@@ -103,6 +103,6 @@ export interface GalleryItem {
   id: string;
   title: string;
   imageUrl: string;
-  category: 'Event' | 'Worship' | 'Outreach';
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
   date: string;
 }
