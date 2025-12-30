@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { fetchVerseOfTheDay } from '../services/geminiService';
+import { getDailyVerse } from '../services/geminiService';
 
 interface VerseData {
   verse: string;
@@ -29,13 +29,24 @@ export const useVerseOfTheDay = () => {
             return;
           }
         }
+        
+        const verseObj = await getDailyVerse();
+        
+        if (verseObj) {
+            const newVerse = `${verseObj.text} - ${verseObj.reference}`;
+            setVerse(newVerse);
+            const verseData: VerseData = { verse: newVerse, date: today };
+            localStorage.setItem('verseOfTheDay', JSON.stringify(verseData));
+        } else {
+             const fallbackVerse = "The Lord is my shepherd, I lack nothing. - Psalm 23:1";
+             setVerse(fallbackVerse);
+             const verseData: VerseData = { verse: fallbackVerse, date: today };
+             localStorage.setItem('verseOfTheDay', JSON.stringify(verseData));
+             setError('Failed to fetch verse of the day, showing default.');
+        }
 
-        const newVerse = await fetchVerseOfTheDay();
-        setVerse(newVerse);
-        const verseData: VerseData = { verse: newVerse, date: today };
-        localStorage.setItem('verseOfTheDay', JSON.stringify(verseData));
       } catch (err) {
-        setError('Failed to fetch verse of the day.');
+        setError('An error occurred while fetching the verse of the day.');
         console.error(err);
       } finally {
         setLoading(false);

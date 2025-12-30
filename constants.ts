@@ -319,3 +319,31 @@ const DATA = {
 };
 
 export const getConstants = (lang: Language) => DATA[lang];
+
+// Exports for backward compatibility with old `views` components to fix build errors.
+export const ANNOUNCEMENTS_DATA = DATA.en.announcements;
+
+// The old Event type was different, so we map the new data structure to the old one.
+export const EVENTS_DATA = DATA.en.events.map(e => ({
+    day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek],
+    time: e.time,
+    name: e.title,
+    leader: e.program?.thuhriltu || e.program?.hawngtu || e.program?.tantu || 'TBD'
+}));
+
+// The old Sermon type was different, so we map to it.
+export const SERMONS_DATA = DATA.en.sermons.map(s => ({
+    title: s.title,
+    speaker: s.preacher,
+    date: s.date,
+    scripture: "John 3:16", // Old type had scripture, new one doesn't. Add placeholder.
+    audioUrl: s.audioUrl || '#'
+}));
+
+// The old Leaders data was different, so we map to it.
+export const LEADERS_DATA = DATA.en.pastors.map(p => ({
+    name: p.name,
+    role: p.role,
+    imageUrl: p.imageUrl,
+    tenure: p.period
+}));

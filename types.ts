@@ -1,4 +1,13 @@
 
+export enum View {
+  Home = 'Home',
+  Sermons = 'Sermons',
+  Events = 'Events',
+  Announcements = 'Announcements',
+  Leaders = 'Leaders',
+  Contact = 'Contact'
+}
+
 export interface Announcement {
   id: string;
   title: string;

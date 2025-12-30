@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Language } from "../translations";
 
@@ -37,7 +36,8 @@ export const getDailyVerse = async (language: Language = 'en'): Promise<{ text: 
   
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      // FIX: Updated model to 'gemini-3-flash-preview' for basic text tasks as per coding guidelines.
+      model: 'gemini-3-flash-preview',
       contents: `Generate a single, uplifting Bible verse for the day in ${langPrompt}. Return JSON with "text" and "reference" fields.`,
       config: {
         responseMimeType: 'application/json',
