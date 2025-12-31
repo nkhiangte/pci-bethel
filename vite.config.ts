@@ -1,4 +1,4 @@
-import path from 'path';
+import { fileURLToPath, URL } from 'url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -16,9 +16,8 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         alias: {
-          // FIX: `__dirname` is not available in ES modules by default.
-          // Using `./` resolves to the current working directory, which is the project root when running Vite.
-          '@': path.resolve('./'),
+          // FIX: Use import.meta.url for a more robust path alias resolution in ESM.
+          '@': fileURLToPath(new URL('./', import.meta.url)),
         }
       }
     };

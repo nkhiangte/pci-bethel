@@ -4,7 +4,7 @@ import {
   BookOpen, DollarSign, Globe, Home, Users, Coffee, Heart, Music, 
   Smile, Library, Book, Box, Newspaper, FileText, UserPlus, Clock, 
   ClipboardCheck, Handshake, ChevronDown, ChevronUp, Search, Loader, 
-  AlertTriangle, Phone, Plus, Edit, Trash, Save, X
+  AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
@@ -35,6 +35,64 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // Full Data with Members (Fallback and Initial Seed)
 const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
+   {
+    name: 'Sunday School',
+    icon: 'BookOpen',
+    members: [
+        { id: 'ss-c', name: 'Upa David Lalchhanhima', role: 'Chairman' },
+        { id: 'ss-vc', name: 'Upa Lalremruata', role: 'Vice Chairman' },
+        { id: 'ss-s', name: 'Pu C. Rohmingliana', role: 'Secretary' },
+        { id: 'ss-as', name: 'Pu Manliankhupa', role: 'Asst. Secretary' },
+        { id: 'ss-m-kc', name: 'Kohhran Committee te', role: 'Member' },
+        { id: 'ss-m-dl1', name: 'Pu Zoramenga', role: 'Leader, Senior Dept.' },
+        { id: 'ss-m-dl2', name: 'T.Upa Hmingthansanga', role: 'Leader, Sacrament Dept.' },
+        { id: 'ss-m-dl3', name: 'Pu V.Lalbiakdika', role: 'Leader, Intermediate Dept.' },
+        { id: 'ss-m-dl4', name: 'Tv.H.Lalfakawma', role: 'Leader, Junior Dept.' },
+        { id: 'ss-m-dl5', name: 'Pu Mungngaihsanga', role: 'Leader, Primary Dept.' },
+        { id: 'ss-m-dl6', name: 'Pi K.Lalbiakthangi', role: 'Leader, Beginners Dept.' },
+        { id: 'ss-m-dl7', name: 'Pi K.Lalrokhumi', role: 'Leader, Pre-Beginners Dept.' },
+        { id: 'ss-m-lib', name: 'Upa Daikhawzama', role: 'Librarian' }
+    ]
+  },
+  {
+    name: 'Finance Committee',
+    icon: 'DollarSign',
+    members: [
+        { id: 'fin-c', name: 'Upa C.Lalthantluanga', role: 'Chairman' },
+        { id: 'fin-vc', name: 'Upa Daikhawzama', role: 'Vice Chairman' },
+        { id: 'fin-s', name: 'Pu Lalmuanpuia Ralte', role: 'Secretary' },
+        { id: 'fin-as1', name: 'Pu C.Lalmuansanga', role: 'Asst. Secretary' },
+        { id: 'fin-as2', name: 'Pu R.Lalmalsawma', role: 'Asst. Secretary' },
+        { id: 'fin-m1', name: 'Pu Dawngsuanpauva', role: 'Member' },
+        { id: 'fin-m2', name: 'Pu C.Rohmingliana', role: 'Member' },
+        { id: 'fin-m3', name: 'Pu Lalsanglura Zote', role: 'Member' },
+        { id: 'fin-m4', name: 'Pu Lalramthara', role: 'Member' },
+        { id: 'fin-m5', name: 'Pu T.Sangtluanga', role: 'Member' },
+        { id: 'fin-m6', name: 'Pu Thangdeihchina', role: 'Member' },
+        { id: 'fin-m7', name: 'Pu JC Laldinthara', role: 'Member' },
+        { id: 'fin-m8', name: 'Pu MS Dawngliana', role: 'Member' },
+        { id: 'fin-m9', name: 'Pu K.Lalengthanga', role: 'Member' },
+        { id: 'fin-m10', name: 'Pu C.Lalrawngbawla', role: 'Member' },
+        { id: 'fin-m11', name: 'Pu Lalhmingmawia', role: 'Member' },
+        { id: 'fin-m12', name: 'Pu Thanglianmanga', role: 'Member' },
+        { id: 'fin-m13', name: 'Pu Kenneth Lalthanzauva', role: 'Member' },
+        { id: 'fin-m14', name: 'Pu Nelson Khiangte', role: 'Member' },
+        { id: 'fin-m15', name: 'Pu Kapthuama', role: 'Member' },
+        { id: 'fin-m16', name: 'Pu Khawlrosiama', role: 'Member' },
+        { id: 'fin-m17', name: 'Pu Thangkunga Hualngo', role: 'Member' },
+        { id: 'fin-m18', name: 'Pu Mungngaihsanga', role: 'Member' },
+        { id: 'fin-m19', name: 'Pu C.Malsawmdawngliana', role: 'Member' },
+        { id: 'fin-m20', name: 'Pu B.Zelkhangova', role: 'Member' },
+        { id: 'fin-m21', name: 'Pu PC Zoramthanga', role: 'Member' },
+        { id: 'fin-m22', name: 'Pu K.Lalengkima', role: 'Member' },
+        { id: 'fin-m23', name: 'Pu Lalthanghulha', role: 'Member' },
+        { id: 'fin-m24', name: 'Pu C.Lalengmawia', role: 'Member' },
+        { id: 'fin-m25', name: 'Pu Lalmuanpuia', role: 'Member' },
+        { id: 'fin-m26', name: 'Pu Lalramnghakhlela', role: 'Member' },
+        { id: 'fin-m27', name: 'Pu F.Lalhriatpuia', role: 'Member' },
+        { id: 'fin-m28', name: 'Pu H.Lalzuitluanga', role: 'Member' },
+    ]
+  },
   {
     name: 'Ramthar Committee',
     icon: 'Globe',
@@ -380,6 +438,7 @@ const Departments: React.FC = () => {
   const { isAdmin } = useAuth();
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -427,6 +486,46 @@ const Departments: React.FC = () => {
   useEffect(() => {
     fetchCommittees();
   }, [fetchCommittees]);
+
+  const handleSeedData = async () => {
+    if (!db || !db.collection || !window.confirm("This will DELETE ALL existing committees and re-seed from the initial data. Are you sure?")) {
+        return;
+    }
+
+    setIsSeeding(true);
+    try {
+        const committeesRef = db.collection('committees');
+        
+        // 1. Delete all existing documents
+        const existingDocs = await committeesRef.get();
+        if (!existingDocs.empty) {
+            const deleteBatch = db.batch();
+            existingDocs.docs.forEach((doc: any) => {
+                deleteBatch.delete(doc.ref);
+            });
+            await deleteBatch.commit();
+            console.log("Existing committees deleted.");
+        }
+
+        // 2. Add all new documents from INITIAL_COMMITTEES
+        const addBatch = db.batch();
+        INITIAL_COMMITTEES.forEach(committeeData => {
+            const newDocRef = committeesRef.doc(); // Firestore generates ID
+            addBatch.set(newDocRef, committeeData);
+        });
+        await addBatch.commit();
+        console.log("Successfully seeded committees!");
+
+        // Refresh the list
+        await fetchCommittees();
+        alert("Seeding complete!");
+
+    } catch (error) {
+        console.error("Error seeding data:", error);
+        alert("An error occurred during seeding.");
+    }
+    setIsSeeding(false);
+  };
   
   const handleSaveCommittee = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -547,9 +646,17 @@ const Departments: React.FC = () => {
         </div>
         
         {isAdmin && !isOfflineMode && (
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 flex flex-wrap justify-center gap-4">
             <button onClick={() => openCommitteeModal(null)} className="inline-flex items-center px-6 py-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-sm transition">
               <Plus size={18} className="mr-2" /> Add New Committee
+            </button>
+            <button 
+              onClick={handleSeedData} 
+              disabled={isSeeding}
+              className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-sm transition disabled:opacity-50"
+            >
+              {isSeeding ? <Loader className="animate-spin w-5 h-5 mr-2" /> : <Database size={18} className="mr-2" />}
+              Seed All Committees
             </button>
           </div>
         )}
