@@ -1,0 +1,53 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if the currently authenticated user is an admin.
+    // It looks for a 'role' field set to 'admin' in their user document.
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // --- Publicly Readable Collections ---
+    // These collections can be read by anyone, but only modified by admins.
+
+    match /announcements/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /committees/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /events/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /records/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /resources/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- User Profiles ---
+    // Users can only create, read, and modify their own profile document.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
