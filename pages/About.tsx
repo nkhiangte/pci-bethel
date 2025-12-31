@@ -133,58 +133,8 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* KOHHRAN THURIN (CHURCH DOCTRINE) */}
-        <div className="mb-20 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-church-50 text-church-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Scroll size={32} />
-            </div>
-            <h2 className="text-3xl font-serif font-bold text-church-900 mb-4">KOHHRAN THURIN</h2>
-            <div className="w-24 h-1 bg-church-500 mx-auto mb-6"></div>
-            <p className="text-slate-600 text-sm leading-relaxed max-w-4xl mx-auto italic">
-              "India Ram Presbyterian Kohhran chuan (Apostol-te Thuvawn te, Nicea Thuvawn te, Westminster Thurin Puanchhuahna leh Wales Ram Presbyterian Kohhran Thurin Puanchhuahna te chu Pathian Thu hrilhfiahna tha tawka ngaia, Kohhranah leh Pathian thu zirna hmunahte thurin innghahna atâna zirtîr tlâk nia pawm tlat chungin), a hnuaia Thurin Puanchhuahna thute hi a Pastor-te, Probationary Pastor-te, Upate leh Kohhrana dânzawhkimten an vawn ngheh tlat atân a pawm a ni."
-            </p>
-          </div>
-
-          <div className="grid gap-6">
-            {DOCTRINE_ARTICLES.map((article, index) => (
-              <div key={index} className="bg-slate-50 rounded-lg p-6 border-l-4 border-church-500">
-                <h3 className="font-bold text-lg text-church-800 mb-2">{article.title}</h3>
-                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{article.text}</p>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 text-center text-xs text-slate-400">
-            Source : India ram Presbyterian Kohhran Dân Bu 2022 (Ninth Revised Edition 2022)
-          </div>
-        </div>
-
-        {/* Our Pastors */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-serif font-bold text-church-900 mb-8 text-center">{t.about.shepherdsTitle}</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-            {pastors.map((pastor) => (
-              <div key={pastor.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
-                <div className="aspect-square overflow-hidden bg-slate-200">
-                  <img 
-                    src={pastor.imageUrl} 
-                    alt={pastor.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-xl font-bold text-slate-800">{pastor.name}</h3>
-                  <p className="text-church-600 font-medium">{pastor.role}</p>
-                  {pastor.period && <p className="text-slate-500 text-sm mt-1">{pastor.period}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Detailed Statistics Section */}
-        <div className="mb-16">
+        <div className="mb-20">
           <div className="flex flex-col items-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-wider text-church-500">Bethel Kohhran at a glance</p>
             <h2 className="text-4xl font-serif font-bold text-church-900 mt-1 mb-2 text-center">KOHHRAN STATISTICS</h2>
@@ -282,6 +232,55 @@ const About: React.FC = () => {
           </div>
         </div>
 
+        {/* KOHHRAN THURIN (CHURCH DOCTRINE) */}
+        <div className="mb-20 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
+          <div className="text-center mb-10">
+            <div className="w-16 h-16 bg-church-50 text-church-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Scroll size={32} />
+            </div>
+            <h2 className="text-3xl font-serif font-bold text-church-900 mb-4">KOHHRAN THURIN</h2>
+            <div className="w-24 h-1 bg-church-500 mx-auto mb-6"></div>
+            <p className="text-slate-600 text-sm leading-relaxed max-w-4xl mx-auto italic">
+              "India Ram Presbyterian Kohhran chuan (Apostol-te Thuvawn te, Nicea Thuvawn te, Westminster Thurin Puanchhuahna leh Wales Ram Presbyterian Kohhran Thurin Puanchhuahna te chu Pathian Thu hrilhfiahna tha tawka ngaia, Kohhranah leh Pathian thu zirna hmunahte thurin innghahna atâna zirtîr tlâk nia pawm tlat chungin), a hnuaia Thurin Puanchhuahna thute hi a Pastor-te, Probationary Pastor-te, Upate leh Kohhrana dânzawhkimten an vawn ngheh tlat atân a pawm a ni."
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            {DOCTRINE_ARTICLES.map((article, index) => (
+              <div key={index} className="bg-slate-50 rounded-lg p-6 border-l-4 border-church-500">
+                <h3 className="font-bold text-lg text-church-800 mb-2">{article.title}</h3>
+                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{article.text}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-8 text-center text-xs text-slate-400">
+            Source : India ram Presbyterian Kohhran Dân Bu 2022 (Ninth Revised Edition 2022)
+          </div>
+        </div>
+
+        {/* Our Pastors */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-serif font-bold text-church-900 mb-8 text-center">{t.about.shepherdsTitle}</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            {pastors.map((pastor) => (
+              <div key={pastor.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
+                <div className="aspect-square overflow-hidden bg-slate-200">
+                  <img 
+                    src={pastor.imageUrl} 
+                    alt={pastor.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-6 text-center">
+                  <h3 className="text-xl font-bold text-slate-800">{pastor.name}</h3>
+                  <p className="text-church-600 font-medium">{pastor.role}</p>
+                  {pastor.period && <p className="text-slate-500 text-sm mt-1">{pastor.period}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
