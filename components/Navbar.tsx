@@ -40,7 +40,7 @@ const Navbar: React.FC = () => {
          { name: t.nav.about, path: '/about' },
          { name: t.nav.worship, path: '/worship' },
          { name: t.nav.sermons, path: '/media' },
-         // Statistics moved into About Us page
+         { name: t.nav.records, path: '/records' },
          { name: t.nav.gallery, path: '/gallery' },
          { name: t.nav.events, path: '/events' },
          { name: t.nav.announcements, path: '/announcements' },

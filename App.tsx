@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import Statistics from './pages/Statistics';
+import Records from './pages/Records'; // Import the new page
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -54,9 +55,10 @@ const App: React.FC = () => {
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/giving" element={<Giving />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="/gallery/*" element={<Gallery />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/statistics" element={<Statistics />} />
+                  <Route path="/records" element={<Records />} /> {/* Add new route */}
                 </Routes>
               </main>
               <Footer />

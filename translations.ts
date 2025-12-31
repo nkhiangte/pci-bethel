@@ -17,6 +17,7 @@ export const translations = {
       giving: 'Giving',
       contact: 'Contact',
       gallery: 'Gallery',
+      records: 'Records',
       admin: 'Admin',
       statistics: 'Statistics',
     },
@@ -94,6 +95,37 @@ export const translations = {
       title: 'Committees',
       subtitle: 'Dedicated members ensuring the smooth operation and spiritual growth of our church community.',
     },
+    records: {
+      title: 'Church Records',
+      subtitle: 'Official register of baptisms, weddings, deaths, and other important church events.',
+      tabs: {
+        baptism: 'Baptism',
+        wedding: 'Wedding',
+        death: 'Death',
+        conference: 'Inkhawmpui'
+      },
+      add: 'Add New Record',
+      empty: 'No records found in this category.',
+      theads: {
+        name: 'Name',
+        dob: 'Date of Birth',
+        baptism_date: 'Baptism Date',
+        parents: 'Parents',
+        minister: 'Baptizing Minister',
+        groom: "Groom's Name",
+        bride: "Bride's Name",
+        wedding_date: 'Wedding Date',
+        wedding_minister: 'Officiating Minister',
+        dod: 'Date of Death',
+        age: 'Age',
+        family: 'Officiant (Funeral)',
+        event: 'Event Name',
+        year: 'Year',
+        theme: 'Theme',
+        location: 'Location',
+        speakers: 'Key Speakers'
+      }
+    },
     footer: {
       churchDesc: 'A community of believers united in faith, serving the Lord in Champhai. Join us for worship and fellowship.',
       quickLinks: 'Quick Links',
@@ -132,6 +164,7 @@ export const translations = {
       giving: 'Thawhlawm',
       contact: 'Biak Pawh',
       gallery: 'Thlalak',
+      records: 'Records',
       admin: 'Admin',
       statistics: 'Statistics',
     },
@@ -208,6 +241,37 @@ export const translations = {
     departments: {
       title: 'Committee Te',
       subtitle: 'Kohhran kal phung leh thlarau lam hmasawnna atana thawk tute.',
+    },
+    records: {
+      title: 'Kohhran Vawn Bîk',
+      subtitle: 'Baptisma, Inneihna, Thihna leh inkhawmpui pawimawh dangte chhinchhiahna.',
+      tabs: {
+        baptism: 'Baptisma',
+        wedding: 'Inneihna',
+        death: 'Thihna',
+        conference: 'Inkhawmpui'
+      },
+      add: 'Dah Luh Thar',
+      empty: 'Heng ho ah hian engmah dah luh a la awm lo.',
+      theads: {
+        name: 'Hming',
+        dob: 'Pian Ni',
+        baptism_date: 'Baptis Chan Ni',
+        parents: 'Nu leh Pa',
+        minister: 'Baptistu',
+        groom: "Mopa Hming",
+        bride: "Monu Hming",
+        wedding_date: 'Inneih Ni',
+        wedding_minister: 'Inneihtir tu',
+        dod: 'Thih Ni',
+        age: 'Kum',
+        family: 'Vuitu',
+        event: 'Inkhawmpui Hming',
+        year: 'Kum',
+        theme: 'Thupui',
+        location: 'A Hmun',
+        speakers: 'Thusawitu Pawimawh'
+      }
     },
     footer: {
       churchDesc: 'Rinna a pummunkhat, Lalpa rawngbawl tura kohte kan ni. Lo tel ve rawh le.',

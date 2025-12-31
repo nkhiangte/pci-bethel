@@ -106,3 +106,44 @@ export interface GalleryItem {
   category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
   date: string;
 }
+
+// New Record Types
+export interface BaptismRecord {
+  id?: string;
+  type: 'baptism';
+  name: string;
+  dateOfBirth: string;
+  baptismDate: string;
+  parents: string;
+  minister: string;
+}
+
+export interface WeddingRecord {
+  id?: string;
+  type: 'wedding';
+  groomName: string;
+  brideName: string;
+  weddingDate: string;
+  minister: string;
+}
+
+export interface DeathRecord {
+  id?: string;
+  type: 'death';
+  name: string;
+  dateOfDeath: string;
+  age: number;
+  familyContact?: string;
+}
+
+export interface InkhawmpuiRecord {
+  id?: string;
+  type: 'inkhawmpui';
+  eventName: string;
+  year: number;
+  theme: string;
+  location: string;
+  speakers: string; // comma-separated
+}
+
+export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord;
