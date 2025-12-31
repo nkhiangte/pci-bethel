@@ -25,44 +25,35 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 const App: React.FC = () => {
-  const appBgUrl = "https://i.ibb.co/G4kcMqmM/117973144-786352218785464-3747589953800462999-n.jpg";
-
   return (
     <LanguageProvider>
       <AuthProvider>
         <HashRouter>
-          {/* Global Background Container */}
-          <div 
-            className="flex flex-col min-h-screen font-sans text-slate-900 bg-fixed bg-cover bg-center"
-            style={{ backgroundImage: `url("${appBgUrl}")` }}
-          >
-            {/* Overlay for readability */}
-            <div className="flex flex-col min-h-screen bg-slate-50/90 backdrop-blur-[1px]">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/worship" element={<Worship />} />
-                  <Route path="/media" element={<Media />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/announcements" element={<Announcements />} />
-                  <Route path="/committees" element={<Departments />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/fellowship/:id" element={<Fellowship />} />
-                  <Route path="/membership" element={<Membership />} />
-                  <Route path="/resources" element={<Resources />} />
-                  <Route path="/giving" element={<Giving />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/gallery/*" element={<Gallery />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/statistics" element={<Statistics />} />
-                  <Route path="/records" element={<Records />} /> {/* Add new route */}
-                </Routes>
-              </main>
-              <Footer />
-            </div>
+          <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
+            <Navbar />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/worship" element={<Worship />} />
+                <Route path="/media" element={<Media />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/announcements" element={<Announcements />} />
+                <Route path="/committees" element={<Departments />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/fellowship/:id" element={<Fellowship />} />
+                <Route path="/membership" element={<Membership />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/giving" element={<Giving />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/gallery/*" element={<Gallery />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/statistics" element={<Statistics />} />
+                <Route path="/records" element={<Records />} /> {/* Add new route */}
+              </Routes>
+            </main>
+            <Footer />
           </div>
         </HashRouter>
       </AuthProvider>

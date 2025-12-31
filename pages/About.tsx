@@ -73,7 +73,7 @@ const About: React.FC = () => {
     },
     {
       title: "Thurin VIII",
-      text: "Krista din chhuah Sakramen-te chu Baptisma leh Lalpa Zanriahte hi an ni. Baptisma chu Krista nêna kan inzawmna te, Thlarau Thianghlim zâra piantharna leh tihnunna chhinchhiahna leh nemnghehna a ni a, Lalpa hnêna kan inhlanna thiltih a ni bawk. Baptisma-ah chuan Pa leh Fapa leh Thlarau Thianghlim hminga sil fai entîr nân tui hman a ni a. An sualte sima, Krista chu an Chhandamtu atân an ring tih puangtute leh an fate chantîr tûr a ni.\n\nLalpa Zanriah chu Krista thihna hriat reng nâna chhang leh uain chan ho hi a ni a, ringtuten Krista thihnaa hlâwkna an chan chhinchhiahna leh nemnghehna a ni. Ama mite chuan Amah leh a inhlanna an pawmzia te, an hlâwkpuizia te, a rawngbawl tûra an inpêk zêlna te, Amah an pâwlna leh mi dang nêna an inpâwlna te entîr nân, A lo kal leh hma loh chuan an chang ho thîn tûr a ni. Sakramen hlâwknate chu Krista malsâwmna avâng leh rinnaa changtuah A Thlarauvin a thawh avânga lo awm a ni."
+      text: "Krista din chhuah Sakramen-te chu Baptisma leh Lalpa Zanriahte hi an ni. Baptisma chu Krista nêna kan inzawmna te, Thlarau Thianghlim zâra piantharna leh tihnunna chhinchhiahna leh nemnghehna a ni a, Lalpa hnêna kan inhlanna thiltih a ni bawk. Baptisma-ah chuan Pa leh Fapa leh Thlarau Thianghlim hminga sil fai entîr nân tui hman a ni a. An sualte sima, Krista chu an Chhandamtu atân an ring tih puangtute leh an fate chantîr tûr a ni.\n\Lalpa Zanriah chu Krista thihna hriat reng nâna chhang leh uain chan ho hi a ni a, ringtuten Krista thihnaa hlâwkna an chan chhinchhiahna leh nemnghehna a ni. Ama mite chuan Amah leh a inhlanna an pawmzia te, an hlâwkpuizia te, a rawngbawl tûra an inpêk zêlna te, Amah an pâwlna leh mi dang nêna an inpâwlna te entîr nân, A lo kal leh hma loh chuan an chang ho thîn tûr a ni. Sakramen hlâwknate chu Krista malsâwmna avâng leh rinnaa changtuah A Thlarauvin a thawh avânga lo awm a ni."
     },
     {
       title: "Thurin IX",
@@ -186,7 +186,8 @@ const About: React.FC = () => {
         {/* Detailed Statistics Section */}
         <div className="mb-16">
           <div className="flex flex-col items-center mb-12">
-            <h2 className="text-4xl font-serif font-bold text-church-900 mb-2 text-center">KOHHRAN STATISTICS</h2>
+            <p className="text-sm font-semibold uppercase tracking-wider text-church-500">Bethel Kohhran at a glance</p>
+            <h2 className="text-4xl font-serif font-bold text-church-900 mt-1 mb-2 text-center">KOHHRAN STATISTICS</h2>
             <span className="bg-church-100 text-church-700 px-4 py-1 rounded-full font-bold text-sm">
               {stats.date}
             </span>
