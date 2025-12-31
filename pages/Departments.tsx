@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
   BookOpen, DollarSign, Globe, Home, Users, Coffee, Heart, Music, 
@@ -558,7 +559,7 @@ const Departments: React.FC = () => {
         ) : (
           <>
              {isOfflineMode && (
-                 <div className="mb-6 p-3 bg-blue-50 text-blue-700 text-xs rounded text-center flex items-center justify-center">
+                 <div className="mb-6 p-3 bg-church-50 text-church-700 text-xs rounded text-center flex items-center justify-center">
                     <AlertTriangle size={14} className="mr-2" />
                     Public View Mode. Admin controls are disabled.
                  </div>
@@ -582,7 +583,7 @@ const Departments: React.FC = () => {
                         <div className="text-slate-400">{isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</div>
                         {isAdmin && !isOfflineMode && (
                            <div className="absolute top-2 right-2 flex space-x-1">
-                             <button onClick={(e) => { e.stopPropagation(); openCommitteeModal(c); }} className="p-1.5 text-blue-500 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={14} /></button>
+                             <button onClick={(e) => { e.stopPropagation(); openCommitteeModal(c); }} className="p-1.5 text-church-600 bg-church-50 rounded-full hover:bg-church-100"><Edit size={14} /></button>
                              <button onClick={(e) => { e.stopPropagation(); handleDeleteCommittee(c.id); }} className="p-1.5 text-red-500 bg-red-50 rounded-full hover:bg-red-100"><Trash size={14} /></button>
                            </div>
                         )}
@@ -607,7 +608,7 @@ const Departments: React.FC = () => {
                                                 <span className="text-slate-500 text-xs sm:text-sm mr-2">{member.role}</span>
                                                 {isAdmin && !isOfflineMode && (
                                                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
-                                                    <button onClick={() => openMemberModal(c.id, member)} className="p-1 text-blue-500 hover:bg-blue-50 rounded"><Edit size={14} /></button>
+                                                    <button onClick={() => openMemberModal(c.id, member)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
                                                     <button onClick={() => handleDeleteMember(c.id, member.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
                                                   </div>
                                                 )}

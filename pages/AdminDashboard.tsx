@@ -20,7 +20,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const adminActions = [
-      { title: 'Manage Events', icon: Calendar, link: '/events', color: 'bg-blue-500', desc: 'Add or edit church calendar items.' },
+      { title: 'Manage Events', icon: Calendar, link: '/events', color: 'bg-church-500', desc: 'Add or edit church calendar items.' },
       { title: 'Manage Announcements', icon: Bell, link: '/announcements', color: 'bg-orange-500', desc: 'Post new updates for the congregation.' },
       { title: 'Upload Reports', icon: FileText, link: '/resources', color: 'bg-green-500', desc: 'Upload weekly bulletins and annual reports.' },
       { title: 'Manage Gallery', icon: Image, link: '/gallery', color: 'bg-purple-500', desc: 'Upload photos from recent events.' },

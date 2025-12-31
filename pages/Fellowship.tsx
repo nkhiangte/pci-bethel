@@ -47,7 +47,7 @@ const Fellowship: React.FC = () => {
           
           <div className="grid md:grid-cols-2 gap-8">
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <div className="p-3 bg-church-50 text-church-600 rounded-lg">
                 <Users size={24} />
               </div>
               <div>

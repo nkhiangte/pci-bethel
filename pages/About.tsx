@@ -145,9 +145,9 @@ const About: React.FC = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Population Card */}
-            <div className="bg-white rounded-xl shadow-sm border-t-4 border-blue-500 p-6">
+            <div className="bg-white rounded-xl shadow-sm border-t-4 border-church-500 p-6">
               <div className="flex items-center mb-6">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg mr-4">
+                <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4">
                   <Users size={24} />
                 </div>
                 <h3 className="text-xl font-bold text-slate-800">Population Overview</h3>

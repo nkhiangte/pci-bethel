@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-8">
             {/* Info Cards */}
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-4"><MapPin size={32} /></div>
+                <div className="p-3 bg-church-50 text-church-600 rounded-full mb-4"><MapPin size={32} /></div>
                 <h3 className="font-bold text-lg mb-2">Our Location</h3>
                 <p className="text-slate-600">Bethel Veng, Champhai<br/>Mizoram 796321</p>
             </div>

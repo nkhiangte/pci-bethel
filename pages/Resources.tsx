@@ -111,7 +111,7 @@ const Resources: React.FC = () => {
             {resources.map((res) => (
               <div key={res.id} className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex items-center justify-between group hover:border-church-200 transition relative">
                 <div className="flex items-center">
-                  <div className={`p-3 rounded-lg mr-4 ${res.category === 'Bulletin' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                  <div className={`p-3 rounded-lg mr-4 ${res.category === 'Bulletin' ? 'bg-church-50 text-church-600' : 'bg-orange-50 text-orange-600'}`}>
                     {res.category === 'Bulletin' ? <Calendar size={24} /> : <FileText size={24} />}
                   </div>
                   <div>

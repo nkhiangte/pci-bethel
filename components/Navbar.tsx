@@ -145,7 +145,7 @@ const Navbar: React.FC = () => {
               {isAdmin && (
                  <Link
                    to="/admin"
-                   className="px-3 py-2 rounded-md text-sm font-medium text-orange-400 hover:bg-church-800 flex items-center"
+                   className="px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:bg-church-800 flex items-center"
                  >
                    <Shield size={14} className="mr-1" /> Admin
                  </Link>

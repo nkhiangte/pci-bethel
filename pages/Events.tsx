@@ -248,7 +248,7 @@ const Events: React.FC = () => {
               <div className="p-6 flex-1 pr-16">
                 <div className="flex items-center space-x-2 mb-3">
                   <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wide ${
-                    event.type === 'Service' ? 'bg-blue-100 text-blue-700' : 
+                    event.type === 'Service' ? 'bg-church-100 text-church-700' : 
                     event.type === 'Meeting' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                   }`}>
                     {event.type}
