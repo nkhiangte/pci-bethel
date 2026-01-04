@@ -1,12 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle } from 'lucide-react';
+import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
+
+const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
+    baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
+    wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
+    death: ['name', 'dateOfDeath', 'age', 'familyContact'],
+    inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
+};
 
 const Records: React.FC = () => {
     const { t } = useLanguage();
@@ -15,9 +23,16 @@ const Records: React.FC = () => {
     const [records, setRecords] = useState<ChurchRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOfflineMode, setIsOfflineMode] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    // FIX: Changed state type from Partial<ChurchRecord> to a union of partials to correctly handle the discriminated union.
+    
+    // Modals State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState<Partial<BaptismRecord> | Partial<WeddingRecord> | Partial<DeathRecord> | Partial<InkhawmpuiRecord> | null>(null);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importData, setImportData] = useState<any[] | null>(null);
+    const [importError, setImportError] = useState<string | null>(null);
+    const [importFileName, setImportFileName] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
     const MOCK_DATA: ChurchRecord[] = [
         { id: 'b1', type: 'baptism', name: 'Lalrinfela Pachuau', dateOfBirth: '2023-01-15', baptismDate: '2023-05-20', parents: 'Pu Lalthanmawia & Pi Zorini', minister: 'Rev. H. Vanlalruata' },
@@ -58,19 +73,18 @@ const Records: React.FC = () => {
     };
 
     const handleAddNew = () => {
-        // FIX: Directly set the editingRecord state with the correct object type for each tab. This is now type-safe due to the updated state type.
         switch(activeTab) {
             case 'baptism': setEditingRecord({ type: 'baptism', name: '', dateOfBirth: '', baptismDate: '', parents: '', minister: '' }); break;
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
             case 'death': setEditingRecord({ type: 'death', name: '', dateOfDeath: '', age: 0, familyContact: '' }); break;
             case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', location: '', speakers: '' }); break;
         }
-        setIsModalOpen(true);
+        setIsEditModalOpen(true);
     };
     
     const handleEdit = (record: ChurchRecord) => {
         setEditingRecord(record);
-        setIsModalOpen(true);
+        setIsEditModalOpen(true);
     };
 
     const handleDelete = async (id: string) => {
@@ -93,7 +107,7 @@ const Records: React.FC = () => {
             } else {
                 await db.collection('records').add(data);
             }
-            setIsModalOpen(false);
+            setIsEditModalOpen(false);
             fetchRecords();
         } catch (error) {
             console.error("Error saving record:", error);
@@ -101,6 +115,82 @@ const Records: React.FC = () => {
         setLoading(false);
     };
 
+    const handleDownloadTemplate = (format: 'xlsx' | 'csv') => {
+        const headers = TEMPLATE_HEADERS[activeTab];
+        const placeholderData = [Object.fromEntries(headers.map(h => [h, `Sample ${h}`]))];
+
+        const ws = XLSX.utils.json_to_sheet(placeholderData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        
+        XLSX.writeFile(wb, `${activeTab}_template.${format}`);
+    };
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setImportFileName(file.name);
+        setImportError(null);
+        setImportData(null);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                if (json.length === 0) {
+                    setImportError("The file is empty or could not be read.");
+                    return;
+                }
+
+                const fileHeaders = Object.keys(json[0] as object);
+                const templateHeaders = TEMPLATE_HEADERS[activeTab];
+
+                const allHeadersMatch = templateHeaders.every(h => fileHeaders.includes(h));
+
+                if (!allHeadersMatch) {
+                    setImportError(`File headers do not match the template. Expected: ${templateHeaders.join(', ')}`);
+                    return;
+                }
+
+                setImportData(json);
+            } catch (err) {
+                setImportError("Failed to parse the file. Please ensure it's a valid XLSX or CSV.");
+            }
+        };
+        reader.readAsBinaryString(file);
+        setIsImportModalOpen(true);
+        if (fileInputRef.current) fileInputRef.current.value = ''; // Reset file input
+    };
+
+    const handleConfirmImport = async () => {
+        if (!db?.batch || !importData) return;
+
+        setLoading(true);
+        try {
+            const batch = db.batch();
+            const recordsRef = db.collection('records');
+            
+            importData.forEach(row => {
+                const newDocRef = recordsRef.doc();
+                const recordWithTpe = { ...row, type: activeTab };
+                batch.set(newDocRef, recordWithTpe);
+            });
+
+            await batch.commit();
+            setIsImportModalOpen(false);
+            fetchRecords(); // Refresh data
+        } catch (error) {
+            setImportError("An error occurred while uploading records to the database.");
+            console.error(error);
+        }
+        setLoading(false);
+    };
 
     const tabs = [
         { id: 'baptism', label: t.records.tabs.baptism, icon: Baby },
@@ -119,15 +209,8 @@ const Records: React.FC = () => {
                 
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2 mb-8 flex flex-wrap gap-2 justify-center">
                     {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as RecordType)}
-                            className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                activeTab === tab.id ? 'bg-church-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-                            }`}
-                        >
-                            <tab.icon size={16} className="mr-2" />
-                            {tab.label}
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id as RecordType)} className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${ activeTab === tab.id ? 'bg-church-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>
+                            <tab.icon size={16} className="mr-2" /> {tab.label}
                         </button>
                     ))}
                 </div>
@@ -138,6 +221,24 @@ const Records: React.FC = () => {
                         Public View Mode. Admin controls are disabled due to database permissions.
                     </div>
                 )}
+
+                {isAdmin && !isOfflineMode && (
+                     <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-8">
+                         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                             <div className="text-center sm:text-left">
+                                 <h3 className="font-bold text-slate-800">Import & Export Tools</h3>
+                                 <p className="text-xs text-slate-500">Download a template or upload a completed file to add records in bulk.</p>
+                             </div>
+                             <div className="flex items-center gap-2 flex-wrap justify-center">
+                                 <button onClick={() => handleDownloadTemplate('xlsx')} className="flex items-center gap-2 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-2 rounded-md transition"><FileDown size={14}/> Download XLSX Template</button>
+                                 <button onClick={() => handleDownloadTemplate('csv')} className="flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition"><FileDown size={14}/> Download CSV Template</button>
+                                 <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-md transition"><FileUp size={14}/> Import Records</button>
+                                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .csv" />
+                             </div>
+                         </div>
+                     </div>
+                )}
+
 
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
                     {isAdmin && !isOfflineMode && (
@@ -155,64 +256,17 @@ const Records: React.FC = () => {
                             <table className="w-full text-sm text-left text-slate-500">
                                 <thead className="text-xs text-slate-700 uppercase bg-slate-50">
                                     <tr>
-                                        {activeTab === 'baptism' && <>
-                                            <th className="px-6 py-3">{t.records.theads.name}</th>
-                                            <th className="px-6 py-3">{t.records.theads.dob}</th>
-                                            <th className="px-6 py-3">{t.records.theads.baptism_date}</th>
-                                            <th className="px-6 py-3">{t.records.theads.parents}</th>
-                                            <th className="px-6 py-3">{t.records.theads.minister}</th>
-                                        </>}
-                                        {activeTab === 'wedding' && <>
-                                            <th className="px-6 py-3">{t.records.theads.groom}</th>
-                                            <th className="px-6 py-3">{t.records.theads.bride}</th>
-                                            <th className="px-6 py-3">{t.records.theads.wedding_date}</th>
-                                            <th className="px-6 py-3">{t.records.theads.wedding_minister}</th>
-                                        </>}
-                                        {activeTab === 'death' && <>
-                                            <th className="px-6 py-3">{t.records.theads.name}</th>
-                                            <th className="px-6 py-3">{t.records.theads.dod}</th>
-                                            <th className="px-6 py-3">{t.records.theads.age}</th>
-                                            <th className="px-6 py-3">{t.records.theads.family}</th>
-                                        </>}
-                                        {activeTab === 'inkhawmpui' && <>
-                                            <th className="px-6 py-3">{t.records.theads.event}</th>
-                                            <th className="px-6 py-3">{t.records.theads.year}</th>
-                                            <th className="px-6 py-3">{t.records.theads.theme}</th>
-                                            <th className="px-6 py-3">{t.records.theads.location}</th>
-                                            <th className="px-6 py-3">{t.records.theads.speakers}</th>
-                                        </>}
+                                        {TEMPLATE_HEADERS[activeTab].map(header => <th key={header} className="px-6 py-3">{t.records.theads[header as keyof typeof t.records.theads] || header}</th>)}
                                         {isAdmin && !isOfflineMode && <th className="px-6 py-3">Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredRecords.map(rec => (
                                         <tr key={rec.id} className="bg-white border-b hover:bg-slate-50">
-                                            {rec.type === 'baptism' && <>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{rec.name}</td>
-                                                <td className="px-6 py-4">{rec.dateOfBirth}</td>
-                                                <td className="px-6 py-4">{rec.baptismDate}</td>
-                                                <td className="px-6 py-4">{rec.parents}</td>
-                                                <td className="px-6 py-4">{rec.minister}</td>
-                                            </>}
-                                            {rec.type === 'wedding' && <>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{rec.groomName}</td>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{rec.brideName}</td>
-                                                <td className="px-6 py-4">{rec.weddingDate}</td>
-                                                <td className="px-6 py-4">{rec.minister}</td>
-                                            </>}
-                                            {rec.type === 'death' && <>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{rec.name}</td>
-                                                <td className="px-6 py-4">{rec.dateOfDeath}</td>
-                                                <td className="px-6 py-4">{rec.age}</td>
-                                                <td className="px-6 py-4">{rec.familyContact}</td>
-                                            </>}
-                                            {rec.type === 'inkhawmpui' && <>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{rec.eventName}</td>
-                                                <td className="px-6 py-4">{rec.year}</td>
-                                                <td className="px-6 py-4">{rec.theme}</td>
-                                                <td className="px-6 py-4">{rec.location}</td>
-                                                <td className="px-6 py-4">{rec.speakers}</td>
-                                            </>}
+                                            {/* FIX: Removed erroneous Object.values() wrapper which caused a TypeScript error. */}
+                                            {TEMPLATE_HEADERS[activeTab].map(header => (
+                                                <td key={header} className="px-6 py-4 font-medium text-slate-900">{(rec as any)[header]}</td>
+                                            ))}
                                             {isAdmin && !isOfflineMode && (
                                                 <td className="px-6 py-4 flex space-x-2">
                                                     <button onClick={() => handleEdit(rec)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16} /></button>
@@ -228,56 +282,78 @@ const Records: React.FC = () => {
                 </div>
 
                 {/* Add/Edit Modal */}
-                {isModalOpen && editingRecord && (
+                {isEditModalOpen && editingRecord && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full">
                             <div className="p-6 border-b flex justify-between items-center">
-                                <h3 className="text-lg font-bold">
-                                    {editingRecord.id ? 'Edit' : 'Add'} {tabs.find(t=>t.id === activeTab)?.label} Record
-                                </h3>
-                                <button onClick={() => setIsModalOpen(false)}><X/></button>
+                                <h3 className="text-lg font-bold">{editingRecord.id ? 'Edit' : 'Add'} {tabs.find(t=>t.id === activeTab)?.label} Record</h3>
+                                <button onClick={() => setIsEditModalOpen(false)}><X/></button>
                             </div>
                             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                                {activeTab === 'baptism' && (
-                                    <>
-                                        {/* FIX: Add type assertion to editingRecord when spreading to update state for a discriminated union. */}
-                                        <input className="w-full border p-2 rounded" placeholder="Name" value={(editingRecord as BaptismRecord).name} onChange={e => setEditingRecord({...editingRecord as Partial<BaptismRecord>, name: e.target.value})} />
-                                        <input type="date" className="w-full border p-2 rounded" placeholder="Date of Birth" value={(editingRecord as BaptismRecord).dateOfBirth} onChange={e => setEditingRecord({...editingRecord as Partial<BaptismRecord>, dateOfBirth: e.target.value})} />
-                                        <input type="date" className="w-full border p-2 rounded" placeholder="Baptism Date" value={(editingRecord as BaptismRecord).baptismDate} onChange={e => setEditingRecord({...editingRecord as Partial<BaptismRecord>, baptismDate: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Parents' Names" value={(editingRecord as BaptismRecord).parents} onChange={e => setEditingRecord({...editingRecord as Partial<BaptismRecord>, parents: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Officiating Minister" value={(editingRecord as BaptismRecord).minister} onChange={e => setEditingRecord({...editingRecord as Partial<BaptismRecord>, minister: e.target.value})} />
-                                    </>
-                                )}
-                                {activeTab === 'wedding' && (
-                                     <>
-                                        <input className="w-full border p-2 rounded" placeholder="Groom's Name" value={(editingRecord as WeddingRecord).groomName} onChange={e => setEditingRecord({...editingRecord as Partial<WeddingRecord>, groomName: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Bride's Name" value={(editingRecord as WeddingRecord).brideName} onChange={e => setEditingRecord({...editingRecord as Partial<WeddingRecord>, brideName: e.target.value})} />
-                                        <input type="date" className="w-full border p-2 rounded" placeholder="Wedding Date" value={(editingRecord as WeddingRecord).weddingDate} onChange={e => setEditingRecord({...editingRecord as Partial<WeddingRecord>, weddingDate: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Officiating Minister" value={(editingRecord as WeddingRecord).minister} onChange={e => setEditingRecord({...editingRecord as Partial<WeddingRecord>, minister: e.target.value})} />
-                                    </>
-                                )}
-                                {activeTab === 'death' && (
-                                     <>
-                                        <input className="w-full border p-2 rounded" placeholder="Name" value={(editingRecord as DeathRecord).name} onChange={e => setEditingRecord({...editingRecord as Partial<DeathRecord>, name: e.target.value})} />
-                                        <input type="date" className="w-full border p-2 rounded" placeholder="Date of Death" value={(editingRecord as DeathRecord).dateOfDeath} onChange={e => setEditingRecord({...editingRecord as Partial<DeathRecord>, dateOfDeath: e.target.value})} />
-                                        <input type="number" className="w-full border p-2 rounded" placeholder="Age" value={(editingRecord as DeathRecord).age} onChange={e => setEditingRecord({...editingRecord as Partial<DeathRecord>, age: parseInt(e.target.value) || 0})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Family Contact" value={(editingRecord as DeathRecord).familyContact} onChange={e => setEditingRecord({...editingRecord as Partial<DeathRecord>, familyContact: e.target.value})} />
-                                    </>
-                                )}
-                                {activeTab === 'inkhawmpui' && (
-                                     <>
-                                        <input className="w-full border p-2 rounded" placeholder="Event Name" value={(editingRecord as InkhawmpuiRecord).eventName} onChange={e => setEditingRecord({...editingRecord as Partial<InkhawmpuiRecord>, eventName: e.target.value})} />
-                                        <input type="number" className="w-full border p-2 rounded" placeholder="Year" value={(editingRecord as InkhawmpuiRecord).year} onChange={e => setEditingRecord({...editingRecord as Partial<InkhawmpuiRecord>, year: parseInt(e.target.value) || new Date().getFullYear()})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Theme" value={(editingRecord as InkhawmpuiRecord).theme} onChange={e => setEditingRecord({...editingRecord as Partial<InkhawmpuiRecord>, theme: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Location" value={(editingRecord as InkhawmpuiRecord).location} onChange={e => setEditingRecord({...editingRecord as Partial<InkhawmpuiRecord>, location: e.target.value})} />
-                                        <input className="w-full border p-2 rounded" placeholder="Key Speakers" value={(editingRecord as InkhawmpuiRecord).speakers} onChange={e => setEditingRecord({...editingRecord as Partial<InkhawmpuiRecord>, speakers: e.target.value})} />
-                                    </>
+                                {TEMPLATE_HEADERS[activeTab].map(field => (
+                                    <div key={field}>
+                                        <label className="capitalize block text-sm font-medium text-slate-600 mb-1">{field.replace(/([A-Z])/g, ' $1')}</label>
+                                        <input 
+                                           type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'}
+                                           className="w-full border p-2 rounded" 
+                                           placeholder={`Enter ${field}`}
+                                           value={(editingRecord as any)[field] || ''} 
+                                           onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} 
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-4 bg-slate-50 flex justify-end space-x-2">
+                                <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
+                                <button onClick={handleSave} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">
+                                    {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                 {/* Import Modal */}
+                {isImportModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full">
+                            <div className="p-6 border-b flex justify-between items-center">
+                                <h3 className="text-lg font-bold flex items-center gap-2"><FileSpreadsheet size={20}/> Import Preview</h3>
+                                <button onClick={() => setIsImportModalOpen(false)}><X/></button>
+                            </div>
+                            <div className="p-6 max-h-[70vh] overflow-y-auto">
+                                <p className="text-sm text-slate-600 mb-2">File: <span className="font-medium">{importFileName}</span></p>
+                                {importError ? (
+                                    <div className="bg-red-50 text-red-700 p-4 rounded text-sm"><AlertTriangle className="inline w-4 h-4 mr-2"/>{importError}</div>
+                                ) : !importData ? (
+                                    <div className="text-center py-8"><Loader className="animate-spin mx-auto"/> <p>Processing file...</p></div>
+                                ) : (
+                                    <div>
+                                        <p className="text-sm text-green-700 bg-green-50 p-3 rounded mb-4">
+                                            Successfully parsed <span className="font-bold">{importData.length}</span> records. Please review the preview below before uploading.
+                                        </p>
+                                        <div className="overflow-x-auto border rounded-lg">
+                                            <table className="w-full text-xs">
+                                                <thead className="bg-slate-50">
+                                                    <tr>{Object.keys(importData[0]).map(h => <th key={h} className="p-2 text-left font-medium">{h}</th>)}</tr>
+                                                </thead>
+                                                <tbody>
+                                                    {importData.slice(0, 5).map((row, idx) => (
+                                                        <tr key={idx} className="border-b last:border-0">
+                                                            {Object.values(row).map((val: any, i) => <td key={i} className="p-2 whitespace-nowrap">{String(val)}</td>)}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            {importData.length > 5 && <p className="text-center text-xs text-slate-500 bg-slate-50 p-2">...and {importData.length - 5} more rows.</p>}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                             <div className="p-4 bg-slate-50 flex justify-end space-x-2">
-                                <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button onClick={handleSave} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">
-                                    {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
+                                <button onClick={() => setIsImportModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
+                                <button onClick={handleConfirmImport} disabled={!!importError || !importData || loading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center disabled:opacity-50">
+                                    {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} 
+                                    Confirm & Upload {importData?.length || ''} Records
                                 </button>
                             </div>
                         </div>
