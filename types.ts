@@ -14,6 +14,7 @@ export interface Announcement {
   date: string;
   category: 'General' | 'Funeral' | 'Youth' | 'Emergency';
   content: string;
+  imageUrl?: string;
 }
 
 export interface ProgramDetails {
@@ -106,6 +107,18 @@ export interface GalleryItem {
   category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
   date: string;
 }
+
+export interface SundaySchoolDepartment {
+  id: string; // e.g., 'senior'
+  name: string;
+  leader: string;
+  asstLeader?: string;
+  secretary?: string;
+  teachers: string[];
+  description?: string;
+  students?: number;
+}
+
 
 // New Record Types
 export interface BaptismRecord {

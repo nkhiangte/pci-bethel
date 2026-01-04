@@ -43,6 +43,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /sundaySchoolDepartments/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // --- User Profiles ---
     // Users can only create, read, and modify their own profile document.
     match /users/{userId} {

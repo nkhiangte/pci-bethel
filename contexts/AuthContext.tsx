@@ -37,22 +37,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           try {
             // Fetch additional user data from Firestore
             if (db && db.collection) {
-                let profileData: any = null;
-
-                // 1. Try fetching by UID (Standard best practice)
+                // The user document MUST be keyed by the user's UID.
+                // The fallback query by email is removed as it violates security rules
+                // which do not (and should not) allow listing the 'users' collection.
                 const userDoc = await db.collection('users').doc(user.uid).get();
-                if (userDoc.exists) {
-                    profileData = userDoc.data();
-                } else {
-                    // 2. Fallback: Try fetching by Email (Handles manually created docs where ID != UID)
-                    console.log("Profile not found by UID, searching by email:", user.email);
-                    const querySnapshot = await db.collection('users').where('email', '==', user.email).limit(1).get();
-                    if (!querySnapshot.empty) {
-                        profileData = querySnapshot.docs[0].data();
-                    }
-                }
 
-                if (profileData) {
+                if (userDoc.exists) {
+                    const profileData = userDoc.data();
                     console.log("User Profile Loaded:", profileData);
                     setUserProfile(profileData as UserProfile);
                 } else {

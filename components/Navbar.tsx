@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Globe, User, LogOut, ChevronDown, Shield } from 'lucide-react';
@@ -13,14 +14,18 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: t.nav.home, path: '/' },
-    { name: t.nav.departments.toUpperCase(), path: '/committees' },
+    { name: t.nav.departments, path: '/committees' },
     { 
-      name: t.nav.members, 
+      name: t.nav.sundaySchool, 
       path: '#',
       children: [
-        { name: 'Membership Forms', path: '/membership' },
-        { name: t.nav.resources, path: '/resources' },
-        { name: t.nav.giving, path: '/giving' },
+        { name: t.sundaySchool.preBeginner, path: '/sundayschool/pre-beginner' },
+        { name: t.sundaySchool.beginner, path: '/sundayschool/beginner' },
+        { name: t.sundaySchool.primary, path: '/sundayschool/primary' },
+        { name: t.sundaySchool.junior, path: '/sundayschool/junior' },
+        { name: t.sundaySchool.intermediate, path: '/sundayschool/intermediate' },
+        { name: t.sundaySchool.sacrament, path: '/sundayschool/sacrament' },
+        { name: t.sundaySchool.senior, path: '/sundayschool/senior' },
       ]
     },
     { 
@@ -30,6 +35,15 @@ const Navbar: React.FC = () => {
         { name: 'Kohhran Hmeichhia (KPVM)', path: '/fellowship/kpvm' },
         { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/fellowship/ktp' },
         { name: 'Kohhran Pavalai Pawl', path: '/fellowship/pavlai' },
+      ]
+    },
+    { 
+      name: t.nav.members, 
+      path: '#',
+      children: [
+        { name: 'Membership Forms', path: '/membership' },
+        { name: t.nav.resources, path: '/resources' },
+        { name: t.nav.giving, path: '/giving' },
       ]
     },
     { 
@@ -49,6 +63,8 @@ const Navbar: React.FC = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+  const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path));
+
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'mizo' : 'en');
@@ -98,8 +114,8 @@ const Navbar: React.FC = () => {
                     <>
                       <button
                         className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center ${
-                          link.children.some(child => isActive(child.path))
-                            ? 'text-white'
+                          isParentActive(link.children)
+                            ? 'text-white bg-church-800'
                             : 'text-slate-300 hover:text-white'
                         }`}
                       >

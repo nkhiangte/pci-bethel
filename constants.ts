@@ -1,3 +1,4 @@
+
 import { Announcement, Event, Ministry, Sermon, Staff } from './types';
 import { Language } from './translations';
 
@@ -9,24 +10,27 @@ const DATA = {
     announcements: [
       {
         id: '1',
-        title: 'Urgent Prayer Request',
+        title: 'Urgent Prayer Request for Surgery',
         date: '2023-10-27',
         category: 'Emergency',
-        content: 'Please pray for Upa Lalnuntluanga regarding his surgery tomorrow.'
+        content: 'Please keep Upa Lalnuntluanga in your prayers as he undergoes surgery tomorrow morning. May God guide the hands of the surgeons and grant him a swift recovery.',
+        imageUrl: 'https://picsum.photos/seed/prayer/1200/800'
       },
       {
         id: '2',
-        title: 'KTP General Conference Registration',
+        title: 'KTP General Conference Registration Now Open',
         date: '2023-10-25',
         category: 'Youth',
-        content: 'Registration for the upcoming General Conference is open until Sunday.'
+        content: 'Registration for the upcoming KTP General Conference is open until this Sunday. All youth members are encouraged to register and participate.',
+        imageUrl: 'https://picsum.photos/seed/youthconf/1200/800'
       },
       {
         id: '3',
-        title: 'Community Work (Hnatlang)',
+        title: 'Community Work (Hnatlang) this Saturday',
         date: '2023-10-24',
         category: 'General',
-        content: 'Mass social work at Church premises on Saturday morning, 7:00 AM.'
+        content: 'There will be a mass social work (Hnatlang) at the Church premises this Saturday morning, starting at 7:00 AM. All members are requested to attend.',
+        imageUrl: 'https://picsum.photos/seed/community/1200/800'
       }
     ] as Announcement[],
     events: [
@@ -167,21 +171,24 @@ const DATA = {
         title: 'Ṭawngṭai Pui Ngai',
         date: '2023-10-27',
         category: 'Emergency',
-        content: 'Upa Lalnuntluanga naktuk a zai a nih dawn avangin Kohhran hote ṭawngṭaipuina kan ngen e.'
+        content: 'Upa Lalnuntluanga naktuk a zai a nih dawn avangin Kohhran hote ṭawngṭaipuina kan ngen e. Pathianin hlawhtling takin kaihruai se la, damna famkim pe leh thuai rawh se.',
+        imageUrl: 'https://picsum.photos/seed/prayer/1200/800'
       },
       {
         id: '2',
-        title: 'KTP General Conference Inkhian',
+        title: 'KTP General Conference Inkhian A Hawng',
         date: '2023-10-25',
         category: 'Youth',
-        content: 'KTP General Conference kal turte tan Pathianni thleng inkhian theih a ni e.'
+        content: 'KTP General Conference lo awm tur atana inkhian theih a ni e. Pathianni thleng inkhian theih a ni a, ṭhalai zawng zawngte tel ṭheuh turin kan insawm a ni.',
+        imageUrl: 'https://picsum.photos/seed/youthconf/1200/800'
       },
       {
         id: '3',
-        title: 'Kohhran Hnatlang',
+        title: 'Kohhran Hnatlang Neih Tur A Ni',
         date: '2023-10-24',
         category: 'General',
-        content: 'Inrinni hian Biak In hung chhung tihfai hnatlang neih tur a ni a, dar 7:00 AM ah ṭan tur a ni.'
+        content: 'Inrinni hian Biak In hung chhung tihfai hnatlang neih tur a ni a, dar 7:00 AM ah ṭan tur a ni. Kohhran member zawng zawngte tel tura sawm kan ni.',
+        imageUrl: 'https://picsum.photos/seed/community/1200/800'
       }
     ] as Announcement[],
     events: [

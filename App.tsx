@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import Statistics from './pages/Statistics';
+import SundaySchool from './pages/SundaySchool';
 import Records from '@/pages/Records'; // Import the new page
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/committees" element={<Departments />} />
+                <Route path="/sundayschool/:departmentId" element={<SundaySchool />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/fellowship/:id" element={<Fellowship />} />
