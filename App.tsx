@@ -20,7 +20,7 @@ import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import Statistics from './pages/Statistics';
-import Records from './pages/Records'; // Import the new page
+import Records from '@/pages/Records'; // Import the new page
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 

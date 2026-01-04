@@ -16,6 +16,39 @@ const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
 };
 
+const formatDateCell = (value: any): string => {
+  if (!value && value !== 0) return '';
+
+  // Handle Excel serial numbers (which are numbers)
+  if (typeof value === 'number' && value > 1) {
+    // Excel's epoch starts on 1900-01-01, but it incorrectly considers 1900 a leap year.
+    // The offset 25569 is for converting from Excel's epoch to UNIX epoch (days between 1900 and 1970).
+    const date = new Date((value - 25569) * 86400 * 1000);
+    // Add a check for valid date, since some numbers might not be dates
+    if (isNaN(date.getTime()) || date.getUTCFullYear() < 1900 || date.getUTCFullYear() > 2100) {
+        return String(value); // If conversion fails or out of range, return original number
+    }
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  // Handle strings (like 'YYYY-MM-DD' from newer imports)
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      const [, year, month, day] = match;
+      return `${day}/${month}/${year}`;
+    }
+    // Otherwise, return the string as is (e.g., for '??/??/1977' or if already formatted)
+    return value;
+  }
+
+  return String(value);
+};
+
+
 const Records: React.FC = () => {
     const { t } = useLanguage();
     const { isAdmin } = useAuth();
@@ -160,14 +193,28 @@ const Records: React.FC = () => {
 
                 const processedData = json.map(row => {
                     const newRow: { [key: string]: any } = {};
+                    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
                     for (const key in row) {
                         const value = (row as any)[key];
-                        if (value instanceof Date) {
-                            const date = value;
-                            const year = date.getUTCFullYear();
-                            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                            const day = String(date.getUTCDate()).padStart(2, '0');
-                            newRow[key] = `${year}-${month}-${day}`;
+
+                        if (dateFields.includes(key)) {
+                            let formattedDate: string | null = null;
+                            if (value instanceof Date) {
+                                const date = value;
+                                const year = date.getUTCFullYear();
+                                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                                const day = String(date.getUTCDate()).padStart(2, '0');
+                                formattedDate = `${year}-${month}-${day}`;
+                            } else if (typeof value === 'number' && value > 1) {
+                                const date = new Date((value - 25569) * 86400 * 1000);
+                                if (!isNaN(date.getTime()) && date.getUTCFullYear() > 1900 && date.getUTCFullYear() < 2100) {
+                                    const year = date.getUTCFullYear();
+                                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                                    const day = String(date.getUTCDate()).padStart(2, '0');
+                                    formattedDate = `${year}-${month}-${day}`;
+                                }
+                            }
+                            newRow[key] = formattedDate !== null ? formattedDate : value;
                         } else {
                             newRow[key] = value;
                         }
@@ -217,6 +264,7 @@ const Records: React.FC = () => {
     ];
     
     const filteredRecords = records.filter(r => r.type === activeTab);
+    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
 
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
@@ -281,7 +329,9 @@ const Records: React.FC = () => {
                                     {filteredRecords.map(rec => (
                                         <tr key={rec.id} className="bg-white border-b hover:bg-slate-50">
                                             {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                <td key={header} className="px-6 py-4 font-medium text-slate-900">{(rec as any)[header]}</td>
+                                                <td key={header} className="px-6 py-4 font-medium text-slate-900">
+                                                    {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
+                                                </td>
                                             ))}
                                             {isAdmin && !isOfflineMode && (
                                                 <td className="px-6 py-4 flex space-x-2">
