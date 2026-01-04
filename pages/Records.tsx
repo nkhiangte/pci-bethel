@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet } from 'lucide-react';
+import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
@@ -56,6 +56,7 @@ const Records: React.FC = () => {
     const [records, setRecords] = useState<ChurchRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOfflineMode, setIsOfflineMode] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     
     // Modals State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -88,7 +89,7 @@ const Records: React.FC = () => {
             return;
         }
         try {
-            const snapshot = await db.collection('records').get();
+            const snapshot = await db.collection('records').orderBy('baptismDate', 'desc').get(); // Basic sorting
             if (snapshot.empty) {
                 setRecords(MOCK_DATA);
             } else {
@@ -266,6 +267,24 @@ const Records: React.FC = () => {
     const filteredRecords = records.filter(r => r.type === activeTab);
     const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
 
+    const searchedRecords = filteredRecords.filter(rec => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+
+        switch (rec.type) {
+            case 'baptism':
+                return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
+            case 'wedding':
+                return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
+            case 'death':
+                return (rec.name?.toLowerCase().includes(term));
+            case 'inkhawmpui':
+                return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
+            default:
+                return false;
+        }
+    });
+
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -304,6 +323,18 @@ const Records: React.FC = () => {
                      </div>
                 )}
 
+                <div className="mb-6">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search by name, minister, etc..."
+                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-church-500"
+                        />
+                    </div>
+                </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
                     {isAdmin && !isOfflineMode && (
@@ -315,8 +346,10 @@ const Records: React.FC = () => {
                     )}
                     
                     <div className="overflow-x-auto">
-                        {loading ? <Loader className="animate-spin mx-auto my-12" /> : filteredRecords.length === 0 ? (
-                            <p className="text-center text-slate-500 py-8">{t.records.empty}</p>
+                        {loading ? <Loader className="animate-spin mx-auto my-12" /> : searchedRecords.length === 0 ? (
+                            <p className="text-center text-slate-500 py-8">
+                                {searchTerm ? `No records found for "${searchTerm}".` : t.records.empty}
+                            </p>
                         ) : (
                             <table className="w-full text-sm text-left text-slate-500">
                                 <thead className="text-xs text-slate-700 uppercase bg-slate-50">
@@ -326,7 +359,7 @@ const Records: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredRecords.map(rec => (
+                                    {searchedRecords.map(rec => (
                                         <tr key={rec.id} className="bg-white border-b hover:bg-slate-50">
                                             {TEMPLATE_HEADERS[activeTab].map(header => (
                                                 <td key={header} className="px-6 py-4 font-medium text-slate-900">
