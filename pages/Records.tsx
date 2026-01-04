@@ -141,7 +141,7 @@ const Records: React.FC = () => {
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet);
+                const json = XLSX.utils.sheet_to_json(worksheet, { cellDates: true });
 
                 if (json.length === 0) {
                     setImportError("The file is empty or could not be read.");
@@ -158,7 +158,24 @@ const Records: React.FC = () => {
                     return;
                 }
 
-                setImportData(json);
+                const processedData = json.map(row => {
+                    const newRow: { [key: string]: any } = {};
+                    for (const key in row) {
+                        const value = (row as any)[key];
+                        if (value instanceof Date) {
+                            const date = value;
+                            const year = date.getUTCFullYear();
+                            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                            const day = String(date.getUTCDate()).padStart(2, '0');
+                            newRow[key] = `${year}-${month}-${day}`;
+                        } else {
+                            newRow[key] = value;
+                        }
+                    }
+                    return newRow;
+                });
+
+                setImportData(processedData);
             } catch (err) {
                 setImportError("Failed to parse the file. Please ensure it's a valid XLSX or CSV.");
             }
@@ -263,7 +280,6 @@ const Records: React.FC = () => {
                                 <tbody>
                                     {filteredRecords.map(rec => (
                                         <tr key={rec.id} className="bg-white border-b hover:bg-slate-50">
-                                            {/* FIX: Removed erroneous Object.values() wrapper which caused a TypeScript error. */}
                                             {TEMPLATE_HEADERS[activeTab].map(header => (
                                                 <td key={header} className="px-6 py-4 font-medium text-slate-900">{(rec as any)[header]}</td>
                                             ))}
