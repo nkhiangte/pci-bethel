@@ -141,7 +141,7 @@ const Records: React.FC = () => {
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet, { cellDates: true });
+                const json = XLSX.utils.sheet_to_json(worksheet, { cellDates: true } as any) as any[];
 
                 if (json.length === 0) {
                     setImportError("The file is empty or could not be read.");

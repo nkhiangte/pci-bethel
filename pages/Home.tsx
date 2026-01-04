@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, MapPin, ArrowRight, Bell, Calendar } from 'lucide-react';
@@ -49,7 +48,9 @@ const Home: React.FC = () => {
             className="h-24 w-24 md:h-32 md:w-32 mb-6 drop-shadow-xl bg-white rounded-full p-1"
           />
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-4 tracking-wide shadow-sm">
-            {CHURCH_NAME}
+            <span className="block text-3xl md:text-5xl">Mizoram Synod</span>
+            <span className="block text-lg md:text-2xl font-light tracking-normal mt-1">(Presbyterian Church of India)</span>
+            <span className="block mt-2">Champhai Bethel Kohhran</span>
           </h1>
           <p className="text-xl md:text-2xl text-church-100 font-light mb-8">{t.home.heroTagline}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">

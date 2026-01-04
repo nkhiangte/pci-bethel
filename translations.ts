@@ -1,4 +1,3 @@
-
 export type Language = 'en' | 'mizo';
 
 export const translations = {
@@ -46,7 +45,7 @@ export const translations = {
     },
     about: {
       title: 'About Our Church',
-      subtitle: 'Learn about the history, mission, and leadership of PCI Champhai Bethel Kohhran.',
+      subtitle: 'Learn about the history, mission, and leadership of Mizoram Synod (PCI) Champhai Bethel Kohhran.',
       historyTitle: 'Our History',
       historyText: 'Founded in 1985, Bethel Kohhran has grown from a small gathering in a humble house to a vibrant community of faith in Champhai.',
       missionTitle: 'Our Mission',
@@ -192,7 +191,7 @@ export const translations = {
     },
     about: {
       title: 'Kan Kohhran Chanchin',
-      subtitle: 'PCI Champhai Bethel Kohhran chanchin, thil tum leh hruaitute.',
+      subtitle: 'Mizoram Synod (PCI) Champhai Bethel Kohhran chanchin, thil tum leh hruaitute.',
       historyTitle: 'Kan Chanchin',
       historyText: 'Kum 1985-a din tan, Bethel Kohhran hi in te reuh te atanga lo intanin, tunah chuan Champhai khawpuia Kohhran lian leh thang duang tak a lo ni ta.',
       missionTitle: 'Kan Thil Tum',
