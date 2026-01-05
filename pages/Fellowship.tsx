@@ -1,16 +1,51 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
+import { db } from '../services/firebase';
+import { Ministry } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Clock, Users, Calendar } from 'lucide-react';
+import { Clock, Users, Calendar, Loader } from 'lucide-react';
 
 const Fellowship: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { language, t } = useLanguage();
-  const { ministries } = getConstants(language);
+  const { language } = useLanguage();
+  const [fellowship, setFellowship] = useState<Ministry | null | undefined>(undefined); // undefined for loading state
 
-  const fellowship = ministries.find((m) => m.id === id);
+  useEffect(() => {
+    if (!id) return;
+    const fetchFellowship = async () => {
+        if (!db?.doc) {
+            const staticFellowship = getConstants(language).ministries.find(m => m.id === id);
+            setFellowship(staticFellowship || null);
+            return;
+        }
+
+        try {
+            const docRef = db.collection('ministries').doc(id);
+            const docSnap = await docRef.get();
+
+            if (docSnap.exists) {
+                setFellowship({ ...docSnap.data(), id: docSnap.id } as Ministry);
+            } else {
+                console.warn(`Ministry with id ${id} not found in Firestore.`);
+                // Fallback to static data if not found
+                const staticFellowship = getConstants(language).ministries.find(m => m.id === id);
+                setFellowship(staticFellowship || null);
+            }
+        } catch (error) {
+            console.error("Error fetching fellowship:", error);
+            const staticFellowship = getConstants(language).ministries.find(m => m.id === id);
+            setFellowship(staticFellowship || null);
+        }
+    };
+    fetchFellowship();
+  }, [id, language]);
+
+
+  if (fellowship === undefined) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin h-10 w-10 text-church-500" /></div>;
+  }
 
   if (!fellowship) {
     return <Navigate to="/worship" replace />;

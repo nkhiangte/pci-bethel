@@ -35,6 +35,69 @@ const DATA = {
     ] as Announcement[],
     events: [
       {
+        id: 'ktp-2026-01-05',
+        title: 'Kristian Ṭhalai Pawl Inkhawm',
+        date: '2026-01-05',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Thawhṭanni Zan KTP Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pu V.Lalbiakdika',
+          tantu: 'Pu Vanlalmawia',
+          thuhriltu: 'Rev. Lalhmingthanga Chhangte',
+          solo: 'Nl. Ramnghinglovi',
+          groupZai: 'Nl. Ningsianmawii te unau',
+          thawhlawmKhawntute: [
+            '1) Nl. Vungngaihdawni',
+            '2) Nl. V.Hlunmawii',
+            '3) Nl. Thangdinsangi',
+            '4) Nl. C.Lalremruati',
+          ],
+          khuangpu: ['Pu K.Lalramngheta'],
+          pianist: 'Tv. Liankhankhama',
+          guitarist: 'Tv. Pianglawmkima',
+          drummer: 'Tv. Pauengliana',
+          hlaHriltu: 'Nl. DL Kimi Suante'
+        }
+      },
+      {
+        id: 'kh-2026-01-06',
+        title: 'Kohhran Hmeichhia Inkhawm',
+        date: '2026-01-06',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Thawhlehni Zan Kohhran Hmeichhia Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pi C. Lallawmsangi',
+          tantu: 'Pi Lalsangliani',
+          thuhriltu: 'Nl. Ngurbawihtluangi',
+          thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
+          khuangpu: ['Pi F. Lalthianghlimi', 'Pi Lalramchuani']
+        }
+      },
+      {
+        id: 'kpp-2026-01-08',
+        title: 'Kohhran Pavalai Pawl Inkhawm',
+        date: '2026-01-08',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Ningani Zan Kohhran Pavalai Pawl Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pu Ms Dawngliana',
+          tantu: 'Pu Thangdeihchina',
+          thuhriltu: 'Pu P. Lalhmingthanga',
+          thawhlawmKhawntute: ['Pu B. Lalliantawna'],
+          zaiHruaitu: ['Pu K. Lalengthanga', 'Pu HB Vanlalvuana'],
+          pianist: 'Pu Hmunneihthanga'
+        }
+      },
+      {
         id: 'wed-service',
         title: 'Nilai Zan (Wednesday Night)',
         dayOfWeek: 3, // Wednesday
@@ -192,6 +255,69 @@ const DATA = {
       }
     ] as Announcement[],
     events: [
+        {
+        id: 'ktp-2026-01-05',
+        title: 'Kristian Ṭhalai Pawl Inkhawm',
+        date: '2026-01-05',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Thawhṭanni Zan KTP Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pu V.Lalbiakdika',
+          tantu: 'Pu Vanlalmawia',
+          thuhriltu: 'Rev. Lalhmingthanga Chhangte',
+          solo: 'Nl. Ramnghinglovi',
+          groupZai: 'Nl. Ningsianmawii te unau',
+          thawhlawmKhawntute: [
+            '1) Nl. Vungngaihdawni',
+            '2) Nl. V.Hlunmawii',
+            '3) Nl. Thangdinsangi',
+            '4) Nl. C.Lalremruati',
+          ],
+          khuangpu: ['Pu K.Lalramngheta'],
+          pianist: 'Tv. Liankhankhama',
+          guitarist: 'Tv. Pianglawmkima',
+          drummer: 'Tv. Pauengliana',
+          hlaHriltu: 'Nl. DL Kimi Suante'
+        }
+      },
+      {
+        id: 'kh-2026-01-06',
+        title: 'Kohhran Hmeichhia Inkhawm',
+        date: '2026-01-06',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Thawhlehni Zan Kohhran Hmeichhia Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pi C. Lallawmsangi',
+          tantu: 'Pi Lalsangliani',
+          thuhriltu: 'Nl. Ngurbawihtluangi',
+          thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
+          khuangpu: ['Pi F. Lalthianghlimi', 'Pi Lalramchuani']
+        }
+      },
+      {
+        id: 'kpp-2026-01-08',
+        title: 'Kohhran Pavalai Pawl Inkhawm',
+        date: '2026-01-08',
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Ningani Zan Kohhran Pavalai Pawl Inkhawm Program.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Pu Ms Dawngliana',
+          tantu: 'Pu Thangdeihchina',
+          thuhriltu: 'Pu P. Lalhmingthanga',
+          thawhlawmKhawntute: ['Pu B. Lalliantawna'],
+          zaiHruaitu: ['Pu K. Lalengthanga', 'Pu HB Vanlalvuana'],
+          pianist: 'Pu Hmunneihthanga'
+        }
+      },
       {
         id: 'wed-service',
         title: 'Nilai Zan',

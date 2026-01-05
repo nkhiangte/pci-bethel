@@ -1,12 +1,43 @@
-import React, { useState } from 'react';
-import { getConstants } from '../constants';
+
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Clock, Users } from 'lucide-react';
+import { db } from '../services/firebase';
+import { Ministry } from '../types';
+import { Clock, Users, Loader } from 'lucide-react';
+import { getConstants } from '../constants'; // For fallback
 
 const Worship: React.FC = () => {
   const [activeTab, setActiveTab] = useState('ministries');
   const { language, t } = useLanguage();
-  const { ministries } = getConstants(language);
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMinistries = async () => {
+        setLoading(true);
+        if (!db?.collection) {
+            // Fallback to static data if firebase is not available
+            setMinistries(getConstants(language).ministries);
+            setLoading(false);
+            return;
+        }
+        try {
+            const snapshot = await db.collection('ministries').get();
+            if (!snapshot.empty) {
+                const fetchedData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as Ministry[];
+                setMinistries(fetchedData);
+            } else {
+                // Fallback if collection is empty
+                setMinistries(getConstants(language).ministries);
+            }
+        } catch (error) {
+            console.error("Error fetching ministries:", error);
+            setMinistries(getConstants(language).ministries);
+        }
+        setLoading(false);
+    };
+    fetchMinistries();
+  }, [language]); // Re-fetch might be needed if static data is language-dependent on fallback
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -36,30 +67,34 @@ const Worship: React.FC = () => {
 
         {/* Content */}
         {activeTab === 'ministries' ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {ministries.map((m) => (
-              <div key={m.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition">
-                <div className="h-48 overflow-hidden bg-slate-200">
-                  <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-slate-900">{m.name}</h3>
-                    {m.acronym && <span className="bg-church-100 text-church-700 text-xs px-2 py-1 rounded font-bold">{m.acronym}</span>}
+          loading ? (
+            <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {ministries.map((m) => (
+                <div key={m.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition">
+                  <div className="h-48 overflow-hidden bg-slate-200">
+                    <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-slate-600 text-sm mb-4 line-clamp-3">{m.description}</p>
-                  <div className="space-y-2 text-sm text-slate-500 border-t border-slate-100 pt-4">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-2" /> {m.leader}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-bold text-slate-900">{m.name}</h3>
+                      {m.acronym && <span className="bg-church-100 text-church-700 text-xs px-2 py-1 rounded font-bold">{m.acronym}</span>}
                     </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" /> {m.schedule}
+                    <p className="text-slate-600 text-sm mb-4 line-clamp-3">{m.description}</p>
+                    <div className="space-y-2 text-sm text-slate-500 border-t border-slate-100 pt-4">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-2" /> {m.leader}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2" /> {m.schedule}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className="bg-white p-8 rounded-xl shadow-sm max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-6 text-center text-slate-800">{t.worship.serviceOrderTitle}</h2>

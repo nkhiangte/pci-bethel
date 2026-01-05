@@ -33,6 +33,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /ministries/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /records/{docId} {
       allow read: if true;
       allow write: if isAdmin();

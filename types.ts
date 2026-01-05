@@ -18,12 +18,23 @@ export interface Announcement {
 }
 
 export interface ProgramDetails {
-  tantu?: string; // Reader/Conductor
+  hruaitu?: string; // Conductor/Leader
+  tantu?: string; // Reader
   thuhriltu?: string; // Preacher
   thupui?: string; // Topic
   hawngtu?: string; // Topic Opener
-  conductor?: string;
+  conductor?: string; // Legacy, prefer hruaitu
   pianist?: string;
+
+  // New detailed fields
+  solo?: string;
+  groupZai?: string;
+  thawhlawmKhawntute?: string[];
+  khuangpu?: string[];
+  zaiHruaitu?: string[];
+  guitarist?: string;
+  drummer?: string;
+  hlaHriltu?: string;
 }
 
 export interface Event {

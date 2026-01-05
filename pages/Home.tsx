@@ -1,26 +1,45 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Tag, Loader } from 'lucide-react';
+import { ArrowRight, Calendar, Tag, Loader, Clock, User } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
-import { Announcement } from '../types';
+import { Announcement, Event } from '../types';
 import { getConstants } from '../constants';
 import StatsCounter from '../components/StatsCounter';
+
+// Helper to get next occurrence of a day (0=Sun, 1=Mon, ..., 6=Sat)
+const getNextDayOfWeek = (dayOfWeek: number) => {
+  const now = new Date();
+  const resultDate = new Date(now.getTime());
+  const currentDay = now.getDay();
+  const daysUntilNext = (dayOfWeek - currentDay + 7) % 7;
+  resultDate.setDate(now.getDate() + daysUntilNext);
+  // If the calculated date is today but for a recurring event, it's fine.
+  // No need to push to next week unless that's the desired logic.
+  return resultDate;
+};
+
+// Format date for matching (YYYY-MM-DD)
+const formatDateForInput = (date: Date) => {
+    return date.toISOString().split('T')[0];
+};
 
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
   const [news, setNews] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingNews, setLoadingNews] = useState(true);
+  const [weeklyProgramDetails, setWeeklyProgramDetails] = useState<any[]>([]);
+  const [loadingProgram, setLoadingProgram] = useState(true);
   
   const { announcements: staticNews } = getConstants(language);
 
   useEffect(() => {
     const fetchNews = async () => {
-      setLoading(true);
+      setLoadingNews(true);
       if (!db || !db.collection) {
         setNews(staticNews);
-        setLoading(false);
+        setLoadingNews(false);
         return;
       }
       try {
@@ -38,10 +57,55 @@ const Home: React.FC = () => {
         console.error("Error fetching news:", error);
         setNews(staticNews);
       }
-      setLoading(false);
+      setLoadingNews(false);
     };
     fetchNews();
   }, [language, staticNews]);
+  
+  useEffect(() => {
+    const fetchAndProcessPrograms = async () => {
+        setLoadingProgram(true);
+        const allConstantEvents = getConstants(language).events;
+        
+        let realEvents: Event[] = [];
+        try {
+            if (db && db.collection) {
+                const snapshot = await db.collection('events').get();
+                realEvents = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Event[];
+            } else {
+                realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
+            }
+        } catch (e) {
+            console.error("Error fetching events:", e);
+            realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
+        }
+
+        const basePrograms = t.home.weeklyProgram;
+
+        const detailedPrograms = basePrograms.map(baseProg => {
+            const nextDate = getNextDayOfWeek(baseProg.dayOfWeek);
+            const dateStr = formatDateForInput(nextDate);
+            
+            // Find a specific event for that date
+            const specificEvent = realEvents.find(e => e.date === dateStr && !e.isCancelled);
+
+            if (specificEvent) {
+                return {
+                    ...baseProg,
+                    name: specificEvent.title,
+                    details: specificEvent.program
+                };
+            }
+            return baseProg; // Fallback to base program
+        });
+        
+        setWeeklyProgramDetails(detailedPrograms);
+        setLoadingProgram(false);
+    };
+
+    fetchAndProcessPrograms();
+}, [language, t.home.weeklyProgram]);
+
 
   const featuredNews = news[0];
   const otherNews = news.slice(1);
@@ -50,7 +114,7 @@ const Home: React.FC = () => {
     <div className="bg-slate-50 min-h-screen">
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
+          {loadingNews ? (
             <div className="animate-pulse">
               <div className="h-12 w-1/2 bg-slate-200 rounded mb-8"></div>
               <div className="h-96 bg-slate-200 rounded-xl mb-8"></div>
@@ -120,6 +184,38 @@ const Home: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      </div>
+
+      {/* Weekly Program Section */}
+      <div className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-serif font-bold text-center text-church-900 mb-10">{t.home.weeklyProgramme}</h2>
+            {loadingProgram ? (
+                <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {weeklyProgramDetails.map((program) => (
+                        <Link to="/events" key={program.day} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-start space-x-4 hover:shadow-md hover:border-church-100 transition group">
+                            <div className="p-3 bg-church-50 text-church-600 rounded-lg mt-1 group-hover:bg-church-100">
+                                <Clock size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg group-hover:text-church-800">{program.day}</h3>
+                                <p className="text-church-700 font-semibold">{program.name}</p>
+                                {program.details?.thuhriltu ? (
+                                    <div className="flex items-center text-sm text-slate-500 mt-2">
+                                        <User size={14} className="mr-1.5" />
+                                        <span>{program.details.thuhriltu}</span>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500 mt-1">{program.time}</p>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
       </div>
 
