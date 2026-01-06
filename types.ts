@@ -202,12 +202,19 @@ export interface KTPGroup {
   members: KTPMember[];
 }
 
+export interface KTPSubCommittee {
+  id: string;
+  name: string;
+  members: KTPMember[];
+}
+
 export interface KTPHruaitute {
   year: number;
   leaders: KTPMember[];
   committeeMembers: KTPMember[];
   exOfficioMembers: KTPMember[];
   groupLeaders?: KTPGroup[];
+  subCommittees?: KTPSubCommittee[];
 }
 
 // KTP Budget Types

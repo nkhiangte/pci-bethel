@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPMember, KTPGroup, KTPBudget, BudgetItem } from '../types';
+import { Ministry, KTPHruaitute, KTPMember, KTPGroup, KTPBudget, BudgetItem, KTPSubCommittee } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -96,6 +96,68 @@ const INITIAL_KTP_2026_DATA: KTPHruaitute = {
                 { id: 'g4l8', role: 'Branch O.B', name: 'Tv Vanlalchhana' },
             ]
         },
+    ],
+    subCommittees: [
+        {
+            id: 'sc1', name: 'PROGRAMME', members: [
+                { id: 'sc1-c', role: 'Chairman', name: 'Pu V.Lalbiakdika' },
+                { id: 'sc1-s', role: 'Secretary', name: 'Tv Vanlalchhana' },
+                { id: 'sc1-m1', name: 'Pu Zoramenga' }, { id: 'sc1-m2', name: 'Tv Thangdeihmanga' },
+                { id: 'sc1-m3', name: 'Tv H.Lalfakawma' }, { id: 'sc1-m4', name: 'Nl Lallawmzuali' },
+                { id: 'sc1-m5', name: 'Pu Tluangzathanga' }, { id: 'sc1-m6', name: 'Tv B.Thangzauva' },
+                { id: 'sc1-m7', name: 'Pu C.Ramtharnghaka' }, { id: 'sc1-m8', name: 'Tv Vanlalzauva' },
+                { id: 'sc1-m9', name: 'Tv Thangzasanga' }, { id: 'sc1-m10', name: 'Tv Lalhmuliana' },
+                { id: 'sc1-m11', name: 'Tv Lalrochawia' }, { id: 'sc1-m12', name: 'Tv Chinngoliana' },
+            ]
+        },
+        {
+            id: 'sc2', name: 'MUSIC', members: [
+                { id: 'sc2-c', role: 'Chairman', name: 'Tv Thangdeihmanga' },
+                { id: 'sc2-cd', role: 'Conductor', name: 'Tv. Liankhankhama' },
+                { id: 'sc2-acd', role: 'Asst. Conductor', name: 'Pu K.Lalramngheta' },
+                { id: 'sc2-m1', name: 'Tv PB Hmangaihropuia' },
+                { id: 'sc2-m2', name: 'Pu Manliankhupa' },
+                { id: 'sc2-m3', name: 'Tv C.Lalhumhima' },
+            ]
+        },
+        {
+            id: 'sc3', name: 'REFRESHMENT', members: [
+                { id: 'sc3-c', role: 'Chairman', name: 'Nl. Lallawmzuali' },
+                { id: 'sc3-s', role: 'Secretary', name: 'Pu Vanlalzamlova' },
+                { id: 'sc3-m1', name: 'Nl B.Lalnunsiami' }, { id: 'sc3-m2', name: 'Pu T.Lalramnghaka' },
+                { id: 'sc3-m3', name: 'Pu Vanlalruatpuia' }, { id: 'sc3-m4', name: 'Pu Lalthangliana' },
+                { id: 'sc3-m5', name: 'Nl Chingsawmluni' },
+            ]
+        },
+        {
+            id: 'sc4', name: 'EVANGELICAL', members: [
+                { id: 'sc4-c', role: 'Chairman', name: 'Tv H.Lalfakawma' },
+                { id: 'sc4-s', role: 'Secretary', name: 'Nl Ningsianmawii' },
+                { id: 'sc4-m1', name: 'Nl B.Lalnunsiami' }, { id: 'sc4-m2', name: 'Nl Lalnunthari' },
+                { id: 'sc4-m3', name: 'Pu C.Lalchhanhima' }, { id: 'sc4-m4', name: 'Tv Vanlaldanmawia' },
+                { id: 'sc4-m5', name: 'Nl Baby Romalsawmi' }, { id: 'sc4-m6', name: 'Nl Anny Lalliandawli' },
+                { id: 'sc4-m7', name: 'Nl B.Lalrinfeli' },
+            ]
+        },
+        {
+            id: 'sc5', name: 'PROPERTY & DECORATION', members: [
+                { id: 'sc5-c', role: 'Chairman', name: 'Tv. Vanlalchhana' },
+                { id: 'sc5-s', role: 'Secretary', name: 'Pu. Lalhmunngheta' },
+                { id: 'sc5-m1', name: 'Pu V.Lalbiakdika' }, { id: 'sc5-m2', name: 'Pu Zoramenga' },
+                { id: 'sc5-m3', name: 'Tv Thangdeihmanga' }, { id: 'sc5-m4', name: 'Tv H.Lalfakawma' },
+                { id: 'sc5-m5', name: 'Nl. Lallawmzuali' },
+            ]
+        },
+        {
+            id: 'sc6', name: 'MEDIA & DOCUMENTATION', members: [
+                { id: 'sc6-c', role: 'Chairman', name: 'Pu Zoramenga' },
+                { id: 'sc6-s', role: 'Secretary', name: 'Pu Manliankhupa' },
+                { id: 'sc6-m1', name: 'Pu V.Lalbiakdika' }, { id: 'sc6-m2', name: 'Tv Thangdeihmanga' },
+                { id: 'sc6-m3', name: 'Tv Vanlalchhana' }, { id: 'sc6-m4', name: 'Tv H.Lalfakawma' },
+                { id: 'sc6-m5', name: 'Nl Lallawmzuali' }, { id: 'sc6-m6', name: 'Tv C.Lalmuankima' },
+                { id: 'sc6-m7', name: 'Tv Pauengliana' }, { id: 'sc6-m8', name: 'Tv Lalhmangaihsanga' },
+            ]
+        }
     ]
 };
 
@@ -487,12 +549,19 @@ const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdm
         </Section>
         
         {data.groupLeaders && data.groupLeaders.length > 0 && (
-            <div className="mb-8">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">GROUP Hruaitute</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Section title="Group Hruaitute">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-1 md:col-span-2 lg:col-span-3">
                     {data.groupLeaders.map(group => <GroupCard key={group.id} group={group} />)}
                 </div>
-            </div>
+            </Section>
+        )}
+
+        {data.subCommittees && data.subCommittees.length > 0 && (
+             <Section title="Sub-Committees">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-1 md:col-span-2 lg:col-span-3">
+                    {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
+                </div>
+            </Section>
         )}
     </div>
 );
@@ -531,6 +600,34 @@ const GroupCard: React.FC<{ group: KTPGroup }> = ({ group }) => (
         </ul>
     </div>
 );
+
+const SubCommitteeCard: React.FC<{ subcommittee: KTPSubCommittee }> = ({ subcommittee }) => {
+    const mainRoles = ['Chairman', 'Secretary', 'Conductor', 'Asst. Conductor'];
+    const leaders = subcommittee.members.filter(m => m.role && mainRoles.includes(m.role));
+    const members = subcommittee.members.filter(m => !m.role || !mainRoles.includes(m.role));
+    
+    return (
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">{subcommittee.name}</h4>
+            <ul className="space-y-1.5 mb-3">
+                {leaders.map(member => (
+                    <li key={member.id} className="text-sm flex justify-between">
+                        <span className="text-slate-600">{member.role}:</span>
+                        <span className="font-semibold text-slate-900 text-right">{member.name}</span>
+                    </li>
+                ))}
+            </ul>
+            {members.length > 0 && (
+                 <>
+                    <h5 className="text-xs font-bold text-slate-400">Members:</h5>
+                    <div className="text-sm font-medium text-slate-800 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                        {members.map(m => <span key={m.id}>{m.name}</span>)}
+                    </div>
+                 </>
+            )}
+        </div>
+    );
+};
 
 const KTPDataMissing: React.FC<{ title: string, onSetup: () => void, isAdmin: boolean, year: number }> = ({ title, onSetup, isAdmin, year }) => (
     <div className="text-center py-20">
@@ -606,6 +703,40 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
         setFormData({ ...formData, groupLeaders: newGroups });
     };
 
+    const handleSubCommitteeChange = (index: number, value: string) => {
+        const newSubs = [...(formData.subCommittees || [])];
+        newSubs[index].name = value;
+        setFormData({ ...formData, subCommittees: newSubs });
+    };
+
+    const handleSubCommitteeMemberChange = (subIndex: number, memberIndex: number, field: keyof KTPMember, value: string) => {
+        const newSubs = [...(formData.subCommittees || [])];
+        (newSubs[subIndex].members[memberIndex] as any)[field] = value;
+        setFormData({ ...formData, subCommittees: newSubs });
+    };
+
+    const addSubCommittee = () => {
+        const newSub: KTPSubCommittee = { id: `new-sub-${Date.now()}`, name: 'New Sub-Committee', members: [] };
+        setFormData({ ...formData, subCommittees: [...(formData.subCommittees || []), newSub] });
+    };
+
+    const removeSubCommittee = (id: string) => {
+        const newSubs = (formData.subCommittees || []).filter(s => s.id !== id);
+        setFormData({ ...formData, subCommittees: newSubs });
+    };
+
+    const addSubCommitteeMember = (subIndex: number) => {
+        const newSubs = [...(formData.subCommittees || [])];
+        newSubs[subIndex].members.push({ id: `new-sub-member-${Date.now()}`, name: '', role: '' });
+        setFormData({ ...formData, subCommittees: newSubs });
+    };
+
+    const removeSubCommitteeMember = (subIndex: number, memberId: string) => {
+        const newSubs = [...(formData.subCommittees || [])];
+        newSubs[subIndex].members = newSubs[subIndex].members.filter(m => m.id !== memberId);
+        setFormData({ ...formData, subCommittees: newSubs });
+    };
+
 
     const handleSaveClick = async () => {
         setIsSaving(true);
@@ -664,6 +795,30 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
                              ))}
                          </div>
                          <button type="button" onClick={addGroup} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition shadow-sm mt-4 flex items-center gap-1"><Plus size={16}/> Add Group</button>
+                    </div>
+                     <div className="border-t pt-4">
+                         <h4 className="font-bold mb-2">Sub-Committees</h4>
+                         <div className="space-y-4">
+                             {(formData.subCommittees || []).map((sub, subIndex) => (
+                                <div key={sub.id} className="p-4 border rounded-lg bg-slate-50 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                       <input className="font-bold text-lg w-full border-b bg-transparent" value={sub.name} onChange={(e) => handleSubCommitteeChange(subIndex, e.target.value)} />
+                                       <button type="button" onClick={() => removeSubCommittee(sub.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+                                    </div>
+                                    <div className="space-y-2">
+                                       {sub.members.map((member, memberIndex) => (
+                                          <div key={member.id} className="grid grid-cols-12 gap-2 items-center">
+                                              <input className="col-span-4 border p-2 text-sm rounded" placeholder="Role (Optional)" value={member.role || ''} onChange={e => handleSubCommitteeMemberChange(subIndex, memberIndex, 'role', e.target.value)} />
+                                              <input className="col-span-7" placeholder="Name" value={member.name} onChange={e => handleSubCommitteeMemberChange(subIndex, memberIndex, 'name', e.target.value)} />
+                                              <button type="button" onClick={() => removeSubCommitteeMember(subIndex, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+                                          </div>
+                                       ))}
+                                    </div>
+                                    <button type="button" onClick={() => addSubCommitteeMember(subIndex)} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><UserPlus size={14}/> Add Member</button>
+                                </div>
+                             ))}
+                         </div>
+                         <button type="button" onClick={addSubCommittee} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition shadow-sm mt-4 flex items-center gap-1"><Plus size={16}/> Add Sub-Committee</button>
                     </div>
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">
