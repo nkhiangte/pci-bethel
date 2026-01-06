@@ -1,12 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Tag, Loader, Clock, User, BookOpen, Star, Music, Users, Flower2 } from 'lucide-react';
+import { ArrowRight, Calendar, Tag, Loader, Clock, User, BookOpen, Star, Music, Users, Flower2, Plus, Edit, Trash, Database, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
-import { Announcement, Event, WeeklyDuty } from '../types';
+import { Announcement, Event, WeeklyDuty, Staff } from '../types';
 import { getConstants } from '../constants';
 import StatsCounter from '../components/StatsCounter';
+import Card from '../components/Card'; // Import Card component
+import { useAuth } from '../contexts/AuthContext';
+import ElderEditModal from '../components/ElderEditModal'; // Import new modal component
 
 // Format date for matching (YYYY-MM-DD)
 const formatDateForInput = (date: Date) => {
@@ -15,6 +18,7 @@ const formatDateForInput = (date: Date) => {
 
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
+  const { isAdmin } = useAuth();
   const [news, setNews] = useState<Announcement[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
   const [weeklyProgramDetails, setWeeklyProgramDetails] = useState<any[]>([]);
@@ -22,7 +26,15 @@ const Home: React.FC = () => {
   const [weeklyDuties, setWeeklyDuties] = useState<WeeklyDuty | null>(null);
   const [loadingDuties, setLoadingDuties] = useState(true);
   
-  const { announcements: staticNews, weeklyDuty: staticDuty } = getConstants(language);
+  const [churchElders, setChurchElders] = useState<Staff[]>([]);
+  const [loadingElders, setLoadingElders] = useState(true);
+  const [isSeedingElders, setIsSeedingElders] = useState(false);
+  const [isElderModalOpen, setIsElderModalOpen] = useState(false);
+  const [editingElder, setEditingElder] = useState<Partial<Staff> | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+
+  const { announcements: staticNews, weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
 
   const getWeekDateRange = () => {
     const today = new Date();
@@ -31,6 +43,7 @@ const Home: React.FC = () => {
 
     // Calculate start of the week (Monday)
     const startOfWeek = new Date(today);
+    startOfWeek.setHours(0, 0, 0, 0);
     startOfWeek.setDate(today.getDate() - dayOfWeek);
 
     // Calculate end of the week (Sunday)
@@ -164,9 +177,110 @@ const Home: React.FC = () => {
     fetchDuties();
   }, [language, staticDuty]);
 
+  const fetchElders = useCallback(async () => {
+    setLoadingElders(true);
+    if (!db || !db.collection) {
+      setChurchElders(staticElders);
+      setLoadingElders(false);
+      return;
+    }
+    try {
+      // Removed .orderBy('name') to avoid requiring an index and potential permission errors.
+      const snapshot = await db.collection('elders').get();
+      if (!snapshot.empty) {
+        const fetchedData = snapshot.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Staff[];
+        // Client-side sort after fetching to maintain order
+        fetchedData.sort((a, b) => a.name.localeCompare(b.name));
+        setChurchElders(fetchedData);
+      } else {
+        setChurchElders(staticElders); // Fallback to static if collection is empty
+      }
+    } catch (error) {
+      console.error("Error fetching elders:", error); // This is where the error is reported
+      setChurchElders(staticElders); // Fallback on error
+    }
+    setLoadingElders(false);
+  }, [staticElders]);
+
+  useEffect(() => {
+    fetchElders();
+  }, [fetchElders]);
+
+  const handleSeedElders = async () => {
+    if (!db?.collection || !window.confirm("This will DELETE ALL existing elders and re-seed from the initial data. Are you sure?")) {
+        return;
+    }
+
+    setIsSeedingElders(true);
+    try {
+        const eldersRef = db.collection('elders');
+        
+        // 1. Delete all existing documents
+        const existingDocs = await eldersRef.get();
+        if (!existingDocs.empty) {
+            const deleteBatch = db.batch();
+            existingDocs.docs.forEach((doc: any) => {
+                deleteBatch.delete(doc.ref);
+            });
+            await deleteBatch.commit();
+            console.log("Existing elders deleted.");
+        }
+
+        // 2. Add all new documents from staticElders
+        const addBatch = db.batch();
+        staticElders.forEach(elderData => {
+            const newDocRef = eldersRef.doc(); // Firestore generates ID
+            addBatch.set(newDocRef, elderData);
+        });
+        await addBatch.commit();
+        console.log("Successfully seeded elders!");
+
+        fetchElders(); // Refresh the list
+        alert("Elder data seeding complete!");
+
+    } catch (error) {
+        console.error("Error seeding elder data:", error);
+        alert("An error occurred during elder data seeding.");
+    }
+    setIsSeedingElders(false);
+  };
+
+  const handleSaveElder = async (elder: Staff) => {
+    if (!db?.collection) return;
+    setLoadingElders(true);
+    try {
+      const { id, ...dataToSave } = elder;
+      if (id) {
+        await db.collection('elders').doc(id).set(dataToSave, { merge: true });
+      } else {
+        await db.collection('elders').add(dataToSave);
+      }
+      setIsElderModalOpen(false);
+      fetchElders();
+    } catch (error) {
+      console.error("Error saving elder:", error);
+    }
+    setLoadingElders(false);
+  };
+
+  const handleDeleteElder = async (id: string) => {
+    if (!db?.collection || !window.confirm("Are you sure you want to delete this elder?")) return;
+    setLoadingElders(true);
+    try {
+      await db.collection('elders').doc(id).delete();
+      fetchElders();
+    } catch (error) {
+      console.error("Error deleting elder:", error);
+    }
+    setLoadingElders(false);
+  };
 
   const featuredNews = news[0];
   const otherNews = news.slice(1);
+  const seniorPastor = staticPastors.find(p => p.role === 'Senior Pastor');
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -243,6 +357,110 @@ const Home: React.FC = () => {
         </div>
       </div>
 
+      {/* Kohhran Puipate (Leaders) Section */}
+      <div className="py-16 bg-church-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-serif font-bold text-center text-church-900 mb-10">{t.home.puipate}</h2>
+          
+          {isAdmin && (
+             <div className="text-center mb-8 flex flex-wrap justify-center gap-4">
+                <button 
+                  onClick={handleSeedElders} 
+                  disabled={isSeedingElders}
+                  className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-sm transition disabled:opacity-50"
+                >
+                  {isSeedingElders ? <Loader className="animate-spin w-5 h-5 mr-2" /> : <Database size={18} className="mr-2" />}
+                  Seed Elders Data
+                </button>
+                <button 
+                  onClick={() => { setEditingElder({role: 'Elder', name: '', imageUrl: '', description: ''}); setIsElderModalOpen(true); }}
+                  className="inline-flex items-center px-6 py-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-sm transition"
+                >
+                  <Plus size={18} className="mr-2" /> Add New Elder
+                </button>
+             </div>
+          )}
+
+          {loadingElders ? (
+             <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+          ) : (
+            <>
+              <div className="grid lg:grid-cols-3 gap-8 justify-center mb-16">
+                {/* Senior Pastor Card */}
+                {seniorPastor && (
+                  <Card className="text-center col-span-1 lg:col-start-2 border-t-4 border-church-500 relative group">
+                    <img 
+                      src={seniorPastor.imageUrl} 
+                      alt={seniorPastor.name} 
+                      className="w-full h-64 object-cover object-top" 
+                    />
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold text-slate-900 mb-1">{seniorPastor.name}</h3>
+                      <p className="text-church-700 font-semibold text-lg">{seniorPastor.role}</p>
+                      {seniorPastor.description && (
+                         <p className="text-sm text-slate-500 mt-2 italic">{seniorPastor.description}</p>
+                      )}
+                      {seniorPastor.period && (
+                        <p className="text-sm text-slate-500 mt-1">{seniorPastor.period}</p>
+                      )}
+                      <Link to="/about" className="mt-4 inline-flex items-center text-church-600 hover:text-church-800 font-medium transition">
+                        View All Leaders <ArrowRight size={16} className="ml-1" />
+                      </Link>
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              {/* Church Elders Grid */}
+              <h3 className="text-2xl font-serif font-bold text-center text-church-900 mb-8">{t.home.kohhranElders}</h3>
+              {churchElders.length > 0 ? (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {churchElders.map(elder => (
+                    <Card key={elder.id} className="text-center relative group">
+                      <img 
+                        src={elder.imageUrl} 
+                        alt={elder.name} 
+                        className="w-full h-48 object-cover object-top" 
+                      />
+                      <div className="p-4">
+                        <h3 className="text-lg font-bold text-slate-900">{elder.name}</h3>
+                        <p className="text-church-700 font-medium">{elder.role}</p>
+                        {elder.description && (
+                          <p className="text-sm text-slate-500 mt-2 line-clamp-3">{elder.description}</p>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => { setEditingElder(elder); setIsElderModalOpen(true); }}
+                            className="p-1.5 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition"
+                            title="Edit Elder"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            onClick={() => setShowDeleteConfirm(elder.id || '')}
+                            className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition"
+                            title="Delete Elder"
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <Shield size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">No elders listed. {isAdmin && "Use the 'Seed Elders Data' button to populate."}</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-serif font-bold text-center text-church-900 mb-2">{t.home.weeklyProgramme}</h2>
@@ -311,6 +529,18 @@ const Home: React.FC = () => {
 
       <StatsCounter />
       
+      {/* Elder Edit/Add Modal */}
+      {isElderModalOpen && editingElder && (
+        <ElderEditModal
+          elder={editingElder}
+          onClose={() => { setIsElderModalOpen(false); setEditingElder(null); }}
+          onSave={handleSaveElder}
+          onDelete={handleDeleteElder}
+          isLoading={loadingElders}
+          showDeleteConfirm={showDeleteConfirm}
+          setShowDeleteConfirm={setShowDeleteConfirm}
+        />
+      )}
     </div>
   );
 };

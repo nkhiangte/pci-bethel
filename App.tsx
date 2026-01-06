@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -22,6 +23,7 @@ import AdminDuties from './pages/AdminDuties'; // Import new page
 import Statistics from './pages/Statistics';
 import SundaySchool from './pages/SundaySchool';
 import Records from '@/pages/Records'; // Import the new page
+import ElderEditModal from './components/ElderEditModal'; // Import new modal component
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 

@@ -79,6 +79,7 @@ export interface Staff {
   role: string;
   period?: string; // For past pastors
   imageUrl: string;
+  description?: string; // Added optional description for leaders/elders
 }
 
 export interface CommitteeMember {

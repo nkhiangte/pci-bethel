@@ -28,6 +28,8 @@ export const translations = {
       verseOfTheDay: 'Verse of the Day',
       latestNews: 'Latest News',
       newsTitle: 'Latest News',
+      puipate: 'Our Leaders', // Added Puipate translation
+      kohhranElders: 'Church Elders', // New translation key for Church Elders
       viewAll: 'View All',
       serviceTimes: 'Service Times',
       weeklyProgramme: 'Weekly Church Program',
@@ -202,7 +204,9 @@ export const translations = {
       watchSermons: 'Thusawi Ngaithla Rawh',
       verseOfTheDay: 'Vawiin Chang Thlan',
       latestNews: 'Thuthar',
-      newsTitle: 'Latest News',
+      newsTitle: 'Thuthar & Hriattirna',
+      puipate: 'Kohhran Puipate', // Added Puipate translation
+      kohhranElders: 'Kohhran Upate', // New translation key for Church Elders
       viewAll: 'En Vek Rawh',
       serviceTimes: 'Inkhawm Hun',
       weeklyProgramme: 'Tunkar Inkhawm Program',
