@@ -144,7 +144,7 @@ const INITIAL_KTP_2026_DATA: KTPHruaitute = {
                 { id: 'sc5-c', role: 'Chairman', name: 'Tv. Vanlalchhana' },
                 { id: 'sc5-s', role: 'Secretary', name: 'Pu. Lalhmunngheta' },
                 { id: 'sc5-m1', name: 'Pu V.Lalbiakdika' }, { id: 'sc5-m2', name: 'Pu Zoramenga' },
-                { id: 'sc5-m3', name: 'Tv Thangdeihmanga' }, { id: 'sc5-m4', name: 'Tv H.Lalfakawma' },
+                { id: 'sc5-m3', name: 'Tv Thangdeihmanga' }, { id: 'sc1-m4', name: 'Tv H.Lalfakawma' },
                 { id: 'sc5-m5', name: 'Nl. Lallawmzuali' },
             ]
         },
@@ -344,7 +344,7 @@ const Fellowship: React.FC = () => {
         case 'home':
             return (
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Leadership & Schedule</h2>
+                  {/* Removed h2 "Leadership & Schedule" */}
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="flex items-start space-x-4">
                       <div className="p-3 bg-cyan-50 text-cyan-600 rounded-lg"><Users size={24} /></div>
@@ -580,9 +580,8 @@ const KTPSubCommitteesView: React.FC<{ data: KTPHruaitute, onEdit: () => void, i
 
         {data.subCommittees && data.subCommittees.length > 0 ? (
              <Section title="Sub-Committees">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
-                </div>
+                {/* Removed the inner grid, now Section's grid will control the layout */}
+                {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
             </Section>
         ) : (
             <div className="text-center py-10 text-slate-500">No sub-committees defined yet.</div>
@@ -636,9 +635,9 @@ const SubCommitteeCard: React.FC<{ subcommittee: KTPSubCommittee }> = ({ subcomm
             <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">{subcommittee.name}</h4>
             <ul className="space-y-1.5 mb-3">
                 {leaders.map(member => (
-                    <li key={member.id} className="text-sm flex justify-between">
-                        <span className="text-slate-600">{member.role}:</span>
-                        <span className="font-semibold text-slate-900 text-right">{member.name}</span>
+                    <li key={member.id} className="text-sm flex items-baseline gap-1"> {/* Added flex and items-baseline */}
+                        <span className="text-slate-600 whitespace-nowrap">{member.role}:</span> {/* Added whitespace-nowrap */}
+                        <span className="font-semibold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">{member.name}</span> {/* Added whitespace-nowrap, overflow-hidden, text-ellipsis */}
                     </li>
                 ))}
             </ul>
