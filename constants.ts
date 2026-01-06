@@ -88,24 +88,7 @@ const DATA = {
         order: 0, // Added order for consistency
       }
     ] as Staff[],
-    proPastors: [ // New: Pro Pastor Data
-      {
-        id: 'pp1',
-        name: 'Pro. Pastor Lallawmsanga',
-        role: 'Pro Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=21',
-        description: 'Assisting in pastoral duties and spiritual guidance.',
-        order: 0,
-      },
-      {
-        id: 'pp2',
-        name: 'Pro. Pastor H. Lalremruata',
-        role: 'Pro Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=22',
-        description: 'Engaged in various ministries and community outreach.',
-        order: 1,
-      },
-    ] as Staff[],
+    proPastors: [] as Staff[], // Removed mock data for Pro Pastors
     elders: [
       { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'A pillar of faith, serving the church with dedication and compassion.', order: 1 },
       { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Known for his unwavering commitment to church community.', order: 2 },
@@ -197,24 +180,7 @@ const DATA = {
         order: 0, // Added order for consistency
       }
     ] as Staff[],
-    proPastors: [ // New: Pro Pastor Data Mizo
-      {
-        id: 'pp1',
-        name: 'Pro. Pastor Lallawmsanga',
-        role: 'Pro Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=21',
-        description: 'Rawngbawlna hrang hrangah Pastor puitu.',
-        order: 0,
-      },
-      {
-        id: 'pp2',
-        name: 'Pro. Pastor H. Lalremruata',
-        role: 'Pro Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=22',
-        description: 'Rawngbawlna hrang hrangah leh khawtlang rawngbawlnaa inhmang.',
-        order: 1,
-      },
-    ] as Staff[],
+    proPastors: [] as Staff[], // Removed mock data for Pro Pastors (Mizo)
     elders: [
       { id: 'e1', name: 'Upa C. Lalzuala', role: 'Upa', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.', order: 1 },
       { id: 'e2', name: 'Upa R. Lalruata', role: 'Upa', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.', order: 2 },
