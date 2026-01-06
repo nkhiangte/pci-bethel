@@ -210,6 +210,7 @@ const Fellowship: React.FC = () => {
   const ktpNavLinks = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'circular', label: '2026 hruaitute', icon: Book },
+    { id: 'sub-committees', label: 'Sub-Committees', icon: Users }, // New tab for Sub-Committees
     { id: 'project-budget', label: 'Project & Budget 2026', icon: DollarSign },
     { id: 'members', label: 'Member List', icon: List },
     { id: 'history', label: 'Our History', icon: History },
@@ -259,7 +260,7 @@ const Fellowship: React.FC = () => {
             return;
         }
 
-        if (tab === 'circular') {
+        if (tab === 'circular' || tab === 'sub-committees') { // Fetch KTPHruaitute for both these tabs
             try {
                 const docRef = db.collection('ktpLeaders').doc('2026');
                 const docSnap = await docRef.get();
@@ -366,6 +367,10 @@ const Fellowship: React.FC = () => {
             return ktpHruaitute ? 
                    <KTPHruaituteView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
                    <KTPDataMissing title="Hruaitute Details" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
+        case 'sub-committees': // New case for Sub-Committees
+            return ktpHruaitute ?
+                   <KTPSubCommitteesView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
+                   <KTPDataMissing title="Sub-Committees" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
         case 'project-budget':
             return ktpBudget ?
                    <KTPBudgetView data={ktpBudget} onEdit={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} /> :
@@ -555,16 +560,36 @@ const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdm
                 </div>
             </Section>
         )}
+        {/* Removed subCommittees rendering from here */}
+    </div>
+);
 
-        {data.subCommittees && data.subCommittees.length > 0 && (
+// New component for Sub-Committees
+const KTPSubCommitteesView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
+    <div>
+        <div className="flex justify-between items-start mb-6 pb-4 border-b">
+            <div className="flex items-center gap-4">
+                <img src={ktpLogoUrl} alt="KTP Logo" className="h-16 w-16 rounded-full shadow-md bg-white p-1" />
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">KTP SUB-COMMITTEES {data.year}</h2>
+                    <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
+                </div>
+            </div>
+            {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
+        </div>
+
+        {data.subCommittees && data.subCommittees.length > 0 ? (
              <Section title="Sub-Committees">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-1 md:col-span-2 lg:col-span-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
                 </div>
             </Section>
+        ) : (
+            <div className="text-center py-10 text-slate-500">No sub-committees defined yet.</div>
         )}
     </div>
 );
+
 
 const Section: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
     <div className="mb-8">
