@@ -38,6 +38,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
    {
     name: 'Sunday School',
     icon: 'BookOpen',
+    description: 'The Sunday School Committee oversees the spiritual education of children and youth, organizing classes, curriculum, and special events.',
     members: [
         { id: 'ss-c', name: 'Upa David Lalchhanhima', role: 'Chairman' },
         { id: 'ss-vc', name: 'Upa Lalremruata', role: 'Vice Chairman' },
@@ -57,6 +58,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Finance Committee',
     icon: 'DollarSign',
+    description: 'Responsible for managing the church\'s financial resources, including budgeting, fundraising, and transparent reporting.',
     members: [
         { id: 'fin-c', name: 'Upa C.Lalthantluanga', role: 'Chairman' },
         { id: 'fin-vc', name: 'Upa Daikhawzama', role: 'Vice Chairman' },
@@ -96,6 +98,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Ramthar Committee',
     icon: 'Globe',
+    description: 'Dedicated to supporting missionary work and outreach programs, spreading the Gospel beyond our local community.',
     members: [
       { id: 'ramthar-c', name: 'Upa H.Zairemmawia', role: 'Chairman' },
       { id: 'ramthar-vc', name: 'Pu H.Vanlalthanga', role: 'Vice Chairman' },
@@ -127,14 +130,15 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
       { id: 'ramthar-m22', name: 'Pu Hmunneihthanga', role: 'Member' },
       { id: 'ramthar-m23', name: 'Pu Lalneihsanga', role: 'Member' },
       { id: 'ramthar-m24', name: 'Pu Lalrawngbawla', role: 'Member' },
-      { id: 'ramthar-m25', name: 'Pi Lalbiakkungi (KH aiawh)', role: 'Member' },
-      { id: 'ramthar-m26', name: 'Tv.H.Lalfakawma (KTP aiawh)', role: 'Member' },
+      { id: 'ramthar-m25', name: 'Pi Lalbiakkungi (KH aiawhte)', role: 'Member' },
+      { id: 'ramthar-m26', name: 'Tv.H.Lalfakawma (KTP aiawhte)', role: 'Member' },
       { id: 'ramthar-exo1', name: 'Kohhran Committee zawng zawngte', role: 'Ex-Officio Member' }
     ]
   },
   {
     name: 'Building Committee',
     icon: 'Home',
+    description: 'Manages the construction, maintenance, and renovation of all church properties and facilities.',
     members: [
         { id: 'bld-c', name: 'Upa David Lalchhanhima', role: 'Chairman' },
         { id: 'bld-vc', name: 'Upa R.Lalramhluna', role: 'Vice Chairman' },
@@ -171,6 +175,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Social Front Committee',
     icon: 'Handshake',
+    description: 'Organizes community service projects, social welfare initiatives, and outreach to those in need within and outside the church.',
     members: [
       { id: 'sfc-c', name: 'Upa C.Zohmingthanga', role: 'Chairman' },
       { id: 'sfc-vc', name: 'Upa HT Vanlalsawma', role: 'Vice Chairman' },
@@ -208,6 +213,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Refreshment Committee',
     icon: 'Coffee',
+    description: 'Coordinates hospitality and refreshments for church events, ensuring comfort and fellowship for all attendees.',
     members: [
         { id: 'ref-c', name: 'T.Upa Hmingthansanga', role: 'Chairman' },
         { id: 'ref-vc', name: 'Pu H.Lalzuitluanga', role: 'Vice Chairman' },
@@ -251,6 +257,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Kristian Chhungkua Committee',
     icon: 'Heart',
+    description: 'Promotes Christian family values and provides support for families within the church through various programs and counseling.',
     members: [
         { id: 'kck-c', name: 'Upa Hmingthanmawia Sailo', role: 'Chairman' },
         { id: 'kck-vc', name: 'Pu K.Lalduhawma', role: 'Vice Chairman' },
@@ -271,6 +278,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Worship Committee',
     icon: 'Music',
+    description: 'Plans and organizes all worship services, including music, liturgy, and special programs to enhance the worship experience.',
     members: [
         { id: 'wsp-c', name: 'Upa Lalremruata', role: 'Chairman' },
         { id: 'wsp-vc', name: 'Pu Thangdeihchina', role: 'Vice Chairman' },
@@ -306,6 +314,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Masihi Sangati Committee',
     icon: 'Users',
+    description: 'Fosters fellowship and spiritual growth among non-Mizo speaking members, organizing services and activities in Hindi.',
     members: [
         { id: 'msc-c', name: 'T.Upa V.Kaizasiama', role: 'Chairman' },
         { id: 'msc-vc', name: 'Upa B.Hranghlira', role: 'Vice Chairman' },
@@ -341,6 +350,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Reception, Ushering & Decoration Committee',
     icon: 'Smile',
+    description: 'Ensures a warm welcome for all visitors and members, manages ushering duties, and beautifies the church premises for services and events.',
     members: [
         { id: 'rud-c', name: 'T.Upa C.Lalthazuala', role: 'Chairman' },
         { id: 'rud-vc', name: 'Pu Zoramenga', role: 'Vice Chairman' },
@@ -372,6 +382,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Archive & Library Committee',
     icon: 'Library',
+    description: 'Preserves the church\'s historical records, documents, and maintains the church library for members to access spiritual resources.',
     members: [
         { id: 'arc-c', name: 'Upa Daikhawzama', role: 'Chairman' },
         { id: 'arc-vc', name: 'Upa K.Vanlalhmuaka', role: 'Vice Chairman' },
@@ -388,6 +399,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Bible Society of India (BSI)',
     icon: 'BookOpen',
+    description: 'Supports the mission of the Bible Society of India in making Bibles available and accessible to everyone in local languages.',
     members: [
         { id: 'bsi-p', name: 'Upa HT Lalthlengliana', role: 'President' },
         { id: 'bsi-vp', name: 'Pu Vanlalhriata', role: 'Vice President' },
@@ -419,6 +431,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Bungraw Enkawltu Committee',
     icon: 'Box',
+    description: 'Manages and maintains all church assets and supplies, ensuring resources are available and in good condition for various church activities.',
     members: [
         { id: 'bec-c', name: 'Upa Lianpianga', role: 'Chairman' },
         { id: 'bec-s', name: 'Pu T.Sangtluanga', role: 'Secretary' },
@@ -541,6 +554,7 @@ const Departments: React.FC = () => {
             await db.collection('committees').add({
                 name: dataToSave.name || 'Untitled',
                 icon: dataToSave.icon || 'Users',
+                description: dataToSave.description || '', // Save description
                 members: dataToSave.members || []
             });
         }
@@ -616,7 +630,7 @@ const Departments: React.FC = () => {
 
 
   const openCommitteeModal = (committee: Partial<Committee> | null) => {
-    setEditingCommittee(committee || { name: '', icon: 'Users', members: [] });
+    setEditingCommittee(committee || { name: '', icon: 'Users', description: '', members: [] });
     setIsCommitteeModalOpen(true);
   };
 
@@ -630,6 +644,7 @@ const Departments: React.FC = () => {
 
   const filteredCommittees = committees.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.description?.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by description
     c.members?.some(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -684,7 +699,9 @@ const Departments: React.FC = () => {
                             <div className={`p-3 rounded-lg mr-4 transition-colors shadow-sm ${isExpanded ? 'bg-church-100 text-church-700' : 'bg-slate-50 text-slate-400'}`}><Icon size={24} /></div>
                             <div>
                                 <h3 className={`text-base font-bold transition-colors ${isExpanded ? 'text-church-900' : 'text-slate-800'}`}>{c.name}</h3>
-                                <p className="text-xs text-slate-500 mt-1">{c.members?.length || 0} Members</p>
+                                {c.description && (
+                                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{c.description}</p> // Show description preview
+                                )}
                             </div>
                         </div>
                         <div className="text-slate-400">{isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</div>
@@ -698,6 +715,13 @@ const Departments: React.FC = () => {
 
                      {isExpanded && (
                          <div className="border-t border-slate-100 bg-slate-50/70 p-6 animate-in slide-in-from-top-2 duration-200">
+                            {c.description && ( // Display full description when expanded
+                                <div className="mb-6 pb-4 border-b border-slate-100">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.common.description}</h4>
+                                    <p className="text-sm text-slate-700">{c.description}</p>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Members</h4>
                                 {isAdmin && !isOfflineMode && (
@@ -748,6 +772,10 @@ const Departments: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Committee Name</label>
                   <input required className="w-full border border-slate-300 rounded p-2" value={editingCommittee?.name || ''} onChange={e => setEditingCommittee({...editingCommittee, name: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">{t.common.description}</label>
+                  <textarea className="w-full border border-slate-300 rounded p-2 h-24" value={editingCommittee?.description || ''} onChange={e => setEditingCommittee({...editingCommittee, description: e.target.value})} placeholder="Brief description of the committee's purpose and activities."></textarea>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Icon</label>

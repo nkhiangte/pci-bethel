@@ -914,7 +914,11 @@ export const Home: React.FC = () => {
                 <>
                   {churchElders.length > 0 ? (
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                      {churchElders.map((elder, index) => (
+                      {churchElders.map((elder, index) => {
+                        // Strip "Upa " or "T. Upa " from the displayed name
+                        const displayName = elder.name.replace(/^(Upa|T\.?\s*Upa)\s+/i, '');
+                        
+                        return (
                         <Card key={elder.id} className="text-center relative group">
                           <img 
                             src={elder.imageUrl} 
@@ -922,8 +926,11 @@ export const Home: React.FC = () => {
                             className="w-full h-48 object-cover object-top" 
                           />
                           <div className="p-4">
-                            <h3 className="text-lg font-bold text-slate-900">{elder.name}</h3>
+                            <h3 className="text-lg font-bold text-slate-900">{displayName}</h3>
                             <p className="text-church-700 font-medium">{elder.role}</p>
+                            {elder.period && (
+                                <p className="text-xs text-slate-500 mt-1 font-medium">Ordained: {elder.period}</p>
+                            )}
                             {elder.description && (
                               <p className="text-sm text-slate-500 mt-2 line-clamp-3">{elder.description}</p>
                             )}
@@ -963,7 +970,8 @@ export const Home: React.FC = () => {
                             </div>
                           )}
                         </Card>
-                      ))}
+                      );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">

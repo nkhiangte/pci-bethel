@@ -1,4 +1,5 @@
 
+
 export type Language = 'en' | 'mizo';
 
 export const translations = {
@@ -178,6 +179,9 @@ export const translations = {
       hasAccount: "Already have an account?",
       logout: 'Logout',
       welcome: 'Welcome',
+    },
+    common: { // New common translations
+      description: 'Description'
     }
   },
   mizo: {
@@ -356,6 +360,9 @@ export const translations = {
       hasAccount: "Account i nei tawh em?",
       logout: 'Chhuak Rawh',
       welcome: 'Chibai',
+    },
+    common: { // New common translations
+      description: 'Hrilhfiahna'
     }
   }
 };

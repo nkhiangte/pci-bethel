@@ -95,6 +95,7 @@ export interface Committee {
   id: string;
   name: string;
   icon: string; // Store the icon name as a string (e.g., "BookOpen")
+  description?: string; // New: Added optional description for committees
   members: CommitteeMember[];
 }
 

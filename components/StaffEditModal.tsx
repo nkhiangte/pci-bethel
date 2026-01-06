@@ -64,12 +64,12 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Period (Optional, e.g., 2020-2024)</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Period / Ordination Year (Optional)</label>
             <input
               className="w-full border border-slate-300 rounded p-2.5"
               value={formData.period || ''}
               onChange={e => setFormData({ ...formData, period: e.target.value })}
-              placeholder="e.g., 2020-2024 (for past roles)"
+              placeholder="e.g., 2020-2024 (Pastors) or 2010 (Ordination Year)"
             />
           </div>
           <div>
