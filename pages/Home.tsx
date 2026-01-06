@@ -562,7 +562,7 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <>
-              <h1 className="text-4xl font-serif font-bold text-church-900 mb-8">{t.home.newsTitle || 'News & Updates'}</h1>
+              {/* Note: The main banner is now in App.tsx */}
 
               {news[0] && ( // Check if news has at least one item before accessing [0]
                 <div className="mb-12 group">

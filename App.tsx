@@ -35,6 +35,17 @@ const App: React.FC = () => {
         <HashRouter>
           <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
             <Navbar />
+            <div className="w-full bg-slate-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                <div className="rounded-2xl overflow-hidden shadow-sm">
+                  <img 
+                    src="https://i.ibb.co/V06hg04Q/WEBBAN.png" 
+                    alt="Mizoram Synod Champhai Bethel Kohhran Banner" 
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            </div>
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
