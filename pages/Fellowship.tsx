@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPMember } from '../types';
+import { Ministry, KTPHruaitute, KTPMember, KTPGroup } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield } from 'lucide-react';
+import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus } from 'lucide-react';
 
 const INITIAL_KTP_2026_DATA: KTPHruaitute = {
     year: 2026,
@@ -48,8 +48,58 @@ const INITIAL_KTP_2026_DATA: KTPHruaitute = {
         { id: 'eo2', name: 'Upa Hmingthanmawia Sailo', phone: '9862532256', role: 'Kohhran Committee Aiawh' },
         { id: 'eo3', name: 'Rev. Lalhmingthanga Chhangte', phone: '7085626477', role: 'Ex-Officio' },
         { id: 'eo4', name: 'Pro Pastor Lallawmsanga', phone: '9862727756', role: 'Ex-Officio' },
+    ],
+    groupLeaders: [
+        {
+            id: 'g1', groupName: 'UPA KHAWIDAWLA', members: [
+                { id: 'g1l1', role: 'Leader', name: 'Pu Tluangzathanga' },
+                { id: 'g1l2', role: 'Asst. Leader', name: 'Tv. Zothanpuia' },
+                { id: 'g1l3', role: 'Secretary', name: 'Tv Thangzasanga' },
+                { id: 'g1l4', role: 'Asst Secretary', name: 'Nl. Lalnunsiami' },
+                { id: 'g1l5', role: 'Treasurer', name: 'Nl. Thangdinsangi' },
+                { id: 'g1l6', role: 'Fin. Secretary', name: 'Tv. Zodintluanga' },
+                { id: 'g1l7', role: 'Branch O.B', name: 'Tv. H. Lalfakawma' },
+            ]
+        },
+        {
+            id: 'g2', groupName: 'Upa MANHLEIA', members: [
+                { id: 'g2l1', role: 'Leader', name: 'Tv B. Thangzauva' },
+                { id: 'g2l2', role: 'Asst. Leader', name: 'Pu Ramdinpuia' },
+                { id: 'g2l3', role: 'Secretary', name: 'Tv Lalhmuliana' },
+                { id: 'g2l4', role: 'Asst.Secretary', name: 'Nl. Ruth Lalnunfeli' },
+                { id: 'g2l5', role: 'Treasurer', name: 'Nl. C. Lalremruati' },
+                { id: 'g2l6', role: 'Fin. Secretary', name: 'Pu Vanlalmawia' },
+                { id: 'g2l7', role: 'Branch O.B', name: 'Pu Zoramenga' },
+            ]
+        },
+        {
+            id: 'g3', groupName: 'UPA C.LALRINTLUANGA', members: [
+                { id: 'g3l1', role: 'Leader', name: 'Pu C.Ramtharnghaka' },
+                { id: 'g3l2', role: 'Asst. Leader', name: 'Pu Lalhruaitluanga' },
+                { id: 'g3l3', role: 'Secretary', name: 'Tv Lalrochawia' },
+                { id: 'g3l4', role: 'Asst. Secretary', name: 'Nl Zodinsangi' },
+                { id: 'g3l5', role: 'Treasurer', name: 'Nl. V.Nunmawiii' },
+                { id: 'g3l6', role: 'Fin. Secretary', name: 'Tv Lalengkima' },
+                { id: 'g3l7', role: 'Branch O.B', name: 'Tv Thangdeihmanga' },
+                { id: 'g3l8', role: 'Branch O.B', name: 'Nl Lallawmzuali' },
+            ]
+        },
+        {
+            id: 'g4', groupName: 'UPA H.LALMAWIA', members: [
+                { id: 'g4l1', role: 'Leader', name: 'Tv Vanlalzauva' },
+                { id: 'g4l2', role: 'Asst. Leader', name: 'Pu Samuel Lalbiakzuala' },
+                { id: 'g4l3', role: 'Secretary', name: 'Tv Chinngoliana' },
+                { id: 'g4l4', role: 'Asst. Secretary', name: 'Nl Zosangpuii' },
+                { id: 'g4l5', role: 'Treasurer', name: 'Nl. Vungngaihdawni' },
+                { id: 'g4l6', role: 'Fin. Secretary', name: 'Tv Lalmalsawmzuala' },
+                { id: 'g4l7', role: 'Branch O.B', name: 'Pu V.Lalbiakdika' },
+                { id: 'g4l8', role: 'Branch O.B', name: 'Tv Vanlalchhana' },
+            ]
+        },
     ]
 };
+
+const ktpLogoUrl = "https://i.ibb.co/KzQf1j7j/Gemini-Generated-Image-k4xevgk4xevgk4xe.png";
 
 const Fellowship: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -172,11 +222,13 @@ const Fellowship: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {fellowship.acronym && (
+          {isKTP ? (
+            <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-24 w-24 mb-6 rounded-full shadow-lg bg-white/10 p-1" />
+          ) : fellowship.acronym ? (
             <span className="inline-block py-1 px-3 rounded-full bg-church-500 text-white text-sm font-bold tracking-wide mb-4">
               {fellowship.acronym}
             </span>
-          )}
+          ) : null}
           <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">{fellowship.name}</h1>
           <p className="text-xl text-slate-200 max-w-2xl mx-auto leading-relaxed">
             {fellowship.description}
@@ -286,9 +338,12 @@ const formatWhatsAppLink = (phone: string) => {
 const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
     <div>
         <div className="flex justify-between items-start mb-6 pb-4 border-b">
-            <div>
-                <h2 className="text-2xl font-bold text-slate-800">KTP HRUAITUTE {data.year}</h2>
-                <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
+            <div className="flex items-center gap-4">
+                <img src={ktpLogoUrl} alt="KTP Logo" className="h-16 w-16 rounded-full shadow-md bg-white p-1" />
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">KTP HRUAITUTE {data.year}</h2>
+                    <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
+                </div>
             </div>
             {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
         </div>
@@ -302,6 +357,15 @@ const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdm
         <Section title="Kohhran Committee Aiawhte & Ex-Officio">
             {data.exOfficioMembers.map(p => <PersonCard key={p.id} person={p} formatWhatsAppLink={formatWhatsAppLink} />)}
         </Section>
+        
+        {data.groupLeaders && data.groupLeaders.length > 0 && (
+            <div className="mb-8">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">GROUP Hruaitute</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {data.groupLeaders.map(group => <GroupCard key={group.id} group={group} />)}
+                </div>
+            </div>
+        )}
     </div>
 );
 
@@ -318,15 +382,31 @@ const PersonCard: React.FC<{ person: KTPMember, formatWhatsAppLink: (phone: stri
     <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
         <p className="font-bold text-slate-900">{person.name}</p>
         {person.role && <p className="text-xs text-church-600 font-semibold">{person.role}</p>}
-        <a href={formatWhatsAppLink(person.phone)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-slate-500 mt-1 hover:text-green-600 transition">
-            <Phone size={12} /> {person.phone}
-        </a>
+        {person.phone && person.phone !== 'N/A' && (
+             <a href={formatWhatsAppLink(person.phone)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-slate-500 mt-1 hover:text-green-600 transition">
+                <Phone size={12} /> {person.phone}
+            </a>
+        )}
+    </div>
+);
+
+const GroupCard: React.FC<{ group: KTPGroup }> = ({ group }) => (
+    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <h4 className="font-bold text-church-800 border-b border-slate-200 pb-2 mb-2">Group: {group.groupName}</h4>
+        <ul className="space-y-1.5">
+            {group.members.map(member => (
+                <li key={member.id} className="text-sm flex justify-between">
+                    <span className="text-slate-600">{member.role}:</span>
+                    <span className="font-semibold text-slate-900 text-right">{member.name}</span>
+                </li>
+            ))}
+        </ul>
     </div>
 );
 
 const KTPDataMissing: React.FC<{ onSetup: () => void, isAdmin: boolean }> = ({ onSetup, isAdmin }) => (
     <div className="text-center py-20">
-        <Book size={48} className="mx-auto text-slate-300 mb-4" />
+        <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-20 w-20 mb-6 opacity-50" />
         <h3 className="text-xl font-bold text-slate-700">Hruaitute Details Not Available</h3>
         <p className="text-slate-500 mt-2">Information for {INITIAL_KTP_2026_DATA.year} has not been added yet.</p>
         {isAdmin && (
@@ -341,21 +421,63 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
     const [formData, setFormData] = useState<KTPHruaitute>(JSON.parse(JSON.stringify(data))); // Deep copy
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleMemberChange = (list: keyof KTPHruaitute, index: number, field: keyof KTPMember, value: string) => {
-        const newList = [...(formData[list] as KTPMember[])];
+    const handleMemberChange = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', index: number, field: keyof KTPMember, value: string) => {
+        const list = formData[listName] as KTPMember[];
+        const newList = [...list];
         (newList[index] as any)[field] = value;
-        setFormData({ ...formData, [list]: newList });
+        setFormData({ ...formData, [listName]: newList });
     };
     
-    const addMember = (list: keyof KTPHruaitute) => {
-        const newList = [...(formData[list] as KTPMember[]), { id: `new-${Date.now()}`, name: '', phone: '', role: list === 'leaders' ? 'New Role' : '' }];
-        setFormData({ ...formData, [list]: newList });
+    const addMember = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers') => {
+        const list = formData[listName] as KTPMember[];
+        const newList = [...list, { id: `new-${Date.now()}`, name: '', phone: '', role: listName !== 'committeeMembers' ? 'New Role' : '' }];
+        setFormData({ ...formData, [listName]: newList });
     };
 
-    const removeMember = (list: keyof KTPHruaitute, id: string) => {
-        const newList = (formData[list] as KTPMember[]).filter(m => m.id !== id);
-        setFormData({ ...formData, [list]: newList });
+    const removeMember = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', id: string) => {
+        const list = formData[listName] as KTPMember[];
+        const newList = list.filter(m => m.id !== id);
+        setFormData({ ...formData, [listName]: newList });
     };
+    
+    const handleGroupChange = (groupIndex: number, field: keyof KTPGroup, value: string) => {
+        const newGroups = [...(formData.groupLeaders || [])];
+        (newGroups[groupIndex] as any)[field] = value;
+        setFormData({ ...formData, groupLeaders: newGroups });
+    };
+
+    const handleGroupMemberChange = (groupIndex: number, memberIndex: number, field: keyof KTPMember, value: string) => {
+        const newGroups = [...(formData.groupLeaders || [])];
+        const newMembers = [...newGroups[groupIndex].members];
+        (newMembers[memberIndex] as any)[field] = value;
+        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
+        setFormData({ ...formData, groupLeaders: newGroups });
+    };
+    
+    const addGroup = () => {
+        const newGroup: KTPGroup = { id: `new-group-${Date.now()}`, groupName: 'New Group', members: [] };
+        setFormData({ ...formData, groupLeaders: [...(formData.groupLeaders || []), newGroup] });
+    };
+
+    const removeGroup = (groupId: string) => {
+        const newGroups = (formData.groupLeaders || []).filter(g => g.id !== groupId);
+        setFormData({ ...formData, groupLeaders: newGroups });
+    };
+    
+    const addGroupMember = (groupIndex: number) => {
+        const newGroups = [...(formData.groupLeaders || [])];
+        const newMembers = [...newGroups[groupIndex].members, { id: `new-member-${Date.now()}`, name: '', role: 'New Role', phone: '' }];
+        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
+        setFormData({ ...formData, groupLeaders: newGroups });
+    };
+
+    const removeGroupMember = (groupIndex: number, memberId: string) => {
+        const newGroups = [...(formData.groupLeaders || [])];
+        const newMembers = newGroups[groupIndex].members.filter(m => m.id !== memberId);
+        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
+        setFormData({ ...formData, groupLeaders: newGroups });
+    };
+
 
     const handleSaveClick = async () => {
         setIsSaving(true);
@@ -363,33 +485,57 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
         setIsSaving(false);
     };
 
-    const MemberRow: React.FC<{list: keyof KTPHruaitute, member: KTPMember, index: number, hasRole: boolean}> = ({list, member, index, hasRole}) => (
+    const MemberRow: React.FC<{listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', member: KTPMember, index: number, hasRole: boolean}> = ({listName, member, index, hasRole}) => (
         <div className="grid grid-cols-12 gap-2 items-center">
-            {hasRole && <input className="col-span-3 border p-2 text-sm rounded" placeholder="Role" value={member.role || ''} onChange={e => handleMemberChange(list, index, 'role', e.target.value)} />}
-            <input className={hasRole ? "col-span-4" : "col-span-7"} placeholder="Name" value={member.name} onChange={e => handleMemberChange(list, index, 'name', e.target.value)} />
-            <input className="col-span-4" placeholder="Phone" value={member.phone} onChange={e => handleMemberChange(list, index, 'phone', e.target.value)} />
-            <button type="button" onClick={() => removeMember(list, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+            {hasRole && <input className="col-span-3 border p-2 text-sm rounded" placeholder="Role" value={member.role || ''} onChange={e => handleMemberChange(listName, index, 'role', e.target.value)} />}
+            <input className={hasRole ? "col-span-4" : "col-span-7"} placeholder="Name" value={member.name} onChange={e => handleMemberChange(listName, index, 'name', e.target.value)} />
+            <input className="col-span-4" placeholder="Phone" value={member.phone || ''} onChange={e => handleMemberChange(listName, index, 'phone', e.target.value)} />
+            <button type="button" onClick={() => removeMember(listName, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
         </div>
     );
     
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
                 <div className="p-6 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Edit KTP Hruaitute {formData.year}</h3><button onClick={onClose}><X/></button></div>
                 <div className="p-6 space-y-6 overflow-y-auto">
                     <div>
                         <h4 className="font-bold mb-2">Office Bearers</h4>
-                        <div className="space-y-2">{formData.leaders.map((p, i) => <MemberRow key={p.id} list="leaders" member={p} index={i} hasRole={true}/>)}</div>
+                        <div className="space-y-2">{formData.leaders.map((p, i) => <MemberRow key={p.id} listName="leaders" member={p} index={i} hasRole={true}/>)}</div>
                     </div>
                     <div>
                         <h4 className="font-bold mb-2">Committee Members</h4>
-                        <div className="space-y-2">{formData.committeeMembers.map((p, i) => <MemberRow key={p.id} list="committeeMembers" member={p} index={i} hasRole={false}/>)}</div>
+                        <div className="space-y-2">{formData.committeeMembers.map((p, i) => <MemberRow key={p.id} listName="committeeMembers" member={p} index={i} hasRole={false}/>)}</div>
                         <button type="button" onClick={() => addMember('committeeMembers')} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><PlusCircle size={14}/> Add Committee Member</button>
                     </div>
-                     <div>
+                    <div>
                         <h4 className="font-bold mb-2">Ex-Officio Members</h4>
-                        <div className="space-y-2">{formData.exOfficioMembers.map((p, i) => <MemberRow key={p.id} list="exOfficioMembers" member={p} index={i} hasRole={true}/>)}</div>
+                        <div className="space-y-2">{formData.exOfficioMembers.map((p, i) => <MemberRow key={p.id} listName="exOfficioMembers" member={p} index={i} hasRole={true}/>)}</div>
                         <button type="button" onClick={() => addMember('exOfficioMembers')} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><PlusCircle size={14}/> Add Ex-Officio</button>
+                    </div>
+                    <div className="border-t pt-4">
+                         <h4 className="font-bold mb-2">Group Hruaitute</h4>
+                         <div className="space-y-4">
+                             {(formData.groupLeaders || []).map((group, groupIndex) => (
+                                <div key={group.id} className="p-4 border rounded-lg bg-slate-50 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                       <input className="font-bold text-lg w-full border-b bg-transparent" value={group.groupName} onChange={(e) => handleGroupChange(groupIndex, 'groupName', e.target.value)} />
+                                       <button type="button" onClick={() => removeGroup(group.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+                                    </div>
+                                    <div className="space-y-2">
+                                       {group.members.map((member, memberIndex) => (
+                                          <div key={member.id} className="grid grid-cols-12 gap-2 items-center">
+                                              <input className="col-span-4 border p-2 text-sm rounded" placeholder="Role" value={member.role || ''} onChange={e => handleGroupMemberChange(groupIndex, memberIndex, 'role', e.target.value)} />
+                                              <input className="col-span-7" placeholder="Name" value={member.name} onChange={e => handleGroupMemberChange(groupIndex, memberIndex, 'name', e.target.value)} />
+                                              <button type="button" onClick={() => removeGroupMember(groupIndex, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+                                          </div>
+                                       ))}
+                                    </div>
+                                    <button type="button" onClick={() => addGroupMember(groupIndex)} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><UserPlus size={14}/> Add Member</button>
+                                </div>
+                             ))}
+                         </div>
+                         <button type="button" onClick={addGroup} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition shadow-sm mt-4 flex items-center gap-1"><Plus size={16}/> Add Group</button>
                     </div>
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">

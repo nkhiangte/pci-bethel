@@ -191,7 +191,13 @@ export interface KTPMember {
   id: string;
   name: string;
   role?: string;
-  phone: string;
+  phone?: string;
+}
+
+export interface KTPGroup {
+  id: string;
+  groupName: string;
+  members: KTPMember[];
 }
 
 export interface KTPHruaitute {
@@ -199,4 +205,5 @@ export interface KTPHruaitute {
   leaders: KTPMember[];
   committeeMembers: KTPMember[];
   exOfficioMembers: KTPMember[];
+  groupLeaders?: KTPGroup[];
 }
