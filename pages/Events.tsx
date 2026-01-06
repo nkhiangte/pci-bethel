@@ -4,7 +4,7 @@ import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, User, BookOpen } from 'lucide-react';
 import { Event } from '../types';
 
 // Helper to get next occurrence of a day (0=Sun, 1=Mon, ..., 6=Sat)
@@ -53,41 +53,42 @@ const Events: React.FC = () => {
         };
       });
 
-    // 2. Fetch Real Events from Firestore or use static fallback
+    // 2. Fetch Real Events from Firestore
     let realEvents: Event[] = [];
     try {
       if (db && db.collection) {
         const snapshot = await db.collection('events').get();
-        realEvents = snapshot.docs.map((doc: any) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Event[];
-      } else {
-        realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
+        if (!snapshot.empty) {
+            realEvents = snapshot.docs.map((doc: any) => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Event[];
+        }
       }
     } catch (e) {
       console.error("Error fetching events:", e);
-      realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
     }
     
     // 3. Merge virtual and real events
     const mergedEventsMap = new Map<string, Event>();
 
     [...virtualEvents, ...realEvents].forEach(event => {
-       const key = `${event.date}_${event.title}`;
-       if (event.isCancelled) {
-         // If a real event is a cancellation, ensure it removes a virtual one.
-         mergedEventsMap.delete(key);
-       } else {
-         // Otherwise, it's either a virtual placeholder or a real override.
-         // Real events (from DB or static) should overwrite virtual templates.
-         const existing = mergedEventsMap.get(key);
-         if (!existing || !existing.id.startsWith('virtual_')) {
-            mergedEventsMap.set(key, event);
-         }
-       }
-    });
+        const key = `${event.date}_${event.title}`;
+        const existing = mergedEventsMap.get(key);
 
+        if (event.isCancelled) {
+            if (existing?.id.startsWith('virtual_')) {
+                mergedEventsMap.delete(key);
+            }
+            return; 
+        }
+
+        if (existing && !existing.id.startsWith('virtual_') && event.id.startsWith('virtual_')) {
+            // Priority to real events
+        } else {
+            mergedEventsMap.set(key, event);
+        }
+    });
 
     const finalEvents = Array.from(mergedEventsMap.values());
     finalEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -97,7 +98,23 @@ const Events: React.FC = () => {
   };
 
   const handleEditClick = (event: Event) => {
-    setEditForm({ ...event });
+    setEditForm({ 
+        ...event,
+        program: {
+            hruaitu: '',
+            tantu: '',
+            thuhriltu: '',
+            thupui: '',
+            hawngtu: '',
+            thawhlawmKhawntute: [],
+            khuangpu: [],
+            pianist: '',
+            guitarist: '',
+            drummer: '',
+            hlaHriltu: '',
+            ...event.program
+        }
+    });
     setIsEditing(true);
   };
 
@@ -109,7 +126,19 @@ const Events: React.FC = () => {
       type: 'Service',
       description: '',
       location: 'Biak In',
-      program: {}
+      program: {
+        hruaitu: '',
+        tantu: '',
+        thuhriltu: '',
+        thupui: '',
+        hawngtu: '',
+        thawhlawmKhawntute: [],
+        khuangpu: [],
+        pianist: '',
+        guitarist: '',
+        drummer: '',
+        hlaHriltu: ''
+      }
     });
     setIsEditing(true);
   };
@@ -180,14 +209,14 @@ const Events: React.FC = () => {
     }
   };
 
-  const ProgramItem: React.FC<{label: string, value?: string}> = ({ label, value }) => value ? (
-    <div className="flex text-sm"><span className="font-semibold text-slate-500 w-28 shrink-0">{label}:</span> <span className="font-medium text-slate-800">{value}</span></div>
+  const ProgramItem: React.FC<{label: string, value?: string, boldLabel?: boolean}> = ({ label, value, boldLabel = true }) => value ? (
+    <div className="flex text-sm py-0.5"><span className={`${boldLabel ? 'font-bold' : 'font-semibold'} text-slate-600 w-32 shrink-0`}>{label}:</span> <span className="font-medium text-slate-900">{value}</span></div>
   ) : null;
 
-  const ProgramList: React.FC<{label: string, items?: string[]}> = ({ label, items }) => items && items.length > 0 ? (
-      <div className="flex flex-col sm:flex-row text-sm"><span className="font-semibold text-slate-500 w-28 shrink-0">{label}:</span> 
+  const ProgramList: React.FC<{label: string, items?: string[]}> = ({ label, items }) => items && items.length > 0 && items[0] !== "" ? (
+      <div className="flex flex-col sm:flex-row text-sm py-0.5"><span className="font-bold text-slate-600 w-32 shrink-0">{label}:</span> 
           <div className="flex flex-col">
-              {items.map((item, idx) => <span key={idx} className="font-medium text-slate-800">{item}</span>)}
+              {items.filter(i => i.trim() !== "").map((item, idx) => <span key={idx} className="font-medium text-slate-900">{item}</span>)}
           </div>
       </div>
   ) : null;
@@ -202,7 +231,7 @@ const Events: React.FC = () => {
                     onClick={handleAddNew}
                     className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
                 >
-                    <Plus size={18} className="mr-2" /> Add Event
+                    <Plus size={18} className="mr-2" /> Add Program
                 </button>
             )}
         </div>
@@ -233,25 +262,24 @@ const Events: React.FC = () => {
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{event.title}</h3>
                 
                 {event.program && Object.keys(event.program).length > 0 && (
-                    <div className="bg-slate-50 p-4 rounded-lg my-4 space-y-2 border border-slate-100">
+                    <div className="bg-slate-50 p-5 rounded-lg my-4 space-y-1 border border-slate-100 shadow-inner">
                         <ProgramItem label="Hruaitu" value={event.program.hruaitu} />
                         <ProgramItem label="Ṭantu" value={event.program.tantu} />
                         <ProgramItem label="Thuhriltu" value={event.program.thuhriltu} />
-                        <ProgramItem label="Hawngtu" value={event.program.hawngtu} />
+                        <ProgramItem label="Thupui hawngtu" value={event.program.hawngtu} />
                         <ProgramItem label="Thupui" value={event.program.thupui} />
 
-                        {(event.program.solo || event.program.groupZai || event.program.thawhlawmKhawntute) && <div className="pt-2 mt-2 border-t border-slate-200" />}
+                        {(event.program.solo || event.program.groupZai || (event.program.thawhlawmKhawntute && event.program.thawhlawmKhawntute.length > 0 && event.program.thawhlawmKhawntute[0] !== "")) && <div className="pt-2 mt-2 border-t border-slate-200" />}
                         <ProgramItem label="Solo" value={event.program.solo} />
                         <ProgramItem label="Group Zai" value={event.program.groupZai} />
                         <ProgramList label="Thawhlawm Khawntute" items={event.program.thawhlawmKhawntute} />
                         
-                        {(event.program.khuangpu || event.program.pianist || event.program.guitarist || event.program.drummer || event.program.hlaHriltu || event.program.zaiHruaitu) && <div className="pt-2 mt-2 border-t border-slate-200" />}
-                        <ProgramList label="Zai Hruaitu" items={event.program.zaiHruaitu} />
+                        {((event.program.khuangpu && event.program.khuangpu.length > 0 && event.program.khuangpu[0] !== "") || event.program.pianist || event.program.guitarist || event.program.drummer || event.program.hlaHriltu) && <div className="pt-2 mt-2 border-t border-slate-200" />}
                         <ProgramList label="Khuangpu" items={event.program.khuangpu} />
-                        <ProgramItem label="Pianist" value={event.program.pianist} />
+                        <ProgramItem label="Piano tumtu" value={event.program.pianist} />
                         <ProgramItem label="Guitarist" value={event.program.guitarist} />
                         <ProgramItem label="Drummer" value={event.program.drummer} />
-                        <ProgramItem label="Hla Hriltu" value={event.program.hlaHriltu} />
+                        <ProgramItem label="Hla hriltu" value={event.program.hlaHriltu} />
                     </div>
                 )}
 
@@ -276,35 +304,72 @@ const Events: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-50">
-                    <h3 className="text-xl font-bold text-church-900">{editForm.id && !editForm.id.startsWith('virtual_') ? 'Edit Event' : 'New Event / Program'}</h3>
+                    <h3 className="text-xl font-bold text-church-900">{editForm.id && !editForm.id.startsWith('virtual_') ? 'Edit Program' : 'New Program Details'}</h3>
                     <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
                 </div>
                 <div className="p-6 space-y-5 overflow-y-auto">
-                    <input className="w-full border border-slate-300 rounded-lg p-2.5 text-lg font-bold" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder="Event Title" />
-                    <div className="grid grid-cols-2 gap-4">
-                        <input type="date" className="w-full border border-slate-300 rounded-lg p-2.5" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})} />
-                        <input className="w-full border border-slate-300 rounded-lg p-2.5" value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})} placeholder="Time" />
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Service / Program Title</label>
+                        <input className="w-full border border-slate-300 rounded-lg p-2.5 text-lg font-bold" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder="e.g., KTP Inkhawm" />
                     </div>
                     
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h4 className="font-bold text-sm text-church-700 mb-3 uppercase tracking-wide">Program Details</h4>
-                        <div className="space-y-3">
-                           <div className="grid grid-cols-2 gap-3">
-                                <input className="w-full border p-2 text-sm" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder="Hruaitu (Conductor)" />
-                                <input className="w-full border p-2 text-sm" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder="Ṭantu (Reader)" />
-                                <input className="w-full border p-2 text-sm" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Thuhriltu (Preacher)" />
-                                <input className="w-full border p-2 text-sm" value={editForm.program?.hawngtu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hawngtu: e.target.value}})} placeholder="Hawngtu (Opener)" />
-                                <input className="w-full border p-2 text-sm col-span-2" value={editForm.program?.solo || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, solo: e.target.value}})} placeholder="Solo" />
-                                <input className="w-full border p-2 text-sm col-span-2" value={editForm.program?.groupZai || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, groupZai: e.target.value}})} placeholder="Group Zai" />
+                    <div className="bg-slate-50 p-6 rounded-lg border border-church-100 shadow-inner">
+                        <h4 className="font-bold text-sm text-church-700 mb-4 uppercase tracking-widest border-b border-church-200 pb-1">Program Details</h4>
+                        <div className="space-y-4">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Hruaitu (Conductor)</label>
+                                    <input className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm focus:ring-1 focus:ring-church-300" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder="Hruaitu hming" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Ṭantu (Reader)</label>
+                                    <input className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm focus:ring-1 focus:ring-church-300" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder="Ṭantu hming" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Thuhriltu (Speaker)</label>
+                                    <input className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm focus:ring-1 focus:ring-church-300" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Thusawitu hming" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Thupui hawngtu</label>
+                                    <input className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm focus:ring-1 focus:ring-church-300" value={editForm.program?.hawngtu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hawngtu: e.target.value}})} placeholder="Thupui hawngtu hming" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Thupui / Topic</label>
+                                    <input className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm focus:ring-1 focus:ring-church-300" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder="Zir tur thupui" />
+                                </div>
                            </div>
-                           <textarea className="w-full border p-2 text-sm" rows={3} value={editForm.program?.thawhlawmKhawntute?.join('\n') || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thawhlawmKhawntute: e.target.value.split('\n')}})} placeholder="Thawhlawm Khawntute (one per line)"></textarea>
-                           <textarea className="w-full border p-2 text-sm" rows={2} value={editForm.program?.zaiHruaitu?.join('\n') || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, zaiHruaitu: e.target.value.split('\n')}})} placeholder="Zai Hruaitu (one per line)"></textarea>
-                           <textarea className="w-full border p-2 text-sm" rows={2} value={editForm.program?.khuangpu?.join('\n') || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, khuangpu: e.target.value.split('\n')}})} placeholder="Khuangpu (one per line)"></textarea>
-                           <div className="grid grid-cols-2 gap-3">
-                               <input className="w-full border p-2 text-sm" value={editForm.program?.pianist || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, pianist: e.target.value}})} placeholder="Pianist" />
-                               <input className="w-full border p-2 text-sm" value={editForm.program?.guitarist || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, guitarist: e.target.value}})} placeholder="Guitarist" />
-                               <input className="w-full border p-2 text-sm" value={editForm.program?.drummer || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, drummer: e.target.value}})} placeholder="Drummer" />
-                               <input className="w-full border p-2 text-sm" value={editForm.program?.hlaHriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hlaHriltu: e.target.value}})} placeholder="Hla Hriltu" />
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Thawhlawm Khawntute (One per line)</label>
+                                    <textarea className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm h-24 focus:ring-1 focus:ring-church-300" value={editForm.program?.thawhlawmKhawntute?.join('\n') || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thawhlawmKhawntute: e.target.value.split('\n')}})} placeholder="1) Pi..."></textarea>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Khuangpu (One per line)</label>
+                                    <textarea className="w-full border border-slate-200 p-2 text-sm rounded shadow-sm h-24 focus:ring-1 focus:ring-church-300" value={editForm.program?.khuangpu?.join('\n') || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, khuangpu: e.target.value.split('\n')}})} placeholder="Pu..."></textarea>
+                                </div>
+                           </div>
+
+                           <div className="border-t border-slate-200 my-4 pt-4">
+                               <h5 className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><Music size={14} className="mr-1"/> Music & Worship</h5>
+                               <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Piano tumtu</label>
+                                        <input className="w-full border border-slate-200 p-2 text-sm rounded" value={editForm.program?.pianist || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, pianist: e.target.value}})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Guitarist</label>
+                                        <input className="w-full border border-slate-200 p-2 text-sm rounded" value={editForm.program?.guitarist || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, guitarist: e.target.value}})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Drummer</label>
+                                        <input className="w-full border border-slate-200 p-2 text-sm rounded" value={editForm.program?.drummer || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, drummer: e.target.value}})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Hla hriltu</label>
+                                        <input className="w-full border border-slate-200 p-2 text-sm rounded" value={editForm.program?.hlaHriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hlaHriltu: e.target.value}})} />
+                                    </div>
+                               </div>
                            </div>
                         </div>
                     </div>

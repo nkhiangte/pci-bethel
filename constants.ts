@@ -36,7 +36,7 @@ const DATA = {
     events: [
       {
         id: 'ktp-2026-01-05',
-        title: 'Kristian Ṭhalai Pawl Inkhawm',
+        title: 'Kristian Ṭhalai Pawl (KTP)',
         date: '2026-01-05',
         time: '07:00 PM',
         location: 'Biak In',
@@ -51,9 +51,7 @@ const DATA = {
           groupZai: 'Nl. Ningsianmawii te unau',
           thawhlawmKhawntute: [
             '1) Nl. Vungngaihdawni',
-            '2) Nl. V.Hlunmawii',
-            '3) Nl. Thangdinsangi',
-            '4) Nl. C.Lalremruati',
+            '2) Nl. V.Nunmawii',
           ],
           khuangpu: ['Pu K.Lalramngheta'],
           pianist: 'Tv. Liankhankhama',
@@ -76,112 +74,74 @@ const DATA = {
           tantu: 'Pi Lalsangliani',
           thuhriltu: 'Nl. Ngurbawihtluangi',
           thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
-          khuangpu: ['Pi F. Lalthianghlimi', 'Pi Lalramchuani']
+          khuangpu: ['Pi F. Lalthianghlimi']
         }
       },
       {
-        id: 'kpp-2026-01-08',
-        title: 'Kohhran Pavalai Pawl Inkhawm',
-        date: '2026-01-08',
+        id: 'mon-service',
+        title: 'Kristian Ṭhalai Pawl (KTP)',
+        dayOfWeek: 1, // Monday
         time: '07:00 PM',
         location: 'Biak In',
-        description: 'Ningani Zan Kohhran Pavalai Pawl Inkhawm Program.',
+        description: 'Youth fellowship service.',
         type: 'Service',
-        isRecurringTemplate: false,
+        isRecurringTemplate: true,
         program: {
-          hruaitu: 'Pu Ms Dawngliana',
-          tantu: 'Pu Thangdeihchina',
-          thuhriltu: 'Pu P. Lalhmingthanga',
-          thawhlawmKhawntute: ['Pu B. Lalliantawna'],
-          zaiHruaitu: ['Pu K. Lalengthanga', 'Pu HB Vanlalvuana'],
-          pianist: 'Pu Hmunneihthanga'
+          hruaitu: 'TBD',
+          tantu: 'TBD'
+        }
+      },
+      {
+        id: 'tue-service',
+        title: 'Kohhran Hmeichhia',
+        dayOfWeek: 2, // Tuesday
+        time: '07:00 PM',
+        location: 'Biak In',
+        description: 'Women\'s fellowship service.',
+        type: 'Service',
+        isRecurringTemplate: true,
+        program: {
+          hruaitu: 'TBD',
+          tantu: 'TBD'
         }
       },
       {
         id: 'wed-service',
-        title: 'Nilai Zan (Wednesday Night)',
+        title: 'Wednesday Night Service',
         dayOfWeek: 3, // Wednesday
         time: '07:00 PM',
         location: 'Biak In',
-        description: 'Mid-week service focusing on biblical themes.',
+        description: 'Nilaini Zan Inkhawm.',
         type: 'Service',
         isRecurringTemplate: true,
         program: {
-          tantu: 'Reader Name',
-          thupui: 'Biblical Theme',
-          hawngtu: 'Opener Name'
+          tantu: 'TBD',
+          thupui: 'Bible Study',
+          hawngtu: 'Opener TBD'
         }
       },
       {
         id: 'sat-service',
-        title: 'Inrinni Zan (Saturday Night)',
+        title: 'Saturday Prayer Meeting',
         dayOfWeek: 6, // Saturday
         time: '07:00 PM',
         location: 'Biak In',
-        description: 'Preparation service for the Lord\'s Day.',
+        description: 'Inrinni Zan Ṭawngṭai Inkhawm.',
         type: 'Service',
         isRecurringTemplate: true,
         program: {
-          tantu: 'Reader Name',
-          thuhriltu: 'Speaker Name'
-        }
-      },
-      {
-        id: 'sun-am',
-        title: 'Pathianni Chawhma (Sunday Morning)',
-        dayOfWeek: 0, // Sunday
-        time: '10:00 AM',
-        location: 'Biak In',
-        description: 'Sunday School and Morning Service.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Intermediate Dept Student' // SS Tantu
-        }
-      },
-      {
-        id: 'sun-pm',
-        title: 'Pathianni Chawhnu (Sunday Afternoon)',
-        dayOfWeek: 0, // Sunday
-        time: '01:30 PM',
-        location: 'Biak In',
-        description: 'Afternoon Devotional Service.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Reader Name',
-          thuhriltu: 'Speaker Name'
-        }
-      },
-      {
-        id: 'sun-night',
-        title: 'Pathianni Zan (Sunday Night)',
-        dayOfWeek: 0, // Sunday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Gospel Service.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          thuhriltu: 'Speaker Name'
+          tantu: 'TBD',
+          thuhriltu: 'Speaker TBD'
         }
       }
-    ] as any[], // Typing as any[] temporarily to allow 'dayOfWeek' which matches updated interface
+    ] as any[],
     sermons: [
       {
         id: '1',
         title: 'Walking in Faith',
         preacher: 'Rev. Lalhmingliana',
         date: '2023-10-22',
-        description: 'An inspiring message on trusting God through difficult times.',
-        videoUrl: 'dQw4w9WgXcQ' // Mock ID
-      },
-      {
-        id: '2',
-        title: 'The Power of Prayer',
-        preacher: 'Pastor Zosangliana',
-        date: '2023-10-15',
-        description: 'Understanding the impact of intercessory prayer in our daily lives.'
+        description: 'An inspiring message on trusting God through difficult times.'
       }
     ] as Sermon[],
     ministries: [
@@ -193,23 +153,6 @@ const DATA = {
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Every Monday @ 7:00 PM',
         image: 'https://picsum.photos/800/600?random=10'
-      },
-      {
-        id: 'kpvm',
-        name: 'Kohhran Hmeichhe Pawl',
-        acronym: 'KPVM',
-        description: 'Women\'s Fellowship focusing on family values, prayer, and charity.',
-        leader: 'Pi Lalthlamuani (Chairperson)',
-        schedule: 'Every Tuesday @ 1:00 PM',
-        image: 'https://picsum.photos/800/600?random=11'
-      },
-      {
-        id: 'pavlai',
-        name: 'Pavalai Pawl',
-        description: 'Men\'s Fellowship strengthening the pillars of families and the church.',
-        leader: 'Pu R. Vanlalsawma',
-        schedule: 'Every Thursday @ 7:00 PM',
-        image: 'https://picsum.photos/800/600?random=12'
       }
     ] as Ministry[],
     pastors: [
@@ -218,12 +161,6 @@ const DATA = {
         name: 'Rev. Dr. Lalnunsanga',
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20'
-      },
-      {
-        id: 'p2',
-        name: 'Pastor Lalruatkima',
-        role: 'Associate Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=21'
       }
     ] as Staff[]
   },
@@ -234,30 +171,14 @@ const DATA = {
         title: 'Ṭawngṭai Pui Ngai',
         date: '2023-10-27',
         category: 'Emergency',
-        content: 'Upa Lalnuntluanga naktuk a zai a nih dawn avangin Kohhran hote ṭawngṭaipuina kan ngen e. Pathianin hlawhtling takin kaihruai se la, damna famkim pe leh thuai rawh se.',
+        content: 'Upa Lalnuntluanga naktuk a zai a nih dawn avangin Kohhran hote ṭawngṭaipuina kan ngen e.',
         imageUrl: 'https://picsum.photos/seed/prayer/1200/800'
-      },
-      {
-        id: '2',
-        title: 'KTP General Conference Inkhian A Hawng',
-        date: '2023-10-25',
-        category: 'Youth',
-        content: 'KTP General Conference lo awm tur atana inkhian theih a ni e. Pathianni thleng inkhian theih a ni a, ṭhalai zawng zawngte tel ṭheuh turin kan insawm a ni.',
-        imageUrl: 'https://picsum.photos/seed/youthconf/1200/800'
-      },
-      {
-        id: '3',
-        title: 'Kohhran Hnatlang Neih Tur A Ni',
-        date: '2023-10-24',
-        category: 'General',
-        content: 'Inrinni hian Biak In hung chhung tihfai hnatlang neih tur a ni a, dar 7:00 AM ah ṭan tur a ni. Kohhran member zawng zawngte tel tura sawm kan ni.',
-        imageUrl: 'https://picsum.photos/seed/community/1200/800'
       }
     ] as Announcement[],
     events: [
         {
         id: 'ktp-2026-01-05',
-        title: 'Kristian Ṭhalai Pawl Inkhawm',
+        title: 'Kristian Ṭhalai Pawl (KTP)',
         date: '2026-01-05',
         time: '07:00 PM',
         location: 'Biak In',
@@ -272,9 +193,7 @@ const DATA = {
           groupZai: 'Nl. Ningsianmawii te unau',
           thawhlawmKhawntute: [
             '1) Nl. Vungngaihdawni',
-            '2) Nl. V.Hlunmawii',
-            '3) Nl. Thangdinsangi',
-            '4) Nl. C.Lalremruati',
+            '2) Nl. V.Nunmawii',
           ],
           khuangpu: ['Pu K.Lalramngheta'],
           pianist: 'Tv. Liankhankhama',
@@ -297,93 +216,35 @@ const DATA = {
           tantu: 'Pi Lalsangliani',
           thuhriltu: 'Nl. Ngurbawihtluangi',
           thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
-          khuangpu: ['Pi F. Lalthianghlimi', 'Pi Lalramchuani']
+          khuangpu: ['Pi F. Lalthianghlimi']
         }
       },
       {
-        id: 'kpp-2026-01-08',
-        title: 'Kohhran Pavalai Pawl Inkhawm',
-        date: '2026-01-08',
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Ningani Zan Kohhran Pavalai Pawl Inkhawm Program.',
-        type: 'Service',
-        isRecurringTemplate: false,
-        program: {
-          hruaitu: 'Pu Ms Dawngliana',
-          tantu: 'Pu Thangdeihchina',
-          thuhriltu: 'Pu P. Lalhmingthanga',
-          thawhlawmKhawntute: ['Pu B. Lalliantawna'],
-          zaiHruaitu: ['Pu K. Lalengthanga', 'Pu HB Vanlalvuana'],
-          pianist: 'Pu Hmunneihthanga'
-        }
-      },
-      {
-        id: 'wed-service',
-        title: 'Nilai Zan',
+        id: 'wed-service-template',
+        title: 'Nilai Zan Inkhawm',
         dayOfWeek: 3, // Wednesday
         time: '07:00 PM',
         location: 'Biak In',
-        description: 'Thupui Zir Inkhawm',
+        description: 'Nilaini Zan Inkhawm Program.',
         type: 'Service',
         isRecurringTemplate: true,
         program: {
           tantu: 'Tantu Tur',
-          thupui: 'Thupui',
-          hawngtu: 'Hawngtu Tur'
+          thupui: 'Thupui Zir Tur',
+          hawngtu: 'Thupui Hawngtu'
         }
       },
       {
-        id: 'sat-service',
-        title: 'Inrinni Zan',
+        id: 'sat-service-template',
+        title: 'Inrinni Zan Ṭawngṭai Inkhawm',
         dayOfWeek: 6, // Saturday
         time: '07:00 PM',
         location: 'Biak In',
-        description: 'Ṭawngṭai Inkhawm',
+        description: 'Inrinni Zan Ṭawngṭai Inkhawm Program.',
         type: 'Service',
         isRecurringTemplate: true,
         program: {
           tantu: 'Tantu Tur',
-          thuhriltu: 'Thuhriltu Tur'
-        }
-      },
-      {
-        id: 'sun-am',
-        title: 'Pathianni Chawhma',
-        dayOfWeek: 0, // Sunday
-        time: '10:00 AM',
-        location: 'Biak In',
-        description: 'Sunday School leh Chawhma Inkhawm',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Intermediate Dept Zirlai' // SS Tantu only
-        }
-      },
-      {
-        id: 'sun-pm',
-        title: 'Pathianni Chawhnu',
-        dayOfWeek: 0, // Sunday
-        time: '01:30 PM',
-        location: 'Biak In',
-        description: 'Chawhnu Inkhawm',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Tantu Tur',
-          thuhriltu: 'Thuhriltu Tur'
-        }
-      },
-      {
-        id: 'sun-night',
-        title: 'Pathianni Zan',
-        dayOfWeek: 0, // Sunday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Pathianni Zan Inkhawm',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
           thuhriltu: 'Thuhriltu Tur'
         }
       }
@@ -394,15 +255,7 @@ const DATA = {
         title: 'Rinnaa Kal',
         preacher: 'Rev. Lalhmingliana',
         date: '2023-10-22',
-        description: 'Harsatna karah pawh Pathian rinchhan chunga kal zel tur a fuihna.',
-        videoUrl: 'dQw4w9WgXcQ'
-      },
-      {
-        id: '2',
-        title: 'Ṭawngṭai Thiltihtheihna',
-        preacher: 'Pastor Zosangliana',
-        date: '2023-10-15',
-        description: 'Kan nitin nuna ṭawngṭai pawimawh zia leh a thiltihtheihna.',
+        description: 'Harsatna karah pawh Pathian rinchhan chunga kal zel tur a fuihna.'
       }
     ] as Sermon[],
     ministries: [
@@ -410,27 +263,10 @@ const DATA = {
         id: 'ktp',
         name: 'Kristian Ṭhalai Pawl',
         acronym: 'KTP',
-        description: 'Kohhran ṭhalai rualte, Isua Krista rawngbawlna, zaia rawngbawlna leh khawtlang tana thawk chhuak turin.',
+        description: 'Kohhran ṭhalai rualte rawngbawlna.',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Thawhṭanni @ 7:00 PM',
         image: 'https://picsum.photos/800/600?random=10'
-      },
-      {
-        id: 'kpvm',
-        name: 'Kohhran Hmeichhe Pawl',
-        acronym: 'KPVM',
-        description: 'Chhungkua leh khawtlanga nu te mawhphurhna hlen tura inbuatsaihna.',
-        leader: 'Pi Lalthlamuani (Chairperson)',
-        schedule: 'Thawhlehni @ 1:00 PM',
-        image: 'https://picsum.photos/800/600?random=11'
-      },
-      {
-        id: 'pavlai',
-        name: 'Pavalai Pawl',
-        description: 'Chhungkua leh kohhran ban nghet tak ni tura pa te inunauna.',
-        leader: 'Pu R. Vanlalsawma',
-        schedule: 'Ningani @ 7:00 PM',
-        image: 'https://picsum.photos/800/600?random=12'
       }
     ] as Ministry[],
     pastors: [
@@ -439,12 +275,6 @@ const DATA = {
         name: 'Rev. Dr. Lalnunsanga',
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20'
-      },
-      {
-        id: 'p2',
-        name: 'Pastor Lalruatkima',
-        role: 'Associate Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=21'
       }
     ] as Staff[]
   }
@@ -452,27 +282,22 @@ const DATA = {
 
 export const getConstants = (lang: Language) => DATA[lang];
 
-// Exports for backward compatibility with old `views` components to fix build errors.
+// Exports for backward compatibility with old components
 export const ANNOUNCEMENTS_DATA = DATA.en.announcements;
-
-// The old Event type was different, so we map the new data structure to the old one.
 export const EVENTS_DATA = DATA.en.events.map(e => ({
-    day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek],
+    day: e.dayOfWeek !== undefined ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek] : 'Special',
     time: e.time,
     name: e.title,
-    leader: e.program?.thuhriltu || e.program?.hawngtu || e.program?.tantu || 'TBD'
+    leader: e.program?.thuhriltu || e.program?.hruaitu || 'TBD'
 }));
-
-// The old Sermon type was different, so we map to it.
 export const SERMONS_DATA = DATA.en.sermons.map(s => ({
     title: s.title,
     speaker: s.preacher,
     date: s.date,
-    scripture: "John 3:16", // Old type had scripture, new one doesn't. Add placeholder.
-    audioUrl: s.audioUrl || '#'
+    scripture: "Various",
+    audioUrl: '#'
 }));
 
-// The old Leaders data was different, so we map to it.
 export const LEADERS_DATA = DATA.en.pastors.map(p => ({
     name: p.name,
     role: p.role,

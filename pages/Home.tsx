@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Tag, Loader, Clock, User } from 'lucide-react';
+import { ArrowRight, Calendar, Tag, Loader, Clock, User, BookOpen } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { Announcement, Event } from '../types';
@@ -15,8 +15,6 @@ const getNextDayOfWeek = (dayOfWeek: number) => {
   const currentDay = now.getDay();
   const daysUntilNext = (dayOfWeek - currentDay + 7) % 7;
   resultDate.setDate(now.getDate() + daysUntilNext);
-  // If the calculated date is today but for a recurring event, it's fine.
-  // No need to push to next week unless that's the desired logic.
   return resultDate;
 };
 
@@ -71,13 +69,12 @@ const Home: React.FC = () => {
         try {
             if (db && db.collection) {
                 const snapshot = await db.collection('events').get();
-                realEvents = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Event[];
-            } else {
-                realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
+                if (!snapshot.empty) {
+                   realEvents = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Event[];
+                }
             }
         } catch (e) {
             console.error("Error fetching events:", e);
-            realEvents = allConstantEvents.filter(e => !e.isRecurringTemplate && e.date);
         }
 
         const basePrograms = t.home.weeklyProgram;
@@ -96,6 +93,17 @@ const Home: React.FC = () => {
                     details: specificEvent.program
                 };
             }
+            
+            // Try to find if there's any matching constant data with detailed program
+            const constantMatch = allConstantEvents.find(e => e.date === dateStr && e.program);
+            if (constantMatch) {
+               return {
+                   ...baseProg,
+                   name: constantMatch.title,
+                   details: constantMatch.program
+               };
+            }
+
             return baseProg; // Fallback to base program
         });
         
@@ -200,13 +208,45 @@ const Home: React.FC = () => {
                             <div className="p-3 bg-church-50 text-church-600 rounded-lg mt-1 group-hover:bg-church-100">
                                 <Clock size={24} />
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h3 className="font-bold text-slate-800 text-lg group-hover:text-church-800">{program.day}</h3>
-                                <p className="text-church-700 font-semibold">{program.name}</p>
-                                {program.details?.thuhriltu ? (
-                                    <div className="flex items-center text-sm text-slate-500 mt-2">
-                                        <User size={14} className="mr-1.5" />
-                                        <span>{program.details.thuhriltu}</span>
+                                <p className="text-church-700 font-semibold mb-2">{program.name}</p>
+                                
+                                {program.details ? (
+                                    <div className="space-y-1 mt-2 bg-slate-50/50 p-2 rounded-md border border-slate-100">
+                                        {program.details.hruaitu && (
+                                            <div className="flex items-center text-xs text-slate-600">
+                                                <span className="font-bold w-16 shrink-0">Hruaitu:</span>
+                                                <span className="truncate">{program.details.hruaitu}</span>
+                                            </div>
+                                        )}
+                                        {program.details.tantu && (
+                                            <div className="flex items-center text-xs text-slate-600">
+                                                <span className="font-bold w-16 shrink-0">Ṭantu:</span>
+                                                <span className="truncate">{program.details.tantu}</span>
+                                            </div>
+                                        )}
+                                        {program.details.thuhriltu && (
+                                            <div className="flex items-center text-xs text-slate-800 font-medium">
+                                                <span className="font-bold w-16 shrink-0">Thusawi:</span>
+                                                <span className="truncate">{program.details.thuhriltu}</span>
+                                            </div>
+                                        )}
+                                        {program.details.hawngtu && (
+                                            <div className="flex items-center text-xs text-slate-600">
+                                                <span className="font-bold w-16 shrink-0">Hawngtu:</span>
+                                                <span className="truncate">{program.details.hawngtu}</span>
+                                            </div>
+                                        )}
+                                        {program.details.thupui && (
+                                            <div className="flex items-center text-xs text-slate-800 font-medium pt-1 border-t border-slate-200 mt-1">
+                                                <span className="font-bold w-16 shrink-0">Thupui:</span>
+                                                <span className="italic">{program.details.thupui}</span>
+                                            </div>
+                                        )}
+                                        {!program.details.hruaitu && !program.details.tantu && !program.details.thuhriltu && !program.details.thupui && (
+                                           <p className="text-sm text-slate-500">{program.time}</p>
+                                        )}
                                     </div>
                                 ) : (
                                     <p className="text-sm text-slate-500 mt-1">{program.time}</p>

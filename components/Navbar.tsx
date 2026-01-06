@@ -14,6 +14,11 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: t.nav.home, path: '/' },
+    { name: t.nav.about, path: '/about' },
+    { name: t.nav.worship, path: '/worship' },
+    { name: t.nav.sermons, path: '/media' },
+    { name: t.nav.events, path: '/events' },
+    { name: t.nav.announcements, path: '/announcements' },
     { name: t.nav.departments, path: '/committees' },
     { 
       name: t.nav.sundaySchool, 
@@ -46,20 +51,9 @@ const Navbar: React.FC = () => {
         { name: t.nav.giving, path: '/giving' },
       ]
     },
-    { 
-       name: 'More',
-       path: '#',
-       children: [
-         { name: t.nav.about, path: '/about' },
-         { name: t.nav.worship, path: '/worship' },
-         { name: t.nav.sermons, path: '/media' },
-         { name: t.nav.records, path: '/records' },
-         { name: t.nav.gallery, path: '/gallery' },
-         { name: t.nav.events, path: '/events' },
-         { name: t.nav.announcements, path: '/announcements' },
-         { name: t.nav.contact, path: '/contact' },
-       ]
-    }
+    { name: t.nav.records, path: '/records' },
+    { name: t.nav.gallery, path: '/gallery' },
+    { name: t.nav.contact, path: '/contact' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -107,7 +101,7 @@ const Navbar: React.FC = () => {
           </div>
           
           <div className="hidden lg:block">
-            <div className="ml-10 flex items-baseline space-x-2">
+            <div className="ml-10 flex items-baseline flex-wrap gap-x-2">
               {navLinks.map((link) => (
                 <div key={link.name} className="relative group z-50 h-full flex items-center">
                   {link.children ? (
