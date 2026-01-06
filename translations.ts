@@ -8,7 +8,6 @@ export const translations = {
       about: 'About Us',
       worship: 'Worship',
       fellowships: 'Fellowships',
-      sermons: 'Sermons',
       events: 'Events',
       announcements: 'Announcements',
       departments: 'Committees',
@@ -28,7 +27,7 @@ export const translations = {
       watchSermons: 'Watch Sermons',
       verseOfTheDay: 'Verse of the Day',
       latestNews: 'Latest News',
-      newsTitle: 'Bethel News & Updates',
+      newsTitle: 'Latest News',
       viewAll: 'View All',
       serviceTimes: 'Service Times',
       weeklyProgramme: 'Weekly Church Program',
@@ -90,14 +89,6 @@ export const translations = {
         benediction: 'Benediction'
       }
     },
-    media: {
-      title: 'Sermons & Media',
-      latestSermon: 'Latest Sermon',
-      watchNow: 'Watch Now',
-      audio: 'Audio',
-      recentMessages: 'Recent Messages',
-      photoGallery: 'Photo Gallery',
-    },
     events: {
       title: 'Church Calendar',
       moreComing: 'More events for the upcoming month will be updated soon.',
@@ -154,6 +145,15 @@ export const translations = {
         speakers: 'Key Speakers'
       }
     },
+    // FIX: Add media translations for the Media page.
+    media: {
+      title: 'Sermons & Media',
+      latestSermon: 'Latest Sermon',
+      watchNow: 'Watch Now',
+      audio: 'Audio Only',
+      recentMessages: 'Recent Messages',
+      photoGallery: 'Photo Gallery',
+    },
     footer: {
       churchDesc: 'A community of believers united in faith, serving the Lord in Champhai. Join us for worship and fellowship.',
       quickLinks: 'Quick Links',
@@ -183,7 +183,6 @@ export const translations = {
       about: 'Kan Chanchin',
       worship: 'Inkhawm & Rawngbawlna',
       fellowships: 'Fellowship',
-      sermons: 'Thusawi',
       events: 'Program',
       announcements: 'Hriattirna',
       departments: 'Committee',
@@ -203,7 +202,7 @@ export const translations = {
       watchSermons: 'Thusawi Ngaithla Rawh',
       verseOfTheDay: 'Vawiin Chang Thlan',
       latestNews: 'Thuthar',
-      newsTitle: 'Bethel Thuthar',
+      newsTitle: 'Latest News',
       viewAll: 'En Vek Rawh',
       serviceTimes: 'Inkhawm Hun',
       weeklyProgramme: 'Tunkar Inkhawm Program',
@@ -265,14 +264,6 @@ export const translations = {
         benediction: 'Malsawmna'
       }
     },
-    media: {
-      title: 'Thusawi & Media',
-      latestSermon: 'Thusawi Thar Ber',
-      watchNow: 'En Rawh',
-      audio: 'Ngaithla Rawh',
-      recentMessages: 'Thusawi Hnuhnungte',
-      photoGallery: 'Thlalak',
-    },
     events: {
       title: 'Kohhran Calendar',
       moreComing: 'Thla thar program te dah belh zel a ni ang.',
@@ -328,6 +319,15 @@ export const translations = {
         location: 'A Hmun',
         speakers: 'Thusawitu Pawimawh'
       }
+    },
+    // FIX: Add media translations for the Media page.
+    media: {
+      title: 'Thusawi & Media',
+      latestSermon: 'Thusawi Thar Ber',
+      watchNow: 'En Rawh',
+      audio: 'Ngaithla Rawh',
+      recentMessages: 'Thusawi dangte',
+      photoGallery: 'Thlalak aṭang te',
     },
     footer: {
       churchDesc: 'Rinna a pummunkhat, Lalpa rawngbawl tura kohte kan ni. Lo tel ve rawh le.',

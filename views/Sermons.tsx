@@ -21,7 +21,8 @@ const Sermons: React.FC = () => {
               <div className="mt-4 space-y-2 text-gray-600">
                 <div className="flex items-center space-x-2">
                   <UserIcon />
-                  <span>{sermon.speaker}</span>
+                  {/* FIX: Use 'preacher' instead of 'speaker' for consistency with Sermon type. */}
+                  <span>{sermon.preacher}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <ScriptureIcon />

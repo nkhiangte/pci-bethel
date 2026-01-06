@@ -42,9 +42,8 @@ const Footer: React.FC = () => {
             <h3 className="text-white text-lg font-bold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-2 text-sm">
               <li><a href="#/about" className="hover:text-white">{t.nav.about}</a></li>
-              <li><a href="#/worship" className="hover:text-white">{t.home.serviceTimes}</a></li>
-              <li><a href="#/media" className="hover:text-white">{t.media.title}</a></li>
               <li><a href="#/events" className="hover:text-white">{t.nav.events}</a></li>
+              <li><a href="#/contact" className="hover:text-white">{t.nav.contact}</a></li>
             </ul>
           </div>
 

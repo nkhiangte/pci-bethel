@@ -5,8 +5,6 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
-import Worship from './pages/Worship';
-import Media from './pages/Media';
 import Events from './pages/Events';
 import Announcements from './pages/Announcements';
 import Departments from './pages/Departments';
@@ -38,8 +36,6 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/worship" element={<Worship />} />
-                <Route path="/media" element={<Media />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/committees" element={<Departments />} />

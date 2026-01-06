@@ -1,5 +1,5 @@
 
-import { Announcement, Event, Ministry, Sermon, Staff, WeeklyDuty } from './types';
+import { Announcement, Event, Ministry, Staff, WeeklyDuty, Sermon } from './types';
 import { Language } from './translations';
 
 export const CHURCH_NAME = "Mizoram Synod (PCI) Champhai Bethel Kohhran";
@@ -33,16 +33,40 @@ const DATA = {
         imageUrl: 'https://picsum.photos/seed/community/1200/800'
       }
     ] as Announcement[],
-    events: [] as any[],
+    // FIX: Add sermon data.
     sermons: [
       {
-        id: '1',
-        title: 'Walking in Faith',
-        preacher: 'Rev. Lalhmingliana',
-        date: '2023-10-22',
-        description: 'An inspiring message on trusting God through difficult times.'
+        id: 's1',
+        title: 'The Good Shepherd',
+        date: '2024-05-12',
+        preacher: 'Rev. Dr. Lalnunsanga',
+        scripture: 'Psalm 23',
+        description: 'An exposition on the comforting words of Psalm 23, exploring how Jesus is our Good Shepherd through life\'s valleys and peaks.',
+        audioUrl: '#',
+        videoUrl: '#'
+      },
+      {
+        id: 's2',
+        title: 'Faith That Moves Mountains',
+        date: '2024-05-05',
+        preacher: 'Upa H. Zairemmawia',
+        scripture: 'Matthew 17:20',
+        description: 'A message on the power of even a little faith and how it can overcome great obstacles in our spiritual journey.',
+        audioUrl: '#',
+        videoUrl: '#'
+      },
+      {
+        id: 's3',
+        title: 'The Sermon on the Mount',
+        date: '2024-04-28',
+        preacher: 'Rev. Dr. Lalnunsanga',
+        scripture: 'Matthew 5-7',
+        description: 'A deep dive into the core teachings of Jesus from the Sermon on the Mount.',
+        audioUrl: '#',
+        videoUrl: '#'
       }
     ] as Sermon[],
+    events: [] as any[],
     ministries: [
       {
         id: 'ktp',
@@ -93,16 +117,30 @@ const DATA = {
         imageUrl: 'https://picsum.photos/seed/prayer/1200/800'
       }
     ] as Announcement[],
-    events: [] as Event[],
+    // FIX: Add sermon data.
     sermons: [
-      {
-        id: '1',
-        title: 'Rinnaa Kal',
-        preacher: 'Rev. Lalhmingliana',
-        date: '2023-10-22',
-        description: 'Harsatna karah pawh Pathian rinchhan chunga kal zel tur a fuihna.'
-      }
+        {
+            id: 's1',
+            title: 'Berampu Ṭha',
+            date: '2024-05-12',
+            preacher: 'Rev. Dr. Lalnunsanga',
+            scripture: 'Sam 23',
+            description: 'Sam 23-na thuchah thlamuanthlak tak, Isua chu engtin nge kan dam chhung kawng zawhah Berampu Ṭha a nih tih zir chianna.',
+            audioUrl: '#',
+            videoUrl: '#'
+        },
+        {
+            id: 's2',
+            title: 'Rinna Tlâng Sawn Thei',
+            date: '2024-05-05',
+            preacher: 'Upa H. Zairemmawia',
+            scripture: 'Matthaia 17:20',
+            description: 'Rinna tê ber pawhin thil ropui a tih theih dan leh kan thlarau nun kawngah harsatna nasa tak a hneh theih dan thuchah.',
+            audioUrl: '#',
+            videoUrl: '#'
+        }
     ] as Sermon[],
+    events: [] as Event[],
     ministries: [
       {
         id: 'ktp',
@@ -148,18 +186,13 @@ export const getConstants = (lang: Language) => DATA[lang];
 
 // Exports for backward compatibility with old components
 export const ANNOUNCEMENTS_DATA = DATA.en.announcements;
+// FIX: Export SERMONS_DATA for backward compatibility and to resolve import errors.
+export const SERMONS_DATA = DATA.en.sermons;
 export const EVENTS_DATA = DATA.en.events.map(e => ({
     day: e.dayOfWeek !== undefined ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek] : 'Special',
     time: e.time,
     name: e.title,
     leader: e.program?.thuhriltu || e.program?.hruaitu || 'TBD'
-}));
-export const SERMONS_DATA = DATA.en.sermons.map(s => ({
-    title: s.title,
-    speaker: s.preacher,
-    date: s.date,
-    scripture: "Various",
-    audioUrl: '#'
 }));
 
 export const LEADERS_DATA = DATA.en.pastors.map(p => ({

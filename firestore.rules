@@ -3,20 +3,23 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Function to check if the currently authenticated user is an admin.
-    // An admin user document has a field `role` set to 'admin' OR `isAdmin` set to true.
+
+    // ===============================
+    // Admin check function
+    // ===============================
     function isAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
         );
     }
 
-    // --- Publicly Readable Collections ---
-    // These collections can be read by anyone, but only modified by admins.
+    // ===============================
+    // Publicly readable collections
+    // (write access: admin only)
+    // ===============================
 
     match /announcements/{docId} {
       allow read: if true;
@@ -27,13 +30,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     match /events/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpBudget/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
@@ -52,7 +60,7 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     match /resources/{docId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -68,12 +76,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // --- User Profiles ---
+    // ===============================
+    // User profiles
+    // ===============================
+
     match /users/{userId} {
-      // Any authenticated user can read any profile.
+      // Any authenticated user can read profiles
       allow read: if request.auth != null;
-      
-      // A user can write to their own profile, or an admin can write to any profile.
+
+      // Users can edit their own profile
+      // Admins can edit any profile
       allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
     }
   }

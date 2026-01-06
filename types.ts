@@ -17,6 +17,18 @@ export interface Announcement {
   imageUrl?: string;
 }
 
+// FIX: Add Sermon interface to support sermon data.
+export interface Sermon {
+  id: string;
+  title: string;
+  date: string;
+  preacher: string;
+  scripture?: string;
+  description?: string;
+  audioUrl?: string;
+  videoUrl?: string;
+}
+
 export interface ProgramDetails {
   hruaitu?: string; // Conductor/Leader
   tantu?: string; // Reader
@@ -49,16 +61,6 @@ export interface Event {
   program?: ProgramDetails;
   isRecurringTemplate?: boolean;
   isCancelled?: boolean;
-}
-
-export interface Sermon {
-  id: string;
-  title: string;
-  preacher: string;
-  date: string;
-  videoUrl?: string; // YouTube ID or URL
-  audioUrl?: string;
-  description: string;
 }
 
 export interface Ministry {
@@ -206,4 +208,17 @@ export interface KTPHruaitute {
   committeeMembers: KTPMember[];
   exOfficioMembers: KTPMember[];
   groupLeaders?: KTPGroup[];
+}
+
+// KTP Budget Types
+export interface BudgetItem {
+  id: string;
+  item: string;
+  amount: string;
+}
+
+export interface KTPBudget {
+  year: number;
+  income: BudgetItem[];
+  expenditure: BudgetItem[];
 }

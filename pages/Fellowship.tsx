@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPMember, KTPGroup } from '../types';
+import { Ministry, KTPHruaitute, KTPMember, KTPGroup, KTPBudget, BudgetItem } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus } from 'lucide-react';
+import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus, DollarSign } from 'lucide-react';
 
 const INITIAL_KTP_2026_DATA: KTPHruaitute = {
     year: 2026,
@@ -99,6 +99,34 @@ const INITIAL_KTP_2026_DATA: KTPHruaitute = {
     ]
 };
 
+const INITIAL_KTP_2026_BUDGET: KTPBudget = {
+    year: 2026,
+    income: [
+      { id: 'i1', item: "Faith Promise", amount: "420000" },
+      { id: 'i2', item: "Inkhawm Thilpek", amount: "160500" },
+      { id: 'i3', item: "Group Budget", amount: "100000" },
+      { id: 'i4', item: "Comt. Budget", amount: "10500" },
+      { id: 'i5', item: "Inhlawhna", amount: "80000" },
+      { id: 'i6', item: "Opening Balance", amount: "632226" },
+    ],
+    expenditure: [
+      { id: 'e1', item: "Missionary chawmna", amount: "96000" },
+      { id: 'e2', item: "Bial KTP Budget", amount: "65000" },
+      { id: 'e3', item: "Bial Conf/meet thlengtu puina", amount: "10000" },
+      { id: 'e4', item: "Property tihchangtlunna", amount: "150000" },
+      { id: 'e5', item: "Half Yearly meet", amount: "80000" },
+      { id: 'e6', item: "KTP inkhawm kim lawmman", amount: "20000" },
+      { id: 'e7', item: "Synod Rescue Home", amount: "20000" },
+      { id: 'e8', item: "Gen. Conference kal na", amount: "30000" },
+      { id: 'e9', item: "YRC Special Budget", amount: "15000" },
+      { id: 'e10', item: "Branch Golden Jubilee pual", amount: "50000" },
+      { id: 'e11', item: "Kohhrana chhunluh", amount: "50000" },
+      { id: 'e12', item: "Krismas leh Kumthar pual", amount: "50000" },
+      { id: 'e13', item: "Branch in enkawlna", amount: "767266" },
+    ],
+};
+
+
 const ktpLogoUrl = "https://i.ibb.co/KzQf1j7j/Gemini-Generated-Image-k4xevgk4xevgk4xe.png";
 
 const Fellowship: React.FC = () => {
@@ -109,13 +137,18 @@ const Fellowship: React.FC = () => {
 
   const isKTP = id === 'ktp';
   const [ktpActiveTab, setKtpActiveTab] = useState('home');
+  
+  // State for KTP specific data
   const [ktpHruaitute, setKtpHruaitute] = useState<KTPHruaitute | null | undefined>(undefined);
+  const [ktpBudget, setKtpBudget] = useState<KTPBudget | null | undefined>(undefined);
   const [loadingKtpData, setLoadingKtpData] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isHruaituteEditModalOpen, setIsHruaituteEditModalOpen] = useState(false);
+  const [isBudgetEditModalOpen, setIsBudgetEditModalOpen] = useState(false);
 
   const ktpNavLinks = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'circular', label: '2026 hruaitute', icon: Book },
+    { id: 'project-budget', label: 'Project & Budget 2026', icon: DollarSign },
     { id: 'members', label: 'Member List', icon: List },
     { id: 'history', label: 'Our History', icon: History },
     { id: 'gallery', label: 'Picture Gallery', icon: Camera },
@@ -153,31 +186,42 @@ const Fellowship: React.FC = () => {
   }, [id, language]);
 
   useEffect(() => {
-    if (isKTP && ktpActiveTab === 'circular') {
-      const fetchKtpData = async () => {
+    if (!isKTP) return;
+    
+    const fetchKtpDataForTab = async (tab: string) => {
         setLoadingKtpData(true);
         if (!db?.doc) {
-          setKtpHruaitute(null);
-          setLoadingKtpData(false);
-          return;
-        }
-        try {
-          const docRef = db.collection('ktpLeaders').doc('2026');
-          const docSnap = await docRef.get();
-          if (docSnap.exists) {
-            setKtpHruaitute(docSnap.data() as KTPHruaitute);
-          } else {
             setKtpHruaitute(null);
-          }
-        } catch (error) {
-          console.error("Error fetching KTP Hruaitute:", error);
-          setKtpHruaitute(null);
+            setKtpBudget(null);
+            setLoadingKtpData(false);
+            return;
+        }
+
+        if (tab === 'circular') {
+            try {
+                const docRef = db.collection('ktpLeaders').doc('2026');
+                const docSnap = await docRef.get();
+                setKtpHruaitute(docSnap.exists ? (docSnap.data() as KTPHruaitute) : null);
+            } catch (error) {
+                console.error("Error fetching KTP Hruaitute:", error);
+                setKtpHruaitute(null);
+            }
+        } else if (tab === 'project-budget') {
+            try {
+                const docRef = db.collection('ktpBudget').doc('2026');
+                const docSnap = await docRef.get();
+                setKtpBudget(docSnap.exists ? (docSnap.data() as KTPBudget) : null);
+            } catch (error) {
+                console.error("Error fetching KTP Budget:", error);
+                setKtpBudget(null);
+            }
         }
         setLoadingKtpData(false);
-      };
-      fetchKtpData();
-    }
+    };
+
+    fetchKtpDataForTab(ktpActiveTab);
   }, [isKTP, ktpActiveTab]);
+
 
   const handleSaveKtpData = async (data: KTPHruaitute) => {
     setLoadingKtpData(true);
@@ -189,11 +233,30 @@ const Fellowship: React.FC = () => {
     try {
       await db.collection('ktpLeaders').doc(String(data.year)).set(data);
       setKtpHruaitute(data);
-      setIsEditModalOpen(false);
+      setIsHruaituteEditModalOpen(false);
       alert("Hruaitute updated successfully!");
     } catch (error) {
       console.error("Error saving KTP data:", error);
       alert("Failed to save data.");
+    }
+    setLoadingKtpData(false);
+  };
+  
+  const handleSaveKtpBudget = async (data: KTPBudget) => {
+    setLoadingKtpData(true);
+    if (!db?.doc) {
+      alert("Database not available.");
+      setLoadingKtpData(false);
+      return;
+    }
+    try {
+      await db.collection('ktpBudget').doc(String(data.year)).set(data);
+      setKtpBudget(data);
+      setIsBudgetEditModalOpen(false);
+      alert("Budget updated successfully!");
+    } catch (error) {
+      console.error("Error saving KTP budget:", error);
+      alert("Failed to save budget data.");
     }
     setLoadingKtpData(false);
   };
@@ -211,9 +274,48 @@ const Fellowship: React.FC = () => {
   if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin h-10 w-10 text-church-500" /></div>;
   if (!fellowship) return <Navigate to="/worship" replace />;
 
+  const renderKtpTabContent = () => {
+    if (loadingKtpData) return <div className="text-center py-20"><Loader className="animate-spin h-8 w-8 text-cyan-500 mx-auto" /></div>;
+
+    switch(ktpActiveTab) {
+        case 'home':
+            return (
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Leadership & Schedule</h2>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="flex items-start space-x-4">
+                      <div className="p-3 bg-cyan-50 text-cyan-600 rounded-lg"><Users size={24} /></div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">Leader</h3>
+                        <p className="text-slate-600 mt-1">{fellowship.leader}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-4">
+                      <div className="p-3 bg-cyan-50 text-cyan-600 rounded-lg"><Clock size={24} /></div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">Regular Meeting</h3>
+                        <p className="text-slate-600 mt-1">{fellowship.schedule}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            );
+        case 'circular':
+            return ktpHruaitute ? 
+                   <KTPHruaituteView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
+                   <KTPDataMissing title="Hruaitute Details" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
+        case 'project-budget':
+            return ktpBudget ?
+                   <KTPBudgetView data={ktpBudget} onEdit={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} /> :
+                   <KTPDataMissing title="Project & Budget" onSetup={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_BUDGET.year} />;
+        default:
+            return <KtpContentPlaceholder tabId={ktpActiveTab} />;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="relative bg-church-900 text-white py-20">
+      <div className={`relative ${isKTP ? 'bg-cyan-800' : 'bg-church-900'} text-white py-20`}>
         <div className="absolute inset-0 overflow-hidden">
           <img 
             src={fellowship.image} 
@@ -225,7 +327,7 @@ const Fellowship: React.FC = () => {
           {isKTP ? (
             <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-24 w-24 mb-6 rounded-full shadow-lg bg-white/10 p-1" />
           ) : fellowship.acronym ? (
-            <span className="inline-block py-1 px-3 rounded-full bg-church-500 text-white text-sm font-bold tracking-wide mb-4">
+            <span className={`inline-block py-1 px-3 rounded-full ${isKTP ? 'bg-cyan-500' : 'bg-church-500'} text-white text-sm font-bold tracking-wide mb-4`}>
               {fellowship.acronym}
             </span>
           ) : null}
@@ -246,7 +348,7 @@ const Fellowship: React.FC = () => {
                   onClick={() => setKtpActiveTab(link.id)}
                   className={`flex items-center gap-2 px-5 py-4 font-semibold text-sm whitespace-nowrap border-b-2 transition-colors duration-200 ${
                     ktpActiveTab === link.id
-                      ? 'border-church-500 text-church-700'
+                      ? 'border-cyan-500 text-cyan-700'
                       : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                   }`}
                 >
@@ -258,33 +360,7 @@ const Fellowship: React.FC = () => {
           </div>
           
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 min-h-[300px]">
-            {ktpActiveTab === 'home' ? (
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Leadership & Schedule</h2>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="flex items-start space-x-4">
-                      <div className="p-3 bg-church-50 text-church-600 rounded-lg"><Users size={24} /></div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Leader</h3>
-                        <p className="text-slate-600 mt-1">{fellowship.leader}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-4">
-                      <div className="p-3 bg-green-50 text-green-600 rounded-lg"><Clock size={24} /></div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Regular Meeting</h3>
-                        <p className="text-slate-600 mt-1">{fellowship.schedule}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            ) : ktpActiveTab === 'circular' ? (
-              loadingKtpData ? <div className="text-center py-20"><Loader className="animate-spin h-8 w-8 text-church-500 mx-auto" /></div> :
-              ktpHruaitute ? <KTPHruaituteView data={ktpHruaitute} onEdit={() => setIsEditModalOpen(true)} isAdmin={isAdmin} /> :
-              <KTPDataMissing onSetup={() => setIsEditModalOpen(true)} isAdmin={isAdmin} />
-            ) : (
-              <KtpContentPlaceholder tabId={ktpActiveTab} />
-            )}
+             {renderKtpTabContent()}
           </div>
         </div>
       ) : (
@@ -323,7 +399,8 @@ const Fellowship: React.FC = () => {
         </div>
       )}
       
-      {isEditModalOpen && <KTPHruaituteEditModal data={ktpHruaitute || INITIAL_KTP_2026_DATA} onClose={() => setIsEditModalOpen(false)} onSave={handleSaveKtpData} />}
+      {isHruaituteEditModalOpen && <KTPHruaituteEditModal data={ktpHruaitute || INITIAL_KTP_2026_DATA} onClose={() => setIsHruaituteEditModalOpen(false)} onSave={handleSaveKtpData} />}
+      {isBudgetEditModalOpen && <KTPBudgetEditModal data={ktpBudget || INITIAL_KTP_2026_BUDGET} onClose={() => setIsBudgetEditModalOpen(false)} onSave={handleSaveKtpBudget} />}
     </div>
   );
 };
@@ -333,6 +410,57 @@ const formatWhatsAppLink = (phone: string) => {
     if (cleaned.length === 10) return `https://wa.me/91${cleaned}`;
     if (cleaned.startsWith('91') && cleaned.length === 12) return `https://wa.me/${cleaned}`;
     return `https://wa.me/${cleaned}`;
+};
+
+const KTPBudgetView: React.FC<{ data: KTPBudget, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => {
+  const calculateTotal = (items: BudgetItem[]) => {
+    return items.reduce((sum, item) => sum + parseFloat(item.amount.replace(/,/g, '') || '0'), 0);
+  };
+
+  const totalIncome = calculateTotal(data.income);
+  const totalExpenditure = calculateTotal(data.expenditure);
+
+  const formatCurrency = (value: number) => {
+    return `₹ ${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+  
+  const BudgetSection: React.FC<{ title: string; items: BudgetItem[], total: number; colorClass: string; }> = ({ title, items, total, colorClass }) => (
+    <div>
+      <h3 className={`text-xl font-bold mb-4 border-b-2 pb-2 ${colorClass}`}>{title}</h3>
+      <table className="w-full text-sm">
+        <tbody>
+          {items.map((entry) => (
+            <tr key={entry.id} className="border-b border-slate-100 last:border-b-0">
+              <td className="py-2.5 px-2 text-slate-700">{entry.item}</td>
+              <td className="py-2.5 px-2 text-right font-mono text-slate-800">{parseFloat(entry.amount).toLocaleString('en-IN')} /-</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="font-bold bg-slate-50">
+            <td className="py-3 px-2">Total</td>
+            <td className="py-3 px-2 text-right font-mono text-lg">{formatCurrency(total)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+
+  return (
+    <div>
+       <div className="flex justify-between items-start mb-8 pb-4 border-b">
+         <div>
+            <h2 className="text-2xl font-bold text-slate-800">2026 BUDGET & PROJECT RUAHMANNA</h2>
+            <p className="text-slate-500">Bethel Branch KTP</p>
+         </div>
+         {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
+       </div>
+      <div className="grid md:grid-cols-2 gap-12">
+        <BudgetSection title="BUDGET HEAD" items={data.income} total={totalIncome} colorClass="border-green-500 text-green-700" />
+        <BudgetSection title="SUM HMANNA TURTE" items={data.expenditure} total={totalExpenditure} colorClass="border-red-500 text-red-700" />
+      </div>
+    </div>
+  );
 };
 
 const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
@@ -345,7 +473,7 @@ const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdm
                     <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
                 </div>
             </div>
-            {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
+            {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
         </div>
 
         <Section title="Office Bearers">
@@ -381,7 +509,7 @@ const Section: React.FC<{ title: string, children: React.ReactNode }> = ({ title
 const PersonCard: React.FC<{ person: KTPMember, formatWhatsAppLink: (phone: string) => string }> = ({ person, formatWhatsAppLink }) => (
     <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
         <p className="font-bold text-slate-900">{person.name}</p>
-        {person.role && <p className="text-xs text-church-600 font-semibold">{person.role}</p>}
+        {person.role && <p className="text-xs text-cyan-600 font-semibold">{person.role}</p>}
         {person.phone && person.phone !== 'N/A' && (
              <a href={formatWhatsAppLink(person.phone)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-slate-500 mt-1 hover:text-green-600 transition">
                 <Phone size={12} /> {person.phone}
@@ -392,7 +520,7 @@ const PersonCard: React.FC<{ person: KTPMember, formatWhatsAppLink: (phone: stri
 
 const GroupCard: React.FC<{ group: KTPGroup }> = ({ group }) => (
     <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <h4 className="font-bold text-church-800 border-b border-slate-200 pb-2 mb-2">Group: {group.groupName}</h4>
+        <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">Group: {group.groupName}</h4>
         <ul className="space-y-1.5">
             {group.members.map(member => (
                 <li key={member.id} className="text-sm flex justify-between">
@@ -404,14 +532,14 @@ const GroupCard: React.FC<{ group: KTPGroup }> = ({ group }) => (
     </div>
 );
 
-const KTPDataMissing: React.FC<{ onSetup: () => void, isAdmin: boolean }> = ({ onSetup, isAdmin }) => (
+const KTPDataMissing: React.FC<{ title: string, onSetup: () => void, isAdmin: boolean, year: number }> = ({ title, onSetup, isAdmin, year }) => (
     <div className="text-center py-20">
         <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-20 w-20 mb-6 opacity-50" />
-        <h3 className="text-xl font-bold text-slate-700">Hruaitute Details Not Available</h3>
-        <p className="text-slate-500 mt-2">Information for {INITIAL_KTP_2026_DATA.year} has not been added yet.</p>
+        <h3 className="text-xl font-bold text-slate-700">{title} Not Available</h3>
+        <p className="text-slate-500 mt-2">Information for {year} has not been added yet.</p>
         {isAdmin && (
-            <button onClick={onSetup} className="mt-6 flex items-center mx-auto gap-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full transition shadow-md">
-                <PlusCircle size={16} /> Setup {INITIAL_KTP_2026_DATA.year} Hruaitute
+            <button onClick={onSetup} className="mt-6 flex items-center mx-auto gap-2 text-sm font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-full transition shadow-md">
+                <PlusCircle size={16} /> Setup {year} {title}
             </button>
         )}
     </div>
@@ -540,7 +668,7 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">
                     <button onClick={onClose} className="px-4 py-2 border rounded">Cancel</button>
-                    <button onClick={handleSaveClick} className="px-4 py-2 bg-church-600 text-white rounded flex items-center disabled:opacity-50" disabled={isSaving}>
+                    <button onClick={handleSaveClick} className="px-4 py-2 bg-cyan-600 text-white rounded flex items-center disabled:opacity-50" disabled={isSaving}>
                         {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Changes
                     </button>
                 </div>
@@ -548,5 +676,73 @@ const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void,
         </div>
     );
 };
+
+const KTPBudgetEditModal: React.FC<{ data: KTPBudget, onClose: () => void, onSave: (data: KTPBudget) => Promise<void> }> = ({ data, onClose, onSave }) => {
+    const [formData, setFormData] = useState<KTPBudget>(JSON.parse(JSON.stringify(data)));
+    const [isSaving, setIsSaving] = useState(false);
+    
+    const handleItemChange = (listName: 'income' | 'expenditure', index: number, field: 'item' | 'amount', value: string) => {
+        const list = formData[listName];
+        const newList = [...list];
+        newList[index] = { ...newList[index], [field]: value };
+        setFormData({ ...formData, [listName]: newList });
+    };
+
+    const addItem = (listName: 'income' | 'expenditure') => {
+        const list = formData[listName];
+        const newItem: BudgetItem = { id: `new-${Date.now()}`, item: '', amount: '' };
+        setFormData({ ...formData, [listName]: [...list, newItem] });
+    };
+    
+    const removeItem = (listName: 'income' | 'expenditure', id: string) => {
+        const list = formData[listName];
+        setFormData({ ...formData, [listName]: list.filter(item => item.id !== id) });
+    };
+
+    const handleSaveClick = async () => {
+        setIsSaving(true);
+        await onSave(formData);
+        setIsSaving(false);
+    };
+
+    const BudgetItemRow: React.FC<{ listName: 'income' | 'expenditure', item: BudgetItem, index: number }> = ({ listName, item, index }) => (
+        <div className="grid grid-cols-12 gap-2 items-center">
+            <input className="col-span-7 border p-2 text-sm rounded" placeholder="Item Name" value={item.item} onChange={e => handleItemChange(listName, index, 'item', e.target.value)} />
+            <input type="number" className="col-span-4 border p-2 text-sm rounded" placeholder="Amount" value={item.amount} onChange={e => handleItemChange(listName, index, 'amount', e.target.value)} />
+            <button type="button" onClick={() => removeItem(listName, item.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
+        </div>
+    );
+    
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Edit KTP Budget {formData.year}</h3><button onClick={onClose}><X/></button></div>
+                <div className="p-6 grid md:grid-cols-2 gap-6 overflow-y-auto">
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                           <h4 className="font-bold">BUDGET HEAD (Income)</h4>
+                           <button type="button" onClick={() => addItem('income')} className="text-xs text-blue-600 font-bold flex items-center gap-1"><PlusCircle size={14}/> Add Item</button>
+                        </div>
+                        <div className="space-y-2">{formData.income.map((p, i) => <BudgetItemRow key={p.id} listName="income" item={p} index={i} />)}</div>
+                    </div>
+                     <div>
+                        <div className="flex justify-between items-center mb-2">
+                           <h4 className="font-bold">SUM HMANNA TURTE (Expenditure)</h4>
+                           <button type="button" onClick={() => addItem('expenditure')} className="text-xs text-blue-600 font-bold flex items-center gap-1"><PlusCircle size={14}/> Add Item</button>
+                        </div>
+                        <div className="space-y-2">{formData.expenditure.map((p, i) => <BudgetItemRow key={p.id} listName="expenditure" item={p} index={i} />)}</div>
+                    </div>
+                </div>
+                <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">
+                    <button onClick={onClose} className="px-4 py-2 border rounded">Cancel</button>
+                    <button onClick={handleSaveClick} className="px-4 py-2 bg-cyan-600 text-white rounded flex items-center disabled:opacity-50" disabled={isSaving}>
+                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 export default Fellowship;
