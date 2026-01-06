@@ -10,10 +10,21 @@ import { Event } from '../types';
 // Helper to get next occurrence of a day (0=Sun, 1=Mon, ..., 6=Sat)
 const getNextDayOfWeek = (dayOfWeek: number) => {
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const resultDate = new Date(now.getTime());
-  resultDate.setDate(now.getDate() + (dayOfWeek + 7 - now.getDay()) % 7);
-  return resultDate;
+  const currentDay = now.getDay();
+  
+  // Calculate days to add. If today is Wednesday (3) and we want next Tuesday (2), it's (2 - 3 + 7) % 7 = 6 days away.
+  // If today is Wednesday (3) and we want next Thursday (4), it's (4 - 3 + 7) % 7 = 1 day away.
+  let daysToAdd = (dayOfWeek - currentDay + 7) % 7;
+  // If the calculated day is today, show next week's unless we explicitly want today. For an events page, showing the next 7 days is usually better.
+  // Let's adjust to show the upcoming week starting from today.
+  
+  const todayDate = new Date();
+  todayDate.setDate(todayDate.getDate() + (dayOfWeek - todayDate.getDay() + 7) % 7);
+  return todayDate;
 };
+
 
 // Format date for Input field (YYYY-MM-DD)
 const formatDateForInput = (date: Date) => {
@@ -32,24 +43,28 @@ const Events: React.FC = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, [language]);
+  }, [language, t]);
 
   const fetchEvents = async () => {
     setLoading(true);
-
-    const allConstantEvents = getConstants(language).events;
     
-    // 1. Generate Virtual Events from Templates
-    const virtualEvents: Event[] = allConstantEvents
-      .filter(t => t.isRecurringTemplate && t.dayOfWeek !== undefined)
-      .map(t => {
-        const nextDate = getNextDayOfWeek(t.dayOfWeek!);
+    // 1. Generate Virtual Events from recurring templates in translations
+    const basePrograms = t.home.weeklyProgram;
+    const virtualEvents: Event[] = basePrograms
+      .map(progTemplate => {
+        const nextDate = getNextDayOfWeek(progTemplate.dayOfWeek);
         const dateStr = formatDateForInput(nextDate);
         return {
-          ...t,
+          id: `virtual_${progTemplate.day.toLowerCase()}_${dateStr}`,
+          title: progTemplate.name,
           date: dateStr,
-          id: `virtual_${t.id}_${dateStr}`,
-          isRecurringTemplate: false
+          time: progTemplate.time,
+          location: 'Biak In', // Default location
+          description: '',
+          type: 'Service',
+          isRecurringTemplate: false, // This is an instance, not a template
+          dayOfWeek: progTemplate.dayOfWeek,
+          program: {} // Default empty program
         };
       });
 
@@ -72,23 +87,26 @@ const Events: React.FC = () => {
     // 3. Merge virtual and real events
     const mergedEventsMap = new Map<string, Event>();
 
-    [...virtualEvents, ...realEvents].forEach(event => {
-        const key = `${event.date}_${event.title}`;
-        const existing = mergedEventsMap.get(key);
-
+    // First, add all virtual events
+    virtualEvents.forEach(event => {
+        const key = `${event.date}`; // Use date as key to allow override
+        mergedEventsMap.set(key, event);
+    });
+    
+    // Then, process real events, overriding virtual ones or adding new ones
+    realEvents.forEach(event => {
+        const key = event.date;
         if (event.isCancelled) {
-            if (existing?.id.startsWith('virtual_')) {
+            // If a real event is a cancellation, remove the virtual one for that date
+            if (mergedEventsMap.has(key)) {
                 mergedEventsMap.delete(key);
             }
-            return; 
-        }
-
-        if (existing && !existing.id.startsWith('virtual_') && event.id.startsWith('virtual_')) {
-            // Priority to real events
         } else {
+            // Add or override with the real event data
             mergedEventsMap.set(key, event);
         }
     });
+
 
     const finalEvents = Array.from(mergedEventsMap.values());
     finalEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -261,7 +279,7 @@ const Events: React.FC = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{event.title}</h3>
                 
-                {event.program && Object.keys(event.program).length > 0 && (
+                {event.program && Object.values(event.program).some(val => Array.isArray(val) ? val.length > 0 && val[0] !== "" : !!val) ? (
                     <div className="bg-slate-50 p-5 rounded-lg my-4 space-y-1 border border-slate-100 shadow-inner">
                         <ProgramItem label="Hruaitu" value={event.program.hruaitu} />
                         <ProgramItem label="Ṭantu" value={event.program.tantu} />
@@ -281,7 +299,7 @@ const Events: React.FC = () => {
                         <ProgramItem label="Drummer" value={event.program.drummer} />
                         <ProgramItem label="Hla hriltu" value={event.program.hlaHriltu} />
                     </div>
-                )}
+                ) : null}
 
                 <div className="flex flex-col sm:flex-row sm:space-x-6 text-sm text-slate-500 mt-auto pt-4 border-t border-slate-100">
                   <div className="flex items-center mb-2 sm:mb-0"><Clock className="w-4 h-4 mr-2 text-church-500" /> {event.time}</div>
