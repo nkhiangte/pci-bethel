@@ -205,6 +205,8 @@ export const Home: React.FC = () => {
     }
     try {
       // Order by 'order' field first, then by 'name' as a fallback/secondary sort
+      // NOTE: This query requires a Firestore composite index on 'elders' collection:
+      // Fields: 'order' (Ascending), 'name' (Ascending)
       const snapshot = await db.collection('elders').orderBy('order', 'asc').orderBy('name', 'asc').get();
       if (!snapshot.empty) {
         const fetchedData = snapshot.docs.map((doc: any) => ({
@@ -235,6 +237,8 @@ export const Home: React.FC = () => {
       return;
     }
     try {
+      // NOTE: This query requires a Firestore composite index on 'pastors' collection:
+      // Fields: 'order' (Ascending), 'name' (Ascending)
       const snapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
       if (!snapshot.empty) {
         const fetchedData = snapshot.docs.map((doc: any) => ({
@@ -770,6 +774,8 @@ export const Home: React.FC = () => {
                   )}
                 </>
               )}
+            </>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, BookOpen, Heart, Scroll, Activity, Home, ArrowLeftRight, Loader } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -24,6 +22,8 @@ const About: React.FC = () => {
       return;
     }
     try {
+      // NOTE: This query requires a Firestore composite index on 'pastors' collection:
+      // Fields: 'order' (Ascending), 'name' (Ascending)
       const snapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
       if (!snapshot.empty) {
         const fetchedData = snapshot.docs.map((doc: any) => ({
