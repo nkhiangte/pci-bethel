@@ -44,8 +44,8 @@ const INITIAL_KTP_2026_DATA: KTPHruaitute = {
         { id: 'cm23', name: 'Pu Lalthangliana', phone: '7085198550' },
     ],
     exOfficioMembers: [
-        { id: 'eo1', name: 'Upa David Lalchhanhima', phone: '9862630996', role: 'Kohhran Committee Aiawh' },
-        { id: 'eo2', name: 'Upa Hmingthanmawia Sailo', phone: '9862532256', role: 'Kohhran Committee Aiawh' },
+        { id: 'eo1', name: 'Upa David Lalchhanhima', phone: '9862630996', role: 'Kohhran Committee Aiawhte' },
+        { id: 'eo2', name: 'Upa Hmingthanmawia Sailo', phone: '9862532256', role: 'Kohhran Committee Aiawhte' },
         { id: 'eo3', name: 'Rev. Lalhmingthanga Chhangte', phone: '7085626477', role: 'Ex-Officio' },
         { id: 'eo4', name: 'Pro Pastor Lallawmsanga', phone: '9862727756', role: 'Ex-Officio' },
     ],
@@ -198,7 +198,7 @@ const Fellowship: React.FC = () => {
   const [fellowship, setFellowship] = useState<Ministry | null | undefined>(undefined);
 
   const isKTP = id === 'ktp';
-  const [ktpActiveTab, setKtpActiveTab] = useState('home');
+  const [ktpActiveTab, setKtpActiveTab] = useState('circular'); // Changed initial tab from 'home' to 'circular'
   
   // State for KTP specific data
   const [ktpHruaitute, setKtpHruaitute] = useState<KTPHruaitute | null | undefined>(undefined);
@@ -208,7 +208,7 @@ const Fellowship: React.FC = () => {
   const [isBudgetEditModalOpen, setIsBudgetEditModalOpen] = useState(false);
 
   const ktpNavLinks = [
-    { id: 'home', label: 'Home', icon: Home },
+    // { id: 'home', label: 'Home', icon: Home }, // Removed Home tab
     { id: 'circular', label: '2026 hruaitute', icon: Book },
     { id: 'sub-committees', label: 'Sub-Committees', icon: Users }, // New tab for Sub-Committees
     { id: 'project-budget', label: 'Project & Budget 2026', icon: DollarSign },
