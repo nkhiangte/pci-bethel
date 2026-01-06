@@ -43,6 +43,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Rule for 'proPastors' collection: Publicly readable, admin-writable
+    match /proPastors/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /events/{docId} {
       allow read: if true;
       allow write: if isAdmin();

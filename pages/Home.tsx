@@ -42,6 +42,14 @@ export const Home: React.FC = () => {
   const [editingPastor, setEditingPastor] = useState<Partial<Staff> | null>(null);
   const [showDeletePastorConfirm, setShowDeletePastorConfirm] = useState<string | null>(null);
 
+  // New: Pro Pastor-specific states
+  const [churchProPastors, setChurchProPastors] = useState<Staff[]>([]);
+  const [loadingProPastors, setLoadingProPastors] = useState(true);
+  const [isSeedingProPastors, setIsSeedingProPastors] = useState(false);
+  const [isProPastorModalOpen, setIsProPastorModalOpen] = useState(false);
+  const [editingProPastor, setEditingProPastor] = useState<Partial<Staff> | null>(null);
+  const [showDeleteProPastorConfirm, setShowDeleteProPastorConfirm] = useState<string | null>(null);
+
 
   // State for reordering Elders
   const initialEldersOrderRef = useRef<Staff[]>([]);
@@ -51,8 +59,12 @@ export const Home: React.FC = () => {
   const initialPastorsOrderRef = useRef<Staff[]>([]);
   const [hasPastorOrderChanged, setHasPastorOrderChanged] = useState(false);
 
+  // New: State for reordering Pro Pastors
+  const initialProPastorsOrderRef = useRef<Staff[]>([]);
+  const [hasProPastorOrderChanged, setHasProPastorOrderChanged] = useState(false);
 
-  const { announcements: staticNews, weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
+
+  const { announcements: staticNews, weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders, proPastors: staticProPastors } = getConstants(language);
 
   const getWeekDateRange = () => {
     const today = new Date();
@@ -260,10 +272,45 @@ export const Home: React.FC = () => {
     setHasPastorOrderChanged(false);
   }, [staticPastors]);
 
+  // New: Fetch Pro Pastors
+  const fetchProPastors = useCallback(async () => {
+    setLoadingProPastors(true);
+    if (!db || !db.collection) {
+      setChurchProPastors(staticProPastors);
+      initialProPastorsOrderRef.current = staticProPastors;
+      setLoadingProPastors(false);
+      return;
+    }
+    try {
+      // NOTE: This query requires a Firestore composite index on 'proPastors' collection:
+      // Fields: 'order' (Ascending), 'name' (Ascending)
+      const snapshot = await db.collection('proPastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
+      if (!snapshot.empty) {
+        const fetchedData = snapshot.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Staff[];
+        setChurchProPastors(fetchedData);
+        initialProPastorsOrderRef.current = fetchedData;
+      } else {
+        setChurchProPastors(staticProPastors);
+        initialProPastorsOrderRef.current = staticProPastors;
+      }
+    } catch (error) {
+      console.error("Error fetching pro pastors:", error);
+      setChurchProPastors(staticProPastors);
+      initialProPastorsOrderRef.current = staticProPastors;
+    }
+    setLoadingProPastors(false);
+    setHasProPastorOrderChanged(false);
+  }, [staticProPastors]);
+
+
   useEffect(() => {
     fetchElders();
     fetchPastors();
-  }, [fetchElders, fetchPastors]);
+    fetchProPastors(); // New: Fetch Pro Pastors
+  }, [fetchElders, fetchPastors, fetchProPastors]);
 
   // Check if the current elder order differs from the initial order (deep comparison)
   useEffect(() => {
@@ -276,6 +323,12 @@ export const Home: React.FC = () => {
     const isOrderDifferent = JSON.stringify(churchPastors.map(p => p.id)) !== JSON.stringify(initialPastorsOrderRef.current.map(p => p.id));
     setHasPastorOrderChanged(isOrderDifferent);
   }, [churchPastors]);
+
+  // New: Check if the current pro pastor order differs from the initial order
+  useEffect(() => {
+    const isOrderDifferent = JSON.stringify(churchProPastors.map(pp => pp.id)) !== JSON.stringify(initialProPastorsOrderRef.current.map(pp => pp.id));
+    setHasProPastorOrderChanged(isOrderDifferent);
+  }, [churchProPastors]);
 
 
   const handleSeedElders = async () => {
@@ -356,45 +409,95 @@ export const Home: React.FC = () => {
     setIsSeedingPastors(false);
   };
 
+  // New: handleSeedProPastors
+  const handleSeedProPastors = async () => {
+    if (!db?.collection || !window.confirm("This will DELETE ALL existing pro pastors and re-seed from the initial data. Are you sure?")) {
+        return;
+    }
 
-  const handleSaveStaff = async (staff: Staff, collectionName: 'elders' | 'pastors') => {
+    setIsSeedingProPastors(true);
+    try {
+        const proPastorsRef = db.collection('proPastors');
+        
+        // 1. Delete all existing documents
+        const existingDocs = await proPastorsRef.get();
+        if (!existingDocs.empty) {
+            const deleteBatch = db.batch();
+            existingDocs.docs.forEach((doc: any) => {
+                deleteBatch.delete(doc.ref);
+            });
+            await deleteBatch.commit();
+            console.log("Existing pro pastors deleted.");
+        }
+
+        // 2. Add all new documents from staticProPastors with an 'order' field
+        const addBatch = db.batch();
+        staticProPastors.forEach((proPastorData, index) => {
+            const newDocRef = proPastorsRef.doc(); // Firestore generates ID
+            addBatch.set(newDocRef, { ...proPastorData, order: index }); // Assign initial order
+        });
+        await addBatch.commit();
+        console.log("Successfully seeded pro pastors!");
+
+        fetchProPastors(); // Refresh the list
+        alert("Pro Pastor data seeding complete!");
+
+    } catch (error) {
+        console.error("Error seeding pro pastor data:", error);
+        alert("An error occurred during pro pastor data seeding.");
+    }
+    setIsSeedingProPastors(false);
+  };
+
+
+  const handleSaveStaff = async (staff: Staff, collectionName: 'elders' | 'pastors' | 'proPastors') => {
     if (!db?.collection) return;
     setLoadingElders(true); // General loading for any staff operation
     setLoadingPastors(true); // General loading for any staff operation
+    setLoadingProPastors(true); // General loading for any staff operation
     try {
       const { id, ...dataToSave } = staff;
       if (id) {
         await db.collection(collectionName).doc(id).set(dataToSave, { merge: true });
       } else {
         // Assign a high order for new staff to appear at the end
-        const currentStaff = collectionName === 'elders' ? churchElders : churchPastors;
+        const currentStaff = 
+          collectionName === 'elders' ? churchElders : 
+          collectionName === 'pastors' ? churchPastors :
+          churchProPastors; // For proPastors
         const newOrder = currentStaff.length > 0 ? Math.max(...currentStaff.map(s => s.order || 0)) + 1 : 0;
         await db.collection(collectionName).add({ ...dataToSave, order: newOrder });
       }
       setIsElderModalOpen(false);
       setIsPastorModalOpen(false);
+      setIsProPastorModalOpen(false); // New: Close Pro Pastor modal
       if (collectionName === 'elders') fetchElders();
-      else fetchPastors();
+      else if (collectionName === 'pastors') fetchPastors();
+      else fetchProPastors(); // New: Fetch Pro Pastors
     } catch (error) {
       console.error(`Error saving ${collectionName} member:`, error);
     }
     setLoadingElders(false);
     setLoadingPastors(false);
+    setLoadingProPastors(false); // New: Turn off Pro Pastor loading
   };
 
-  const handleDeleteStaff = async (id: string, collectionName: 'elders' | 'pastors') => {
-    if (!db?.collection || !window.confirm(`Are you sure you want to delete this ${collectionName === 'elders' ? 'elder' : 'pastor'}? This action cannot be undone.`)) return;
+  const handleDeleteStaff = async (id: string, collectionName: 'elders' | 'pastors' | 'proPastors') => {
+    if (!db?.collection || !window.confirm(`Are you sure you want to delete this ${collectionName === 'elders' ? 'elder' : (collectionName === 'pastors' ? 'pastor' : 'pro pastor')}? This action cannot be undone.`)) return;
     setLoadingElders(true); // General loading for any staff operation
     setLoadingPastors(true); // General loading for any staff operation
+    setLoadingProPastors(true); // General loading for any staff operation
     try {
       await db.collection(collectionName).doc(id).delete();
       if (collectionName === 'elders') fetchElders();
-      else fetchPastors();
+      else if (collectionName === 'pastors') fetchPastors();
+      else fetchProPastors(); // New: Fetch Pro Pastors
     } catch (error) {
       console.error(`Error deleting ${collectionName} member:`, error);
     }
     setLoadingElders(false);
     setLoadingPastors(false);
+    setLoadingProPastors(false); // New: Turn off Pro Pastor loading
   };
 
 
@@ -412,7 +515,7 @@ export const Home: React.FC = () => {
     }
   };
 
-  const handleSaveOrder = async (collectionName: 'elders' | 'pastors', staffList: Staff[], setLoadingFunc: React.Dispatch<React.SetStateAction<boolean>>, setHasOrderChangedFunc: React.Dispatch<React.SetStateAction<boolean>>, fetchFunc: () => Promise<void>) => {
+  const handleSaveOrder = async (collectionName: 'elders' | 'pastors' | 'proPastors', staffList: Staff[], setLoadingFunc: React.Dispatch<React.SetStateAction<boolean>>, setHasOrderChangedFunc: React.Dispatch<React.SetStateAction<boolean>>, fetchFunc: () => Promise<void>) => {
     if (!db?.batch || !window.confirm(`Confirm saving new ${collectionName} order to database?`)) {
       return;
     }
@@ -678,6 +781,102 @@ export const Home: React.FC = () => {
                 </div>
               )}
 
+              {/* New: Church Pro Pastors Grid */}
+              <h3 className="text-2xl font-serif font-bold text-center text-church-900 mt-16 mb-8">{t.home.kohhranProPastors}</h3>
+              {isAdmin && (
+                 <div className="text-center mb-8 flex flex-wrap justify-center gap-4">
+                    <button 
+                      onClick={handleSeedProPastors} 
+                      disabled={isSeedingProPastors || loadingProPastors}
+                      className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-sm transition disabled:opacity-50"
+                    >
+                      {isSeedingProPastors ? <Loader className="animate-spin w-5 h-5 mr-2" /> : <Database size={18} className="mr-2" />}
+                      Seed Pro Pastor Data
+                    </button>
+                    <button 
+                      onClick={() => { setEditingProPastor({role: 'Pro Pastor', name: '', imageUrl: '', description: '', order: churchProPastors.length > 0 ? Math.max(...churchProPastors.map(pp => pp.order || 0)) + 1 : 0}); setIsProPastorModalOpen(true); }}
+                      disabled={loadingProPastors}
+                      className="inline-flex items-center px-6 py-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-sm transition disabled:opacity-50"
+                    >
+                      <Plus size={18} className="mr-2" /> Add New Pro Pastor
+                    </button>
+                    <button 
+                      onClick={() => handleSaveOrder('proPastors', churchProPastors, setLoadingProPastors, setHasProPastorOrderChanged, fetchProPastors)} 
+                      disabled={!hasProPastorOrderChanged || loadingProPastors}
+                      className="inline-flex items-center px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 shadow-sm transition disabled:opacity-50"
+                      title={hasProPastorOrderChanged ? "Save current display order to database" : "Order is already saved or no changes made"}
+                    >
+                      <Save size={18} className="mr-2" />
+                      Save Pro Pastor Order
+                    </button>
+                 </div>
+              )}
+              {loadingProPastors ? (
+                 <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+              ) : (
+                <>
+                  {churchProPastors.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+                      {churchProPastors.map((proPastor, index) => (
+                        <Card key={proPastor.id} className="text-center relative group">
+                          <img 
+                            src={proPastor.imageUrl} 
+                            alt={proPastor.name} 
+                            className="w-full h-48 object-cover object-top" 
+                          />
+                          <div className="p-4">
+                            <h3 className="text-lg font-bold text-slate-900">{proPastor.name}</h3>
+                            <p className="text-church-700 font-medium">{proPastor.role}</p>
+                            {proPastor.description && (
+                              <p className="text-sm text-slate-500 mt-2 line-clamp-3">{proPastor.description}</p>
+                            )}
+                          </div>
+                          {isAdmin && (
+                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleMoveStaff(proPastor.id!, 'up', churchProPastors, setChurchProPastors)}
+                                disabled={index === 0 || loadingProPastors}
+                                className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
+                                title="Move Up"
+                              >
+                                <ArrowUp size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleMoveStaff(proPastor.id!, 'down', churchProPastors, setChurchProPastors)}
+                                disabled={index === churchProPastors.length - 1 || loadingProPastors}
+                                className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
+                                title="Move Down"
+                              >
+                                <ArrowDown size={16} />
+                              </button>
+                              <button 
+                                onClick={() => { setEditingProPastor(proPastor); setIsProPastorModalOpen(true); }}
+                                className="p-1.5 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition"
+                                title="Edit Pro Pastor"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button 
+                                onClick={() => setShowDeleteProPastorConfirm(proPastor.id || '')}
+                                className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition"
+                                title="Delete Pro Pastor"
+                              >
+                                <Trash size={16} />
+                              </button>
+                            </div>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+                        <Shield size={48} className="mx-auto text-slate-300 mb-4" />
+                        <p className="text-slate-500">No Pro Pastors listed. {isAdmin && "Use the 'Add New Pro Pastor' or 'Seed Pro Pastor Data' button to populate."}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
 
               {/* Church Elders Grid */}
               <h3 className="text-2xl font-serif font-bold text-center text-church-900 mt-16 mb-8">{t.home.kohhranElders}</h3>
@@ -710,7 +909,7 @@ export const Home: React.FC = () => {
                  </div>
               )}
               {loadingElders ? (
-                 <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+                 <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
               ) : (
                 <>
                   {churchElders.length > 0 ? (
@@ -843,6 +1042,20 @@ export const Home: React.FC = () => {
           showDeleteConfirm={showDeletePastorConfirm}
           setShowDeleteConfirm={setShowDeletePastorConfirm}
           collectionName="pastors" // Specify collection for pastors
+        />
+      )}
+
+      {/* New: Pro Pastor Edit/Add Modal */}
+      {isProPastorModalOpen && editingProPastor && (
+        <StaffEditModal
+          staff={editingProPastor}
+          onClose={() => { setIsProPastorModalOpen(false); setEditingProPastor(null); }}
+          onSave={(staff, collection) => handleSaveStaff(staff, collection)}
+          onDelete={(id, collection) => handleDeleteStaff(id, collection)}
+          isLoading={loadingProPastors}
+          showDeleteConfirm={showDeleteProPastorConfirm}
+          setShowDeleteConfirm={setShowDeleteProPastorConfirm}
+          collectionName="proPastors" // Specify collection for pro pastors
         />
       )}
     </div>

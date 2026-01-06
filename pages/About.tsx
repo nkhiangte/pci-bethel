@@ -8,42 +8,52 @@ import { Staff } from '../types';
 
 const About: React.FC = () => {
   const { language, t } = useLanguage();
-  const { pastors: staticPastors } = getConstants(language); // Keep static for fallback
-  const [churchPastors, setChurchPastors] = useState<Staff[]>([]);
-  const [loadingPastors, setLoadingPastors] = useState(true);
+  const { pastors: staticPastors, proPastors: staticProPastors } = getConstants(language); // Keep static for fallback
+  const [churchLeaders, setChurchLeaders] = useState<Staff[]>([]); // Renamed from churchPastors to be more generic
+  const [loadingLeaders, setLoadingLeaders] = useState(true); // Renamed from loadingPastors
 
   const heroBgUrl = "https://i.ibb.co/G4kcMqmM/117973144-786352218785464-3747589953800462999-n.jpg";
 
-  const fetchPastors = useCallback(async () => {
-    setLoadingPastors(true);
+  const fetchLeaders = useCallback(async () => { // Renamed from fetchPastors
+    setLoadingLeaders(true);
     if (!db || !db.collection) {
-      setChurchPastors(staticPastors);
-      setLoadingPastors(false);
+      // Fallback: combine static pastors and pro pastors
+      const combinedStaticLeaders = [...staticPastors, ...staticProPastors].sort((a, b) => (a.order || 0) - (b.order || 0));
+      setChurchLeaders(combinedStaticLeaders);
+      setLoadingLeaders(false);
       return;
     }
     try {
-      // NOTE: This query requires a Firestore composite index on 'pastors' collection:
+      // Fetch Pastors
+      const pastorsSnapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
+      const fetchedPastors = pastorsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Staff[];
+
+      // Fetch Pro Pastors
+      // NOTE: This query requires a Firestore composite index on 'proPastors' collection:
       // Fields: 'order' (Ascending), 'name' (Ascending)
-      const snapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
-      if (!snapshot.empty) {
-        const fetchedData = snapshot.docs.map((doc: any) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Staff[];
-        setChurchPastors(fetchedData);
+      const proPastorsSnapshot = await db.collection('proPastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
+      const fetchedProPastors = proPastorsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Staff[];
+
+      // Combine and sort all spiritual leaders
+      const combinedLeaders = [...fetchedPastors, ...fetchedProPastors].sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      if (combinedLeaders.length > 0) {
+        setChurchLeaders(combinedLeaders);
       } else {
-        setChurchPastors(staticPastors); // Fallback to static if collection is empty
+        const combinedStaticLeaders = [...staticPastors, ...staticProPastors].sort((a, b) => (a.order || 0) - (b.order || 0));
+        setChurchLeaders(combinedStaticLeaders);
       }
     } catch (error) {
-      console.error("Error fetching pastors for About page:", error);
-      setChurchPastors(staticPastors); // Fallback on error
+      console.error("Error fetching church leaders for About page:", error);
+      const combinedStaticLeaders = [...staticPastors, ...staticProPastors].sort((a, b) => (a.order || 0) - (b.order || 0));
+      setChurchLeaders(combinedStaticLeaders);
     }
-    setLoadingPastors(false);
-  }, [staticPastors]);
+    setLoadingLeaders(false);
+  }, [staticPastors, staticProPastors]);
 
   useEffect(() => {
-    fetchPastors();
-  }, [fetchPastors]);
+    fetchLeaders(); // Call fetchLeaders
+  }, [fetchLeaders]);
 
 
   const DOCTRINE_ARTICLES = [
@@ -164,27 +174,27 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* Our Pastors */}
+        {/* Our Spiritual Leaders (Pastors and Pro Pastors combined) */}
         <div className="mb-16">
           <h2 className="text-3xl font-serif font-bold text-church-900 mb-8 text-center">{t.about.shepherdsTitle}</h2>
-          {loadingPastors ? (
+          {loadingLeaders ? (
             <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
-          ) : churchPastors.length > 0 ? (
+          ) : churchLeaders.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-              {churchPastors.map((pastor) => (
-                <div key={pastor.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
+              {churchLeaders.map((leader) => (
+                <div key={leader.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
                   <div className="aspect-square overflow-hidden bg-slate-200">
                     <img 
-                      src={pastor.imageUrl} 
-                      alt={pastor.name} 
+                      src={leader.imageUrl} 
+                      alt={leader.name} 
                       className="w-full h-full object-cover object-top" 
                     />
                   </div>
                   <div className="p-6 text-center">
-                    <h3 className="text-xl font-bold text-slate-800">{pastor.name}</h3>
-                    <p className="text-church-600 font-medium">{pastor.role}</p>
-                    {pastor.period && <p className="text-slate-500 text-sm mt-1">{pastor.period}</p>}
-                    {pastor.description && <p className="text-slate-500 text-sm mt-2 italic line-clamp-3">{pastor.description}</p>}
+                    <h3 className="text-xl font-bold text-slate-800">{leader.name}</h3>
+                    <p className="text-church-600 font-medium">{leader.role}</p>
+                    {leader.period && <p className="text-slate-500 text-sm mt-1">{leader.period}</p>}
+                    {leader.description && <p className="text-slate-500 text-sm mt-2 italic line-clamp-3">{leader.description}</p>}
                   </div>
                 </div>
               ))}
@@ -192,7 +202,7 @@ const About: React.FC = () => {
           ) : (
             <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
               <Users size={48} className="mx-auto text-slate-300 mb-4" />
-              <p className="text-slate-500">No pastors currently listed.</p>
+              <p className="text-slate-500">No spiritual leaders currently listed.</p>
             </div>
           )}
         </div>

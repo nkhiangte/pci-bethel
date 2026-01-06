@@ -30,6 +30,7 @@ export const translations = {
       newsTitle: 'Latest News',
       puipate: 'Our Leaders', // Added Puipate translation
       kohhranElders: 'Church Elders', // New translation key for Church Elders
+      kohhranProPastors: 'Church Pro Pastors', // New: Translation for Pro Pastors
       viewAll: 'View All',
       serviceTimes: 'Service Times',
       weeklyProgramme: 'Weekly Church Program',
@@ -68,7 +69,7 @@ export const translations = {
       missionText: 'To proclaim the Gospel of Jesus Christ, nurture believers in faith, and serve the community through love and compassion.',
       faithTitle: 'Statement of Faith',
       faithText: 'We believe in the Triune God, the authority of the Scriptures, and salvation through faith in Jesus Christ alone.',
-      shepherdsTitle: 'Pastor',
+      shepherdsTitle: 'Our Spiritual Leaders', // Updated to be more generic
       statsFamilies: 'Families',
       statsElders: 'Elders (Upa)',
       statsCommittees: 'Committees',
@@ -207,6 +208,7 @@ export const translations = {
       newsTitle: 'Thuthar & Hriattirna',
       puipate: 'Kohhran Puipate', // Added Puipate translation
       kohhranElders: 'Kohhran Upate', // New translation key for Church Elders
+      kohhranProPastors: 'Kohhran Pro Pastorte', // New: Translation for Pro Pastors (Mizo)
       viewAll: 'En Vek Rawh',
       serviceTimes: 'Inkhawm Hun',
       weeklyProgramme: 'Tunkar Inkhawm Program',
@@ -245,7 +247,7 @@ export const translations = {
       missionText: 'Isua Krista Chanchin Ṭha puan darh, ringtute chawm lian a, hmangaihna leh lainatna nen khawtlang rawngbawl.',
       faithTitle: 'Rin Dan',
       faithText: 'Pathian Pakhata Mi Nung Pathum, Pathian Lehkha Thu thuneihna leh Isua Krista rinna avanga chhandamna kan ring.',
-      shepherdsTitle: 'Pastor',
+      shepherdsTitle: 'Kan Thlarau Hruaitute', // Updated to be more generic
       statsFamilies: 'Chhungkua',
       statsElders: 'Kohhran Upa',
       statsCommittees: 'Committee',

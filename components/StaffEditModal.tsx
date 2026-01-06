@@ -6,12 +6,15 @@ import { Loader, Save, X, Trash2, AlertCircle } from 'lucide-react';
 interface StaffEditModalProps {
   staff: Partial<Staff>;
   onClose: () => void;
-  onSave: (staff: Staff, collectionName: 'elders' | 'pastors') => Promise<void>;
-  onDelete: (id: string, collectionName: 'elders' | 'pastors') => Promise<void>;
+  // FIX: Updated collectionName type to include 'proPastors'
+  onSave: (staff: Staff, collectionName: 'elders' | 'pastors' | 'proPastors') => Promise<void>;
+  // FIX: Updated collectionName type to include 'proPastors'
+  onDelete: (id: string, collectionName: 'elders' | 'pastors' | 'proPastors') => Promise<void>;
   isLoading: boolean;
   showDeleteConfirm: string | null;
   setShowDeleteConfirm: (id: string | null) => void;
-  collectionName: 'elders' | 'pastors'; // Added to distinguish between elders and pastors
+  // FIX: Updated collectionName type to include 'proPastors'
+  collectionName: 'elders' | 'pastors' | 'proPastors'; // Added to distinguish between elders and pastors and proPastors
 }
 
 const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave, onDelete, isLoading, showDeleteConfirm, setShowDeleteConfirm, collectionName }) => {
