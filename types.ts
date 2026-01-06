@@ -185,3 +185,18 @@ export interface WeeklyDuty {
   lightAndSoundDuty: string;
   pangparKhawitu: string;
 }
+
+// KTP Hruaitute Types
+export interface KTPMember {
+  id: string;
+  name: string;
+  role?: string;
+  phone: string;
+}
+
+export interface KTPHruaitute {
+  year: number;
+  leaders: KTPMember[];
+  committeeMembers: KTPMember[];
+  exOfficioMembers: KTPMember[];
+}

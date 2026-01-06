@@ -5,11 +5,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Function to check if the currently authenticated user is an admin.
-    // It checks for document existence before trying to read from it.
+    // An admin user document has a field `role` set to 'admin' OR `isAdmin` set to true.
     function isAdmin() {
       return request.auth != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+        );
     }
 
     // --- Publicly Readable Collections ---
@@ -31,6 +34,11 @@ service cloud.firestore {
     }
     
     match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpLeaders/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
@@ -62,14 +70,11 @@ service cloud.firestore {
 
     // --- User Profiles ---
     match /users/{userId} {
-      // Allow any authenticated user to read profiles (needed for the isAdmin function).
+      // Any authenticated user can read any profile.
       allow read: if request.auth != null;
       
-      // Allow users to create, update, or delete their own profile.
-      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
-
-      // Also allow admins to modify any user's profile.
-      allow write: if isAdmin();
+      // A user can write to their own profile, or an admin can write to any profile.
+      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
     }
   }
 }
