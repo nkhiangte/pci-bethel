@@ -1,22 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Tag, Loader, Clock, User, BookOpen } from 'lucide-react';
+import { ArrowRight, Calendar, Tag, Loader, Clock, User, BookOpen, Star, Music, Users, Flower2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
-import { Announcement, Event } from '../types';
+import { Announcement, Event, WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
 import StatsCounter from '../components/StatsCounter';
-
-// Helper to get next occurrence of a day (0=Sun, 1=Mon, ..., 6=Sat)
-const getNextDayOfWeek = (dayOfWeek: number) => {
-  const now = new Date();
-  const resultDate = new Date(now.getTime());
-  const currentDay = now.getDay();
-  const daysUntilNext = (dayOfWeek - currentDay + 7) % 7;
-  resultDate.setDate(now.getDate() + daysUntilNext);
-  return resultDate;
-};
 
 // Format date for matching (YYYY-MM-DD)
 const formatDateForInput = (date: Date) => {
@@ -29,8 +19,44 @@ const Home: React.FC = () => {
   const [loadingNews, setLoadingNews] = useState(true);
   const [weeklyProgramDetails, setWeeklyProgramDetails] = useState<any[]>([]);
   const [loadingProgram, setLoadingProgram] = useState(true);
+  const [weeklyDuties, setWeeklyDuties] = useState<WeeklyDuty | null>(null);
+  const [loadingDuties, setLoadingDuties] = useState(true);
   
-  const { announcements: staticNews } = getConstants(language);
+  const { announcements: staticNews, weeklyDuty: staticDuty } = getConstants(language);
+
+  const getWeekDateRange = () => {
+    const today = new Date();
+    // Adjust so Monday is 0 and Sunday is 6
+    const dayOfWeek = (today.getDay() + 6) % 7;
+
+    // Calculate start of the week (Monday)
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+    // Calculate end of the week (Sunday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    const startMonth = startOfWeek.toLocaleString('en-US', { month: 'long' });
+    const endMonth = endOfWeek.toLocaleString('en-US', { month: 'long' });
+    const year = startOfWeek.getFullYear();
+    const endYear = endOfWeek.getFullYear();
+    const startDay = startOfWeek.getDate();
+    const endDay = endOfWeek.getDate();
+
+    let dateRange = '';
+    if (year !== endYear) {
+      dateRange = `${startDay} ${startMonth} ${year} - ${endDay} ${endMonth} ${endYear}`;
+    } else if (startMonth !== endMonth) {
+      dateRange = `${startDay} ${startMonth} - ${endDay} ${endMonth} ${year}`;
+    } else {
+      dateRange = `${startDay} - ${endDay} ${startMonth} ${year}`;
+    }
+    return `(${dateRange})`;
+  };
+
+  const weekRange = getWeekDateRange();
+
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -63,6 +89,13 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchAndProcessPrograms = async () => {
         setLoadingProgram(true);
+
+        const today = new Date();
+        const dayOfWeek = (today.getDay() + 6) % 7; 
+        const startOfWeek = new Date(today);
+        startOfWeek.setHours(0, 0, 0, 0);
+        startOfWeek.setDate(today.getDate() - dayOfWeek);
+        
         const allConstantEvents = getConstants(language).events;
         
         let realEvents: Event[] = [];
@@ -80,31 +113,24 @@ const Home: React.FC = () => {
         const basePrograms = t.home.weeklyProgram;
 
         const detailedPrograms = basePrograms.map(baseProg => {
-            const nextDate = getNextDayOfWeek(baseProg.dayOfWeek);
-            const dateStr = formatDateForInput(nextDate);
+            const programDate = new Date(startOfWeek);
+            const dayOffset = (baseProg.dayOfWeek + 6) % 7;
+            programDate.setDate(startOfWeek.getDate() + dayOffset);
+
+            const dateStr = formatDateForInput(programDate);
             
-            // Find a specific event for that date
             const specificEvent = realEvents.find(e => e.date === dateStr && !e.isCancelled);
 
             if (specificEvent) {
-                return {
-                    ...baseProg,
-                    name: specificEvent.title,
-                    details: specificEvent.program
-                };
+                return { ...baseProg, name: specificEvent.title, details: specificEvent.program };
             }
             
-            // Try to find if there's any matching constant data with detailed program
             const constantMatch = allConstantEvents.find(e => e.date === dateStr && e.program);
             if (constantMatch) {
-               return {
-                   ...baseProg,
-                   name: constantMatch.title,
-                   details: constantMatch.program
-               };
+               return { ...baseProg, name: constantMatch.title, details: constantMatch.program };
             }
 
-            return baseProg; // Fallback to base program
+            return baseProg;
         });
         
         setWeeklyProgramDetails(detailedPrograms);
@@ -113,6 +139,30 @@ const Home: React.FC = () => {
 
     fetchAndProcessPrograms();
 }, [language, t.home.weeklyProgram]);
+
+ useEffect(() => {
+    const fetchDuties = async () => {
+        setLoadingDuties(true);
+        if (!db?.doc) {
+            setWeeklyDuties(staticDuty);
+            setLoadingDuties(false);
+            return;
+        }
+        try {
+            const doc = await db.collection('weeklyDuties').doc('current').get();
+            if (doc.exists) {
+                setWeeklyDuties({ id: doc.id, ...doc.data() } as WeeklyDuty);
+            } else {
+                setWeeklyDuties(staticDuty);
+            }
+        } catch (error) {
+            console.error("Error fetching weekly duties:", error);
+            setWeeklyDuties(staticDuty);
+        }
+        setLoadingDuties(false);
+    };
+    fetchDuties();
+  }, [language, staticDuty]);
 
 
   const featuredNews = news[0];
@@ -136,7 +186,6 @@ const Home: React.FC = () => {
             <>
               <h1 className="text-4xl font-serif font-bold text-church-900 mb-8">{t.home.newsTitle || 'News & Updates'}</h1>
 
-              {/* Featured News */}
               {featuredNews && (
                 <div className="mb-12 group">
                   <Link to="/announcements" className="block rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
@@ -165,7 +214,6 @@ const Home: React.FC = () => {
                 </div>
               )}
 
-              {/* Other News Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {otherNews.map((item) => (
                   <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
@@ -195,10 +243,41 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Weekly Program Section */}
       <div className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-serif font-bold text-center text-church-900 mb-10">{t.home.weeklyProgramme}</h2>
+            <h2 className="text-3xl font-serif font-bold text-center text-church-900 mb-2">{t.home.weeklyProgramme}</h2>
+            <p className="text-center text-slate-500 font-medium -mt-1 mb-10">{weekRange}</p>
+
+            {loadingDuties ? <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+            : weeklyDuties && (
+                <div className="mb-10 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider border-b pb-2 mb-2">{weeklyDuties.month} Thla Thawhlawm Chiartu</h3>
+                            <ul className="space-y-1 text-slate-700 text-sm list-disc list-inside">{weeklyDuties.thawhlawmChiartute.map((n,i) => <li key={i}>{n}</li>)}</ul>
+                        </div>
+                         <div>
+                            <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider border-b pb-2 mb-2">{weeklyDuties.month} Thla Buhfaitham Hralhtu</h3>
+                            <ul className="space-y-1 text-slate-700 text-sm list-disc list-inside">{weeklyDuties.buhfaithamHralhtute.map((n,i) => <li key={i}>{n}</li>)}</ul>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider border-b pb-2 mb-2">{weeklyDuties.month} Thla Usher</h3>
+                            <ul className="space-y-1 text-slate-700 text-sm list-disc list-inside">{weeklyDuties.ushers.map((n,i) => <li key={i}>{n}</li>)}</ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-slate-100 pt-6">
+                        <h3 className="font-bold text-center text-slate-800 uppercase tracking-wider mb-4">{weeklyDuties.weekRange} Kohhran Hun Ruatna</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                           <div className="bg-slate-50 p-3 rounded-lg"><h4 className="text-xs font-bold text-slate-500">Zai Hruaitu</h4><p className="text-sm font-semibold text-church-800 mt-1">{weeklyDuties.zaiHruaitu}</p></div>
+                           <div className="bg-slate-50 p-3 rounded-lg"><h4 className="text-xs font-bold text-slate-500">Piano Tumtu</h4><p className="text-sm font-semibold text-church-800 mt-1">{weeklyDuties.pianoTumtu}</p></div>
+                           <div className="bg-slate-50 p-3 rounded-lg"><h4 className="text-xs font-bold text-slate-500">Hla Hriltu</h4><p className="text-sm font-semibold text-church-800 mt-1">{weeklyDuties.hlaHriltu}</p></div>
+                           <div className="bg-slate-50 p-3 rounded-lg"><h4 className="text-xs font-bold text-slate-500">Light & Sound</h4><p className="text-sm font-semibold text-church-800 mt-1">{weeklyDuties.lightAndSoundDuty}</p></div>
+                           <div className="bg-slate-50 p-3 rounded-lg"><h4 className="text-xs font-bold text-slate-500">Pangpar Khawitu</h4><p className="text-sm font-semibold text-church-800 mt-1">{weeklyDuties.pangparKhawitu}</p></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {loadingProgram ? (
                 <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
             ) : (
@@ -214,43 +293,14 @@ const Home: React.FC = () => {
                                 
                                 {program.details ? (
                                     <div className="space-y-1 mt-2 bg-slate-50/50 p-2 rounded-md border border-slate-100">
-                                        {program.details.hruaitu && (
-                                            <div className="flex items-center text-xs text-slate-600">
-                                                <span className="font-bold w-16 shrink-0">Hruaitu:</span>
-                                                <span className="truncate">{program.details.hruaitu}</span>
-                                            </div>
-                                        )}
-                                        {program.details.tantu && (
-                                            <div className="flex items-center text-xs text-slate-600">
-                                                <span className="font-bold w-16 shrink-0">Ṭantu:</span>
-                                                <span className="truncate">{program.details.tantu}</span>
-                                            </div>
-                                        )}
-                                        {program.details.thuhriltu && (
-                                            <div className="flex items-center text-xs text-slate-800 font-medium">
-                                                <span className="font-bold w-16 shrink-0">Thusawi:</span>
-                                                <span className="truncate">{program.details.thuhriltu}</span>
-                                            </div>
-                                        )}
-                                        {program.details.hawngtu && (
-                                            <div className="flex items-center text-xs text-slate-600">
-                                                <span className="font-bold w-16 shrink-0">Hawngtu:</span>
-                                                <span className="truncate">{program.details.hawngtu}</span>
-                                            </div>
-                                        )}
-                                        {program.details.thupui && (
-                                            <div className="flex items-center text-xs text-slate-800 font-medium pt-1 border-t border-slate-200 mt-1">
-                                                <span className="font-bold w-16 shrink-0">Thupui:</span>
-                                                <span className="italic">{program.details.thupui}</span>
-                                            </div>
-                                        )}
-                                        {!program.details.hruaitu && !program.details.tantu && !program.details.thuhriltu && !program.details.thupui && (
-                                           <p className="text-sm text-slate-500">{program.time}</p>
-                                        )}
+                                        {program.details.hruaitu && ( <div className="flex items-center text-xs text-slate-600"><span className="font-bold w-16 shrink-0">Hruaitu:</span><span className="truncate">{program.details.hruaitu}</span></div>)}
+                                        {program.details.tantu && ( <div className="flex items-center text-xs text-slate-600"><span className="font-bold w-16 shrink-0">Ṭantu:</span><span className="truncate">{program.details.tantu}</span></div>)}
+                                        {program.details.thuhriltu && ( <div className="flex items-center text-xs text-slate-800 font-medium"><span className="font-bold w-16 shrink-0">Thusawi:</span><span className="truncate">{program.details.thuhriltu}</span></div>)}
+                                        {program.details.hawngtu && ( <div className="flex items-center text-xs text-slate-600"><span className="font-bold w-16 shrink-0">Hawngtu:</span><span className="truncate">{program.details.hawngtu}</span></div>)}
+                                        {program.details.thupui && ( <div className="flex items-center text-xs text-slate-800 font-medium pt-1 border-t border-slate-200 mt-1"><span className="font-bold w-16 shrink-0">Thupui:</span><span className="italic">{program.details.thupui}</span></div>)}
+                                        {!program.details.hruaitu && !program.details.tantu && !program.details.thuhriltu && !program.details.thupui && ( <p className="text-sm text-slate-500">{program.time}</p>)}
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-slate-500 mt-1">{program.time}</p>
-                                )}
+                                ) : ( <p className="text-sm text-slate-500 mt-1">{program.time}</p> )}
                             </div>
                         </Link>
                     ))}

@@ -21,6 +21,7 @@ export const translations = {
       records: 'Records',
       admin: 'Admin',
       statistics: 'Statistics',
+      duties: 'Weekly Duties',
     },
     home: {
       newHere: 'New Here?',
@@ -192,6 +193,7 @@ export const translations = {
       records: 'Records',
       admin: 'Admin',
       statistics: 'Statistics',
+      duties: 'Tunkar Inruatna',
     },
     home: {
       newHere: 'I vawi khatna em ni?',
@@ -323,7 +325,7 @@ export const translations = {
     },
     footer: {
       churchDesc: 'Rinna a pummunkhat, Lalpa rawngbawl tura kohte kan ni. Lo tel ve rawh le.',
-      quickLinks: 'Link Pawimawh',
+      quickLinks: 'Quick Links',
       contactUs: 'Biak Pawh Dan',
       rightsReserved: 'Dikna zawng zawng hauh a ni.',
     },

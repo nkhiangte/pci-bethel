@@ -171,3 +171,17 @@ export interface InkhawmpuiRecord {
 }
 
 export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord;
+
+export interface WeeklyDuty {
+  id: string; // Should be 'current'
+  month: string;
+  thawhlawmChiartute: string[];
+  buhfaithamHralhtute: string[];
+  ushers: string[];
+  weekRange: string;
+  zaiHruaitu: string;
+  pianoTumtu: string;
+  hlaHriltu: string;
+  lightAndSoundDuty: string;
+  pangparKhawitu: string;
+}

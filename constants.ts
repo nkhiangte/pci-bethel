@@ -1,5 +1,5 @@
 
-import { Announcement, Event, Ministry, Sermon, Staff } from './types';
+import { Announcement, Event, Ministry, Sermon, Staff, WeeklyDuty } from './types';
 import { Language } from './translations';
 
 export const CHURCH_NAME = "Mizoram Synod (PCI) Champhai Bethel Kohhran";
@@ -34,6 +34,46 @@ const DATA = {
       }
     ] as Announcement[],
     events: [
+      {
+        id: 'sun-chawhma-2026-01-11',
+        title: 'Sunday School Service',
+        date: '2026-01-11',
+        time: '10:00 AM',
+        location: 'Biak In',
+        description: 'Sunday School teaching session.',
+        type: 'Service',
+        isRecurringTemplate: false,
+        program: {
+          tantu: 'Pi Lalramengi',
+          thupui: 'Lesson 1: Introduction',
+          thuhriltu: 'Rev. Lalhmingthanga Chhangte'
+        }
+      },
+      {
+        id: 'sun-chawhnu-2026-01-11',
+        title: 'Pro. Pastor Induction Service',
+        date: '2026-01-11',
+        time: '1:30 PM',
+        location: 'Biak In',
+        description: 'Induction service for the new Probationary Pastor.',
+        type: 'Special',
+        isRecurringTemplate: false,
+      },
+      {
+        id: 'sun-zan-2026-01-11',
+        title: 'Ordination Service',
+        date: '2026-01-11',
+        time: '7:00 PM',
+        location: 'Biak In',
+        description: 'Ordination service for new church leaders.',
+        type: 'Special',
+        isRecurringTemplate: false,
+        program: {
+          hruaitu: 'Rev. Lalhmingthanga Chhangte',
+          thuhriltu: 'Pro. Pastor Lallawmsanga',
+          groupZai: 'Kohhran Zaipawl (Church Choir)'
+        }
+      },
       {
         id: 'ktp-2026-01-05',
         title: 'Kristian Ṭhalai Pawl (KTP)',
@@ -162,7 +202,26 @@ const DATA = {
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20'
       }
-    ] as Staff[]
+    ] as Staff[],
+    weeklyDuty: {
+      id: 'current',
+      month: 'January',
+      thawhlawmChiartute: [
+        'T. Upa C. Lalthazuala', 'Pu Kapthuama', 'Pu Nelson Khiangte', 'Pu Lalhmingmawia'
+      ],
+      buhfaithamHralhtute: [
+        'Pi Lalbiakhnuni', 'Pi K. Thangkimi', 'Pi Vanlalnghaki Colney', 'Pi H. Lallawmkimi', 'Pi Rosiammawii', 'Pi Zorampari', 'Pi K. Rochharliani'
+      ],
+      ushers: [
+        'Pu Tluangzathanga', 'Pu Lalhruaitluanga', 'Tv. Lalrochawia', 'Pu Samuel Lalbiakzuala', 'Tv. Zodintluanga', 'Tv. Pauengliana', 'Nl. Lalnunthari', 'Nl. C. Lalrampansangi', 'Nl. Ngurthankimi', 'Nl. Catherine Lalhriatpuii', 'Nl. Anny Lalliandawli', 'Nl. B. Lalrinfeli'
+      ],
+      weekRange: '05 - 11 January, 2026',
+      zaiHruaitu: 'Pu R. Lalmalsawma & Tv. Vanlalchhana',
+      pianoTumtu: 'Tv. H. Lalfakawma',
+      hlaHriltu: 'Pi C. Lalramthari',
+      lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
+      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami'
+    } as WeeklyDuty
   },
   mizo: {
     announcements: [
@@ -176,6 +235,46 @@ const DATA = {
       }
     ] as Announcement[],
     events: [
+        {
+          id: 'sun-chawhma-2026-01-11',
+          title: 'Pathianni Chawhma Sunday School Inkhawm',
+          date: '2026-01-11',
+          time: '10:00 AM',
+          location: 'Biak In',
+          description: 'Sunday School zirlai.',
+          type: 'Service',
+          isRecurringTemplate: false,
+          program: {
+            tantu: 'Pi Lalramengi',
+            thupui: 'Zirlai 1-na: Thuhmahruai',
+            thuhriltu: 'Rev. Lalhmingthanga Chhangte'
+          }
+        },
+        {
+          id: 'sun-chawhnu-2026-01-11',
+          title: 'Pro. Pastor Induction Service',
+          date: '2026-01-11',
+          time: '1:30 PM',
+          location: 'Biak In',
+          description: 'Pro. Pastor thar lak luhna inkhawm.',
+          type: 'Special',
+          isRecurringTemplate: false,
+        },
+        {
+          id: 'sun-zan-2026-01-11',
+          title: 'Rawngbawltu Hlan Inkhawm',
+          date: '2026-01-11',
+          time: '7:00 PM',
+          location: 'Biak In',
+          description: 'Rawngbawltu thar hlan a nemngheh an nihna inkhawm.',
+          type: 'Special',
+          isRecurringTemplate: false,
+          program: {
+            hruaitu: 'Rev. Lalhmingthanga Chhangte',
+            thuhriltu: 'Pro. Pastor Lallawmsanga',
+            groupZai: 'Kohhran Zaipawl'
+          }
+        },
         {
         id: 'ktp-2026-01-05',
         title: 'Kristian Ṭhalai Pawl (KTP)',
@@ -276,7 +375,26 @@ const DATA = {
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20'
       }
-    ] as Staff[]
+    ] as Staff[],
+    weeklyDuty: {
+      id: 'current',
+      month: 'January',
+      thawhlawmChiartute: [
+        'T. Upa C. Lalthazuala', 'Pu Kapthuama', 'Pu Nelson Khiangte', 'Pu Lalhmingmawia'
+      ],
+      buhfaithamHralhtute: [
+        'Pi Lalbiakhnuni', 'Pi K. Thangkimi', 'Pi Vanlalnghaki Colney', 'Pi H. Lallawmkimi', 'Pi Rosiammawii', 'Pi Zorampari', 'Pi K. Rochharliani'
+      ],
+      ushers: [
+        'Pu Tluangzathanga', 'Pu Lalhruaitluanga', 'Tv. Lalrochawia', 'Pu Samuel Lalbiakzuala', 'Tv. Zodintluanga', 'Tv. Pauengliana', 'Nl. Lalnunthari', 'Nl. C. Lalrampansangi', 'Nl. Ngurthankimi', 'Nl. Catherine Lalhriatpuii', 'Nl. Anny Lalliandawli', 'Nl. B. Lalrinfeli'
+      ],
+      weekRange: '05 - 11 January, 2026',
+      zaiHruaitu: 'Pu R. Lalmalsawma & Tv. Vanlalchhana',
+      pianoTumtu: 'Tv. H. Lalfakawma',
+      hlaHriltu: 'Pi C. Lalramthari',
+      lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
+      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami'
+    } as WeeklyDuty
   }
 };
 

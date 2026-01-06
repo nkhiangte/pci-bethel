@@ -5,9 +5,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Function to check if the currently authenticated user is an admin.
-    // It looks for a 'role' field set to 'admin' in their user document.
+    // It checks for document existence before trying to read from it.
     function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // --- Publicly Readable Collections ---
@@ -53,11 +55,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /weeklyDuties/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // --- User Profiles ---
-    // Users can only create, read, and modify their own profile document.
     match /users/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow any authenticated user to read profiles (needed for the isAdmin function).
+      allow read: if request.auth != null;
+      
+      // Allow users to create, update, or delete their own profile.
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+
+      // Also allow admins to modify any user's profile.
+      allow write: if isAdmin();
     }
   }
 }

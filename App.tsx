@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
+import AdminDuties from './pages/AdminDuties'; // Import new page
 import Statistics from './pages/Statistics';
 import SundaySchool from './pages/SundaySchool';
 import Records from '@/pages/Records'; // Import the new page
@@ -53,6 +54,7 @@ const App: React.FC = () => {
                 <Route path="/gallery/*" element={<Gallery />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/ministries" element={<AdminMinistries />} />
+                <Route path="/admin/duties" element={<AdminDuties />} /> {/* Add new route */}
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> {/* Add new route */}
               </Routes>
