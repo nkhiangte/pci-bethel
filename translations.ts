@@ -40,14 +40,7 @@ export const translations = {
       getDirections: 'Get Directions',
       locationText: 'We are located near the main community hall.',
       heroTagline: 'A House of Prayer for All Nations',
-      weeklyProgram: [
-        { day: 'Monday', name: 'Kristian Ṭhalai Pawl (KTP)', time: '7:00 PM', dayOfWeek: 1 },
-        { day: 'Tuesday', name: 'Kohhran Hmeichhia', time: '7:00 PM', dayOfWeek: 2 },
-        { day: 'Wednesday', name: 'Nilai Zan Service', time: '7:00 PM', dayOfWeek: 3 },
-        { day: 'Thursday', name: 'Kohhran Pavalai Pawl', time: '7:00 PM', dayOfWeek: 4 },
-        { day: 'Saturday', name: 'Prayer Meeting', time: '7:00 PM', dayOfWeek: 6 },
-        { day: 'Sunday', name: 'Worship Services', time: '10:30 AM, 1:30 PM & 6:30 PM', dayOfWeek: 0 },
-      ],
+      weeklyProgram: [],
     },
     program: {
       speaker: 'Preacher',
@@ -212,14 +205,7 @@ export const translations = {
       getDirections: 'Kal Dan En Rawh',
       locationText: 'Veng lai Community Hall bulah kan awm.',
       heroTagline: 'Hnam tin tan ṭawngṭaina in',
-      weeklyProgram: [
-        { day: 'Thawhṭanni', name: 'Kristian Ṭhalai Pawl (KTP)', time: 'Dar 7:00 PM', dayOfWeek: 1 },
-        { day: 'Thawhlehni', name: 'Kohhran Hmeichhia', time: 'Dar 7:00 PM', dayOfWeek: 2 },
-        { day: 'Nilaini', name: 'Nilai Zan Inkhawm', time: 'Dar 7:00 PM', dayOfWeek: 3 },
-        { day: 'Ningani', name: 'Kohhran Pavalai Pawl', time: 'Dar 7:00 PM', dayOfWeek: 4 },
-        { day: 'Inrinni', name: 'Ṭawngṭai Inkhawm', time: 'Dar 7:00 PM', dayOfWeek: 6 },
-        { day: 'Pathianni', name: 'Pathianni Inkhawm', time: 'Dar 10:30 AM, 1:30 PM & 6:30 PM', dayOfWeek: 0 },
-      ],
+      weeklyProgram: [],
     },
     program: {
       speaker: 'Thuhriltu',

@@ -116,63 +116,6 @@ const DATA = {
           thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
           khuangpu: ['Pi F. Lalthianghlimi']
         }
-      },
-      {
-        id: 'mon-service',
-        title: 'Kristian Ṭhalai Pawl (KTP)',
-        dayOfWeek: 1, // Monday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Youth fellowship service.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          hruaitu: 'TBD',
-          tantu: 'TBD'
-        }
-      },
-      {
-        id: 'tue-service',
-        title: 'Kohhran Hmeichhia',
-        dayOfWeek: 2, // Tuesday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Women\'s fellowship service.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          hruaitu: 'TBD',
-          tantu: 'TBD'
-        }
-      },
-      {
-        id: 'wed-service',
-        title: 'Wednesday Night Service',
-        dayOfWeek: 3, // Wednesday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Nilaini Zan Inkhawm.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'TBD',
-          thupui: 'Bible Study',
-          hawngtu: 'Opener TBD'
-        }
-      },
-      {
-        id: 'sat-service',
-        title: 'Saturday Prayer Meeting',
-        dayOfWeek: 6, // Saturday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Inrinni Zan Ṭawngṭai Inkhawm.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'TBD',
-          thuhriltu: 'Speaker TBD'
-        }
       }
     ] as any[],
     sermons: [
@@ -316,35 +259,6 @@ const DATA = {
           thuhriltu: 'Nl. Ngurbawihtluangi',
           thawhlawmKhawntute: ['Pi Lalhmunmawii', 'Pi R. Lallawmkimi'],
           khuangpu: ['Pi F. Lalthianghlimi']
-        }
-      },
-      {
-        id: 'wed-service-template',
-        title: 'Nilai Zan Inkhawm',
-        dayOfWeek: 3, // Wednesday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Nilaini Zan Inkhawm Program.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Tantu Tur',
-          thupui: 'Thupui Zir Tur',
-          hawngtu: 'Thupui Hawngtu'
-        }
-      },
-      {
-        id: 'sat-service-template',
-        title: 'Inrinni Zan Ṭawngṭai Inkhawm',
-        dayOfWeek: 6, // Saturday
-        time: '07:00 PM',
-        location: 'Biak In',
-        description: 'Inrinni Zan Ṭawngṭai Inkhawm Program.',
-        type: 'Service',
-        isRecurringTemplate: true,
-        program: {
-          tantu: 'Tantu Tur',
-          thuhriltu: 'Thuhriltu Tur'
         }
       }
     ] as Event[],
