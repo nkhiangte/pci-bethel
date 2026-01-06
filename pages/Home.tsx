@@ -766,10 +766,10 @@ export const Home: React.FC = () => {
                             >
                                 <Edit size={16} />
                             </button>
-                            <button
-                              onClick={() => setShowDeletePastorConfirm(pastor.id || '')}
-                              className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition"
-                              title="Delete Pastor"
+                            <button 
+                                onClick={() => setShowDeletePastorConfirm(pastor.id || '')}
+                                className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition"
+                                title="Delete Pastor"
                             >
                                 <Trash size={16} />
                             </button>

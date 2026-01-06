@@ -32,6 +32,11 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
     }
   };
 
+  // The delete button will now always be shown if staff.id exists,
+  // as per the user's request for full admin control.
+  // Actual deletion permission is handled by Firestore Security Rules.
+  const allowDeleteUI = true; 
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col animate-in zoom-in-90 duration-200">
@@ -85,7 +90,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
               placeholder="A brief description or role of the staff member."
             />
           </div>
-          {staff.id && (
+          {staff.id && allowDeleteUI && ( // Always show delete button if ID exists
             <div className="pt-4 border-t border-slate-100">
               <button
                 type="button"
@@ -105,7 +110,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
         </div>
       </div>
 
-      {showDeleteConfirm && (
+      {showDeleteConfirm && allowDeleteUI && ( // Always show delete confirmation if triggered
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-90 duration-200">
             <div className="flex items-center text-red-600 mb-4"><AlertCircle className="w-6 h-6 mr-2" /><h3 className="text-lg font-bold">Confirm Delete</h3></div>
