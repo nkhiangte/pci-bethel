@@ -1,4 +1,5 @@
 
+
 import { Announcement, Event, Ministry, Staff, WeeklyDuty, Sermon } from './types';
 import { Language } from './translations';
 
@@ -84,24 +85,25 @@ const DATA = {
         name: 'Rev. Dr. Lalnunsanga',
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20',
-        description: 'Serving as the spiritual head and guiding our church with wisdom and grace.'
+        description: 'Serving as the spiritual head and guiding our church with wisdom and grace.',
+        order: 0, // Added order for consistency
       }
     ] as Staff[],
     elders: [
-      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'A pillar of faith, serving the church with dedication and compassion.' },
-      { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Known for his unwavering commitment to church community.' },
-      { id: 'e3', name: 'T. Upa Hminga', role: 'Elder', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Guides our congregation with profound spiritual insights.' },
-      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Elder', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'His gentle guidance and wisdom are a blessing to all.' },
-      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Elder', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Leads with vision and a heart for service.' },
-      { id: 'e6', name: 'Upa Daikhawzama', role: 'Elder', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'A devoted elder, always ready to lend an ear and offer counsel.' },
-      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Elder', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Passionate about nurturing spiritual growth within the church.' },
-      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Elder', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Provides steadfast leadership and encouragement.' },
-      { id: 'e9', name: 'Upa Lianpianga', role: 'Elder', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Dedicated to community outreach and pastoral care.' },
-      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Elder', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Inspires generosity and service in the congregation.' },
-      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Elder', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'A faithful servant, committed to upholding biblical truths.' },
-      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Elder', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Offers wise counsel and a calm presence to all who seek it.' },
-      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Elder', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'Known for his heartfelt prayers and deep spiritual understanding.' },
-      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Elder', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Champions youth programs and ministries.' }
+      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'A pillar of faith, serving the church with dedication and compassion.', order: 1 },
+      { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Known for his unwavering commitment to church community.', order: 2 },
+      { id: 'e3', name: 'T. Upa Hminga', role: 'Elder', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Guides our congregation with profound spiritual insights.', order: 3 },
+      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Elder', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'His gentle guidance and wisdom are a blessing to all.', order: 4 },
+      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Elder', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Leads with vision and a heart for service.', order: 5 },
+      { id: 'e6', name: 'Upa Daikhawzama', role: 'Elder', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'A devoted elder, always ready to lend an ear and offer counsel.', order: 6 },
+      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Elder', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Passionate about nurturing spiritual growth within the church.', order: 7 },
+      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Elder', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Provides steadfast leadership and encouragement.', order: 8 },
+      { id: 'e9', name: 'Upa Lianpianga', role: 'Elder', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Dedicated to community outreach and pastoral care.', order: 9 },
+      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Elder', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Inspires generosity and service in the congregation.', order: 10 },
+      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Elder', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'A faithful servant, committed to upholding biblical truths.', order: 11 },
+      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Elder', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Offers wise counsel and a calm presence to all who seek it.', order: 12 },
+      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Elder', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'Known for his heartfelt prayers and deep spiritual understanding.', order: 13 },
+      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Elder', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Champions youth programs and ministries.', order: 14 }
     ] as Staff[],
     weeklyDuty: {
       id: 'current',
@@ -174,24 +176,25 @@ const DATA = {
         name: 'Rev. Dr. Lalnunsanga',
         role: 'Senior Pastor',
         imageUrl: 'https://picsum.photos/200/200?random=20',
-        description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.'
+        description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.',
+        order: 0, // Added order for consistency
       }
     ] as Staff[],
     elders: [
-      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Upa', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.' },
-      { id: 'e2', name: 'Upa R. Lalruata', role: 'Upa', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.' },
-      { id: 'e3', name: 'T. Upa Hminga', role: 'Upa', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Thlarau lam thil hriatna thuk tak nei a, kohhran kaihruaitu.' },
-      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Upa', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'A kaihhruaina duhawm tak leh finnate chu malsawmna a ni.' },
-      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Upa', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Rawngbawlna thinlung tak pu a, hruaitu a ni.' },
-      { id: 'e6', name: 'Upa Daikhawzama', role: 'Upa', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'Upa rinawm tak, ngaihtuahna tha tak pe zel a ni.' },
-      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Upa', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Kohhrana thlarau lam intlâkna chawh lartu a ni.' },
-      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Upa', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Kaihhruaina nghet tak pe a, thlamuantu a ni.' },
-      { id: 'e9', name: 'Upa Lianpianga', role: 'Upa', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Khawtlang tana inpe a, mi ngaihsak tak a ni.' },
-      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Upa', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Kohhran chhungah inpeknate a chawh lartu a ni.' },
-      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Upa', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'Rawngbawltu rinawm tak, Pathian thu vawng tlat a ni.' },
-      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Upa', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Finna nei a, ngaihsak tak a ni.' },
-      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Upa', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'A tawngtainate avanga mi hriat hlawh, Pathian thu hrethiam tak a ni.' },
-      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Upa', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Ṭhalai program leh rawngbawlnate tana inpe.' }
+      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Upa', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.', order: 1 },
+      { id: 'e2', name: 'Upa R. Lalruata', role: 'Upa', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.', order: 2 },
+      { id: 'e3', name: 'T. Upa Hminga', role: 'Upa', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Thlarau lam thil hriatna thuk tak nei a, kohhran kaihruaitu.', order: 3 },
+      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Upa', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'A kaihhruaina duhawm tak leh finnate chu malsawmna a ni.', order: 4 },
+      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Upa', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Rawngbawlna thinlung tak pu a, hruaitu a ni.', order: 5 },
+      { id: 'e6', name: 'Upa Daikhawzama', role: 'Upa', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'Upa rinawm tak, ngaihtuahna tha tak pe zel a ni.', order: 6 },
+      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Upa', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Thlarau lam thil hriatna thuk tak nei a, kohhran kaihruaitu.', order: 7 },
+      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Upa', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Kaihhruaina nghet tak pe a, thlamuantu a ni.', order: 8 },
+      { id: 'e9', name: 'Upa Lianpianga', role: 'Upa', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Khawtlang tana inpe a, mi ngaihsak tak a ni.', order: 9 },
+      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Upa', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Kohhran chhungah inpeknate a chawh lartu a ni.', order: 10 },
+      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Upa', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'Rawngbawltu rinawm tak, Pathian thu vawng tlat a ni.', order: 11 },
+      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Upa', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Finna nei a, ngaihsak tak a ni.', order: 12 },
+      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Upa', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'A tawngtainate avanga mi hriat hlawh, Pathian thu hrethiam tak a ni.', order: 13 },
+      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Upa', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Ṭhalai program leh rawngbawlnate tana inpe.', order: 14 }
     ] as Staff[],
     weeklyDuty: {
       id: 'current',
@@ -228,6 +231,7 @@ export const EVENTS_DATA = DATA.en.events.map(e => ({
     leader: e.program?.thuhriltu || e.program?.hruaitu || 'TBD'
 }));
 
+// LEADERS_DATA will now be dynamically fetched, this constant is kept as a placeholder/backup.
 export const LEADERS_DATA = DATA.en.pastors.map(p => ({
     name: p.name,
     role: p.role,

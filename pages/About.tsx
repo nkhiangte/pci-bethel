@@ -1,14 +1,50 @@
 
-import React from 'react';
-import { Users, BookOpen, Heart, Scroll, Activity, Home, ArrowLeftRight } from 'lucide-react';
+
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Users, BookOpen, Heart, Scroll, Activity, Home, ArrowLeftRight, Loader } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
+import { db } from '../services/firebase';
+import { Staff } from '../types';
 
 const About: React.FC = () => {
   const { language, t } = useLanguage();
-  const { pastors } = getConstants(language);
+  const { pastors: staticPastors } = getConstants(language); // Keep static for fallback
+  const [churchPastors, setChurchPastors] = useState<Staff[]>([]);
+  const [loadingPastors, setLoadingPastors] = useState(true);
 
   const heroBgUrl = "https://i.ibb.co/G4kcMqmM/117973144-786352218785464-3747589953800462999-n.jpg";
+
+  const fetchPastors = useCallback(async () => {
+    setLoadingPastors(true);
+    if (!db || !db.collection) {
+      setChurchPastors(staticPastors);
+      setLoadingPastors(false);
+      return;
+    }
+    try {
+      const snapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
+      if (!snapshot.empty) {
+        const fetchedData = snapshot.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Staff[];
+        setChurchPastors(fetchedData);
+      } else {
+        setChurchPastors(staticPastors); // Fallback to static if collection is empty
+      }
+    } catch (error) {
+      console.error("Error fetching pastors for About page:", error);
+      setChurchPastors(staticPastors); // Fallback on error
+    }
+    setLoadingPastors(false);
+  }, [staticPastors]);
+
+  useEffect(() => {
+    fetchPastors();
+  }, [fetchPastors]);
+
 
   const DOCTRINE_ARTICLES = [
     {
@@ -29,7 +65,7 @@ const About: React.FC = () => {
     },
     {
       title: "Thurin V",
-      text: "Mihringte chuan anmahni duhthû ngeiin Pathian dân an bawhchhia a, thiam lohna leh chhiatnaah chuan anmahni an inbarh lût ta a. Chu thiam lohna leh chhiatna leh sual hremna ata chu anmahni chhanchhuak tûr leh, chatuan nunna pe tûrin, hmangaihna tâwp nei lo Pathian chuan, A chatuan Fapa neih chhun Lal Isua Krista chu khawvêlah a rawn tîr a; Ama zârah chauh chuan mihringte hi chhandamin an awm thei a. Chu Chatuan Fapa chu mihring takah a lo chang a, minung pakhat mize pahnih nei, Pathian tak leh mihring tak a ni kumkhua ta a ni. Thlarau Thianghlim thiltihtheihnain nula thianghlim Mari chuan a pai a, a hring a; mahse, sual a nei lo. Mi sualte tân Pathian dân chu a zâwm famkim a, Pathianin dikna a phût hlen chhuak tûr leh mihringte Pathian remtîr tûrin, inthawina tak leh famkim atân a inhlân a, kraws-ah a thi a, phûmin a awm a, ni thum niah mitthi zing ata a tho leh a. Pathian ding lamah a han chho va, chutah chuan a mite tân a dîlsak reng a, chuta tang chuan mitthite kaitho tûr leh khawvêl rorêl tûrin a lo kal leh ang."
+      text: "Mihringte chuan anmahni duhthû ngeiin Pathian dân an bawhchhia a, thiam lohna leh chhiatnaah chuan anmahni an inbarh lût ta a. Chu thiam lohna leh chhiatna leh sual hremna ata chu anmahni chhanchhuak tûr leh, chatuan nunna pe tûrin, hmangaihna tâwp nei lo Pathian chuan, A chatuan Fapa neih chhun Lal Isua Krista chu khawvêlah a rawn tîr a; Ama zârah chauh chuan mihringte hi chhandamin an awm thei a. Chu Chatuan Fapa chu mihring takah a lo chang a, minung pakhat mize pahnih nei, Pathian tak leh mihring tak a ni kumkhua ta a ni. Thlarau Thianghlim thiltihtheihnain nula thianghlim Mari chuan a pai a, a hring a; mahse, sual a nei lo. Mi sualte tân Pathian dân chu a zâwm famkim a, Pathianin dikna a phût hlen chhuak tûr leh mihringte Pathian remtîr tûrin, inthawina tak leh famkim atân a inhlân a, kraws-ah a thi a, phûmin an awm a, ni thum niah mitthi zing ata a tho leh a. Pathian ding lamah a han chho va, chutah chuan a mite tân a dîlsak reng a, chuta tang chuan mitthite kaitho tûr leh khawvêl rorêl tûrin a lo kal leh ang."
     },
     {
       title: "Thurin VI",
@@ -131,24 +167,34 @@ const About: React.FC = () => {
         {/* Our Pastors */}
         <div className="mb-16">
           <h2 className="text-3xl font-serif font-bold text-church-900 mb-8 text-center">{t.about.shepherdsTitle}</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-            {pastors.map((pastor) => (
-              <div key={pastor.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
-                <div className="aspect-square overflow-hidden bg-slate-200">
-                  <img 
-                    src={pastor.imageUrl} 
-                    alt={pastor.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+          {loadingPastors ? (
+            <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
+          ) : churchPastors.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+              {churchPastors.map((pastor) => (
+                <div key={pastor.id} className="bg-white rounded-lg overflow-hidden shadow-md group hover:shadow-xl transition-shadow duration-300 border border-slate-100">
+                  <div className="aspect-square overflow-hidden bg-slate-200">
+                    <img 
+                      src={pastor.imageUrl} 
+                      alt={pastor.name} 
+                      className="w-full h-full object-cover object-top" 
+                    />
+                  </div>
+                  <div className="p-6 text-center">
+                    <h3 className="text-xl font-bold text-slate-800">{pastor.name}</h3>
+                    <p className="text-church-600 font-medium">{pastor.role}</p>
+                    {pastor.period && <p className="text-slate-500 text-sm mt-1">{pastor.period}</p>}
+                    {pastor.description && <p className="text-slate-500 text-sm mt-2 italic line-clamp-3">{pastor.description}</p>}
+                  </div>
                 </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-xl font-bold text-slate-800">{pastor.name}</h3>
-                  <p className="text-church-600 font-medium">{pastor.role}</p>
-                  {pastor.period && <p className="text-slate-500 text-sm mt-1">{pastor.period}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+              <Users size={48} className="mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-500">No pastors currently listed.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

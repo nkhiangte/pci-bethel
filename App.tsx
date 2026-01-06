@@ -1,10 +1,10 @@
 
-
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
+// FIX: Changed default import to named import based on the error message "Module ... has no default export".
+import { Home } from './pages/Home';
 import About from './pages/About';
 import Events from './pages/Events';
 import Announcements from './pages/Announcements';
@@ -20,12 +20,13 @@ import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
 import AdminDuties from './pages/AdminDuties'; // Import new page
-import Statistics from './pages/Statistics';
-import SundaySchool from './pages/SundaySchool';
-import Records from '@/pages/Records'; // Import the new page
-import ElderEditModal from './components/ElderEditModal'; // Import new modal component
+import StaffEditModal from './components/StaffEditModal'; // FIX: Import new generic modal component
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
+// FIX: Import SundaySchool, Statistics, and Records components
+import SundaySchool from './pages/SundaySchool';
+import Statistics from './pages/Statistics';
+import Records from './pages/Records';
 
 const App: React.FC = () => {
   return (

@@ -1,4 +1,5 @@
 
+
 export enum View {
   Home = 'Home',
   Sermons = 'Sermons',
@@ -80,6 +81,7 @@ export interface Staff {
   period?: string; // For past pastors
   imageUrl: string;
   description?: string; // Added optional description for leaders/elders
+  order?: number; // New field for custom sorting
 }
 
 export interface CommitteeMember {
