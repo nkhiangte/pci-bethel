@@ -175,56 +175,73 @@ const Records: React.FC = () => {
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet, { cellDates: true } as any) as any[];
+                // Read without cellDates to handle dates robustly
+                const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
                 if (json.length === 0) {
                     setImportError("The file is empty or could not be read.");
                     return;
                 }
 
-                const fileHeaders = Object.keys(json[0] as object);
+                const fileHeaders = Object.keys(json[0] as object).map(h => h.trim());
                 const templateHeaders = TEMPLATE_HEADERS[activeTab];
 
                 const allHeadersMatch = templateHeaders.every(h => fileHeaders.includes(h));
 
                 if (!allHeadersMatch) {
-                    setImportError(`File headers do not match the template. Expected: ${templateHeaders.join(', ')}`);
+                    setImportError(`File headers do not match the template. Expected: [${templateHeaders.join(', ')}]. Found: [${fileHeaders.join(', ')}]`);
                     return;
                 }
 
                 const processedData = json.map(row => {
                     const newRow: { [key: string]: any } = {};
                     const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
-                    for (const key in row) {
-                        const value = (row as any)[key];
+                    
+                    templateHeaders.forEach(header => {
+                        let value = (row as any)[header];
+                        
+                        // Sanitize undefined/null to empty string to prevent Firestore errors
+                        if (value === undefined || value === null) {
+                            value = '';
+                        }
 
-                        if (dateFields.includes(key)) {
+                        if (dateFields.includes(header) && value) {
                             let formattedDate: string | null = null;
-                            if (value instanceof Date) {
-                                const date = value;
-                                const year = date.getUTCFullYear();
-                                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                                const day = String(date.getUTCDate()).padStart(2, '0');
-                                formattedDate = `${year}-${month}-${day}`;
-                            } else if (typeof value === 'number' && value > 1) {
-                                const date = new Date((value - 25569) * 86400 * 1000);
-                                if (!isNaN(date.getTime()) && date.getUTCFullYear() > 1900 && date.getUTCFullYear() < 2100) {
-                                    const year = date.getUTCFullYear();
-                                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                                    const day = String(date.getUTCDate()).padStart(2, '0');
+                            if (typeof value === 'number' && value > 1) { // Excel date serial number
+                                const date = XLSX.SSF.parse_date_code(value);
+                                if (date) {
+                                    const year = date.y;
+                                    const month = String(date.m).padStart(2, '0');
+                                    const day = String(date.d).padStart(2, '0');
                                     formattedDate = `${year}-${month}-${day}`;
                                 }
+                            } else if (value instanceof Date) { // JS Date Object
+                                const year = value.getUTCFullYear();
+                                const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+                                const day = String(value.getUTCDate()).padStart(2, '0');
+                                formattedDate = `${year}-${month}-${day}`;
+                            } else if (typeof value === 'string') { // Date String
+                                const parsedDate = new Date(value);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    const year = parsedDate.getFullYear();
+                                    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                                    const day = String(parsedDate.getDate()).padStart(2, '0');
+                                    if (year > 1900 && year < 2100) { // Basic sanity check
+                                        formattedDate = `${year}-${month}-${day}`;
+                                    }
+                                }
                             }
-                            newRow[key] = formattedDate !== null ? formattedDate : value;
+                            newRow[header] = formattedDate || value.toString();
                         } else {
-                            newRow[key] = value;
+                            newRow[header] = value.toString();
                         }
-                    }
+                    });
                     return newRow;
                 });
 
                 setImportData(processedData);
             } catch (err) {
+                console.error("Error parsing file:", err);
                 setImportError("Failed to parse the file. Please ensure it's a valid XLSX or CSV.");
             }
         };
@@ -243,8 +260,8 @@ const Records: React.FC = () => {
             
             importData.forEach(row => {
                 const newDocRef = recordsRef.doc();
-                const recordWithTpe = { ...row, type: activeTab };
-                batch.set(newDocRef, recordWithTpe);
+                const recordWithType = { ...row, type: activeTab };
+                batch.set(newDocRef, recordWithType);
             });
 
             await batch.commit();
