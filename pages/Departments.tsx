@@ -1,10 +1,10 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   BookOpen, DollarSign, Globe, Home, Users, Coffee, Heart, Music, 
   Smile, Library, Book, Box, Newspaper, FileText, UserPlus, Clock, 
   ClipboardCheck, Handshake, ChevronDown, ChevronUp, Search, Loader, 
-  AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database
+  AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
@@ -421,7 +421,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
         { id: 'bsi-m12', name: 'Pi R.Lalropuii', role: 'Member' },
         { id: 'bsi-m13', name: 'Pi KC Lalnunhlimi', role: 'Member' },
         { id: 'bsi-m14', name: 'Pi Lalthanzuali', role: 'Member' },
-        { id: 'bsi-exo1', name: 'Rev. Lalhmingthanga Chhangte, Bialtu Pastor', role: 'Ex-Officio Member' },
+        { id: 'bsi-exo1', name: 'Rev.Lalhmingthanga Chhangte, Bialtu Pastor', role: 'Ex-Officio Member' },
         { id: 'bsi-exo2', name: 'Upa Lianpianga, Kohhran Secretary', role: 'Ex-Officio Member' },
         { id: 'bsi-exo3', name: 'Pu H. Vanlalthanga, Fin. Secy., Champhai North Branch BSI', role: 'Ex-Officio Member' },
         { id: 'bsi-exo4', name: 'Pu P. Lalhmingthanga, Secretary, Bethel Area BSI', role: 'Ex-Officio Member' },
@@ -434,8 +434,8 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
     description: 'Manages and maintains all church assets and supplies, ensuring resources are available and in good condition for various church activities.',
     members: [
         { id: 'bec-c', name: 'Upa Lianpianga', role: 'Chairman' },
-        { id: 'bec-s', name: 'Pu T. Sangtluanga', role: 'Secretary' },
-        { id: 'bec-m1', name: 'T. Upa Hmingthansanga', role: 'Member' },
+        { id: 'bec-s', name: 'Pu T.Sangtluanga', role: 'Secretary' },
+        { id: 'bec-m1', name: 'T.Upa Hmingthansanga', role: 'Member' },
         { id: 'bec-m2', name: 'Pu C. Lalfaka', role: 'Member' },
         { id: 'bec-m3', name: 'Pu Ronald Lalhmachhuana', role: 'Member' },
         { id: 'bec-m4', name: 'Pu H. Lalfela', role: 'Member' },
@@ -464,11 +464,15 @@ const Departments: React.FC = () => {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMemberInfo, setEditingMemberInfo] = useState<{ committeeId: string; member?: CommitteeMember } | null>(null);
 
+  // State for reordering
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
+  const initialOrderRef = useRef<string[]>([]);
+
   const fetchCommittees = useCallback(async () => {
     setLoading(true);
     if (!db || !db.collection) {
        console.warn("Firestore not available, using static data.");
-       setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}` } as Committee)));
+       setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
        setIsOfflineMode(true);
        setLoading(false);
        return;
@@ -482,18 +486,28 @@ const Departments: React.FC = () => {
                 ...doc.data()
             })) as Committee[];
             
-            fetchedData.sort((a, b) => a.name.localeCompare(b.name));
+            // Sort by 'order' if available, otherwise by name
+            fetchedData.sort((a, b) => {
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                return a.name.localeCompare(b.name);
+            });
+
             setCommittees(fetchedData);
+            initialOrderRef.current = fetchedData.map(c => c.id); // Store initial order
             setIsOfflineMode(false);
         } else {
-            setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}` } as Committee)));
+            // Provide initial order based on index if DB is empty
+            setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
         }
     } catch (error: any) {
         console.warn("Firebase access denied or failed, using static data:", error.message);
-        setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}` } as Committee)));
+        setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
         setIsOfflineMode(true);
     }
     setLoading(false);
+    setHasOrderChanged(false);
   }, []);
 
   useEffect(() => {
@@ -522,9 +536,10 @@ const Departments: React.FC = () => {
 
         // 2. Add all new documents from INITIAL_COMMITTEES
         const addBatch = db.batch();
-        INITIAL_COMMITTEES.forEach(committeeData => {
+        INITIAL_COMMITTEES.forEach((committeeData, index) => {
             const newDocRef = committeesRef.doc(); // Firestore generates ID
-            addBatch.set(newDocRef, committeeData);
+            // Add 'order' field based on index
+            addBatch.set(newDocRef, { ...committeeData, order: index });
         });
         await addBatch.commit();
         console.log("Successfully seeded committees!");
@@ -551,11 +566,14 @@ const Departments: React.FC = () => {
         if (id && !id.startsWith('static-')) {
             await db.collection('committees').doc(id).set(dataToSave, { merge: true });
         } else {
+            // When adding a new committee, put it at the end
+            const newOrder = committees.length > 0 ? Math.max(...committees.map(c => c.order || 0)) + 1 : 0;
             await db.collection('committees').add({
                 name: dataToSave.name || 'Untitled',
                 icon: dataToSave.icon || 'Users',
                 description: dataToSave.description || '', // Save description
-                members: dataToSave.members || []
+                members: dataToSave.members || [],
+                order: newOrder
             });
         }
         
@@ -628,6 +646,46 @@ const Departments: React.FC = () => {
     }
   };
 
+  const handleMoveCommittee = (id: string, direction: 'up' | 'down') => {
+    if (searchTerm) return; // Disable reordering when filtering
+    
+    const currentIndex = committees.findIndex(c => c.id === id);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+    if (newIndex >= 0 && newIndex < committees.length) {
+      const updatedCommittees = [...committees];
+      const [movedCommittee] = updatedCommittees.splice(currentIndex, 1);
+      updatedCommittees.splice(newIndex, 0, movedCommittee);
+      setCommittees(updatedCommittees);
+      setHasOrderChanged(true);
+    }
+  };
+
+  const handleSaveOrder = async () => {
+    if (!db || !db.batch || !window.confirm("Save new committee order?")) return;
+    
+    setLoading(true);
+    try {
+        const batch = db.batch();
+        committees.forEach((committee, index) => {
+            if (committee.id && !committee.id.startsWith('static-')) {
+                const docRef = db.collection('committees').doc(committee.id);
+                batch.update(docRef, { order: index });
+            }
+        });
+        await batch.commit();
+        setHasOrderChanged(false);
+        initialOrderRef.current = committees.map(c => c.id);
+        alert("Order saved successfully!");
+    } catch (error) {
+        console.error("Error saving order:", error);
+        alert("Failed to save order.");
+    }
+    setLoading(false);
+  };
+
 
   const openCommitteeModal = (committee: Partial<Committee> | null) => {
     setEditingCommittee(committee || { name: '', icon: 'Users', description: '', members: [] });
@@ -666,6 +724,13 @@ const Departments: React.FC = () => {
               <Plus size={18} className="mr-2" /> Add New Committee
             </button>
             <button 
+              onClick={handleSaveOrder} 
+              disabled={!hasOrderChanged || loading}
+              className="inline-flex items-center px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 shadow-sm transition disabled:opacity-50"
+            >
+              <Save size={18} className="mr-2" /> Save Order
+            </button>
+            <button 
               onClick={handleSeedData} 
               disabled={isSeeding}
               className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-sm transition disabled:opacity-50"
@@ -688,7 +753,7 @@ const Departments: React.FC = () => {
              )}
 
              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-               {filteredCommittees.map((c) => {
+               {filteredCommittees.map((c, index) => {
                  const Icon = ICON_MAP[c.icon] || Users;
                  const isExpanded = expandedCommitteeId === c.id;
                  
@@ -706,9 +771,29 @@ const Departments: React.FC = () => {
                         </div>
                         <div className="text-slate-400">{isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</div>
                         {isAdmin && !isOfflineMode && (
-                           <div className="absolute top-2 right-2 flex space-x-1">
-                             <button onClick={(e) => { e.stopPropagation(); openCommitteeModal(c); }} className="p-1.5 text-church-600 bg-church-50 rounded-full hover:bg-church-100"><Edit size={14} /></button>
-                             <button onClick={(e) => { e.stopPropagation(); handleDeleteCommittee(c.id); }} className="p-1.5 text-red-500 bg-red-50 rounded-full hover:bg-red-100"><Trash size={14} /></button>
+                           <div className="absolute top-2 right-2 flex space-x-1" onClick={(e) => e.stopPropagation()}>
+                             {!searchTerm && (
+                                <>
+                                    <button 
+                                        onClick={() => handleMoveCommittee(c.id, 'up')}
+                                        disabled={index === 0}
+                                        className="p-1.5 text-slate-500 bg-slate-50 rounded-full hover:bg-slate-100 disabled:opacity-30"
+                                        title="Move Up"
+                                    >
+                                        <ArrowUp size={14} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleMoveCommittee(c.id, 'down')}
+                                        disabled={index === filteredCommittees.length - 1}
+                                        className="p-1.5 text-slate-500 bg-slate-50 rounded-full hover:bg-slate-100 disabled:opacity-30"
+                                        title="Move Down"
+                                    >
+                                        <ArrowDown size={14} />
+                                    </button>
+                                </>
+                             )}
+                             <button onClick={() => openCommitteeModal(c)} className="p-1.5 text-church-600 bg-church-50 rounded-full hover:bg-church-100"><Edit size={14} /></button>
+                             <button onClick={() => handleDeleteCommittee(c.id)} className="p-1.5 text-red-500 bg-red-50 rounded-full hover:bg-red-100"><Trash size={14} /></button>
                            </div>
                         )}
                      </div>

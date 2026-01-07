@@ -1,5 +1,6 @@
 
 
+
 export enum View {
   Home = 'Home',
   Sermons = 'Sermons',
@@ -97,6 +98,7 @@ export interface Committee {
   icon: string; // Store the icon name as a string (e.g., "BookOpen")
   description?: string; // New: Added optional description for committees
   members: CommitteeMember[];
+  order?: number;
 }
 
 export interface UserProfile {
