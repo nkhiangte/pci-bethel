@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search } from 'lucide-react';
+import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search, ExternalLink } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
@@ -60,6 +60,7 @@ const Records: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isOfflineMode, setIsOfflineMode] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
     // Modals State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -73,19 +74,20 @@ const Records: React.FC = () => {
     const fetchRecords = useCallback(async () => {
         setLoading(true);
         setIsOfflineMode(false);
+        setMissingIndexUrl(null); // Reset error state on new fetch
         
         const sortField = DATE_SORT_FIELD_MAP[activeTab];
 
         if (!db?.collection) {
-            setRecords([]); // Mock data removed for clarity
+            setRecords([]); 
             setIsOfflineMode(true);
             setLoading(false);
             return;
         }
 
         try {
-            // This query is more efficient and correct. It filters by type AND sorts.
-            // NOTE: This will require composite indexes in Firestore. The console will provide a link to create them.
+            // Attempt 1: Optimized Query (Filter + Sort)
+            // This requires a composite index in Firestore.
             const snapshot = await db.collection('records')
                                      .where('type', '==', activeTab)
                                      .orderBy(sortField, 'desc')
@@ -98,14 +100,56 @@ const Records: React.FC = () => {
                 setRecords(data);
             }
         } catch (error: any) {
-            console.error("Error fetching records:", error.message);
-            if (error.code === 'permission-denied' || error.message.includes('permission')) {
+            console.error("Error fetching records (primary query):", error);
+            
+            // Check for Index Error
+            const errorMessage = error.message || '';
+            const isIndexError = error.code === 'failed-precondition' || errorMessage.includes('index');
+
+            if (isIndexError) {
+                 // 1. Extract Index URL
+                 const match = errorMessage.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
+                 if (match) {
+                     setMissingIndexUrl(match[0]);
+                 } else {
+                     // Fallback URL if extraction fails but it's clearly an index error
+                     setMissingIndexUrl("https://console.firebase.google.com/project/_/firestore/indexes");
+                 }
+
+                 // 2. Fallback Query: Fetch WITHOUT sorting from DB, sort client-side
+                 try {
+                     console.log("Attempting fallback query (client-side sort)...");
+                     const fallbackSnapshot = await db.collection('records')
+                                              .where('type', '==', activeTab)
+                                              .get();
+                    
+                     if (!fallbackSnapshot.empty) {
+                         const data = fallbackSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
+                         // Client-side sort
+                         data.sort((a: any, b: any) => {
+                             const dateA = a[sortField] || '';
+                             const dateB = b[sortField] || '';
+                             if (activeTab === 'inkhawmpui') {
+                                 return Number(dateB) - Number(dateA);
+                             }
+                             return dateA > dateB ? -1 : 1; // Descending
+                         });
+                         setRecords(data);
+                     } else {
+                         setRecords([]);
+                     }
+                 } catch (fallbackError) {
+                     console.error("Error in fallback query:", fallbackError);
+                     setRecords([]);
+                 }
+
+            } else if (error.code === 'permission-denied' || errorMessage.includes('permission')) {
                 setIsOfflineMode(true);
-            } else if (error.code === 'failed-precondition') {
-                 console.error("Firestore index missing. Please create the required composite index. The error message should contain a link to create it.");
-                 // You could show a message to the admin user here.
+                setRecords([]);
+            } else {
+                // Other errors
+                setRecords([]);
             }
-            setRecords([]);
         }
         setLoading(false);
     }, [activeTab]);
@@ -321,6 +365,33 @@ const Records: React.FC = () => {
                     </div>
                 )}
 
+                {/* Database Index Warning for Admins */}
+                {isAdmin && missingIndexUrl && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center">
+                            <div className="bg-yellow-100 p-2 rounded-full mr-3">
+                                <AlertTriangle className="text-yellow-700" size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-sm">Database Index Required</h3>
+                                <p className="text-xs mt-1 max-w-xl">
+                                    To sort and filter <strong>{tabs.find(t => t.id === activeTab)?.label}</strong> records efficiently, Firestore requires a composite index. 
+                                    Please click the button to create it automatically. 
+                                    <span className="font-bold text-yellow-900 block mt-1">Your data is currently visible using a fallback method.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <a 
+                            href={missingIndexUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-yellow-600 text-white text-xs font-bold rounded-lg hover:bg-yellow-700 transition shadow-sm whitespace-nowrap flex items-center"
+                        >
+                            Create Index <ExternalLink size={12} className="ml-1" />
+                        </a>
+                    </div>
+                )}
+
                 {isAdmin && !isOfflineMode && (
                      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-8">
                          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -363,7 +434,7 @@ const Records: React.FC = () => {
                     <div className="overflow-x-auto">
                         {loading ? <Loader className="animate-spin mx-auto my-12" /> : searchedRecords.length === 0 ? (
                             <p className="text-center text-slate-500 py-8">
-                                {searchTerm ? `No records found for "${searchTerm}".` : t.records.empty}
+                                {missingIndexUrl && records.length === 0 ? "Waiting for database index creation..." : (searchTerm ? `No records found for "${searchTerm}".` : t.records.empty)}
                             </p>
                         ) : (
                             <table className="w-full text-sm text-left text-slate-500">
