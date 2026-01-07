@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
@@ -16,17 +16,21 @@ const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
 };
 
+const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
+    baptism: 'baptismDate',
+    wedding: 'weddingDate',
+    death: 'dateOfDeath',
+    inkhawmpui: 'year',
+};
+
 const formatDateCell = (value: any): string => {
   if (!value && value !== 0) return '';
 
   // Handle Excel serial numbers (which are numbers)
   if (typeof value === 'number' && value > 1) {
-    // Excel's epoch starts on 1900-01-01, but it incorrectly considers 1900 a leap year.
-    // The offset 25569 is for converting from Excel's epoch to UNIX epoch (days between 1900 and 1970).
     const date = new Date((value - 25569) * 86400 * 1000);
-    // Add a check for valid date, since some numbers might not be dates
     if (isNaN(date.getTime()) || date.getUTCFullYear() < 1900 || date.getUTCFullYear() > 2100) {
-        return String(value); // If conversion fails or out of range, return original number
+        return String(value);
     }
     const day = String(date.getUTCDate()).padStart(2, '0');
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -41,7 +45,6 @@ const formatDateCell = (value: any): string => {
       const [, year, month, day] = match;
       return `${day}/${month}/${year}`;
     }
-    // Otherwise, return the string as is (e.g., for '??/??/1977' or if already formatted)
     return value;
   }
 
@@ -67,31 +70,29 @@ const Records: React.FC = () => {
     const [importFileName, setImportFileName] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-
-    const MOCK_DATA: ChurchRecord[] = [
-        { id: 'b1', type: 'baptism', name: 'Lalrinfela Pachuau', dateOfBirth: '2023-01-15', baptismDate: '2023-05-20', parents: 'Pu Lalthanmawia & Pi Zorini', minister: 'Rev. H. Vanlalruata' },
-        { id: 'w1', type: 'wedding', groomName: 'Samuel V.L. Hriata', brideName: 'Esther Lalhlimpuii', weddingDate: '2024-02-14', minister: 'Rev. H. Vanlalruata' },
-        { id: 'd1', type: 'death', name: 'Upa C. Lalzuala', dateOfDeath: '2024-03-01', age: 78, familyContact: 'Pu Lalhruaia' },
-        { id: 'i1', type: 'inkhawmpui', eventName: 'Bial Inkhawmpui Vawi 50-na', year: 2023, theme: 'Krista Chhungkua', location: 'Bethel Kohhran', speakers: 'Rev. Dr. Vanlalzuala' }
-    ];
-
-    useEffect(() => {
-        fetchRecords();
-    }, []);
-
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         setLoading(true);
         setIsOfflineMode(false);
+        
+        const sortField = DATE_SORT_FIELD_MAP[activeTab];
+
         if (!db?.collection) {
-            setRecords(MOCK_DATA);
+            setRecords([]); // Mock data removed for clarity
             setIsOfflineMode(true);
             setLoading(false);
             return;
         }
+
         try {
-            const snapshot = await db.collection('records').orderBy('baptismDate', 'desc').get(); // Basic sorting
+            // This query is more efficient and correct. It filters by type AND sorts.
+            // NOTE: This will require composite indexes in Firestore. The console will provide a link to create them.
+            const snapshot = await db.collection('records')
+                                     .where('type', '==', activeTab)
+                                     .orderBy(sortField, 'desc')
+                                     .get();
+                                     
             if (snapshot.empty) {
-                setRecords(MOCK_DATA);
+                setRecords([]);
             } else {
                 const data = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
                 setRecords(data);
@@ -100,11 +101,19 @@ const Records: React.FC = () => {
             console.error("Error fetching records:", error.message);
             if (error.code === 'permission-denied' || error.message.includes('permission')) {
                 setIsOfflineMode(true);
+            } else if (error.code === 'failed-precondition') {
+                 console.error("Firestore index missing. Please create the required composite index. The error message should contain a link to create it.");
+                 // You could show a message to the admin user here.
             }
-            setRecords(MOCK_DATA);
+            setRecords([]);
         }
         setLoading(false);
-    };
+    }, [activeTab]);
+
+    useEffect(() => {
+        fetchRecords();
+    }, [fetchRecords]);
+
 
     const handleAddNew = () => {
         switch(activeTab) {
@@ -175,7 +184,6 @@ const Records: React.FC = () => {
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                // Read without cellDates to handle dates robustly
                 const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
                 if (json.length === 0) {
@@ -200,7 +208,6 @@ const Records: React.FC = () => {
                     templateHeaders.forEach(header => {
                         let value = (row as any)[header];
                         
-                        // Sanitize undefined/null to empty string to prevent Firestore errors
                         if (value === undefined || value === null) {
                             value = '';
                         }
@@ -210,24 +217,16 @@ const Records: React.FC = () => {
                             if (typeof value === 'number' && value > 1) { // Excel date serial number
                                 const date = XLSX.SSF.parse_date_code(value);
                                 if (date) {
-                                    const year = date.y;
-                                    const month = String(date.m).padStart(2, '0');
-                                    const day = String(date.d).padStart(2, '0');
-                                    formattedDate = `${year}-${month}-${day}`;
+                                    formattedDate = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
                                 }
                             } else if (value instanceof Date) { // JS Date Object
-                                const year = value.getUTCFullYear();
-                                const month = String(value.getUTCMonth() + 1).padStart(2, '0');
-                                const day = String(value.getUTCDate()).padStart(2, '0');
-                                formattedDate = `${year}-${month}-${day}`;
+                                formattedDate = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
                             } else if (typeof value === 'string') { // Date String
                                 const parsedDate = new Date(value);
                                 if (!isNaN(parsedDate.getTime())) {
                                     const year = parsedDate.getFullYear();
-                                    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
-                                    const day = String(parsedDate.getDate()).padStart(2, '0');
-                                    if (year > 1900 && year < 2100) { // Basic sanity check
-                                        formattedDate = `${year}-${month}-${day}`;
+                                    if (year > 1900 && year < 2100) {
+                                       formattedDate = `${year}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
                                     }
                                 }
                             }
@@ -247,7 +246,7 @@ const Records: React.FC = () => {
         };
         reader.readAsBinaryString(file);
         setIsImportModalOpen(true);
-        if (fileInputRef.current) fileInputRef.current.value = ''; // Reset file input
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleConfirmImport = async () => {
@@ -266,7 +265,7 @@ const Records: React.FC = () => {
 
             await batch.commit();
             setIsImportModalOpen(false);
-            fetchRecords(); // Refresh data
+            fetchRecords();
         } catch (error) {
             setImportError("An error occurred while uploading records to the database.");
             console.error(error);
@@ -281,10 +280,9 @@ const Records: React.FC = () => {
         { id: 'inkhawmpui', label: t.records.tabs.conference, icon: Users },
     ];
     
-    const filteredRecords = records.filter(r => r.type === activeTab);
     const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
 
-    const searchedRecords = filteredRecords.filter(rec => {
+    const searchedRecords = records.filter(rec => {
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();
 

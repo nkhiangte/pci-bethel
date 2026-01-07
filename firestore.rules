@@ -75,6 +75,8 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Unified collection for all record types: baptism, wedding, death, inkhawmpui
+    // This single rule covers the new 'wedding' records as they are stored here with type='wedding'
     match /records/{docId} {
       allow read: if true;
       allow write: if isAdmin();
