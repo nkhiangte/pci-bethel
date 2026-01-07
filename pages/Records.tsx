@@ -4,8 +4,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search, ExternalLink } from 'lucide-react';
+import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search, ExternalLink, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
 
@@ -213,6 +215,66 @@ const Records: React.FC = () => {
         XLSX.writeFile(wb, `${activeTab}_template.${format}`);
     };
 
+    const handleExportExcel = () => {
+        const headers = TEMPLATE_HEADERS[activeTab];
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
+        
+        // Prepare data with proper headers and formatted dates
+        const exportData = searchedRecords.map(rec => {
+            const row: any = {};
+            headers.forEach(header => {
+                const displayHeader = t.records.theads[header as keyof typeof t.records.theads] || header;
+                const value = (rec as any)[header];
+                if (dateFields.includes(header)) {
+                    row[displayHeader] = formatDateCell(value);
+                } else {
+                    row[displayHeader] = value;
+                }
+            });
+            return row;
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Records");
+        XLSX.writeFile(wb, `Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        const headers = TEMPLATE_HEADERS[activeTab];
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
+
+        const tableHead = headers.map(h => t.records.theads[h as keyof typeof t.records.theads] || h);
+        const tableBody = searchedRecords.map(rec => {
+            return headers.map(header => {
+                const value = (rec as any)[header];
+                if (dateFields.includes(header)) {
+                    return formatDateCell(value);
+                }
+                return value || '';
+            });
+        });
+
+        const title = `${t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Records`;
+        
+        doc.setFontSize(16);
+        doc.text(title, 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Bethel Kohhran - Exported on ${new Date().toLocaleDateString()}`, 14, 28);
+
+        autoTable(doc, {
+            head: [tableHead],
+            body: tableBody,
+            startY: 35,
+            theme: 'grid',
+            headStyles: { fillColor: [134, 120, 79] }, // church-800 color approximately
+            styles: { fontSize: 8 }
+        });
+
+        doc.save(`Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -394,15 +456,25 @@ const Records: React.FC = () => {
 
                 {isAdmin && !isOfflineMode && (
                      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-8">
-                         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                             <div className="text-center sm:text-left">
-                                 <h3 className="font-bold text-slate-800">Import & Export Tools</h3>
-                                 <p className="text-xs text-slate-500">Download a template or upload a completed file to add records in bulk.</p>
+                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                             <div className="text-center md:text-left">
+                                 <h3 className="font-bold text-slate-800">Data Management</h3>
+                                 <p className="text-xs text-slate-500">Tools for importing, exporting, and managing bulk records.</p>
                              </div>
                              <div className="flex items-center gap-2 flex-wrap justify-center">
-                                 <button onClick={() => handleDownloadTemplate('xlsx')} className="flex items-center gap-2 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-2 rounded-md transition"><FileDown size={14}/> Download XLSX Template</button>
-                                 <button onClick={() => handleDownloadTemplate('csv')} className="flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition"><FileDown size={14}/> Download CSV Template</button>
-                                 <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-md transition"><FileUp size={14}/> Import Records</button>
+                                 {/* Export Buttons */}
+                                 <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-md border border-slate-200 mr-2">
+                                     <button onClick={handleExportExcel} disabled={records.length === 0} className="flex items-center gap-1.5 text-xs font-bold text-green-700 hover:bg-white hover:shadow-sm px-3 py-1.5 rounded-md transition disabled:opacity-50" title="Export current list to Excel">
+                                         <FileSpreadsheet size={14}/> Export Excel
+                                     </button>
+                                     <div className="w-px h-4 bg-slate-300"></div>
+                                     <button onClick={handleExportPDF} disabled={records.length === 0} className="flex items-center gap-1.5 text-xs font-bold text-red-700 hover:bg-white hover:shadow-sm px-3 py-1.5 rounded-md transition disabled:opacity-50" title="Export current list to PDF">
+                                         <FileText size={14}/> Export PDF
+                                     </button>
+                                 </div>
+
+                                 <button onClick={() => handleDownloadTemplate('xlsx')} className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-md transition"><FileDown size={14}/> Templates</button>
+                                 <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-md transition"><FileUp size={14}/> Import Data</button>
                                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .csv" />
                              </div>
                          </div>
