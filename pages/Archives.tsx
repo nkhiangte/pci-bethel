@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft, DollarSign, Globe, Home, Heart, Coffee, Smile, Library, Mic, Mic2, GraduationCap, Book, BookOpen, Music } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -12,6 +13,30 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'History': History,
     'Minute': File,
     'Rawngbawltu te': Users 
+};
+
+const SUB_CATEGORY_ICONS: Record<string, React.ElementType> = {
+    'Executive Body': Users,
+    'Ramthar': Globe,
+    'FINANCE': DollarSign,
+    'BUILDING': Home,
+    'SOCIAL FRONT': Heart,
+    'REFRESHMENT': Coffee,
+    'KRISTIAN CHHUNGKUA': Home,
+    'WORSHIP': Music, // Using Music icon defined below in component or standard Lucide
+    'MASIHI SANGATI': Users,
+    'BSI': BookOpen,
+    'RECEPTION, USHERING & DECORATION': Smile,
+    'ARCHIVE & LIBRARY': Library,
+    'MUSIC': Mic2,
+    'LIGHT & SOUND': Mic,
+    'SUNDAY SCHOOL': Book,
+    'Sunday School Teachers': GraduationCap,
+    'THUHRILTU': Mic,
+    'ṬANTU': BookOpen,
+    'KOHHRAN HMEICHHIA': Users,
+    'KTP': Users,
+    'KOHHRAN PAVALAI PAWL': Users
 };
 
 // Category Metadata for the Grid View
@@ -99,7 +124,6 @@ const getStaticArchives = (): ArchiveEntry[] => {
 
     // 1. Process SS Data
     // (Assuming full SUNDAY_SCHOOL_TEACHERS_SEED_DATA is present in the file context, otherwise this needs the full array)
-    // For brevity in this response, using the provided array structure.
     
     // 2. Add other mock/seed data if necessary (e.g. MOCK_ARCHIVES)
     const MOCK_ARCHIVES: ArchiveEntry[] = [
@@ -121,7 +145,7 @@ export const Archives: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     // selectedCategory is initially null to show the grid view
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
+    const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
     const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
     const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
@@ -140,6 +164,12 @@ export const Archives: React.FC = () => {
     const fetchArchives = useCallback(async () => {
         // Only fetch if a category is selected
         if (!selectedCategory) {
+            setArchives([]);
+            return;
+        }
+
+        // If in 'Rawngbawltu te' mode but no subcategory is selected, we are in the grid view, so don't fetch
+        if (selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) {
             setArchives([]);
             return;
         }
@@ -169,10 +199,8 @@ export const Archives: React.FC = () => {
                              return; 
                         }
                         baseQuery = baseQuery.where('subCategory', '==', `SS Zirtirtute - ${activeSSDepartment}`);
-                    } else if (selectedSubCategory !== 'All') {
-                        baseQuery = baseQuery.where('subCategory', '==', selectedSubCategory);
                     } else {
-                        baseQuery = baseQuery.where('category', '==', 'Rawngbawltu te');
+                        baseQuery = baseQuery.where('subCategory', '==', selectedSubCategory);
                     }
                 } else {
                     // For main categories
@@ -234,7 +262,6 @@ export const Archives: React.FC = () => {
 
                 // Sub Category Filter (Only for Rawngbawltu te)
                 if (selectedCategory === 'Rawngbawltu te') {
-                    if (selectedSubCategory === 'All') return true;
                     if (selectedSubCategory === 'Sunday School Teachers') {
                         if (!activeSSDepartment) return false;
                         return item.subCategory === `SS Zirtirtute - ${activeSSDepartment}`;
@@ -256,37 +283,40 @@ export const Archives: React.FC = () => {
         fetchArchives();
     }, [fetchArchives]);
 
-    // Reset subcategory when main category changes
+    // Reset subcategory logic when main category changes
     useEffect(() => {
-        if (selectedCategory !== 'Rawngbawltu te') {
-            setSelectedSubCategory('All');
-            setActiveSSDepartment(null);
-            setSsSearchTerm('');
-            setSsSearchResults([]);
-        }
+        setSelectedSubCategory(null);
+        setActiveSSDepartment(null);
+        setSsSearchTerm('');
+        setSsSearchResults([]);
     }, [selectedCategory]);
-
-    // When switching subcategories, reset SS department selection unless staying within SS context
-    useEffect(() => {
-        if (selectedSubCategory !== 'Sunday School Teachers') {
-            setActiveSSDepartment(null);
-            setSsSearchTerm('');
-            setSsSearchResults([]);
-        }
-    }, [selectedSubCategory]);
 
     const handleCategorySelect = (categoryId: string) => {
         setSelectedCategory(categoryId);
-        // Reset scroll to top
         window.scrollTo(0, 0);
     };
 
-    const handleBackToGrid = () => {
-        setSelectedCategory(null);
-        setArchives([]);
-        setSearchTerm('');
-        setSelectedSubCategory('All');
-        setActiveSSDepartment(null);
+    const handleSubCategorySelect = (subId: string) => {
+        setSelectedSubCategory(subId);
+        window.scrollTo(0, 0);
+    }
+
+    const handleBack = () => {
+        if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
+            if (selectedSubCategory === 'Sunday School Teachers' && activeSSDepartment) {
+                setActiveSSDepartment(null);
+                return;
+            }
+            setSelectedSubCategory(null); // Go back to SubCategory Grid
+            setArchives([]);
+        } else {
+            // Go back to Main Grid
+            setSelectedCategory(null);
+            setArchives([]);
+            setSearchTerm('');
+            setSelectedSubCategory(null);
+            setActiveSSDepartment(null);
+        }
     };
 
     const handleAddNew = () => {
@@ -294,7 +324,7 @@ export const Archives: React.FC = () => {
             title: '',
             date: new Date().toISOString().split('T')[0],
             category: (selectedCategory as any) || 'Document', // Default to current category
-            subCategory: '',
+            subCategory: selectedSubCategory || '',
             description: '',
             link: ''
         });
@@ -652,22 +682,31 @@ export const Archives: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    // LIST VIEW FOR SELECTED CATEGORY
+                    // LIST VIEW OR SUB-GRID VIEW
                     <div className="animate-in fade-in zoom-in duration-200">
                         {/* Header Navigation */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-200 pb-6">
                             <div className="flex items-center">
                                 <button 
-                                    onClick={handleBackToGrid} 
+                                    onClick={handleBack} 
                                     className="p-2 mr-4 bg-white border border-slate-200 rounded-full text-slate-500 hover:text-church-600 hover:border-church-300 transition-all shadow-sm group"
                                 >
                                     <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                                 </button>
                                 <div>
                                     <h2 className="text-3xl font-bold text-slate-800 flex items-center">
-                                        {ARCHIVE_SECTIONS.find(s => s.id === selectedCategory)?.label}
+                                        {/* Display proper title based on state */}
+                                        {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory ? 
+                                            'Departments' : 
+                                            (selectedSubCategory || ARCHIVE_SECTIONS.find(s => s.id === selectedCategory)?.label)
+                                        }
                                     </h2>
-                                    <p className="text-sm text-slate-500">Viewing all records in this category</p>
+                                    <p className="text-sm text-slate-500">
+                                        {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory 
+                                            ? 'Select a department to view records' 
+                                            : 'Viewing records'
+                                        }
+                                    </p>
                                 </div>
                             </div>
 
@@ -691,7 +730,7 @@ export const Archives: React.FC = () => {
                                             <Plus size={18} className="mr-2" /> Add Entry
                                         </button>
                                         {/* Only show specific seed button based on selected sub-category */}
-                                        {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && selectedSubCategory !== 'Sunday School Teachers' && (
+                                        {selectedCategory === 'Rawngbawltu te' && selectedSubCategory && selectedSubCategory !== 'Sunday School Teachers' && (
                                             <button 
                                                 onClick={() => {
                                                     switch(selectedSubCategory) {
@@ -727,148 +766,140 @@ export const Archives: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Sub-Category Filters (Only for Rawngbawltu te) */}
-                        {selectedCategory === 'Rawngbawltu te' && (
-                            <div className="mb-8 overflow-hidden">
-                                <div className="flex items-center space-x-2 w-full overflow-x-auto pb-4 hide-scrollbar">
-                                    <button 
-                                        onClick={() => setSelectedSubCategory('All')}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                                            selectedSubCategory === 'All' 
-                                            ? 'bg-slate-800 text-white' 
-                                            : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                        }`}
-                                    >
-                                        All Departments
-                                    </button>
-                                    {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
-                                        <button 
+                        {/* Rawngbawltu te Sub-Category Grid (The "Screenshot" Replacement) */}
+                        {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                {RAWNGBAWLTU_SUBCATEGORIES.map((sub) => {
+                                    const Icon = SUB_CATEGORY_ICONS[sub] || Users;
+                                    return (
+                                        <button
                                             key={sub}
-                                            onClick={() => setSelectedSubCategory(sub)}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                                                selectedSubCategory === sub
-                                                ? 'bg-slate-800 text-white' 
-                                                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                            }`}
+                                            onClick={() => handleSubCategorySelect(sub)}
+                                            className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-church-200 hover:-translate-y-1 transition-all duration-200 text-left group flex items-center"
                                         >
-                                            {sub}
+                                            <div className="p-3 bg-slate-50 text-slate-500 rounded-lg mr-4 group-hover:bg-church-100 group-hover:text-church-600 transition-colors shrink-0">
+                                                <Icon size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-800 text-sm group-hover:text-church-700 transition-colors line-clamp-2">{sub}</h3>
+                                            </div>
                                         </button>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
-                        )}
-
-                        {/* Loading State */}
-                        {loading ? (
-                            <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
                         ) : (
-                            // Logic for displaying content based on selection
-                            selectedSubCategory === 'Sunday School Teachers' && !activeSSDepartment ? (
-                                renderDepartmentGrid()
+                            /* Loading State */
+                            loading ? (
+                                <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
                             ) : (
-                                <div>
-                                    {activeSSDepartment && (
-                                        <div className="mb-6 flex items-center">
-                                            <button 
-                                                onClick={() => setActiveSSDepartment(null)}
-                                                className="flex items-center text-slate-500 hover:text-church-600 transition font-medium"
-                                            >
-                                                <ChevronLeft size={20} className="mr-1" /> Back to Departments
-                                            </button>
-                                            <span className="mx-3 text-slate-300">|</span>
-                                            <h2 className="text-xl font-bold text-slate-800">{activeSSDepartment} Teachers</h2>
-                                        </div>
-                                    )}
+                                // Logic for displaying content based on selection
+                                selectedSubCategory === 'Sunday School Teachers' && !activeSSDepartment ? (
+                                    renderDepartmentGrid()
+                                ) : (
+                                    <div>
+                                        {activeSSDepartment && (
+                                            <div className="mb-6 flex items-center">
+                                                <button 
+                                                    onClick={() => setActiveSSDepartment(null)}
+                                                    className="flex items-center text-slate-500 hover:text-church-600 transition font-medium"
+                                                >
+                                                    <ChevronLeft size={20} className="mr-1" /> Back to Departments
+                                                </button>
+                                                <span className="mx-3 text-slate-300">|</span>
+                                                <h2 className="text-xl font-bold text-slate-800">{activeSSDepartment} Teachers</h2>
+                                            </div>
+                                        )}
 
-                                    {filteredArchives.length > 0 ? (
-                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {filteredArchives.map(entry => {
-                                                const Icon = CATEGORY_ICONS[entry.category] || Archive;
-                                                const isOfficeBearer = entry.category === 'Rawngbawltu te';
-                                                const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
+                                        {filteredArchives.length > 0 ? (
+                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {filteredArchives.map(entry => {
+                                                    const Icon = CATEGORY_ICONS[entry.category] || Archive;
+                                                    const isOfficeBearer = entry.category === 'Rawngbawltu te';
+                                                    const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
 
-                                                return (
-                                                    <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
-                                                        {isAdmin && (
-                                                            <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                                <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
-                                                                <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
-                                                            </div>
-                                                        )}
-                                                        
-                                                        {youtubeId ? (
-                                                            <div className="flex flex-col h-full">
-                                                                {/* Thumbnail */}
-                                                                <div 
-                                                                    className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm"
-                                                                    onClick={() => setPlayingVideoId(youtubeId)}
-                                                                >
-                                                                    <img 
-                                                                        src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} 
-                                                                        alt={entry.title} 
-                                                                        className="w-full h-full object-cover" 
-                                                                    />
-                                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
-                                                                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition">
-                                                                            <Play size={20} className="text-church-600 ml-1 fill-current" />
+                                                    return (
+                                                        <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
+                                                            {isAdmin && (
+                                                                <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                                    <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
+                                                                    <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {youtubeId ? (
+                                                                <div className="flex flex-col h-full">
+                                                                    {/* Thumbnail */}
+                                                                    <div 
+                                                                        className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm"
+                                                                        onClick={() => setPlayingVideoId(youtubeId)}
+                                                                    >
+                                                                        <img 
+                                                                            src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} 
+                                                                            alt={entry.title} 
+                                                                            className="w-full h-full object-cover" 
+                                                                        />
+                                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
+                                                                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition">
+                                                                                <Play size={20} className="text-church-600 ml-1 fill-current" />
+                                                                            </div>
+                                                                        </div>
+                                                                        {/* Category badge */}
+                                                                        <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase tracking-wider">Video</span>
+                                                                    </div>
+                                                                    
+                                                                    <div className="flex justify-between items-start mb-2">
+                                                                        <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
+                                                                    </div>
+                                                                    <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
+                                                                    <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
+                                                                </div>
+                                                            ) : (
+                                                                // Standard Layout
+                                                                <>
+                                                                    <div className="flex items-start mb-4">
+                                                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
+                                                                            <Icon size={24} />
+                                                                        </div>
+                                                                        <div>
+                                                                            {!isOfficeBearer && (
+                                                                                <div className="flex flex-wrap gap-2 mb-1">
+                                                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
+                                                                                    {entry.subCategory && (
+                                                                                        <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
+                                                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
+                                                                            {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
                                                                         </div>
                                                                     </div>
-                                                                    {/* Category badge */}
-                                                                    <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase tracking-wider">Video</span>
-                                                                </div>
-                                                                
-                                                                <div className="flex justify-between items-start mb-2">
-                                                                    <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
-                                                                </div>
-                                                                <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
-                                                                <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
-                                                            </div>
-                                                        ) : (
-                                                            // Standard Layout
-                                                            <>
-                                                                <div className="flex items-start mb-4">
-                                                                    <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
-                                                                        <Icon size={24} />
+                                                                    <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
+                                                                        {entry.description}
                                                                     </div>
-                                                                    <div>
-                                                                        {!isOfficeBearer && (
-                                                                            <div className="flex flex-wrap gap-2 mb-1">
-                                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
-                                                                                {entry.subCategory && (
-                                                                                    <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                                        <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                                                        {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
-                                                                    </div>
-                                                                </div>
-                                                                <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
-                                                                    {entry.description}
-                                                                </div>
-                                                                {entry.link && (
-                                                                    <a 
-                                                                        href={entry.link} 
-                                                                        target="_blank" 
-                                                                        rel="noopener noreferrer"
-                                                                        className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
-                                                                    >
-                                                                        View Resource <ExternalLink size={14} className="ml-1" />
-                                                                    </a>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
-                                            <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                                            <p className="text-slate-500">{t.archives.empty}</p>
-                                        </div>
-                                    )}
-                                </div>
+                                                                    {entry.link && (
+                                                                        <a 
+                                                                            href={entry.link} 
+                                                                            target="_blank" 
+                                                                            rel="noopener noreferrer"
+                                                                            className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
+                                                                        >
+                                                                            View Resource <ExternalLink size={14} className="ml-1" />
+                                                                        </a>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
+                                                <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                                                <p className="text-slate-500">{t.archives.empty}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
                             )
                         )}
                     </div>
