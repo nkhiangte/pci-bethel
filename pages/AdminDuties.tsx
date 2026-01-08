@@ -4,7 +4,7 @@ import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getConstants } from '../constants';
-import { Loader, Save, X, Database, Shield, ClipboardList } from 'lucide-react';
+import { Loader, Save, X, Database, Shield, ClipboardList, Clock } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -33,7 +33,12 @@ const AdminDuties: React.FC = () => {
                 setDuties({
                   month: '', thawhlawmChiartute: [], buhfaithamHralhtute: [], ushers: [],
                   weekRange: '', zaiHruaitu: '', pianoTumtu: '', hlaHriltu: '',
-                  lightAndSoundDuty: '', pangparKhawitu: ''
+                  lightAndSoundDuty: '', pangparKhawitu: '',
+                  serviceTimes: {
+                      sundaySchool: '10:00 AM',
+                      morning: '01:30 PM',
+                      evening: '07:00 PM'
+                  }
                 });
             }
         } catch (error) {
@@ -54,7 +59,7 @@ const AdminDuties: React.FC = () => {
         setIsSaving(true);
         try {
             await db.collection('weeklyDuties').doc('current').set(duties, { merge: true });
-            alert("Weekly duties updated successfully!");
+            alert("Weekly duties and service times updated successfully!");
         } catch (error) {
             console.error("Error saving duties:", error);
             alert("An error occurred. Please try again.");
@@ -68,6 +73,16 @@ const AdminDuties: React.FC = () => {
 
     const handleFieldChange = (field: keyof WeeklyDuty, value: string) => {
         setDuties(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleServiceTimeChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
+        setDuties(prev => ({
+            ...prev,
+            serviceTimes: {
+                ...(prev.serviceTimes || { sundaySchool: '', morning: '', evening: '' }),
+                [timeType]: value
+            }
+        }));
     };
 
     if (!currentUser) return <Navigate to="/login" replace />;
@@ -87,13 +102,49 @@ const AdminDuties: React.FC = () => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Manage Weekly Duties</h1>
-                    <p className="max-w-2xl mx-auto text-slate-600">Update the list of members on duty for various roles. Changes will reflect on the homepage.</p>
+                    <p className="max-w-2xl mx-auto text-slate-600">Update the list of members on duty for various roles and adjust service times. Changes will reflect on the homepage.</p>
                 </div>
 
                 {loading ? <div className="text-center py-20"><Loader className="animate-spin h-10 w-10 mx-auto text-church-500" /></div>
                 : (
                     <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-100 space-y-8">
                         
+                        {/* Service Times Section */}
+                        <div className="bg-church-50 p-6 rounded-lg border border-church-100">
+                            <h3 className="text-lg font-bold text-church-800 mb-4 flex items-center">
+                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times)
+                            </h3>
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Sunday School</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.serviceTimes?.sundaySchool || ''} 
+                                        onChange={e => handleServiceTimeChange('sundaySchool', e.target.value)} 
+                                        placeholder="e.g. 10:00 AM"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Morning Service</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.serviceTimes?.morning || ''} 
+                                        onChange={e => handleServiceTimeChange('morning', e.target.value)} 
+                                        placeholder="e.g. 01:30 PM"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Evening Service</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.serviceTimes?.evening || ''} 
+                                        onChange={e => handleServiceTimeChange('evening', e.target.value)} 
+                                        placeholder="e.g. 07:00 PM"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Month (e.g., January)</label>

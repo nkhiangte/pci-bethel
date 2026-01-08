@@ -122,7 +122,12 @@ const DATA = {
       pianoTumtu: 'Tv. H. Lalfakawma',
       hlaHriltu: 'Pi C. Lalramthari',
       lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
-      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami'
+      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami',
+      serviceTimes: {
+        sundaySchool: '10:00 AM',
+        morning: '01:30 PM',
+        evening: '07:00 PM'
+      }
     } as WeeklyDuty
   },
   mizo: {
@@ -214,7 +219,12 @@ const DATA = {
       pianoTumtu: 'Tv. H. Lalfakawma',
       hlaHriltu: 'Pi C. Lalramthari',
       lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
-      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami'
+      pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami',
+      serviceTimes: {
+        sundaySchool: '10:00 AM',
+        morning: '01:30 PM',
+        evening: '07:00 PM'
+      }
     } as WeeklyDuty
   }
 };

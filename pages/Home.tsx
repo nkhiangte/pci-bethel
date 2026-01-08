@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
@@ -5,11 +6,13 @@ import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import Card from '../components/Card';
 import { WeeklyDuty, Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic } from 'lucide-react';
+import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Home: React.FC = () => {
   const { t, language } = useLanguage();
+  const { isAdmin } = useAuth();
   const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay();
   const { weeklyDuty: staticWeeklyDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
 
@@ -152,7 +155,14 @@ export const Home: React.FC = () => {
         {/* Weekly Duties */}
         <section>
             <div className="flex flex-col md:flex-row items-center justify-between mb-8">
-                <h2 className="text-3xl font-serif font-bold text-church-900">{t.nav.duties}</h2>
+                <div className="flex items-center gap-3">
+                    <h2 className="text-3xl font-serif font-bold text-church-900">{t.nav.duties}</h2>
+                    {isAdmin && (
+                        <Link to="/admin/duties" className="text-slate-400 hover:text-church-600 transition" title="Edit Duties">
+                            <Edit size={20} />
+                        </Link>
+                    )}
+                </div>
                 {weeklyDuty.weekRange && <span className="bg-church-100 text-church-800 px-4 py-1 rounded-full font-medium text-sm">{weeklyDuty.weekRange}</span>}
             </div>
             
@@ -241,7 +251,14 @@ export const Home: React.FC = () => {
 
         {/* Service Times */}
         <section>
-            <h2 className="text-3xl font-serif font-bold text-church-900 text-center mb-10">{t.home.serviceTimes}</h2>
+            <div className="text-center mb-10 relative">
+                <h2 className="text-3xl font-serif font-bold text-church-900 inline-block">{t.home.serviceTimes}</h2>
+                {isAdmin && (
+                    <Link to="/admin/duties" className="absolute ml-3 text-slate-400 hover:text-church-600 transition inline-block" title="Edit Service Times">
+                        <Edit size={20} />
+                    </Link>
+                )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6 bg-church-800 text-white rounded-t-lg">
@@ -249,7 +266,7 @@ export const Home: React.FC = () => {
                         <h4 className="font-bold text-xl">{t.home.sundaySchool}</h4>
                     </div>
                     <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">10:00 AM</p>
+                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}</p>
                         <p className="text-slate-500 mt-2">Every Sunday</p>
                     </div>
                 </Card>
@@ -259,7 +276,7 @@ export const Home: React.FC = () => {
                         <h4 className="font-bold text-xl">{t.home.morningService}</h4>
                     </div>
                     <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">01:30 PM</p>
+                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.morning || '01:30 PM'}</p>
                         <p className="text-slate-500 mt-2">Every Sunday</p>
                     </div>
                 </Card>
@@ -269,7 +286,7 @@ export const Home: React.FC = () => {
                         <h4 className="font-bold text-xl">{t.home.eveningService}</h4>
                     </div>
                     <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">07:00 PM</p>
+                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.evening || '07:00 PM'}</p>
                         <p className="text-slate-500 mt-2">Every Sunday</p>
                     </div>
                 </Card>

@@ -205,6 +205,12 @@ export interface WeeklyDuty {
   hlaHriltu: string;
   lightAndSoundDuty: string;
   pangparKhawitu: string;
+  // Added serviceTimes to allow dynamic editing of Inkhawm Hun
+  serviceTimes?: {
+    sundaySchool: string;
+    morning: string;
+    evening: string;
+  };
 }
 
 // KTP Hruaitute Types
