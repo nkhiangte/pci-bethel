@@ -4,15 +4,39 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, AlertTriangle } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, AlertTriangle, Users } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
     'Photo': Image,
     'Video': Video,
     'History': History,
-    'Minute': File
+    'Minute': File,
+    'Rawngbawltu te': Users 
 };
+
+// Sub-categories for Rawngbawltu te
+const RAWNGBAWLTU_SUBCATEGORIES = [
+    'Executive Body',
+    'Ramthar',
+    'BUILDING',
+    'SOCIAL FRONT',
+    'REFRESHMENT',
+    'KRISTIAN CHHUNGKUA',
+    'MASIHI SANGATI',
+    'BSI',
+    'RECEPTION, USHERING & DECORATION',
+    'ARCHIVE & LIBRARY',
+    'MUSIC',
+    'LIGHT & SOUND',
+    'SUNDAY SCHOOL',
+    'SUNDAY SCHOOL ZIRTIRTUTE',
+    'THUHRILTU',
+    'ṬANTU',
+    'KOHHRAN HMEICHHIA',
+    'KTP',
+    'KOHHRAN PAVALAI PAWL'
+];
 
 const Archives: React.FC = () => {
     const { t } = useLanguage();
@@ -21,6 +45,7 @@ const Archives: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
+    const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
     
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +56,8 @@ const Archives: React.FC = () => {
     const MOCK_ARCHIVES: ArchiveEntry[] = [
         { id: '1', title: 'Church Foundation Stone Laying', date: '1985-04-12', category: 'History', description: 'Records of the foundation stone laying ceremony.', link: '#' },
         { id: '2', title: 'Silver Jubilee Souvenir', date: '2010-10-15', category: 'Document', description: 'Scanned copy of the Silver Jubilee souvenir book.', link: '#' },
-        { id: '3', title: 'Old Church Building Photo', date: '1990-05-20', category: 'Photo', description: 'Photograph of the first church building.', link: '#' }
+        { id: '3', title: 'Old Church Building Photo', date: '1990-05-20', category: 'Photo', description: 'Photograph of the first church building.', link: '#' },
+        { id: '4', title: '2023 Executive Committee Members', date: '2023-01-01', category: 'Rawngbawltu te', subCategory: 'Executive Body', description: 'List of executive committee members for the year 2023.', link: '#' }
     ];
 
     const fetchArchives = useCallback(async () => {
@@ -64,11 +90,19 @@ const Archives: React.FC = () => {
         fetchArchives();
     }, [fetchArchives]);
 
+    // Reset subcategory when main category changes
+    useEffect(() => {
+        if (selectedCategory !== 'Rawngbawltu te') {
+            setSelectedSubCategory('All');
+        }
+    }, [selectedCategory]);
+
     const handleAddNew = () => {
         setEditingEntry({
             title: '',
             date: new Date().toISOString().split('T')[0],
             category: 'Document',
+            subCategory: '',
             description: '',
             link: ''
         });
@@ -100,6 +134,12 @@ const Archives: React.FC = () => {
         setIsSaving(true);
         try {
             const { id, ...data } = editingEntry;
+            
+            // Clean up subCategory if category is not Rawngbawltu te
+            if (data.category !== 'Rawngbawltu te') {
+                delete data.subCategory;
+            }
+
             if (id) {
                 await db.collection('archives').doc(id).set(data, { merge: true });
             } else {
@@ -118,10 +158,16 @@ const Archives: React.FC = () => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               item.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+        
+        // Sub-category filter logic
+        const matchesSubCategory = selectedCategory !== 'Rawngbawltu te' || 
+                                   selectedSubCategory === 'All' || 
+                                   item.subCategory === selectedSubCategory;
+
+        return matchesSearch && matchesCategory && matchesSubCategory;
     });
 
-    const categories = ['All', 'Document', 'Photo', 'Video', 'History', 'Minute'];
+    const categories = ['All', 'Document', 'Photo', 'Video', 'History', 'Minute', 'Rawngbawltu te'];
 
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
@@ -131,8 +177,9 @@ const Archives: React.FC = () => {
                     <p className="text-slate-600 max-w-2xl mx-auto">{t.archives.subtitle}</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div className="flex items-center space-x-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                {/* Main Category Filters */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div className="flex items-center space-x-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                         {categories.map(cat => (
                             <button 
                                 key={cat}
@@ -170,6 +217,37 @@ const Archives: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Sub-Category Filters (Only for Rawngbawltu te) */}
+                {selectedCategory === 'Rawngbawltu te' && (
+                    <div className="mb-8 overflow-hidden">
+                        <div className="flex items-center space-x-2 w-full overflow-x-auto pb-4 hide-scrollbar">
+                            <button 
+                                onClick={() => setSelectedSubCategory('All')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                                    selectedSubCategory === 'All' 
+                                    ? 'bg-slate-800 text-white' 
+                                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                                }`}
+                            >
+                                All Departments
+                            </button>
+                            {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
+                                <button 
+                                    key={sub}
+                                    onClick={() => setSelectedSubCategory(sub)}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                                        selectedSubCategory === sub
+                                        ? 'bg-slate-800 text-white' 
+                                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                                    }`}
+                                >
+                                    {sub}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
                 ) : filteredArchives.length > 0 ? (
@@ -177,24 +255,29 @@ const Archives: React.FC = () => {
                         {filteredArchives.map(entry => {
                             const Icon = CATEGORY_ICONS[entry.category] || Archive;
                             return (
-                                <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative">
+                                <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
                                     {isAdmin && (
-                                        <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                             <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
                                             <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
                                         </div>
                                     )}
                                     <div className="flex items-start mb-4">
-                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4">
+                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
                                             <Icon size={24} />
                                         </div>
                                         <div>
-                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
-                                            <h3 className="font-bold text-slate-800 text-lg leading-tight mt-1">{entry.title}</h3>
+                                            <div className="flex flex-wrap gap-2 mb-1">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
+                                                {entry.subCategory && (
+                                                    <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
                                             <p className="text-xs text-slate-500 mt-1">{entry.date}</p>
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 text-sm mb-4 line-clamp-3">
+                                    <p className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">
                                         {entry.description}
                                     </p>
                                     {entry.link && (
@@ -202,7 +285,7 @@ const Archives: React.FC = () => {
                                             href={entry.link} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800"
+                                            className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
                                         >
                                             View Resource <ExternalLink size={14} className="ml-1" />
                                         </a>
@@ -260,6 +343,24 @@ const Archives: React.FC = () => {
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Sub Category Selection - Only visible for 'Rawngbawltu te' */}
+                            {editingEntry.category === 'Rawngbawltu te' && (
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Sub Category</label>
+                                    <select 
+                                        className="w-full border border-slate-300 rounded p-2.5 bg-white" 
+                                        value={editingEntry.subCategory || ''} 
+                                        onChange={e => setEditingEntry({...editingEntry, subCategory: e.target.value})}
+                                    >
+                                        <option value="" disabled>Select Sub-Category</option>
+                                        {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
+                                            <option key={sub} value={sub}>{sub}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Link (URL)</label>
                                 <input 
