@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Globe, User, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { Menu, X, Globe, User, LogOut, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
   const { currentUser, userProfile, isAdmin } = useAuth();
@@ -61,6 +62,10 @@ const Navbar: React.FC = () => {
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'mizo' : 'en');
+  };
+
+  const toggleMobileMenu = (name: string) => {
+    setMobileExpanded(prev => prev === name ? null : name);
   };
 
   const handleLogout = async () => {
@@ -216,25 +221,34 @@ const Navbar: React.FC = () => {
               <div key={link.name}>
                 {link.children ? (
                   <>
-                    <div className="block px-3 py-2 text-base font-medium text-slate-300 uppercase tracking-wider text-xs bg-church-800/50 mt-2">
+                    <button
+                      onClick={() => toggleMobileMenu(link.name)}
+                      className={`w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                         mobileExpanded === link.name ? 'bg-church-800 text-white' : 'text-slate-300 hover:bg-church-800 hover:text-white'
+                      }`}
+                    >
                       {link.name}
-                    </div>
-                    <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2">
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.path}
-                          to={child.path}
-                          onClick={() => setIsOpen(false)}
-                          className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                            isActive(child.path)
-                              ? 'bg-church-800 text-white'
-                              : 'text-slate-400 hover:bg-church-800 hover:text-white'
-                          }`}
-                        >
-                          {child.name}
-                        </Link>
-                      ))}
-                    </div>
+                      {mobileExpanded === link.name ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {mobileExpanded === link.name && (
+                      <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2 mt-1 animate-in slide-in-from-top-1 duration-200">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            onClick={() => setIsOpen(false)}
+                            className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                              isActive(child.path)
+                                ? 'bg-church-800 text-white'
+                                : 'text-slate-400 hover:bg-church-800 hover:text-white'
+                            }`}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <Link

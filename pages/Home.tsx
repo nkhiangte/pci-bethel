@@ -6,7 +6,7 @@ import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import Card from '../components/Card';
 import { WeeklyDuty, Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun, UserCheck, Home as HomeIcon } from 'lucide-react';
+import { Loader, Calendar, Clock, User, Users, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun, UserCheck, Home as HomeIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,18 +14,20 @@ const StatsSlideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   
   const stats = [
-    { label: "Kohhran Pum", value: "2,094", icon: User, sub: "Total Members" },
+    { label: "Kohhran Pum", value: "2,094", icon: Users, sub: "Total Members" },
     { label: "Dan Zawhkim", value: "1,475", icon: UserCheck, sub: "Full Communicant" },
     { label: "Chhungkua", value: "440", icon: HomeIcon, sub: "Families" },
+    { label: "Mipa", value: "1,032", icon: User, sub: "Males" },
+    { label: "Hmeichhia", value: "1,071", icon: User, sub: "Females" },
     { label: "Sunday School", value: "1,773", icon: BookOpen, sub: "Zirtu & Zirtirtu" },
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % stats.length);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [stats.length]);
 
   const currentStat = stats[currentIndex];
   const Icon = currentStat.icon;
