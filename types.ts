@@ -1,6 +1,8 @@
 
 
 
+
+
 export enum View {
   Home = 'Home',
   Sermons = 'Sermons',
@@ -179,6 +181,16 @@ export interface InkhawmpuiRecord {
 }
 
 export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord;
+
+// Archives Type
+export interface ArchiveEntry {
+  id: string;
+  title: string;
+  date: string;
+  category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute';
+  description: string;
+  link?: string; // Optional URL to the file
+}
 
 export interface WeeklyDuty {
   id: string; // Should be 'current'

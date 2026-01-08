@@ -1,5 +1,7 @@
 
 
+
+
 export type Language = 'en' | 'mizo';
 
 export const translations = {
@@ -19,6 +21,7 @@ export const translations = {
       contact: 'Contact',
       gallery: 'Gallery',
       records: 'Records',
+      archives: 'Archives',
       admin: 'Admin',
       statistics: 'Statistics',
       duties: 'Weekly Duties',
@@ -149,6 +152,13 @@ export const translations = {
         speakers: 'Key Speakers'
       }
     },
+    archives: {
+        title: 'Archives',
+        subtitle: 'Historical documents, old records, and preserved memories of the church.',
+        add: 'Add Archive Entry',
+        category: 'Category',
+        empty: 'No archives found matching your search.',
+    },
     // FIX: Add media translations for the Media page.
     media: {
       title: 'Sermons & Media',
@@ -200,6 +210,7 @@ export const translations = {
       contact: 'Biak Pawh',
       gallery: 'Thlalak',
       records: 'Records',
+      archives: 'Archives',
       admin: 'Admin',
       statistics: 'Statistics',
       duties: 'Tunkar Inruatna',
@@ -329,6 +340,13 @@ export const translations = {
         location: 'A Hmun',
         speakers: 'Thusawitu Pawimawh'
       }
+    },
+    archives: {
+        title: 'Archives',
+        subtitle: 'Kohhran thil hlui vawnhim te, lehkha pawimawh leh thlalak te.',
+        add: 'Dah Luh Thar',
+        category: 'Chi Hrang',
+        empty: 'He category ah hian engmah hmuh tur a awm lo.',
     },
     // FIX: Add media translations for the Media page.
     media: {

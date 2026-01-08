@@ -1,4 +1,6 @@
 
+
+
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -27,6 +29,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import SundaySchool from './pages/SundaySchool';
 import Statistics from './pages/Statistics';
 import Records from './pages/Records';
+import Archives from './pages/Archives';
 
 const App: React.FC = () => {
   return (
@@ -67,6 +70,7 @@ const App: React.FC = () => {
                 <Route path="/admin/duties" element={<AdminDuties />} /> {/* Add new route */}
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> {/* Add new route */}
+                <Route path="/archives" element={<Archives />} />
               </Routes>
             </main>
             <Footer />

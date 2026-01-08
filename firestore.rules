@@ -1,4 +1,6 @@
 
+
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -22,6 +24,11 @@ service cloud.firestore {
     // ===============================
 
     match /announcements/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /archives/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }

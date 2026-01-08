@@ -1,4 +1,6 @@
 
+
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Globe, User, LogOut, ChevronDown, Shield } from 'lucide-react';
@@ -50,6 +52,7 @@ const Navbar: React.FC = () => {
       ]
     },
     { name: t.nav.records, path: '/records' },
+    { name: t.nav.archives, path: '/archives' },
     { name: t.nav.gallery, path: '/gallery' },
     { name: t.nav.contact, path: '/contact' },
   ];

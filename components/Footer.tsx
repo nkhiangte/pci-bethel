@@ -66,7 +66,7 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="border-t border-slate-700 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
+        <div className="border-t border-slate-700 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
           <p>&copy; {new Date().getFullYear()} {CHURCH_NAME}. {t.footer.rightsReserved}</p>
           <div className="mt-4 md:mt-0">
             {currentUser ? (
@@ -81,10 +81,13 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Added Property Section */}
-        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
-            <p className="text-xs text-slate-600 font-medium uppercase tracking-wider">Property of Bethel Presbyterian Kohhran</p>
-            <p className="text-[10px] text-slate-700 mt-1">Archives & Library Committee</p>
+        {/* Added Property Section - Updated colors for visibility */}
+        <div className="mt-6 pt-6 border-t border-church-800 text-center">
+            <p className="text-xs text-church-200 font-medium uppercase tracking-wider">Property of Bethel Presbyterian Kohhran</p>
+            <p className="text-[10px] text-church-300 mt-1">Archives & Library Committee</p>
+            <p className="text-xs text-white mt-2 font-medium">
+              Powered by <a href="tel:9612447703" className="hover:text-church-200 transition-colors underline decoration-white/50">PrisMark</a>
+            </p>
         </div>
       </div>
     </footer>
