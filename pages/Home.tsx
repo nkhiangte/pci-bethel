@@ -567,6 +567,7 @@ export const Home: React.FC = () => {
               {news[0] && ( // Check if news has at least one item before accessing [0]
                 <div className="mb-12 group">
                   <Link to="/announcements" className="block rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                    {/* Changed bg-white/70 backdrop-blur-sm to bg-white/95 and removed backdrop-blur for sharpness */}
                     <div 
                       className="relative h-[500px] bg-cover bg-center flex items-end p-8 text-white"
                       style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url(${news[0].imageUrl || 'https://picsum.photos/seed/church/1200/800'})` }}
@@ -576,10 +577,10 @@ export const Home: React.FC = () => {
                         <h2 className="text-4xl md:text-5xl font-serif font-bold mt-4 mb-4 leading-tight drop-shadow-md">
                           {news[0].title}
                         </h2>
-                        <p className="text-slate-200 text-lg mb-6 line-clamp-2 drop-shadow">
+                        <p className="text-slate-100 text-lg mb-6 line-clamp-2 drop-shadow-md">
                           {news[0].content}
                         </p>
-                        <div className="flex items-center text-sm font-medium text-slate-300">
+                        <div className="flex items-center text-sm font-medium text-slate-200">
                           <Calendar size={16} className="mr-2" /> {news[0].date}
                           <span className="mx-3">|</span>
                           <div className="flex items-center text-white font-bold group-hover:underline">
@@ -620,6 +621,18 @@ export const Home: React.FC = () => {
           )}
         </div>
       </div>
+
+      <section className="py-16 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* This section previously had backdrop blur, removing for clarity */}
+          <div className="bg-white p-8 rounded-lg shadow-sm border border-church-100">
+            <h2 className="text-3xl md:text-4xl font-bold text-church-900 mb-4">Welcome to Bethel Kohhran</h2>
+            <p className="text-lg text-slate-700 max-w-2xl mx-auto font-medium">
+              "For where two or three gather in my name, there am I with them." - Matthew 18:20
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Kohhran Puipate (Leaders) Section */}
       <div className="py-16 bg-church-50">
@@ -672,7 +685,7 @@ export const Home: React.FC = () => {
                       <h3 className="text-2xl font-bold text-slate-900 mb-1">{featuredPastor.name}</h3>
                       <p className="text-church-700 font-semibold text-lg">{featuredPastor.role}</p>
                       {featuredPastor.description && (
-                         <p className="text-sm text-slate-500 mt-2 italic">{featuredPastor.description}</p>
+                         <p className="text-sm text-slate-600 mt-2 italic">{featuredPastor.description}</p>
                       )}
                       {featuredPastor.period && (
                         <p className="text-sm text-slate-500 mt-1">{featuredPastor.period}</p>

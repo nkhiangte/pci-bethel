@@ -345,6 +345,43 @@ const ARCHIVE_LIBRARY_SEED_DATA = [
   { year: '2025', details: "Chairman : Upa Daikhawzama\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu C Lalzova\nAsst. Secretary: Pi PC Lalnunsangi" },
 ];
 
+const BSI_SEED_DATA = [
+  { year: '1992', details: "President : Pu V Lalpianga\nVice President : Pu FC Lalramliana\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Nunthara" },
+  { year: '1993', details: "President : Pu V Lalpianga\nVice President : Pu FC Lalramliana\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Nunthara" },
+  { year: '1994', details: "President : Pu FC Lalramliana\nVice President : Pu V Lalpianga\nSecretary : Pu K Nunthara\nAsst. Secretary: Tv. Zohmangaiha\nTreasurer : Pu Thangliankhama\nFin. Secretary : Upa Manhleia" },
+  { year: '1995', details: "Record awm lo" },
+  { year: '1996', details: "President : Upa Manhleia\nVice President : Pu V Lalpianga\nSecretary : Pu Lal\\anpuia\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu K Nunthara" },
+  { year: '1997', details: "President : Upa Saizama Sailo\nVice President : Pu V Lalpianga\nSecretary : Pu Lal\\anpuia\nAsst. Secretary: Pu H Kapthianga\nTreasurer : Upa Hleikapa\nFin. Secretary : Pu K Nunthara" },
+  { year: '1998', details: "Record awm lo" },
+  { year: '1999', details: "President : Upa Khawidawla\nVice President : Upa Hleikapa\nSecretary : Pu K Nunthara\nAsst. Secretary: Pu MS Dawngliana\nTreasurer : Pu C Lalzova\nFin. Secretary : Pu Lal\\anpuia" },
+  { year: '2000', details: "President : Upa Daikhawzama\nVice President : Upa Hleikapa\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu Lalrozama\nTreasurer : Pu K Nunthara\nFin. Secretary : Pu Lal\\anpuia" },
+  { year: '2001', details: "President : Upa B Hranghlira\nVice President : Pu V Lalpianga\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu K Lalduhawma\nTreasurer : Pu K |huamluaia\nFin. Secretary : Pu H Vanlalthanga" },
+  { year: '2002', details: "President : Upa Manhleia\nVice President : Pu V Lalpianga\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu T Lal\\anpuia\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu C Roenga" },
+  { year: '2003', details: "President : Upa Khawidawla\nVice President : Pu V Lalpianga\nSecretary : Pu C Roenga\nAsst. Secretary: Pu T Dilliana\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu F Lalbuatsaiha" },
+  { year: '2004', details: "President : Upa Khawidawla\nVice President : Upa Hleikapa\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
+  { year: '2005', details: "President : Upa PC Lalhmingliana\nVice President : Upa Daikhawzama\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
+  { year: '2006', details: "President : Upa PC Lalhmingliana\nVice President : Upa Daikhawzama\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu R Lalhmangaiha\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2007', details: "President : Upa Manhleia\nVice President : Upa Daikhawzama\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pi Lalnunziri\nTreasurer : Pu Ramhnehzauva\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2008', details: "President : Upa Daikhawzama\nVice President : T.Upa C Lalthantluanga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pi Lalnunziri\nTreasurer : Pu Ramhnehzauva\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2009', details: "President : Upa Daikhawzama\nVice President : Pu R Dengkunga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu H Lalchawimawia\nTreasurer : Pu Vanlalrema Ralte\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2010', details: "President : T.Upa C Roliana\nVice President : Pu R Dengkunga\nSecretary : Pu H Lalchawimawia\nAsst. Secretary: Pu C Lalzova\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
+  { year: '2011', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu H Lalchawimawia\nAsst. Secretary: Pu C Lalzova\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
+  { year: '2012', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu Zoramnghingliana\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu C Lalmuansanga" },
+  { year: '2013', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu Zoramnghingliana\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Lalmuansanga" },
+  { year: '2014', details: "President : T.Upa C Lalthantluanga\nVice President : Pu C Lalzova\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Lalmuansanga" },
+  { year: '2015', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu Zoramnghingliana/\n: Pu P Lalhmingthanga\nAsst. Secretary: Pu P Lalhmingthanga/\n: Pu T Chalzawna\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2016', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu T Chalzawna\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2017', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu T Chalzawna\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2018', details: "President : Upa Daikhawzama\nVice President : Pu P Lalhmingthanga\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2019', details: "President : Upa Daikhawzama\nVice President : Pu P Lalhmingthanga\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2020', details: "President : Upa C Lalrintluanga\nVice President : Pu C Roliana\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2021', details: "President : Upa C Lalrintluanga\nVice President : Pu C Roliana\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2022', details: "President : Upa K Vanlalhmuaka\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
+  { year: '2023', details: "President : T.Upa Hmingthanmawia Sailo\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu Thanglianmanga" },
+  { year: '2024', details: "President : T.Upa Hmingthanmawia Sailo\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Thanglianmanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu Vanlaldika Varte" },
+  { year: '2025', details: "President : Upa Lianpianga\nVice President : Pu P Lalhmingthanga\nSecretary : Pu Thanglianmanga\nAsst. Secretary: Pu Nelson Khiangte\nTreasurer : L Khenpauva\nFin. Secretary : Pu Vanlalhriata" },
+];
+
 const MUSIC_SEED_DATA = [
   { year: '2001', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Daikhawzama\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu C Lalthlamuana\nFin. Secretary : Pu H Zakima" },
   { year: '2010', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : T.Upa C Roliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu Lalbiakkunga Pachuau" },
@@ -947,6 +984,40 @@ const Archives: React.FC = () => {
         setIsSaving(false);
     };
 
+    const handleSeedBSI = async () => {
+        if (!db?.collection || !window.confirm("This will add/overwrite BSI records. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            BSI_SEED_DATA.forEach(data => {
+                const docId = `bsi-${data.year}`; 
+                const docRef = collectionRef.doc(docId);
+                const entry: ArchiveEntry = {
+                    id: docId,
+                    title: data.year, // Using JUST the year as title
+                    date: `${data.year}-01-01`,
+                    category: 'Rawngbawltu te',
+                    subCategory: 'BSI',
+                    description: data.details,
+                    link: ''
+                };
+                batch.set(docRef, entry);
+            });
+
+            await batch.commit();
+            alert("BSI data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding BSI:", error);
+            alert("Failed to seed data.");
+        }
+        setIsSaving(false);
+    };
+
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1133,6 +1204,16 @@ const Archives: React.FC = () => {
                                         disabled={isSaving}
                                         className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
                                         title="Seed Finance Data"
+                                    >
+                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                    </button>
+                                )}
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'BSI' && (
+                                    <button 
+                                        onClick={handleSeedBSI}
+                                        disabled={isSaving}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                        title="Seed BSI Data"
                                     >
                                         {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
                                     </button>

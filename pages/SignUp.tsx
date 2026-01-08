@@ -68,7 +68,8 @@ const SignUp: React.FC = () => {
       className="min-h-screen bg-cover bg-center flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
       style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("${bgUrl}")` }}
     >
-      <div className="max-w-md w-full space-y-8 bg-white/95 backdrop-blur-sm p-10 rounded-xl shadow-2xl border border-white/20">
+      {/* Increased opacity to 0.98 and removed backdrop-blur for text clarity */}
+      <div className="max-w-md w-full space-y-8 bg-white/98 p-10 rounded-xl shadow-2xl border border-white/20">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 bg-church-100 text-church-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
             <UserPlus size={24} />
