@@ -10,50 +10,93 @@ import { Loader, Calendar, Clock, User, Users, Music, BookOpen, ChevronRight, Mi
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const StatsSlideshow = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+// Custom Male Icon (Mars)
+const MaleIcon = ({ size = 24, className = "" }: { size?: number | string, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="10" cy="14" r="5" />
+    <path d="M20 4v6" />
+    <path d="M20 4h-6" />
+    <path d="M14.5 9.5 20 4" />
+  </svg>
+);
+
+// Custom Female Icon (Venus)
+const FemaleIcon = ({ size = 24, className = "" }: { size?: number | string, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="10" r="5" />
+    <path d="M12 15v6" />
+    <path d="M9 19h6" />
+  </svg>
+);
+
+const StatsSpinner = () => {
+  const [rotation, setRotation] = useState(0);
   
   const stats = [
     { label: "Kohhran Pum", value: "2,094", icon: Users, sub: "Total Members" },
     { label: "Dan Zawhkim", value: "1,475", icon: UserCheck, sub: "Full Communicant" },
     { label: "Chhungkua", value: "440", icon: HomeIcon, sub: "Families" },
-    { label: "Mipa", value: "1,032", icon: User, sub: "Males" },
-    { label: "Hmeichhia", value: "1,071", icon: User, sub: "Females" },
+    { label: "Mipa", value: "1,032", icon: MaleIcon, sub: "Males" },
+    { label: "Hmeichhia", value: "1,071", icon: FemaleIcon, sub: "Females" },
     { label: "Sunday School", value: "1,773", icon: BookOpen, sub: "Zirtu & Zirtirtu" },
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % stats.length);
+      setRotation(prev => prev + 180);
     }, 4000);
     return () => clearInterval(timer);
-  }, [stats.length]);
+  }, []);
 
-  const currentStat = stats[currentIndex];
-  const Icon = currentStat.icon;
+  const step = rotation / 180;
+  
+  // Calculate indices for front and back faces based on the current step
+  const frontIndex = (step % 2 === 0) ? step % stats.length : (step + 1) % stats.length;
+  const backIndex = (step % 2 !== 0) ? step % stats.length : (step + 1) % stats.length;
+
+  const frontStat = stats[frontIndex];
+  const backStat = stats[backIndex];
+
+  const Face = ({ stat }: { stat: any }) => {
+      const Icon = stat.icon;
+      return (
+        <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center text-center p-8 bg-gradient-to-br from-church-600 to-church-800 rounded-2xl shadow-lg text-white" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+           <Icon className="absolute -bottom-6 -right-6 w-40 h-40 text-white opacity-10 rotate-12 transition-transform duration-700 transform hover:rotate-45" />
+           <div className="relative z-10 w-full">
+              <div className="inline-flex p-3 bg-white/20 rounded-full mb-4 backdrop-blur-md shadow-inner">
+                 <Icon size={32} className="text-white" />
+              </div>
+              <h3 className="text-5xl font-bold mb-2 tracking-tight drop-shadow-sm">{stat.value}</h3>
+              <p className="text-xl font-bold text-church-100 uppercase tracking-wide">{stat.label}</p>
+              <p className="text-xs text-church-200 mt-1 font-medium bg-black/10 inline-block px-2 py-0.5 rounded-full">{stat.sub}</p>
+           </div>
+        </div>
+      );
+  };
 
   return (
-    <div className="h-full min-h-[250px] bg-gradient-to-br from-church-600 to-church-800 rounded-2xl shadow-lg text-white p-8 relative overflow-hidden flex flex-col justify-center items-center text-center">
-       {/* Background Decoration */}
-       <Icon className="absolute -bottom-6 -right-6 w-40 h-40 text-white opacity-10 rotate-12 transition-transform duration-700 transform hover:rotate-45" />
-       
-       <div key={currentIndex} className="animate-in fade-in slide-in-from-right-8 duration-500 w-full relative z-10">
-          <div className="inline-flex p-3 bg-white/20 rounded-full mb-4 backdrop-blur-md shadow-inner">
-             <Icon size={32} className="text-white" />
+    <div className="h-full min-h-[250px] relative" style={{ perspective: '1000px' }}>
+       <div 
+         className="w-full h-full relative transition-transform duration-1000 ease-in-out"
+         style={{ transform: `rotateY(${rotation}deg)`, transformStyle: 'preserve-3d' }}
+       >
+          {/* Front Face (0deg) */}
+          <div style={{ transform: 'rotateY(0deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }} className="absolute inset-0">
+             <Face stat={frontStat} />
           </div>
-          <h3 className="text-5xl font-bold mb-2 tracking-tight drop-shadow-sm">{currentStat.value}</h3>
-          <p className="text-xl font-bold text-church-100 uppercase tracking-wide">{currentStat.label}</p>
-          <p className="text-xs text-church-200 mt-1 font-medium bg-black/10 inline-block px-2 py-0.5 rounded-full">{currentStat.sub}</p>
+          
+          {/* Back Face (180deg) */}
+          <div style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }} className="absolute inset-0">
+             <Face stat={backStat} />
+          </div>
        </div>
-
-       {/* Indicators */}
+       
+       {/* Indicators (Optional, purely decorative as rotation is automatic) */}
        <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
           {stats.map((_, idx) => (
-            <button
+            <div
               key={idx} 
-              onClick={() => setCurrentIndex(idx)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'}`}
-              aria-label={`Go to slide ${idx + 1}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${idx === (step % stats.length) ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`}
             />
           ))}
        </div>
@@ -229,9 +272,9 @@ export const Home: React.FC = () => {
                   {renderVerseContent()}
               </div>
 
-              {/* Stats Slideshow - Span 1 col */}
+              {/* Stats Spinner - Span 1 col */}
               <div className="md:col-span-1 h-full">
-                 <StatsSlideshow />
+                 <StatsSpinner />
               </div>
            </div>
         </section>
