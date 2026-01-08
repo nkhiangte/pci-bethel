@@ -5,6 +5,7 @@ export const translations = {
   en: {
     nav: {
       home: 'Home',
+      upaBial: 'Upa Bial', // Added
       about: 'About Us',
       worship: 'Worship',
       fellowships: 'Fellowships',
@@ -30,9 +31,9 @@ export const translations = {
       verseOfTheDay: 'Verse of the Day',
       latestNews: 'Latest News',
       newsTitle: 'Latest News',
-      puipate: 'Our Leaders', // Added Puipate translation
-      kohhranElders: 'Church Elders', // New translation key for Church Elders
-      kohhranProPastors: 'Church Pro Pastors', // New: Translation for Pro Pastors
+      puipate: 'Our Leaders',
+      kohhranElders: 'Church Elders',
+      kohhranProPastors: 'Church Pro Pastors',
       viewAll: 'View All',
       serviceTimes: 'Service Times',
       weeklyProgramme: 'Weekly Church Program',
@@ -71,7 +72,7 @@ export const translations = {
       missionText: 'To proclaim the Gospel of Jesus Christ, nurture believers in faith, and serve the community through love and compassion.',
       faithTitle: 'Statement of Faith',
       faithText: 'We believe in the Triune God, the authority of the Scriptures, and salvation through faith in Jesus Christ alone.',
-      shepherdsTitle: 'Our Spiritual Leaders', // Updated to be more generic
+      shepherdsTitle: 'Our Spiritual Leaders',
       statsFamilies: 'Families',
       statsElders: 'Elders (Upa)',
       statsCommittees: 'Committees',
@@ -158,7 +159,6 @@ export const translations = {
         category: 'Category',
         empty: 'No archives found matching your search.',
     },
-    // FIX: Add media translations for the Media page.
     media: {
       title: 'Sermons & Media',
       latestSermon: 'Latest Sermon',
@@ -189,13 +189,14 @@ export const translations = {
       logout: 'Logout',
       welcome: 'Welcome',
     },
-    common: { // New common translations
+    common: {
       description: 'Description'
     }
   },
   mizo: {
     nav: {
       home: 'Phekpui',
+      upaBial: 'Upa Bial', // Added
       about: 'Kan Chanchin',
       worship: 'Inkhawm & Rawngbawlna',
       fellowships: 'Fellowship',
@@ -221,9 +222,9 @@ export const translations = {
       verseOfTheDay: 'Vawiin Chang Thlan',
       latestNews: 'Thuthar',
       newsTitle: 'Thuthar & Hriattirna',
-      puipate: 'Kohhran Puipate', // Added Puipate translation
-      kohhranElders: 'Kohhran Upate', // New translation key for Church Elders
-      kohhranProPastors: 'Kohhran Pro Pastorte', // New: Translation for Pro Pastors (Mizo)
+      puipate: 'Kohhran Puipate',
+      kohhranElders: 'Kohhran Upate',
+      kohhranProPastors: 'Kohhran Pro Pastorte',
       viewAll: 'En Vek Rawh',
       serviceTimes: 'Inkhawm Hun',
       weeklyProgramme: 'Tunkar Inkhawm Program',
@@ -262,7 +263,7 @@ export const translations = {
       missionText: 'Isua Krista Chanchin Ṭha puan darh, ringtute chawm lian a, hmangaihna leh lainatna nen khawtlang rawngbawl.',
       faithTitle: 'Rin Dan',
       faithText: 'Pathian Pakhata Mi Nung Pathum, Pathian Lehkha Thu thuneihna leh Isua Krista rinna avanga chhandamna kan ring.',
-      shepherdsTitle: 'Kan Thlarau Hruaitute', // Updated to be more generic
+      shepherdsTitle: 'Kan Thlarau Hruaitute',
       statsFamilies: 'Chhungkua',
       statsElders: 'Kohhran Upa',
       statsCommittees: 'Committee',
@@ -349,7 +350,6 @@ export const translations = {
         category: 'Chi Hrang',
         empty: 'He category ah hian engmah hmuh tur a awm lo.',
     },
-    // FIX: Add media translations for the Media page.
     media: {
       title: 'Thusawi & Media',
       latestSermon: 'Thusawi Thar Ber',
@@ -380,7 +380,7 @@ export const translations = {
       logout: 'Chhuak Rawh',
       welcome: 'Chibai',
     },
-    common: { // New common translations
+    common: {
       description: 'Hrilhfiahna'
     }
   }

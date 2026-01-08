@@ -29,6 +29,7 @@ import Statistics from './pages/Statistics';
 import Records from './pages/Records';
 import Archives from './pages/Archives'; // FIX: Changed from named import to default import
 import InkhawmChanvo from './pages/InkhawmChanvo';
+import UpaBial from './pages/UpaBial'; // Added UpaBial
 
 const App: React.FC = () => {
   return (
@@ -51,6 +52,7 @@ const App: React.FC = () => {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/upa-bial" element={<UpaBial />} /> {/* Added Route */}
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
