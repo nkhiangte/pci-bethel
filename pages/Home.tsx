@@ -49,8 +49,12 @@ export const Home: React.FC = () => {
       } else {
         setChurchPastors(staticPastors);
       }
-    } catch (error) {
-      console.error("Error fetching pastors:", error);
+    } catch (error: any) {
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        console.warn("Offline mode: Using static pastors data");
+      } else {
+        console.error("Error fetching pastors:", error);
+      }
       setChurchPastors(staticPastors);
     }
     setLoadingPastors(false);
@@ -75,8 +79,12 @@ export const Home: React.FC = () => {
       } else {
         setChurchElders(staticElders);
       }
-    } catch (error) {
-      console.error("Error fetching elders:", error);
+    } catch (error: any) {
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        console.warn("Offline mode: Using static elders data");
+      } else {
+        console.error("Error fetching elders:", error);
+      }
       setChurchElders(staticElders);
     }
     setLoadingElders(false);
@@ -91,8 +99,11 @@ export const Home: React.FC = () => {
           return;
       }
       try {
+          // Using a timeout promise to prevent hanging indefinitely in some edge cases
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
           const docRef = db.collection('weeklyDuties').doc('current');
-          const docSnap = await docRef.get();
+          const docSnap: any = await Promise.race([docRef.get(), timeoutPromise]);
+          
           if (docSnap.exists) {
               const data = docSnap.data() as WeeklyDuty;
               // Handle potential structure mismatch from old data
@@ -107,8 +118,12 @@ export const Home: React.FC = () => {
           } else {
               setWeeklyDuty(staticWeeklyDuty);
           }
-      } catch (error) {
-          console.error("Error fetching duty:", error);
+      } catch (error: any) {
+          if (error.code === 'unavailable' || error.message?.includes('offline') || error.message === 'Timeout') {
+             console.warn("Offline mode or timeout: Using static weekly duty data");
+          } else {
+             console.error("Error fetching duty:", error);
+          }
           setWeeklyDuty(staticWeeklyDuty);
       }
       setLoadingDuty(false);

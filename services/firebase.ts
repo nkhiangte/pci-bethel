@@ -1,3 +1,4 @@
+
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
@@ -27,10 +28,17 @@ const mockDb = {
       return () => {};
     },
     get: async () => ({ docs: [] }),
-    doc: () => ({}),
+    doc: () => ({
+        get: async () => ({ exists: false, data: () => undefined }),
+        set: async () => {},
+        update: async () => {},
+        delete: async () => {}
+    }),
   }),
   batch: () => ({
     set: () => {},
+    update: () => {},
+    delete: () => {},
     commit: async () => {}
   })
 };
@@ -41,6 +49,9 @@ const mockAuth = {
     return () => {};
   },
   signInWithEmailAndPassword: async () => {
+    throw new Error("Firebase Auth not initialized");
+  },
+  createUserWithEmailAndPassword: async () => {
     throw new Error("Firebase Auth not initialized");
   },
   signOut: async () => {}
@@ -57,6 +68,15 @@ try {
   db = firebase.firestore();
   auth = firebase.auth();
   storage = firebase.storage();
+  
+  // Enable offline persistence to avoid errors when offline
+  db.enablePersistence({ synchronizeTabs: true }).catch((err: any) => {
+      if (err.code == 'failed-precondition') {
+          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+      } else if (err.code == 'unimplemented') {
+          console.warn('The current browser does not support all of the features required to enable persistence');
+      }
+  });
   
   console.log("Firebase initialized successfully");
 
