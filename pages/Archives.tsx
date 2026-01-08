@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -13,6 +13,16 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Minute': File,
     'Rawngbawltu te': Users 
 };
+
+// Category Metadata for the Grid View
+const ARCHIVE_SECTIONS = [
+    { id: 'Document', label: 'Documents', icon: FileText, color: 'bg-blue-500', description: 'Official papers, reports, and publications.' },
+    { id: 'Photo', label: 'Photos', icon: Image, color: 'bg-emerald-500', description: 'Gallery of church events and memories.' },
+    { id: 'Video', label: 'Videos', icon: Video, color: 'bg-red-500', description: 'Recordings of services and special items.' },
+    { id: 'History', label: 'History', icon: History, color: 'bg-amber-500', description: 'Church history, milestones, and timeline.' },
+    { id: 'Minute', label: 'Minutes', icon: File, color: 'bg-purple-500', description: 'Committee meeting records and resolutions.' },
+    { id: 'Rawngbawltu te', label: 'Rawngbawltu te', icon: Users, color: 'bg-church-600', description: 'Records of past leaders and committees.' },
+];
 
 // Sub-categories for Rawngbawltu te
 const RAWNGBAWLTU_SUBCATEGORIES = [
@@ -107,9 +117,10 @@ export const Archives: React.FC = () => {
     const { t } = useLanguage();
     const { isAdmin } = useAuth();
     const [archives, setArchives] = useState<ArchiveEntry[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('All');
+    // selectedCategory is initially null to show the grid view
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
     const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
     const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
@@ -127,6 +138,12 @@ export const Archives: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
 
     const fetchArchives = useCallback(async () => {
+        // Only fetch if a category is selected
+        if (!selectedCategory) {
+            setArchives([]);
+            return;
+        }
+
         setLoading(true);
         setMissingIndexUrl(null);
         
@@ -157,7 +174,8 @@ export const Archives: React.FC = () => {
                     } else {
                         baseQuery = baseQuery.where('category', '==', 'Rawngbawltu te');
                     }
-                } else if (selectedCategory !== 'All') {
+                } else {
+                    // For main categories
                     baseQuery = baseQuery.where('category', '==', selectedCategory);
                 }
 
@@ -212,7 +230,7 @@ export const Archives: React.FC = () => {
             // Filter static data in memory to match the query parameters
             fetchedData = allStatic.filter(item => {
                 // Category Filter
-                if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
+                if (item.category !== selectedCategory) return false;
 
                 // Sub Category Filter (Only for Rawngbawltu te)
                 if (selectedCategory === 'Rawngbawltu te') {
@@ -257,11 +275,25 @@ export const Archives: React.FC = () => {
         }
     }, [selectedSubCategory]);
 
+    const handleCategorySelect = (categoryId: string) => {
+        setSelectedCategory(categoryId);
+        // Reset scroll to top
+        window.scrollTo(0, 0);
+    };
+
+    const handleBackToGrid = () => {
+        setSelectedCategory(null);
+        setArchives([]);
+        setSearchTerm('');
+        setSelectedSubCategory('All');
+        setActiveSSDepartment(null);
+    };
+
     const handleAddNew = () => {
         setEditingEntry({
             title: '',
             date: new Date().toISOString().split('T')[0],
-            category: 'Document',
+            category: (selectedCategory as any) || 'Document', // Default to current category
             subCategory: '',
             description: '',
             link: ''
@@ -356,10 +388,75 @@ export const Archives: React.FC = () => {
 
     // Specific Seed Function for Sunday School Teachers
     const handleSeedSundaySchoolTeachers = async () => {
-        // ... (Seeding logic from previous component code, assuming data is available)
-        // Since seed data was truncated in response for brevity, 
-        // normally we would iterate SUNDAY_SCHOOL_TEACHERS_SEED_DATA here.
-        alert("Seed functionality requires full dataset.");
+        if (!db?.collection || !window.confirm("This will seed Sunday School Teachers data. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            // Helper to normalize department names from seed text to standard SS_DEPARTMENTS
+            const normalizeDept = (raw: string) => {
+                if (raw.includes('Puitling')) return 'Puitling';
+                if (raw.includes('Senior')) return 'Senior';
+                if (raw.includes('Sacrament')) return 'Sacrament';
+                if (raw.includes('Intermediate')) return 'Intermediate';
+                if (raw.includes('Junior')) return 'Junior';
+                if (raw.includes('Primary')) return 'Primary';
+                if (raw.includes('Pre-Beginner')) return 'Pre-Beginner';
+                if (raw.includes('Beginner')) return 'Beginner';
+                return 'O.B.';
+            };
+
+            SUNDAY_SCHOOL_TEACHERS_SEED_DATA.forEach(data => {
+                const year = data.year;
+                const lines = data.details.split('\n');
+                let currentDept = 'O.B.';
+                let currentContent: string[] = [];
+                
+                const flushDept = (dept: string, content: string[]) => {
+                    if (content.length === 0) return;
+                    const normalizedDept = normalizeDept(dept);
+                    // Use a clean ID structure: ss-zirtirtute-dept-year
+                    const docId = `ss-zirtirtute-${normalizedDept.toLowerCase()}-${year}`;
+                    const docRef = collectionRef.doc(docId);
+                    const entry: ArchiveEntry = {
+                        id: docId,
+                        title: `${year} - ${normalizedDept}`,
+                        date: `${year}-01-01`,
+                        category: 'Rawngbawltu te',
+                        subCategory: `SS Zirtirtute - ${normalizedDept}`,
+                        description: content.join('\n'),
+                        link: ''
+                    };
+                    batch.set(docRef, entry);
+                };
+
+                lines.forEach(line => {
+                    const deptMatch = line.match(/^\[(.*?)\]/);
+                    if (deptMatch) {
+                        // Flush previous
+                        flushDept(currentDept, currentContent);
+                        // Start new
+                        currentDept = deptMatch[1];
+                        currentContent = [];
+                    } else {
+                        if (line.trim()) currentContent.push(line.trim());
+                    }
+                });
+                // Flush last one
+                flushDept(currentDept, currentContent);
+            });
+
+            await batch.commit();
+            alert("Sunday School Teachers data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding SS data:", error);
+            alert("Failed to seed SS data.");
+        }
+        setIsSaving(false);
     };
 
     const handleSeedExecutiveBody = () => handleSeedGeneric(EXECUTIVE_BODY_SEED_DATA, 'Executive Body');
@@ -387,8 +484,6 @@ export const Archives: React.FC = () => {
         // Category filtering is handled in fetch, but search is client side
         return matchesSearch; 
     });
-
-    const categories = ['All', 'Document', 'Photo', 'Video', 'History', 'Minute', 'Rawngbawltu te'];
 
     const handleSSSearch = (term: string) => {
         setSsSearchTerm(term);
@@ -539,210 +634,244 @@ export const Archives: React.FC = () => {
                     </div>
                 )}
 
-                {/* Main Category Filters */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <div className="flex items-center space-x-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-                        {categories.map(cat => (
-                            <button 
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                                    selectedCategory === cat 
-                                    ? 'bg-church-600 text-white' 
-                                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                                }`}
+                {!selectedCategory ? (
+                    // GRID VIEW OF CATEGORIES
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {ARCHIVE_SECTIONS.map((section) => (
+                            <button
+                                key={section.id}
+                                onClick={() => handleCategorySelect(section.id)}
+                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 hover:shadow-xl hover:border-church-200 hover:-translate-y-1 transition-all duration-300 text-left group"
                             >
-                                {cat}
+                                <div className={`w-16 h-16 ${section.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-md group-hover:scale-110 transition-transform`}>
+                                    <section.icon size={32} />
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-church-700 transition-colors">{section.label}</h3>
+                                <p className="text-slate-500">{section.description}</p>
                             </button>
                         ))}
                     </div>
-
-                    <div className="flex gap-4 w-full md:w-auto">
-                        <div className="relative flex-grow md:flex-grow-0">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input 
-                                type="text" 
-                                placeholder="Search archives..." 
-                                className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        {isAdmin && (
-                            <div className="flex gap-2">
+                ) : (
+                    // LIST VIEW FOR SELECTED CATEGORY
+                    <div className="animate-in fade-in zoom-in duration-200">
+                        {/* Header Navigation */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-200 pb-6">
+                            <div className="flex items-center">
                                 <button 
-                                    onClick={handleAddNew}
-                                    className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap"
+                                    onClick={handleBackToGrid} 
+                                    className="p-2 mr-4 bg-white border border-slate-200 rounded-full text-slate-500 hover:text-church-600 hover:border-church-300 transition-all shadow-sm group"
                                 >
-                                    <Plus size={18} className="mr-2" /> {t.archives.add}
+                                    <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                                 </button>
-                                {/* Only show specific seed button based on selected sub-category */}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && selectedSubCategory !== 'Sunday School Teachers' && (
-                                    <button 
-                                        onClick={() => {
-                                            switch(selectedSubCategory) {
-                                                case 'Executive Body': handleSeedExecutiveBody(); break;
-                                                case 'Ramthar': handleSeedRamthar(); break;
-                                                // ... other seed handlers ...
-                                                case 'KOHHRAN PAVALAI PAWL': handleSeedKohhranPavalaiPawl(); break;
-                                                default: alert("Seed data not available for this category yet.");
-                                            }
-                                        }}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title={`Seed Data for ${selectedSubCategory}`}
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-slate-800 flex items-center">
+                                        {ARCHIVE_SECTIONS.find(s => s.id === selectedCategory)?.label}
+                                    </h2>
+                                    <p className="text-sm text-slate-500">Viewing all records in this category</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <div className="relative flex-grow md:flex-grow-0">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search archives..." 
+                                        className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none shadow-sm"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                {isAdmin && (
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={handleAddNew}
+                                            className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap"
+                                        >
+                                            <Plus size={18} className="mr-2" /> Add Entry
+                                        </button>
+                                        {/* Only show specific seed button based on selected sub-category */}
+                                        {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && selectedSubCategory !== 'Sunday School Teachers' && (
+                                            <button 
+                                                onClick={() => {
+                                                    switch(selectedSubCategory) {
+                                                        case 'Executive Body': handleSeedExecutiveBody(); break;
+                                                        case 'Ramthar': handleSeedRamthar(); break;
+                                                        case 'BUILDING': handleSeedBuilding(); break;
+                                                        case 'SOCIAL FRONT': handleSeedSocialFront(); break;
+                                                        case 'REFRESHMENT': handleSeedRefreshment(); break;
+                                                        case 'KRISTIAN CHHUNGKUA': handleSeedKristianChhungkua(); break;
+                                                        case 'WORSHIP': handleSeedWorship(); break;
+                                                        case 'MASIHI SANGATI': handleSeedMasihiSangati(); break;
+                                                        case 'RECEPTION, USHERING & DECORATION': handleSeedReceptionUsheringDecoration(); break;
+                                                        case 'ARCHIVE & LIBRARY': handleSeedArchiveLibrary(); break;
+                                                        case 'MUSIC': handleSeedMusic(); break;
+                                                        case 'LIGHT & SOUND': handleSeedLightSound(); break;
+                                                        case 'FINANCE': handleSeedFinance(); break;
+                                                        case 'BSI': handleSeedBSI(); break;
+                                                        case 'KTP': handleSeedKTP(); break;
+                                                        case 'KOHHRAN HMEICHHIA': handleSeedKohhranHmeichhia(); break;
+                                                        case 'KOHHRAN PAVALAI PAWL': handleSeedKohhranPavalaiPawl(); break;
+                                                        default: alert("Seed data not available for this category yet.");
+                                                    }
+                                                }}
+                                                disabled={isSaving}
+                                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                                title={`Seed Data for ${selectedSubCategory}`}
+                                            >
+                                                {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Sub-Category Filters (Only for Rawngbawltu te) */}
+                        {selectedCategory === 'Rawngbawltu te' && (
+                            <div className="mb-8 overflow-hidden">
+                                <div className="flex items-center space-x-2 w-full overflow-x-auto pb-4 hide-scrollbar">
+                                    <button 
+                                        onClick={() => setSelectedSubCategory('All')}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                                            selectedSubCategory === 'All' 
+                                            ? 'bg-slate-800 text-white' 
+                                            : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                                        }`}
+                                    >
+                                        All Departments
+                                    </button>
+                                    {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
+                                        <button 
+                                            key={sub}
+                                            onClick={() => setSelectedSubCategory(sub)}
+                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                                                selectedSubCategory === sub
+                                                ? 'bg-slate-800 text-white' 
+                                                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                                            }`}
+                                        >
+                                            {sub}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Loading State */}
+                        {loading ? (
+                            <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
+                        ) : (
+                            // Logic for displaying content based on selection
+                            selectedSubCategory === 'Sunday School Teachers' && !activeSSDepartment ? (
+                                renderDepartmentGrid()
+                            ) : (
+                                <div>
+                                    {activeSSDepartment && (
+                                        <div className="mb-6 flex items-center">
+                                            <button 
+                                                onClick={() => setActiveSSDepartment(null)}
+                                                className="flex items-center text-slate-500 hover:text-church-600 transition font-medium"
+                                            >
+                                                <ChevronLeft size={20} className="mr-1" /> Back to Departments
+                                            </button>
+                                            <span className="mx-3 text-slate-300">|</span>
+                                            <h2 className="text-xl font-bold text-slate-800">{activeSSDepartment} Teachers</h2>
+                                        </div>
+                                    )}
+
+                                    {filteredArchives.length > 0 ? (
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {filteredArchives.map(entry => {
+                                                const Icon = CATEGORY_ICONS[entry.category] || Archive;
+                                                const isOfficeBearer = entry.category === 'Rawngbawltu te';
+                                                const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
+
+                                                return (
+                                                    <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
+                                                        {isAdmin && (
+                                                            <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                                <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
+                                                                <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {youtubeId ? (
+                                                            <div className="flex flex-col h-full">
+                                                                {/* Thumbnail */}
+                                                                <div 
+                                                                    className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm"
+                                                                    onClick={() => setPlayingVideoId(youtubeId)}
+                                                                >
+                                                                    <img 
+                                                                        src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} 
+                                                                        alt={entry.title} 
+                                                                        className="w-full h-full object-cover" 
+                                                                    />
+                                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
+                                                                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition">
+                                                                            <Play size={20} className="text-church-600 ml-1 fill-current" />
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Category badge */}
+                                                                    <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase tracking-wider">Video</span>
+                                                                </div>
+                                                                
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
+                                                                </div>
+                                                                <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
+                                                                <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
+                                                            </div>
+                                                        ) : (
+                                                            // Standard Layout
+                                                            <>
+                                                                <div className="flex items-start mb-4">
+                                                                    <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
+                                                                        <Icon size={24} />
+                                                                    </div>
+                                                                    <div>
+                                                                        {!isOfficeBearer && (
+                                                                            <div className="flex flex-wrap gap-2 mb-1">
+                                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
+                                                                                {entry.subCategory && (
+                                                                                    <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                        <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
+                                                                        {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
+                                                                    {entry.description}
+                                                                </div>
+                                                                {entry.link && (
+                                                                    <a 
+                                                                        href={entry.link} 
+                                                                        target="_blank" 
+                                                                        rel="noopener noreferrer"
+                                                                        className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
+                                                                    >
+                                                                        View Resource <ExternalLink size={14} className="ml-1" />
+                                                                    </a>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
+                                            <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                                            <p className="text-slate-500">{t.archives.empty}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )
                         )}
                     </div>
-                </div>
-
-                {/* Sub-Category Filters (Only for Rawngbawltu te) */}
-                {selectedCategory === 'Rawngbawltu te' && (
-                    <div className="mb-8 overflow-hidden">
-                        <div className="flex items-center space-x-2 w-full overflow-x-auto pb-4 hide-scrollbar">
-                            <button 
-                                onClick={() => setSelectedSubCategory('All')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                                    selectedSubCategory === 'All' 
-                                    ? 'bg-slate-800 text-white' 
-                                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                }`}
-                            >
-                                All Departments
-                            </button>
-                            {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
-                                <button 
-                                    key={sub}
-                                    onClick={() => setSelectedSubCategory(sub)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                                        selectedSubCategory === sub
-                                        ? 'bg-slate-800 text-white' 
-                                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                    }`}
-                                >
-                                    {sub}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Loading State */}
-                {loading ? (
-                    <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
-                ) : (
-                    // Logic for displaying content based on selection
-                    selectedSubCategory === 'Sunday School Teachers' && !activeSSDepartment ? (
-                        renderDepartmentGrid()
-                    ) : (
-                        <div>
-                            {activeSSDepartment && (
-                                <div className="mb-6 flex items-center">
-                                    <button 
-                                        onClick={() => setActiveSSDepartment(null)}
-                                        className="flex items-center text-slate-500 hover:text-church-600 transition font-medium"
-                                    >
-                                        <ChevronLeft size={20} className="mr-1" /> Back to Departments
-                                    </button>
-                                    <span className="mx-3 text-slate-300">|</span>
-                                    <h2 className="text-xl font-bold text-slate-800">{activeSSDepartment} Teachers</h2>
-                                </div>
-                            )}
-
-                            {filteredArchives.length > 0 ? (
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in duration-200">
-                                    {filteredArchives.map(entry => {
-                                        const Icon = CATEGORY_ICONS[entry.category] || Archive;
-                                        const isOfficeBearer = entry.category === 'Rawngbawltu te';
-                                        const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
-
-                                        return (
-                                            <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
-                                                {isAdmin && (
-                                                    <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                        <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
-                                                        <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
-                                                    </div>
-                                                )}
-                                                
-                                                {youtubeId ? (
-                                                    <div className="flex flex-col h-full">
-                                                        {/* Thumbnail */}
-                                                        <div 
-                                                            className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm"
-                                                            onClick={() => setPlayingVideoId(youtubeId)}
-                                                        >
-                                                            <img 
-                                                                src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} 
-                                                                alt={entry.title} 
-                                                                className="w-full h-full object-cover" 
-                                                            />
-                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
-                                                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition">
-                                                                    <Play size={20} className="text-church-600 ml-1 fill-current" />
-                                                                </div>
-                                                            </div>
-                                                            {/* Category badge */}
-                                                            <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase tracking-wider">Video</span>
-                                                        </div>
-                                                        
-                                                        <div className="flex justify-between items-start mb-2">
-                                                            <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
-                                                        </div>
-                                                        <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
-                                                        <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
-                                                    </div>
-                                                ) : (
-                                                    // Standard Layout
-                                                    <>
-                                                        <div className="flex items-start mb-4">
-                                                            <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
-                                                                <Icon size={24} />
-                                                            </div>
-                                                            <div>
-                                                                {!isOfficeBearer && (
-                                                                    <div className="flex flex-wrap gap-2 mb-1">
-                                                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
-                                                                        {entry.subCategory && (
-                                                                            <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                                <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                                                {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
-                                                            </div>
-                                                        </div>
-                                                        <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
-                                                            {entry.description}
-                                                        </div>
-                                                        {entry.link && (
-                                                            <a 
-                                                                href={entry.link} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
-                                                            >
-                                                                View Resource <ExternalLink size={14} className="ml-1" />
-                                                            </a>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
-                                    <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                                    <p className="text-slate-500">{t.archives.empty}</p>
-                                </div>
-                            )}
-                        </div>
-                    )
                 )}
             </div>
 
@@ -815,16 +944,26 @@ export const Archives: React.FC = () => {
                             {editingEntry.category === 'Rawngbawltu te' && (
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Sub Category</label>
-                                    <select 
-                                        className="w-full border border-slate-300 rounded p-2.5 bg-white" 
-                                        value={editingEntry.subCategory || ''} 
-                                        onChange={e => setEditingEntry({...editingEntry, subCategory: e.target.value})}
-                                    >
-                                        <option value="" disabled>Select Sub-Category</option>
-                                        {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
-                                            <option key={sub} value={sub}>{sub}</option>
-                                        ))}
-                                    </select>
+                                    {/* FIX: If record is from SS Teachers (dynamic category), show read-only field to prevent category mismatch */}
+                                    {editingEntry.subCategory?.startsWith('SS Zirtirtute') ? (
+                                        <input 
+                                            className="w-full border border-slate-300 rounded p-2.5 bg-slate-100 text-slate-600 cursor-not-allowed"
+                                            value={editingEntry.subCategory}
+                                            readOnly
+                                            title="Cannot change sub-category for Sunday School records via this form."
+                                        />
+                                    ) : (
+                                        <select 
+                                            className="w-full border border-slate-300 rounded p-2.5 bg-white" 
+                                            value={editingEntry.subCategory || ''} 
+                                            onChange={e => setEditingEntry({...editingEntry, subCategory: e.target.value})}
+                                        >
+                                            <option value="" disabled>Select Sub-Category</option>
+                                            {RAWNGBAWLTU_SUBCATEGORIES.map(sub => (
+                                                <option key={sub} value={sub}>{sub}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             )}
 
