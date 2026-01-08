@@ -1,8 +1,4 @@
 
-
-
-
-
 export type Language = 'en' | 'mizo';
 
 export const translations = {
@@ -26,6 +22,7 @@ export const translations = {
       admin: 'Admin',
       statistics: 'Statistics',
       duties: 'Weekly Duties',
+      chanvo: 'Service Roster',
     },
     home: {
       newHere: 'New Here?',
@@ -117,6 +114,7 @@ export const translations = {
       intermediate: 'Intermediate',
       sacrament: 'Sacrament',
       senior: 'Senior',
+      puitling: 'Puitling',
       leader: 'Department Leader',
       teachers: 'Teachers',
       students: 'Students',
@@ -215,6 +213,7 @@ export const translations = {
       admin: 'Admin',
       statistics: 'Statistics',
       duties: 'Tunkar Hun Ruatna',
+      chanvo: 'Inkhawm Chanvo',
     },
     home: {
       newHere: 'I vawi khatna em ni?',
@@ -306,6 +305,7 @@ export const translations = {
       intermediate: 'Intermediate',
       sacrament: 'Sacrament',
       senior: 'Senior',
+      puitling: 'Puitling',
       leader: 'Department Hruaitu',
       teachers: 'Zirtirtute',
       students: 'Zirlaite',

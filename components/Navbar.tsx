@@ -19,6 +19,7 @@ const Navbar: React.FC = () => {
     { name: t.nav.events, path: '/events' },
     { name: t.nav.announcements, path: '/announcements' },
     { name: t.nav.departments, path: '/committees' },
+    { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
     { 
       name: t.nav.sundaySchool, 
       path: '#',
@@ -30,6 +31,7 @@ const Navbar: React.FC = () => {
         { name: t.sundaySchool.intermediate, path: '/sundayschool/intermediate' },
         { name: t.sundaySchool.sacrament, path: '/sundayschool/sacrament' },
         { name: t.sundaySchool.senior, path: '/sundayschool/senior' },
+        { name: t.sundaySchool.puitling, path: '/sundayschool/puitling' },
       ]
     },
     { 

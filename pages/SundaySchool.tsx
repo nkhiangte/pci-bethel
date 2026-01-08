@@ -70,6 +70,28 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       teachers: ['Pi H.Lallawmkimi', 'Tv Vanlalchhana', 'Pu Lalengkima', 'Pu F.Hmingthanzuala', 'Pi C Lalramthari', 'Pi C.Lalchhandami', 'Pu PC Lalmuanpuia', 'Nl Vungngaihdawni', 'Pu C Ramtharnghaka', 'Pi C.Lalrokimi'],
       description: 'Engages in advanced biblical studies, apologetics, and discussions on contemporary issues from a Christian worldview for older teens and young adults.',
       students: 60
+    },
+    {
+      id: 'puitling',
+      leader: '', // Left blank as per request
+      asstLeader: '',
+      secretary: '',
+      teachers: [
+        'Upa B.Hranghlira', 'Upa K.Vanlalhmuaka', 'Upa HT Vanlalsawma', 'Upa PC Lalhmingliana',
+        'Upa R.Lalramhluna', 'Upa Daikhawzama', 'Upa C.Lalthantluanga', 'Upa H.Zairemmawia',
+        'Upa C.Zohmingthanga', 'Upa Lianpianga', 'Upa Hmingthanmawia Sailo', 'T.Upa C.Lalthazuala',
+        'T.Upa V.Kaizasiama', 'Pi PC Lalhmachhuani', 'Pu K.Lalduhawma', 'Pu K.Thuamluaia',
+        'Pu C.Lalzova', 'Pu P.Lalhmingthanga', 'Pi R.Ramengzuali', 'Pu GF Thanga',
+        'Pu Dawngsuanpauva', 'Pi V.Sangkungi', 'Pu Lalramthara', 'Pu MS Dawngliana',
+        'Pu Lalsanglura Zote', 'Nl.Ngurbawitluangi', 'Pu H.Vanlalthanga', 'Pi Lalhlimthangi Khiangte',
+        'Pu Lalmuanpuia Ralte', 'Pi K.Malsawmdawngi', 'Pu T.Sangtluanga', 'Pu K.Lalengthanga',
+        'Pu C.Lalmuansanga', 'Pu C.Lalrawngbawla', 'Pu V.Lalbiakzuala', 'Pu JC Laldinthara',
+        'Rev.Vankhuma', 'Pu R.Lalmalsawma', 'Pu C.Malsawmdawngliana', 'Pu Kenneth Lalthanzauva',
+        'Pu F.Lalduhawma', 'Pu Lalhmingmawia', 'Pu Khawlrosiama', 'Pu L.Khenpauva',
+        'Pu Kapthuama', 'Pu Nelson Khiangte', 'Pu C.Vanlalruata'
+      ],
+      description: 'Bible study and spiritual growth for adults.',
+      students: 0 // Placeholder
     }
 ];
 
@@ -93,6 +115,7 @@ const SundaySchool: React.FC = () => {
     { id: 'intermediate', name: t.sundaySchool.intermediate },
     { id: 'sacrament', name: t.sundaySchool.sacrament },
     { id: 'senior', name: t.sundaySchool.senior },
+    { id: 'puitling', name: t.sundaySchool.puitling },
   ];
   
   const fetchDepartments = useCallback(async () => {
@@ -108,7 +131,22 @@ const SundaySchool: React.FC = () => {
       const snapshot = await db.collection('sundaySchoolDepartments').get();
       if (!snapshot.empty) {
         const fetchedData = snapshot.docs.map((doc: any) => ({ ...doc.data(), id: doc.id })) as SundaySchoolDepartment[];
-        setDepartments(fetchedData);
+        // Ensure all static departments are represented if not in DB yet (e.g. new puitling)
+        const mergedData = [...fetchedData];
+        INITIAL_DEPARTMENTS_DATA.forEach(staticDept => {
+            if (!mergedData.find(d => d.id === staticDept.id)) {
+                mergedData.push({ ...staticDept, name: departmentLinks.find(l => l.id === staticDept.id)?.name || 'Unknown' });
+            }
+        });
+        
+        // Sort based on departmentLinks order
+        const sortedData = mergedData.sort((a, b) => {
+            const indexA = departmentLinks.findIndex(l => l.id === a.id);
+            const indexB = departmentLinks.findIndex(l => l.id === b.id);
+            return indexA - indexB;
+        });
+
+        setDepartments(sortedData);
       } else {
         const staticData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: departmentLinks.find(l => l.id === d.id)?.name || 'Unknown' }));
         setDepartments(staticData);
@@ -241,7 +279,7 @@ const SundaySchool: React.FC = () => {
                 </div>
                 <div className="p-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-slate-50 p-4 rounded-lg flex items-center"><UserCheck className="w-8 h-8 text-church-500 mr-4"/><div><div className="text-xs text-slate-500 font-bold uppercase">{t.sundaySchool.leader}</div><div className="text-lg font-bold text-slate-800">{department.leader}</div></div></div>
+                    <div className="bg-slate-50 p-4 rounded-lg flex items-center"><UserCheck className="w-8 h-8 text-church-500 mr-4"/><div><div className="text-xs text-slate-500 font-bold uppercase">{t.sundaySchool.leader}</div><div className="text-lg font-bold text-slate-800">{department.leader || 'N/A'}</div></div></div>
                     {department.asstLeader && <div className="bg-slate-50 p-4 rounded-lg flex items-center"><UserCheck className="w-8 h-8 text-slate-400 mr-4"/><div><div className="text-xs text-slate-500 font-bold uppercase">Asst. Leader</div><div className="text-lg font-bold text-slate-800">{department.asstLeader}</div></div></div>}
                     {department.secretary && <div className="bg-slate-50 p-4 rounded-lg flex items-center"><UserCheck className="w-8 h-8 text-slate-400 mr-4"/><div><div className="text-xs text-slate-500 font-bold uppercase">Secretary</div><div className="text-lg font-bold text-slate-800">{department.secretary}</div></div></div>}
                     <div className="bg-slate-50 p-4 rounded-lg flex items-center"><Users className="w-8 h-8 text-church-500 mr-4"/><div><div className="text-xs text-slate-500 font-bold uppercase">{t.sundaySchool.students}</div><div className="text-lg font-bold text-slate-800">{department.students} Students</div></div></div>

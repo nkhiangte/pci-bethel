@@ -28,6 +28,7 @@ import SundaySchool from './pages/SundaySchool';
 import Statistics from './pages/Statistics';
 import Records from './pages/Records';
 import Archives from './pages/Archives'; // FIX: Changed from named import to default import
+import InkhawmChanvo from './pages/InkhawmChanvo';
 
 const App: React.FC = () => {
   return (
@@ -69,6 +70,7 @@ const App: React.FC = () => {
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> {/* Add new route */}
                 <Route path="/archives" element={<Archives />} />
+                <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
               </Routes>
             </main>
             <Footer />
