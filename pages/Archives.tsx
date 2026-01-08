@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -16,7 +16,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 // Sub-categories for Rawngbawltu te
-// Consolidated 'SS Zirtirtute - ...' into 'Sunday School Teachers'
 const RAWNGBAWLTU_SUBCATEGORIES = [
     'Executive Body',
     'Ramthar',
@@ -202,6 +201,10 @@ export const Archives: React.FC = () => {
     const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
     const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
+    // SS Search State
+    const [ssSearchTerm, setSsSearchTerm] = useState('');
+    const [ssSearchResults, setSsSearchResults] = useState<any[]>([]);
+
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState<Partial<ArchiveEntry>>({});
@@ -252,13 +255,7 @@ export const Archives: React.FC = () => {
                             ...doc.data()
                         })) as ArchiveEntry[];
                     } else {
-                        // Empty result from DB, could be truly empty or just not populated yet.
-                        // If it's empty, we might want to check if we should show static content?
-                        // For now, let's assume empty DB means empty result unless it fails.
-                        if (snapshot.empty && selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'Sunday School Teachers') {
-                             // Special case: if SS data is empty in DB, maybe fallback to static so users see something?
-                             // But let's stick to the principle: DB overrides static unless DB fails.
-                        }
+                        // Empty result from DB
                     }
                 } catch (indexError: any) {
                     // Check if error is missing index
@@ -334,6 +331,8 @@ export const Archives: React.FC = () => {
         if (selectedCategory !== 'Rawngbawltu te') {
             setSelectedSubCategory('All');
             setActiveSSDepartment(null);
+            setSsSearchTerm('');
+            setSsSearchResults([]);
         }
     }, [selectedCategory]);
 
@@ -341,6 +340,8 @@ export const Archives: React.FC = () => {
     useEffect(() => {
         if (selectedSubCategory !== 'Sunday School Teachers') {
             setActiveSSDepartment(null);
+            setSsSearchTerm('');
+            setSsSearchResults([]);
         }
     }, [selectedSubCategory]);
 
@@ -552,11 +553,48 @@ export const Archives: React.FC = () => {
 
     const categories = ['All', 'Document', 'Photo', 'Video', 'History', 'Minute', 'Rawngbawltu te'];
 
+    const handleSSSearch = (term: string) => {
+        setSsSearchTerm(term);
+        if (!term.trim()) {
+            setSsSearchResults([]);
+            return;
+        }
+        
+        const results: any[] = [];
+        SUNDAY_SCHOOL_TEACHERS_SEED_DATA.forEach(data => {
+            const year = data.year;
+            const lines = data.details.split('\n');
+            let currentDept = 'O.B.';
+            
+            lines.forEach(line => {
+                const deptMatch = line.match(/^\[(.*?)\]/);
+                if (deptMatch) {
+                    currentDept = deptMatch[1];
+                } else if (line.toLowerCase().includes(term.toLowerCase())) {
+                    // Extract context
+                    const parts = line.split(/,|and/);
+                    const matchedPart = parts.find(p => p.toLowerCase().includes(term.toLowerCase())) || line;
+                    
+                    results.push({
+                        year,
+                        dept: currentDept,
+                        text: matchedPart.trim(),
+                        fullLine: line.trim()
+                    });
+                }
+            });
+        });
+        setSsSearchResults(results);
+    };
+
     // Render Department Grid
     const renderDepartmentGrid = () => (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-slate-800">Sunday School Departments</h2>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Sunday School Departments</h2>
+                    <p className="text-slate-500 text-sm">Select a department to view records or search a teacher's name.</p>
+                </div>
                 {isAdmin && (
                     <button 
                         onClick={handleSeedSundaySchoolTeachers}
@@ -568,23 +606,64 @@ export const Archives: React.FC = () => {
                     </button>
                 )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {SS_DEPARTMENTS.map((dept) => (
-                    <button
-                        key={dept}
-                        onClick={() => setActiveSSDepartment(dept)}
-                        className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-church-200 transition text-left group flex items-center"
-                    >
-                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 group-hover:bg-church-100 transition-colors">
-                            <FolderOpen size={24} />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 text-lg group-hover:text-church-700 transition-colors">{dept}</h3>
-                            <p className="text-xs text-slate-500 mt-1">View Teacher Records</p>
-                        </div>
-                    </button>
-                ))}
+
+            {/* SS Search Bar */}
+            <div className="relative mb-8">
+                <UserSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-church-500" size={20} />
+                <input 
+                    type="text" 
+                    placeholder="Search for a Sunday School Teacher (Name)..." 
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none shadow-sm text-lg"
+                    value={ssSearchTerm}
+                    onChange={(e) => handleSSSearch(e.target.value)}
+                />
             </div>
+
+            {ssSearchTerm ? (
+                <div className="space-y-4">
+                    <h3 className="font-bold text-slate-700">Search Results for "{ssSearchTerm}" ({ssSearchResults.length})</h3>
+                    {ssSearchResults.length > 0 ? (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {ssSearchResults.map((res, idx) => (
+                                <div key={idx} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 hover:border-church-200 transition">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="bg-church-100 text-church-700 text-xs font-bold px-2 py-1 rounded">{res.year}</span>
+                                        <span className="text-xs text-slate-400 font-medium uppercase">{res.dept}</span>
+                                    </div>
+                                    <p className="text-slate-800 font-medium">
+                                        {res.text.split(new RegExp(`(${ssSearchTerm})`, 'gi')).map((part: string, i: number) => 
+                                            part.toLowerCase() === ssSearchTerm.toLowerCase() ? <span key={i} className="bg-yellow-200 text-slate-900">{part}</span> : part
+                                        )}
+                                    </p>
+                                    <p className="text-xs text-slate-400 mt-2 truncate" title={res.fullLine}>{res.fullLine}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 bg-white rounded-lg border border-dashed border-slate-200">
+                            <p className="text-slate-500">No records found matching "{ssSearchTerm}".</p>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {SS_DEPARTMENTS.map((dept) => (
+                        <button
+                            key={dept}
+                            onClick={() => setActiveSSDepartment(dept)}
+                            className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-church-200 transition text-left group flex items-center"
+                        >
+                            <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 group-hover:bg-church-100 transition-colors">
+                                <FolderOpen size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg group-hover:text-church-700 transition-colors">{dept}</h3>
+                                <p className="text-xs text-slate-500 mt-1">View Teacher Records</p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 
