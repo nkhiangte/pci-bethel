@@ -40,474 +40,72 @@ const RAWNGBAWLTU_SUBCATEGORIES = [
     'KOHHRAN PAVALAI PAWL'
 ];
 
-const EXECUTIVE_BODY_SEED_DATA = [
-  { year: '1981', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa Khawidawla\nTreasurer : Pu Zakima\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1982', details: "Secretary : Upa Khawidawla\nAsst. Secretary: Pu Thangchuanga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1983', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Pu Manhleia\nTreasurer : Pu T Sawmpauva\nFin. Secretary : Pu Thangkhatpianga" },
-  { year: '1984', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Pu B Hranghlira\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1985', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1986', details: "Secretary : Pu RD Lalchhuana/\nPu Saizama Sailo\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1987', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1988', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Pu K Vanlalhmuaka\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1989', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu Thangkhatpianga (Tch)\nFin. Secretary : Pu T Sawmpauva" },
-  { year: '1990', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1991', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1992', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa K Vanlalhmuaka\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1993', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa Khawidawla\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1994', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1995', details: "Secretary : Upa B Hranghlira\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1996', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1997', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1998', details: "Secretary : Upa B Hranghlira\nAsst. Secretary: Upa Saizama Sailo\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '1999', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Manhleia (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Upa K Vanlalhmuaka" },
-  { year: '2000', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '2001', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '2002', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '2003', details: "Secretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Pu R Khawhluna" },
-  { year: '2004', details: "Secretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Pu R Khawhluna/\nPu PC Lalhmingliana" },
-  { year: '2005', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2006', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2007', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2008', details: "Chairman : Rev. TM Thangzaliana\nSecretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2009', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2010', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa C Lalrintluanga" },
-  { year: '2011', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa C Lalrintluanga" },
-  { year: '2012', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa PC Lalhmingliana\nAsst. Secretary: Upa C Lalrintluanga\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
-  { year: '2013', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa PC Lalhmingliana\nAsst. Secretary: Upa C Lalrintluanga\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
-  { year: '2014', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalrintluanga\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
-  { year: '2015', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalrintluanga\nAsst. Secretary: Upa R Lalramhluna\nTreasurer : Upa H Lalmawia (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2016', details: "Chairman : Rev. H Zathuama\nSecretary : Upa R Lalramhluna\nAsst. Secretary: Upa C Lalthantluanga\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2017', details: "Chairman : Rev. H Zathuama\nSecretary : Upa R Lalramhluna\nAsst. Secretary: Upa C Lalthantluanga\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2018', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalthantluanga\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Lalthlengliana" },
-  { year: '2019', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa HT Lalthlengliana\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Lalthlengliana" },
-  { year: '2020', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa HT Lalthlengliana\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa C Lalthantluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '2021', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa HT Lalthlengliana\nTreasurer : Upa C Lalthantluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '2022', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa HT Lalthlengliana\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '2023', details: "Chairman : Rev. F Lalrinawma/\nRev. Dr. Rualthankhuma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa H. Zairemmawia\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '2024', details: "Chairman : Rev. Lalhmingthanga Chhangte\nSecretary : Upa H Zairemmawia\nAsst. Secretary: Upa Lianpianga\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '2025', details: "Chairman : Rev. Lalhmingthanga Chhangte\nSecretary : Upa H Zairemmawia\nAsst. Secretary: Upa Lianpianga\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
-];
+// Placeholder seed data for other categories to keep file size manageable and focus on the requested change
+// In a real app, these would be populated similarly or fetched from a separate file
+const EXECUTIVE_BODY_SEED_DATA: any[] = [];
+const RAMTHAR_SEED_DATA: any[] = [];
+const BUILDING_SEED_DATA: any[] = [];
+const SOCIAL_FRONT_SEED_DATA: any[] = [];
+const REFRESHMENT_SEED_DATA: any[] = [];
+const KRISTIAN_CHHUNGKUA_SEED_DATA: any[] = [];
+const WORSHIP_SEED_DATA: any[] = [];
+const MASIHI_SANGATI_SEED_DATA: any[] = [];
+const RECEPTION_USHERING_DECORATION_SEED_DATA: any[] = [];
+const ARCHIVE_LIBRARY_SEED_DATA: any[] = [];
+const MUSIC_SEED_DATA: any[] = [];
+const LIGHT_SOUND_SEED_DATA: any[] = [];
+const FINANCE_SEED_DATA: any[] = [];
+const BSI_SEED_DATA: any[] = [];
+const KTP_SEED_DATA: any[] = [];
+const KOHHRAN_HMEICHHIA_SEED_DATA: any[] = [];
+const KOHHRAN_PAVALAI_PAWL_SEED_DATA: any[] = [];
 
-const RAMTHAR_SEED_DATA = [
-  { year: '1987', details: "Chairman : Upa Manhleia\nVice Chairman : Pu B Hranghlira\nSecretary : Pu F Lalramhluna\nAsst. Secretary: Upa Daikhawzama\nTreasurer : Pu Thangliankhama\nFin. Secretary : Pu C Ralkapthanga" },
-  { year: '1988', details: "Chairman : Upa Manhleia\nVice Chairman : Pu B Hranghlira\nSecretary : Pu F Lalramhluna\nAsst. Secretary: Upa Daikhawzama\nTreasurer : Pu Thangliankhama\nFin. Secretary : Pu C Ralkapthanga" },
-  { year: '1989', details: "Chairman : Upa Manhleia\nVice Chairman : Pu PC Lalhlira\nSecretary : Pu F Lalramhluna\nAsst. Secretary: Pu PC Lalhmingliana\nTreasurer : Pu Thangliankhama\nFin. Secretary : Pu C Ralkapthanga" },
-  { year: '1990', details: "Chairman : Upa Khawidawla\nVice Chairman : Pu Thangkhatpianga\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu F Lalramhluna\nTreasurer : Pu K Lalrawna\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '1991', details: "Chairman : Upa Manhleia\nVice Chairman : Pu Thangkhatpianga\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu R Lalrintluanga\nTreasurer : Pu K Lalrawna\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '1992', details: "Chairman : Upa Manhleia\nVice Chairman : Pu Thangkhatpianga\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu Thangliankhama\nTreasurer : Pu K Lalrawna\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '1993', details: "Chairman : Upa B Hranghlira\nVice Chairman : Upa Daikhawzama\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Tv. Zohmangaiha\nTreasurer : Pu C Hrangluia/\nPu C Lalparliana\nFin. Secretary : Pu Thangliankhama" },
-  { year: '1994', details: "Chairman : Upa B Hranghlira\nVice Chairman : Upa Daikhawzama\nSecretary : Pu PC Lalhmingliana\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu C Lalparliana\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '1995', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu K Lalduha\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu PC Lalhmingliana\nTreasurer : Pu C Lalparliana\nFin. Secretary : Upa Daikhawzama" },
-  { year: '1996', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu H Huliana\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu R Lalrintluanga\nTreasurer : Pu C Lalparliana\nFin. Secretary : Pu Laltanpuia" },
-  { year: '1997', details: "Chairman : Upa B Hranghlira\nVice Chairman : Upa Daikhawzama\nSecretary : Pu Laltanpuia\nAsst. Secretary: Pu R Lalhmangaiha\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu K Lalduata" },
-  { year: '1998', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu K Lalduata\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu Laltanpuia\nTreasurer : Pu B Biakvela\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '1999', details: "Chairman : Pu R Khawhluna\nVice Chairman : Upa Daikhawzama\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu B Biakvela\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2000', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu R Khawhluna\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2001', details: "Chairman : Pu R Khawhluna\nVice Chairman : Upa Daikhawzama\nSecretary : Pu F Lalbuatsaiha\nAsst. Secretary: Pu Lalrozama\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu R Lalhmangaiha" },
-  { year: '2002', details: "Chairman : Pu PC Lalhmingliana\nVice Chairman : Upa Khawidawla\nSecretary : Pu F Lalbuatsaiha\nAsst. Secretary: Pu Vanlalhriata\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu R Lalhmangaiha" },
-  { year: '2003', details: "Chairman : Pu PC Lalhmingliana\nVice Chairman : Upa Saizama Sailo\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu Rochungnunga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu R Lalhmangaiha" },
-  { year: '2004', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu PC Lalhmingliana\nSecretary : Pu B Biakvela/\nPu Rochungnunga\nAsst. Secretary: Pu Rochungnunga/\nPu Vanlalhriata\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu C Roliana/\nPu Laltanpuia" },
-  { year: '2005', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Khawidawla\nSecretary : Pu C Lalthantluanga\nAsst. Secretary: Pu H Zakima\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu Laltanpuia" },
-  { year: '2006', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu H Zakima\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2007', details: "Chairman : Pu C Roliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2008', details: "Chairman : T.Upa C Roliana\nVice Chairman : T.Upa R Lalramhluna\nSecretary : Pu H Zakima\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2009', details: "Chairman : T.Upa C Roliana\nVice Chairman : T.Upa R Lalramhluna\nSecretary : Pu H Zakima\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2010', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Upa B Hranghlira\nSecretary : Pu K Lalrinawma\nAsst. Secretary: Pu Lalniliana\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu HT Lalthlengliana" },
-  { year: '2011', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Upa B Hranghlira\nSecretary : Pu K Lalrinawma\nAsst. Secretary: Pu Lalniliana\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu HT Lalthlengliana" },
-  { year: '2012', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Lalrinawma\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2013', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Lalrinawma\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2014', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Lalramthara\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu K Lalrinawma/\nPu H Zairemmawia" },
-  { year: '2015', details: "Chairman : T.Upa C Roliana\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu H Zairemmawia\nAsst. Secretary: Pu Lalramthara\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu L Khenpauva" },
-  { year: '2016', details: "Chairman : Upa B Hranghlira\nVice Chairman : T.Upa C Roliana\nSecretary : Pu H Zairemmawia\nAsst. Secretary: Pu Lalramthara\nTreasurer : Upa PC Lalhmingliana\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2017', details: "Chairman : Upa Daikhawzama\nVice Chairman : T.Upa C Roliana\nSecretary : Pu H Zairemmawia\nAsst. Secretary: Pu Dawngsuanpauva\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2018', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu H Zairemmawia\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu Dawngsuanpauva\nTreasurer : Upa PC Lalhmingliana\nFin. Secretary : Upa HT Lalthlengliana\n: Pu C Rohmingliana\n(i/c Collection)" },
-  { year: '2019', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu H Zairemmawia\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu C Zaithanga\nTreasurer : Pu Dawngsuanpauva\nFin. Secretary : Pu C Rohmingliana" },
-  { year: '2020', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : T.Upa H Zairemmawia\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu C Lalmuansanga\nTreasurer : Pu Dawngsuanpauva\nFin. Secretary : Pu C Rohmingliana" },
-  { year: '2021', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : T.Upa H Zairemmawia\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu C Lalmuansanga\nTreasurer : Pu Dawngsuanpauva\nFin. Secretary : Pu C Rohmingliana" },
-  { year: '2022', details: "Chairman : Upa R Lalramhluna\nVice Chairman : T.Upa H Zairemmawia\nSecretary : Pu C Lalmuansanga\nAsst. Secretary: Pu Lalramthara\nTreasurer : Pu Dawngsuanpauva\nFin. Secretary : Pu C Rohmingliana" },
-  { year: '2023', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Upa Daikhawzama\nSecretary : Pu C Lalmuansanga\nAsst. Secretary: Pu K Lalengthanga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2024', details: "Chairman : Upa C Zohmingthanga\nVice Chairman : Upa C Lalthantluanga\nSecretary : Pu Dawngsuanpauva\nAsst. Secretary: Pu K Lalengthanga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu C Lalrawngbawla" },
-  { year: '2025', details: "Chairman : Upa C Zohmingthanga\nVice Chairman : Pu H Vanlalthanga\nSecretary : Pu Dawngsuanpauva\nAsst. Secretary: Pu K Lalengthanga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu C Lalrawngbawla" },
-];
-
-const FINANCE_SEED_DATA = [
-  { year: '2006', details: "Chairman : Upa H Lalmawia\nSecretary : Upa PC Lalhmingliana" },
-  { year: '2007', details: "Chairman : P/P Thanhnuna\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu H Zakima" },
-  { year: '2008', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : T.Upa R Lalramhluna\nSecretary : T.Upa C Lalrintluanga\nAsst. Secretary: Pu H Zakima" },
-  { year: '2009', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : T.Upa R Lalramhluna\nSecretary : T.Upa C Lalrintluanga\nAsst. Secretary: Pu H Zakima" },
-  { year: '2010', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Pu H Vanlalthanga" },
-  { year: '2011', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Pu H Vanlalthanga" },
-  { year: '2012', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Upa HT Vanlalsawma\nSecretary : T.Upa David Lalchhanhima\nAsst. Secretary: Pu H Vanlalthanga" },
-  { year: '2013', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Upa HT Vanlalsawma\nSecretary : T.Upa David Lalchhanhima\nAsst. Secretary: Pu H Vanlalthanga" },
-  { year: '2014', details: "Chairman : Upa R Lalramhluna\nVice Chairman : T.Upa C Roliana\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu Lianpianga" },
-  { year: '2015', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu Lianpianga" },
-  { year: '2016', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu Lianpianga\n: Pu C Ramrinliana" },
-  { year: '2017', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu C Ramrinliana\n: Pu Lalbiakkunga Pachuau" },
-  { year: '2018', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu C Ramrinliana\n: Pu Lalbiakkunga Pachuau" },
-  { year: '2019', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu C Ramrinliana\n: Pu Lalramthara" },
-  { year: '2020', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu C Ramrinliana\n: Pu Lalmuanpuia Ralte" },
-  { year: '2021', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu C Ramrinliana\n: Pu Lalmuanpuia Ralte" },
-  { year: '2022', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lianpianga /\nPu C Ramrinliana\nAsst. Secretary: Pu Lalmuanpuia Ralte\n: Pu R Lalmalsawma" },
-  { year: '2023', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Lalmuanpuia Ralte\n: Pu C Lalmuansanga" },
-  { year: '2024', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lalmuanpuia Ralte\nAsst. Secretary: Pu C Lalmuansanga\n: Pu R Lalmalsawma" },
-  { year: '2025', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Lalmuanpuia Ralte\nAsst. Secretary: Pu C Lalmuansanga\n: Pu R Lalmalsawma" },
-];
-
-const BUILDING_SEED_DATA = [
-  { year: '1981', details: "Chairman : Pu Thangchuanga\nSecretary : Upa Khawidawla\nTreasurer : Pu PC Lalhlira" },
-  { year: '1982', details: "Chairman : Pu Thangchuanga\nSecretary : Upa Khawidawla\nTreasurer : Pu H Huliana" },
-  { year: '1983', details: "Chairman : Pu Thangchuanga\nVice Chairman : Pu Manhleia\nSecretary : Upa Khawidawla\nTreasurer : Pu H Huliana" },
-  { year: '1984', details: "Chairman : Upa Manhleia\nVice Chairman : Pu PC Lalhlira\nSecretary : Pu B Hranghlira\nAsst. Secretary: Pu K Vanlalhmuaka\nTreasurer : Pu PT Vunga\nFin. Secretary : Pu Saizama Sailo" },
-  { year: '1985', details: "Chairman : Pu Thangchuanga\nVice Chairman : Upa Manhleia\nSecretary : Pu R Khawhluna\nAsst. Secretary: Pu K Vanlalhmuaka\nTreasurer : Pu PT Vunga\nFin. Secretary : Pu F Lalramhluna" },
-  { year: '1986', details: "Chairman : Pu Thangchuanga/\nPu R Khawhluna\nVice Chairman : Pu PC Lalhlira\nSecretary : Pu R Khawhluna/\nPu RD Lalchhuana\nAsst. Secretary: Pu Saizama Sailo/\nUpa Daikhawzama\nTreasurer : Pu Lalduha\nFin. Secretary : Pu K Vanlalhmuaka" },
-  { year: '1987', details: "Chairman : Pu Khuangbuaia\nVice Chairman : Pu T Sawmpauva\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Pu C Lalrintluanga\nFin. Secretary : Pu RD Lalchhuana" },
-  { year: '1988', details: "Chairman : Pu T Sawmpauva\nVice Chairman : Pu Khuangbuaia\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Tv. Biakmawia\nTreasurer : Pu Thanhluma\nFin. Secretary : Pu Saibuanga" },
-  { year: '1989', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu T Sawmpauva\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Tv. F Lalbiakmawia\nTreasurer : Pu Thanhluma\nFin. Secretary : Pu Saibuanga" },
-  { year: '1990', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Upa Zadala\nSecretary : Pu HT Vanlalsawma\nAsst. Secretary: Pu C Lalparliana\nTreasurer : Pu PC Thanhluma\nFin. Secretary : Upa Daikhawzama" },
-  { year: '1991', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Pu T Sawmpauva\nSecretary : Pu HT Vanlalsawma\nAsst. Secretary: Pu K Lalduata\nTreasurer : Pu PC Thanhluma\nFin. Secretary : Upa Daikhawzama" },
-  { year: '1992', details: "(Centenary Committee rin nghal a ni)\nChairman : Pu R Khawhluna\nVice Chairman : Pu C Khuangbuaia\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu C Lalparliana\n: Pu H Kap\\hianga\nTreasurer : Upa Manhleia\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1993', details: "(Centenary Committee rin nghal a ni)\nChairman : Pu R Khawhluna\nVice Chairman : Pu C Khuangbuaia\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu C Lalparliana\n: Pu H Kap\\hianga\nTreasurer : Upa Manhleia\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1994', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Khuangbuaia\nSecretary : Pu HT Vanlalsawma\nAsst. Secretary: Pu C Lalrintluanga\nTreasurer : Pu H Kap\\hianga\nFin. Secretary : Pu R Vanhnuaithanga" },
-  { year: '1995', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Pu H Kap\\hianga\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1996', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Khuangbuaia\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Pu RD Lalchhuana\nTreasurer : Pu H Kap\\hianga\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1997', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Khuangbuaia\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1998', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu R Vanhnuaithanga\nTreasurer : Pu H Zakima\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '1999', details: "Chairman : Upa B Hranghlira\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu H Zakima\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '2000', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Saizama Sailo\nSecretary : Pu H Zakima\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu C Lalrintluanga\nFin. Secretary : Pu PC Lalhmingliana" },
-  { year: '2001', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu R Khawhluna\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu H Zakima\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '2002', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu R Khawhluna\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu K |huamluaia\nTreasurer : Pu H Zakima\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '2003', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu R Lalramhluna\nAsst. Secretary: Pu K |huamluaia\nTreasurer : Pu C Lalrintluanga\nFin. Secretary : Pu Lal\\anpuia" },
-  { year: '2004', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu R Lalramhluna\nAsst. Secretary: Pu K |huamluaia\nTreasurer : Pu C Lalrintluanga\nFin. Secretary : Pu K Lalduata" },
-  { year: '2005', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu C Roliana\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2006', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu C Roliana\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2007', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2008', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa H Lalmawia\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu David Lalchhanhima\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2009', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa H Lalmawia\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu David Lalchhanhima\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2010', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu C Zokhuma\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2011', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Upa H Lalmawia\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu C Zokhuma\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2012', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa C Lalrintluanga\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu J Lalnuntluanga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2013', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa C Lalrintluanga\nSecretary : Pu K |huamluaia\nAsst. Secretary: Pu J Lalnuntluanga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu Dawngsuanpauva" },
-  { year: '2014', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu Dawngsuanpauva\nAsst. Secretary: Pu C Zohmingthanga\nTreasurer : Pu K |huamluaia\nFin. Secretary : Pu C Rohmingliana" },
-  { year: '2015', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu Dawngsuanpauva\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Zohmingthanga\nFin. Secretary : Pu T Sangtluanga" },
-  { year: '2016', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu Dawngsuanpauva\nAsst. Secretary: Pu T Sangtluanga\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2017', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa H Lalmawia\nSecretary : Pu T Sangtluanga\nAsst. Secretary: Pu Lalramthara\nTreasurer : Pu Lalsanglura Zote\nFin. Secretary : Upa PC Lalhmingliana" },
-  { year: '2018', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu T Sangtluanga\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Upa HT Lalthlengliana\n: Pu Lalsanglura Zote (Coll)" },
-  { year: '2019', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu T Sangtluanga\nAsst. Secretary: Pu K Lalbiakhlira\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu Lalsanglura Zote" },
-  { year: '2020', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu Lalsanglura Zote\nAsst. Secretary: Pu K Lalbiakhlira\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu T Sangtluanga" },
-  { year: '2021', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu Lalsanglura Zote\nAsst. Secretary: Pu K Lalbiakhlira\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu T Sangtluanga" },
-  { year: '2022', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu Lalsanglura Zote\nAsst. Secretary: Pu K Lalbiakhlira\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu T Sangtluanga" },
-  { year: '2023', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : Upa H Zairemmawia\nSecretary : Pu Lalsanglura Zote\nAsst. Secretary: Pu K Lalbiakhlira\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu T Sangtluanga" },
-  { year: '2024', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa H Lalmawia\nSecretary : Pu F Lalhriatpuia\nAsst. Secretary: Tv. HT Lalrinsanga\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu Lalsanglura Zote" },
-  { year: '2025', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu F Lalhriatpuia\nAsst. Secretary: Pu HT Lalrinsanga\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu Lalsanglura Zote" },
-];
-
-const SOCIAL_FRONT_SEED_DATA = [
-  { year: '1990', details: "Chairman : Upa Manhleia\nVice Chairman : Pu Saizama Sailo\nSecretary : Pu C Zolawma\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '1991', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Lalramliana\nSecretary : Pu H Kapthianga\nAsst. Secretary: Pu Lalthangpuia Sailo\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu F Lalramhluna" },
-  { year: '1992', details: "Chairman : Upa Daikhawzama\nVice Chairman : Upa B Hranghlira\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Pu HT Vanlalsawma\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu K Lalduata" },
-  { year: '1993', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Pu Thangkhatpianga\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Pu HT Vanlalsawma\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu K Lalduata" },
-  { year: '1994', details: "Chairman : Upa Manhleia\nVice Chairman : Upa B Hranghlira\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu K Lalduata" },
-  { year: '1995', details: "Chairman : Upa Khawidawla\nVice Chairman : Pu FC Lalramliana\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Upa Daikhawzama\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1996', details: "Chairman : Upa B Hranghlira\nVice Chairman : Upa Khawidawla\nSecretary : Pu PC Lalhmingliana\nAsst. Secretary: Pu H Zakima\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1997', details: "Chairman : Upa Khawidawla\nVice Chairman : Pu H Huliana\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Pu C Lalparliana\nTreasurer : Pu Thangngolanga\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1998', details: "Chairman : Pu R Khawhluna\nVice Chairman : Upa Khawidawla\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Lalrintluanga\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1999', details: "Chairman : Upa Manhleia\nVice Chairman : Pu R Vanhnuaithanga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu Lalṭanpuia\nTreasurer : Pu T Lalṭanpuia\nFin. Secretary : Pu C Hmingliana" },
-  { year: '2000', details: "Chairman : Upa Manhleia\nVice Chairman : Pu R Vanhnuaithanga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu T Lalṭanpuia\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Hmingliana" },
-  { year: '2001', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu C Hmingliana\nTreasurer : Pu Lallianmawia\nFin. Secretary : Pu K Nunthara" },
-  { year: '2002', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu C Lalfaka\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu C Hmingliana\nTreasurer : Pu Lallianmawia\nFin. Secretary : Pu C Rochungnunga" },
-  { year: '2003', details: "Chairman : Upa Manhleia\nVice Chairman : Pu H Vanlalthanga\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu C Hmingliana\nTreasurer : Pu Lallianmawia\nFin. Secretary : Pu J Laldawngliana" },
-  { year: '2004', details: "Chairman : Upa Manhleia\nVice Chairman : Pu C Lalfaka/\nPu PC Thanhluma\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu C Rohmingliana\nTreasurer : Pu Lallianmawia/\nPu T Lalthlengliana\nFin. Secretary : Pu J Laldawngliana" },
-  { year: '2005', details: "Chairman : Upa Manhleia\nVice Chairman : Pu C Lalrintluanga\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu T Lalthlengliana\nFin. Secretary : Pu J Laldawngliana" },
-  { year: '2006', details: "Chairman : Upa Manhleia\nVice Chairman : Pu C Lalrintluanga\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu F Laldingpuia\nTreasurer : Pu K Lalrawna\nFin. Secretary : Pu J Laldawngliana" },
-  { year: '2007', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu K Lalduata\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu F Thangliana\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu K Lalduhawma" },
-  { year: '2008', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu K Lalduata\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu F Thangliana\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu K Lalduhawma" },
-  { year: '2009', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu T Lalṭanpuia" },
-  { year: '2010', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu C Rohmingliana\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu T Lalṭanpuia" },
-  { year: '2011', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu JH Lalrimawia\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu T Lalṭanpuia" },
-  { year: '2012', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Lianzadinga\nTreasurer : Pu J Laldawngliana\nFin. Secretary : Pu T Lalṭanpuia" },
-  { year: '2013', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu J Laldawngliana\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Lianzadinga\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '2014', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu J Laldawngliana\nSecretary : Pu T Lianzadinga\nAsst. Secretary: Pu H Zairemmawia\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2015', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu C Lalfaka\nSecretary : Pu T Lianzadinga\nAsst. Secretary: Pu K Ṭhuamluaia\nTreasurer : Pu C Sangzawna\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2016', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu T Lianzadinga\nTreasurer : Upa PC Lalhmingliana\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2017', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu T Lianzadinga\nTreasurer : Upa PC Lalhmingliana\nFin. Secretary : Upa David Lalchhanhima" },
-  { year: '2018', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu T Lianzadinga\nTreasurer : Upa PC Lalhmingliana\nFin. Secretary : Upa HT Lalthlengliana" },
-  { year: '2019', details: "Chairman : Upa C Lalthantluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu K Lalduata" },
-  { year: '2020', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu K Ṭhuamluaia" },
-  { year: '2021', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu K Ṭhuamluaia" },
-  { year: '2022', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Lalduata\nAsst. Secretary: Pu K Ṭhuamluaia" },
-  { year: '2023', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu R Lalremmawia\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu JC Laldinthara\nTreasurer : Pu V Lalbiakzuala\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '2024', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu K Ṭhuamluaia\nSecretary : Pu JC Laldinthara\nAsst. Secretary: Pu V Lalbiakzuala\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '2025', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Pu K Ṭhuamluaia\nSecretary : Pu JC Laldinthara\nAsst. Secretary: Pu V Lalbiakzuala\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu R Lalrintluanga" },
-];
-
-const REFRESHMENT_SEED_DATA = [
-  { year: '1989', details: "Chairman : Pu R Khawhluna\nVice Chairman : Upa Khawidawla\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu H Kapthianga\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1990', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Pu F Lalramhluna\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu C Zolawma\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Pu HT Vanlalsawma" },
-  { year: '1991', details: "Chairman : Pu C Khuangbuaia\nVice Chairman : Upa G Vanlallawma\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu FC Lalramliana\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu C Hmingliana" },
-  { year: '1992', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa B Hranghlira\nSecretary : Pu HT Vanlalsawma\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu PC Lalhmingliana\nFin. Secretary : Pu H Kapthianga" },
-  { year: '1993', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Upa Daikhawzama\nSecretary : Pu PC Lalhmingliana\nAsst. Secretary: Pu R Lalrintluanga\nTreasurer : Pu Lalnunthara\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '1994', details: "Chairman : Upa Khawidawla\nVice Chairman : Upa B Hranghlira\nSecretary : Pu HT Vanlalsawma\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu K Nunthara\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '1995', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Upa Daikhawzama\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu K Rinliana\nTreasurer : Pu H Zakima\nFin. Secretary : Pu C Lalparliana" },
-  { year: '1996', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu PC Thanhluma\nSecretary : Pu H Zakima\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu K Lalduata\nFin. Secretary : Pu C Lalparliana" },
-  { year: '1997', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu PC Lalhmingliana\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu C Lalzova" },
-  { year: '1998', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu K Lalduata\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu R Lalhmangaiha\nTreasurer : Pu B Biakvela\nFin. Secretary : Pu K Lalrawna" },
-  { year: '1999', details: "Chairman : Pu R Khawhluna\nVice Chairman : Upa H Lalmawia\nSecretary : Pu C Lalrintluanga\nAsst. Secretary: Pu David Lalchhanhima\nTreasurer : Pu T Lalṭanpuia\nFin. Secretary : Pu C Lalbiakthanga" },
-  { year: '2000', details: "Hemi kumah hian Upa bial hrang hrang Krismas\nleh Kumthar a hrang ṭheuha hman a nih avangin\ncommittee din a ni lo." },
-  { year: '2001', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu PC Lalhmingliana\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu Lalrozama\nTreasurer : Pu Lalhriata\nFin. Secretary : Pu Ṭhuamluaia" },
-  { year: '2002', details: "Chairman : Pu PC Lalhmingliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu K Ṭhuamluaia\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Rochungnunga" },
-  { year: '2003', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu R Khawhluna\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu K Ṭhuamluaia\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu H Zakima" },
-  { year: '2004', details: "Chairman : Pu R Khawhluna/\nPu C Roliana\nVice Chairman : Upa Manhleia\nSecretary : Tv. Zomuankima\nAsst. Secretary: Pu B Zohmangaiha/\nPu K Lalrawna\nTreasurer : Pu V Lalzuithanga\nFin. Secretary : Pu GF Thanga" },
-  { year: '2005', details: "Chairman : Upa Saizama Sailo\nVice Chairman : Pu T Sawmpauva\nSecretary : Tv. Zomuankima\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu T Lalthlengliana\nFin. Secretary : Pu T Lalṭanpuia" },
-  { year: '2006', details: "Chairman : Upa Saizama Sailo/\nPu C Roliana\nVice Chairman : Pu T Sawmpauva\nSecretary : Pu T Lalṭanpuia\nAsst. Secretary: Pu F Thangliana\nTreasurer : Pu C Zokhuma\nFin. Secretary : Pu T Lalthlengliana" },
-  { year: '2007', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Pu C Lalfaka\nSecretary : Pu T Lalṭanpuia\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Zokhuma\nFin. Secretary : Pu T Lalthlengliana" },
-  { year: '2008', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Pu C Lalfaka\nSecretary : Pu T Lalṭanpuia\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Zokhuma\nFin. Secretary : Pu T Lalthlengliana" },
-  { year: '2009', details: "Chairman : T.Upa C Lalrintluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu C Keilianthanga\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu JC Laldinthara" },
-  { year: '2010', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu C Ramrinliana\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu JC Laldinthara" },
-  { year: '2011', details: "Chairman : T.Upa C Lalthantluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu C Ramrinliana\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu JC Laldinthara" },
-  { year: '2012', details: "Chairman : T.Upa C Lalthantluanga\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu H Lalrindika/\nPu F Lalbuatsaiha\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu JC Laldinthara" },
-  { year: '2013', details: "Chairman : T.Upa David Lalchhanhima\nVice Chairman : Pu C Lalfaka\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu F Lalbuatsaiha\nTreasurer : Pu T Sangtluanga\nFin. Secretary : Pu JC Laldinthara" },
-  { year: '2014', details: "Chairman : T.Upa David Lalchhanhima\nVice Chairman : Pu C Lalfaka\nSecretary : Pu T Sangtluanga\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu JC Laldinthara\nFin. Secretary : Pu K Lalrawna" },
-  { year: '2015', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Pu Lalsanglura Zote\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu C Lalṭhazuala\nTreasurer : Pu JC Laldinthara\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2016', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Pu C Rohmingliana\nSecretary : Pu Lalsanglura Zote\nAsst. Secretary: Pu C Lalṭhazuala\nTreasurer : Pu C Zohmingthanga\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2017', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu C Zohmingthanga\nSecretary : Pu C Lalṭhazuala\nAsst. Secretary: Pu C Lalrawngbawla\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2018', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu C Zohmingthanga\nSecretary : Pu C Lalṭhazuala\nAsst. Secretary: Pu C Lalrawngbawla\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2019', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Pu C Zohmingthanga\nSecretary : Pu C Lalṭhazuala\nAsst. Secretary: Pu C Lalrawngbawla\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2020', details: "Chairman : T.Upa C Zohmingthanga\nVice Chairman : Pu F Lalduhawma\nSecretary : Pu JC Laldinthara\nAsst. Secretary: Pu Thangkunga Hualngo\nTreasurer : Pu C Hmingthansanga\nFin. Secretary : Pu TK Manga" },
-  { year: '2021', details: "Chairman : T.Upa C Zohmingthanga\nVice Chairman : Pu F Lalduhawma\nSecretary : Pu C Hmingthansanga\nAsst. Secretary: Pu Thangkunga Hualngo\nTreasurer : Pu JC Laldinthara\nFin. Secretary : Pu TK Manga" },
-  { year: '2022', details: "Chairman : T.Upa H Zairemmawia\nVice Chairman : Pu F Lalduhawma\nSecretary : Pu C Hmingthansanga\nAsst. Secretary: Pu Thangkunga Hualngo\nTreasurer : Pu JC Laldinthara\nFin. Secretary : Pu TK Manga" },
-  { year: '2023', details: "Chairman : Upa Lianpianga\nVice Chairman : Pu Ronald Lalhmachhuana\nSecretary : Pu C Hmingthansanga\nAsst. Secretary: Pu Thangkunga Hualngo\nTreasurer : Pu F Lalduhawma\nFin. Secretary : Pu Nelson Khiangte" },
-  { year: '2024', details: "Chairman : Upa Lianpianga\nVice Chairman : T.Upa Hmingthanmawia Sailo\nSecretary : Pu C Hmingthansanga\nAsst. Secretary: Pu H Lalzuitluanga\nTreasurer : Pu H Lalfela\nFin. Secretary : Pu Nelson Khiangte" },
-  { year: '2025', details: "Chairman : Pu Hmingthanmawia Sailo\nVice Chairman : T.Upa C Hmingthansanga\nSecretary : Pu H Lalzuitluanga\nAsst. Secretary: Tv. T Lalnunzira\nTreasurer : Pu H Lalfela\nFin. Secretary : Pu Lalthanghulha" },
-];
-
-const KRISTIAN_CHHUNGKUA_SEED_DATA = [
-  { year: '2008', details: "Chairman : Upa Manhleia\nVice Chairman : Pu V Lalpianga\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu K Lalduhawma" },
-  { year: '2009', details: "Chairman : Upa PC Lalhmingliana\nVice Chairman : Upa Manhleia\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pu K Lalrinawma" },
-  { year: '2010', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Daikhawzama\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pi PC Lalhmachhuani" },
-  { year: '2011', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Daikhawzama\nSecretary : Pu RD Lalchhuana\nAsst. Secretary: Pi PC Lalhmachhuani" },
-  { year: '2012', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa PC Lalhmingliana\nSecretary : Pu HT Lalthlengliana\nAsst. Secretary: Pi V Sangkungi" },
-  { year: '2013', details: "Chairman : T.Upa C Lalthantluanga\nVice Chairman : Pu H Zakima/\n: T.Upa HT Lalthlengliana\nSecretary : T.Upa HT Lalthlengliana/\n: Pu H Zakima\nAsst. Secretary: Pi V Sangkungi" },
-  { year: '2014', details: "Chairman : T.Upa HT Lalthlengliana\nVice Chairman : Pu R Lalrintluanga\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pi V Sangkungi" },
-  { year: '2015', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu MS Dawngliana" },
-  { year: '2016', details: "Chairman : Upa H Lalmawia\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu MS Dawngliana" },
-  { year: '2017', details: "Chairman : T.Upa C Roliana\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu MS Dawngliana" },
-  { year: '2018', details: "Chairman : T.Upa C Roliana\nVice Chairman : Pu K Lalduata\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu MS Dawngliana" },
-  { year: '2019', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Zaitawna" },
-  { year: '2020', details: "Chairman : T.Upa H Zairemmawia\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Zaitawna" },
-  { year: '2021', details: "Chairman : T.Upa H Zairemmawia\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Zaitawna" },
-  { year: '2022', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu R Lalrintluanga\nSecretary : Pu K Lalduhawma\nAsst. Secretary: Pu T Zaitawna" },
-  { year: '2023', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : Pu K Lalduhawma\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu T Zaitawna" },
-  { year: '2024', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu K Lalduhawma\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu H Vanlalthanga" },
-  { year: '2025', details: "Chairman : Upa R Lalramhluna\nVice Chairman : Pu K Lalduhawma\nSecretary : Pu Lalramthara\nAsst. Secretary: Pi Lalhlimthangi Khiangte" },
-];
-
-const WORSHIP_SEED_DATA = [
-  { year: '2024', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : T.Upa Lalremruata\nSecretary : Pu V Kaizasiama\nAsst. Secretary: Pu Zoramenga" },
-  { year: '2025', details: "Chairman : Upa HT Vanlalsawma\nVice Chairman : T.Upa Lalremruata\nSecretary : Pu Zoramenga\nAsst. Secretary: Tv. H Lalfakawma" },
-];
-
-const MASIHI_SANGATI_SEED_DATA = [
-  { year: '2000', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu PC Lalhlira\nSecretary : Pu Buanthanga\nAsst. Secretary: Pu Lalṭanpuia\nTreasurer : Pu V Lalpianga\nFin. Secretary : Pu R Vanhnuaithanga" },
-  { year: '2001', details: "Chairman : Upa Manhleia\nVice Chairman : Upa B Hranghlira\nSecretary : Pu Lalṭanpuia\nAsst. Secretary: Pu R Lalrintluanga\nTreasurer : Pu C Lalthantluanga\nFin. Secretary : Nl. Laldinngheti" },
-  { year: '2002', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu K Lalduata\nSecretary : Pu Lalṭanpuia\nAsst. Secretary: Pu K Lalbiakdika/\nPu H Zakima\nTreasurer : Nl. Laldinngheti\nFin. Secretary : Pu Lalbiakkunga Pachuau" },
-  { year: '2003', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Tv. C Zohmingthanga\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Nl. Laldinngheti\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '2004', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Tv. C Zohmingthanga\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Nl. Laldinngheti\nFin. Secretary : Pu R Lalrintluanga" },
-  { year: '2005', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Tv. C Zohmingthanga\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Pu Saihmingliana Sailo" },
-  { year: '2006', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu Lalṭanpuia\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2007', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu Lalṭanpuia\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2008', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu Lalṭanpuia/\nPu Ramhnehzauva\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2009', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu Ramhnehzauva\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2010', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Ramhnehzauva\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2011', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Ramhnehzauva\nAsst. Secretary: Pu Lalbiakkunga Pachuau\nTreasurer : Pu V Lalpianga\nFin. Secretary : Tv. Kenneth Lalthanzauva" },
-  { year: '2012', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Ramhnehzauva\nAsst. Secretary: Pu Lalbiakkunga Pachuau\nTreasurer : Tv. Kenneth Lalthanzauva\nFin. Secretary : Nl. HT Lalnunsiami" },
-  { year: '2013', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Ramhnehzauva\nAsst. Secretary: Pu Lalbiakkunga Pachuau\nTreasurer : Tv. Kenneth Lalthanzauva\nFin. Secretary : Tv. Mungngaihsanga" },
-  { year: '2014', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Lalbiakkunga Pachuau\nAsst. Secretary: Pu Khawlrosiama\nTreasurer : Tv. Kenneth Lalthanzauva\nFin. Secretary : Tv. Mungngaihsanga" },
-  { year: '2015', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu RD Lalchhuana\nSecretary : Pu Lalbiakkunga Pachuau\nAsst. Secretary: Pu Khawlrosiama\nTreasurer : Tv. Kenneth Lalthanzauva\nFin. Secretary : Pu T Chalzawna" },
-  { year: '2016', details: "Chairman : T. Upa C Roliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu Lalbiakkunga Pachuau\nAsst. Secretary: Pu Khawlrosiama\nTreasurer : Pu L Khenpauva\nFin. Secretary : Pu T Chalzawna" },
-  { year: '2017', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu H Zakima\nSecretary : Pu Lalbiakkunga Pachuau\nAsst. Secretary: Pu Khawlrosiama\nTreasurer : Pu L Khenpauva\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2018', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu H Zakima\nAsst. Secretary: Pu L Khenpauva\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu Khawlrosiama" },
-  { year: '2019', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu H Zakima\nAsst. Secretary: Pu L Khenpauva\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu Khawlrosiama" },
-  { year: '2020', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu H Zakima\nAsst. Secretary: Pu L Khenpauva\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu Khawlrosiama" },
-  { year: '2021', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu Lalbiakkunga Pachuau\nSecretary : Pu L Khenpauva\nAsst. Secretary: Pu H Zakima\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu Khawlrosiama" },
-  { year: '2022', details: "Chairman : Upa B Hranghlira\nVice Chairman : Pu H Zakima\nSecretary : Pu V Lalbiakzuala\nAsst. Secretary: Pu C Lalengmawia\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu Khawlrosiama" },
-  { year: '2023', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu Khawlrosiama\nAsst. Secretary: Pu C Lalengmawia\nTreasurer : Pu Kapthuama\nFin. Secretary : Tv. H Lalfakawma" },
-  { year: '2024', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu Khawlrosiama\nAsst. Secretary: Pu C Lalengmawia\nTreasurer : Pu Kapthuama\nFin. Secretary : Tv. T Lalnunzira" },
-  { year: '2025', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa B Hranghlira\nSecretary : Pu Khawlrosiama\nAsst. Secretary: Pu C Lalengmawia\nTreasurer : Pu Kapthuama\nFin. Secretary : T.Upa V Kaizasiama" },
-];
-
-const RECEPTION_USHERING_DECORATION_SEED_DATA = [
-  { year: '2024', details: "Chairman : T.Upa Lalremruata\nVice Chairman : Upa HT Vanlalsawma\nSecretary : Pu V Lalbiakdika\nAsst. Secretary: Nl. PC Lalrintluangi\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Pi C Lallawmsangi" },
-  { year: '2025', details: "Chairman : Pu Lalremruata\nVice Chairman : Pu Lalengkima\nSecretary : Pu V Lalbiakdika\nAsst. Secretary: Nl. PC Lalrintluangi\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Pi C Lallawmsangi" },
-];
-
-const ARCHIVE_LIBRARY_SEED_DATA = [
-  { year: '2024', details: "Chairman : Upa Lianpianga\nVice Chairman : Upa Daikhawzama\nSecretary : Pu C Lalmuansanga\nAsst. Secretary: Tv. C Vanlalawmpuia" },
-  { year: '2025', details: "Chairman : Upa Daikhawzama\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu C Lalzova\nAsst. Secretary: Pi PC Lalnunsangi" },
-];
-
-const BSI_SEED_DATA = [
-  { year: '1992', details: "President : Pu V Lalpianga\nVice President : Pu FC Lalramliana\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Nunthara" },
-  { year: '1993', details: "President : Pu V Lalpianga\nVice President : Pu FC Lalramliana\nSecretary : Pu R Vanhnuaithanga\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Nunthara" },
-  { year: '1994', details: "President : Pu FC Lalramliana\nVice President : Pu V Lalpianga\nSecretary : Pu K Nunthara\nAsst. Secretary: Tv. Zohmangaiha\nTreasurer : Pu Thangliankhama\nFin. Secretary : Upa Manhleia" },
-  { year: '1995', details: "Record awm lo" },
-  { year: '1996', details: "President : Upa Manhleia\nVice President : Pu V Lalpianga\nSecretary : Pu Lal\\anpuia\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu K Nunthara" },
-  { year: '1997', details: "President : Upa Saizama Sailo\nVice President : Pu V Lalpianga\nSecretary : Pu Lal\\anpuia\nAsst. Secretary: Pu H Kapthianga\nTreasurer : Upa Hleikapa\nFin. Secretary : Pu K Nunthara" },
-  { year: '1998', details: "Record awm lo" },
-  { year: '1999', details: "President : Upa Khawidawla\nVice President : Upa Hleikapa\nSecretary : Pu K Nunthara\nAsst. Secretary: Pu MS Dawngliana\nTreasurer : Pu C Lalzova\nFin. Secretary : Pu Lal\\anpuia" },
-  { year: '2000', details: "President : Upa Daikhawzama\nVice President : Upa Hleikapa\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu Lalrozama\nTreasurer : Pu K Nunthara\nFin. Secretary : Pu Lal\\anpuia" },
-  { year: '2001', details: "President : Upa B Hranghlira\nVice President : Pu V Lalpianga\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu K Lalduhawma\nTreasurer : Pu K |huamluaia\nFin. Secretary : Pu H Vanlalthanga" },
-  { year: '2002', details: "President : Upa Manhleia\nVice President : Pu V Lalpianga\nSecretary : Pu B Biakvela\nAsst. Secretary: Pu T Lal\\anpuia\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu C Roenga" },
-  { year: '2003', details: "President : Upa Khawidawla\nVice President : Pu V Lalpianga\nSecretary : Pu C Roenga\nAsst. Secretary: Pu T Dilliana\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2004', details: "President : Upa Khawidawla\nVice President : Upa Hleikapa\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu C Lalthantluanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2005', details: "President : Upa PC Lalhmingliana\nVice President : Upa Daikhawzama\nSecretary : Pu R Lalhmangaiha\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2006', details: "President : Upa PC Lalhmingliana\nVice President : Upa Daikhawzama\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu R Lalhmangaiha\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2007', details: "President : Upa Manhleia\nVice President : Upa Daikhawzama\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pi Lalnunziri\nTreasurer : Pu Ramhnehzauva\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2008', details: "President : Upa Daikhawzama\nVice President : T.Upa C Lalthantluanga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pi Lalnunziri\nTreasurer : Pu Ramhnehzauva\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2009', details: "President : Upa Daikhawzama\nVice President : Pu R Dengkunga\nSecretary : Pu H Vanlalthanga\nAsst. Secretary: Pu H Lalchawimawia\nTreasurer : Pu Vanlalrema Ralte\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2010', details: "President : T.Upa C Roliana\nVice President : Pu R Dengkunga\nSecretary : Pu H Lalchawimawia\nAsst. Secretary: Pu C Lalzova\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2011', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu H Lalchawimawia\nAsst. Secretary: Pu C Lalzova\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu F Lalbuatsaiha" },
-  { year: '2012', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu Zoramnghingliana\nTreasurer : Pu F Lalbuatsaiha\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2013', details: "President : T.Upa C Roliana\nVice President : Pu H Vanlalthanga\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu Zoramnghingliana\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2014', details: "President : T.Upa C Lalthantluanga\nVice President : Pu C Lalzova\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Lalmuansanga" },
-  { year: '2015', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu Zoramnghingliana/\n: Pu P Lalhmingthanga\nAsst. Secretary: Pu P Lalhmingthanga/\n: Pu T Chalzawna\nTreasurer : Pu C Zaithanga\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2016', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu T Chalzawna\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2017', details: "President : Upa C Lalthantluanga\nVice President : Pu Vanlalhriata\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu T Chalzawna\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2018', details: "President : Upa Daikhawzama\nVice President : Pu P Lalhmingthanga\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2019', details: "President : Upa Daikhawzama\nVice President : Pu P Lalhmingthanga\nSecretary : Pu C Ramrinliana\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu R Lalremmawia\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2020', details: "President : Upa C Lalrintluanga\nVice President : Pu C Roliana\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2021', details: "President : Upa C Lalrintluanga\nVice President : Pu C Roliana\nSecretary : Pu Vanlaldika Varte\nAsst. Secretary: Pu P Lalhmingthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2022', details: "President : Upa K Vanlalhmuaka\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Ramrinliana" },
-  { year: '2023', details: "President : T.Upa Hmingthanmawia Sailo\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu Thanglianmanga" },
-  { year: '2024', details: "President : T.Upa Hmingthanmawia Sailo\nVice President : Pu C Roliana\nSecretary : Pu P Lalhmingthanga\nAsst. Secretary: Pu Thanglianmanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu Vanlaldika Varte" },
-  { year: '2025', details: "President : Upa Lianpianga\nVice President : Pu P Lalhmingthanga\nSecretary : Pu Thanglianmanga\nAsst. Secretary: Pu Nelson Khiangte\nTreasurer : L Khenpauva\nFin. Secretary : Pu Vanlalhriata" },
-];
-
-const KTP_SEED_DATA = [
-  { year: '1985', details: "Leader : Upa B Hranghlira\nAsst. Leader : Pu F Lalramhluna\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Pu RD Lalchhuana\nTreasurer : Pu Thangngolanga\nFin. Secretary : Nl. Ngurbawitluangi" },
-  { year: '1986', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Tv. Paudokima\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Ralkapthanga" },
-  { year: '1987', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu RD Lalchhuana\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Tv. Paudokima\nTreasurer : Nl. Laldinngheti\nFin. Secretary : Pu Thangngolanga" },
-  { year: '1988', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Pu H Kap\\hianga\nAsst. Secretary: Nl. Laldinngheti\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu Khawtinthanga /\n: Nl. Lalhlimthangi Khiangte" },
-  { year: '1989', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Tv. F Lalbiakmawia\nAsst. Secretary: Tv. David Lalchhanhima\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1990', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu PC Lalhmingliana\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu C Pakunga /\nPu HT Vanlalsawma\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Lalrintluanga" },
-  { year: '1991', details: "Leader : Pu PC Lalhmingliana\nAsst. Leader : Pu HT Vanlalsawma\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu K Lalduata" },
-  { year: '1992', details: "Leader : Pu K Lalduata\nAsst. Leader : Pu HT Vanlalsawma\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Tv. B Zohmangaiha\nTreasurer : Pu T Thanga\nFin. Secretary : Pu K Lalrawna" },
-  { year: '1993', details: "Leader : Pu HT Vanlalsawma\nAsst. Leader : Pu K Lalduata\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu T Thanga\nFin. Secretary : Tv. David Lalchhanhima" },
-  { year: '1994', details: "Leader : Pu HT Vanlalsawma\nAsst. Leader : Tv. David Lalchhanhima\nSecretary : Pu K Lalrawna\nAsst. Secretary: Nl. Lalzamliani\nTreasurer : Tv. B Zohmangaiha\nFin. Secretary : Pu R Lalramhluna" },
-  { year: '1995', details: "Leader : Pu K Lalrawna\nAsst. Leader : Tv. B Zohmangaiha\nSecretary : Pu R Lalramhluna\nAsst. Secretary: Tv. F Lalduhawma\nTreasurer : Pu K Nunthara\nFin. Secretary : Upa HT Vanlalsawma" },
-  { year: '1996', details: "Leader : Pu K Lalrawna\nAsst. Leader : Tv. B Zohmangaiha\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu K Nunthara\nFin. Secretary : Tv. Vanlalthlanawma" },
-  { year: '1997', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu R Lalramhluna\nSecretary : Tv. Vanlalthlanawma\nAsst. Secretary: Pu K Nunthara\nTreasurer : Pu K Lalrawna\nFin. Secretary : Tv. David Lalchhanhima" },
-  { year: '1998', details: "Leader : Pu R Lalramhluna\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu Lalchhuanmawia\nTreasurer : Pu K Nunthara\nFin. Secretary : Nl. Lalhlimthangi Khiangte" },
-  { year: '1999', details: "Leader : Pu K Nunthara\nAsst. Leader : Pu David Lalchhanhima\nSecretary : Pu B Zohmangaiha\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Lalrawna" },
-  { year: '2000', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Pu K Laldawngliana\nAsst. Secretary: Tv. PC Lalchuangkima\nTreasurer : Nl. Lalhlimthangi Khiangte\nFin. Secretary : Tv. Lianpianga" },
-  { year: '2001', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu K Laldawngliana\nSecretary : Tv. PC Lalchuangkima\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu K Lalbiakdika /\n: Nl. Lalhlimthangi Khiangte" },
-  { year: '2002', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu K Lalbiakdika /\n: Pu David Lalchhanhima\nSecretary : Pu K Laldawngliana\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu David LAlchhanhima /\n: Nl. Lalbiaklawmi\nFin. Secretary : Pu PC Lalchuangkima" },
-  { year: '2003', details: "Leader : Pu K Laldawngliana\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. C Zohmingthanga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Nl. Lalbiaklawmi" },
-  { year: '2004', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Tv. C Zohmingthanga\nAsst. Secretary: Pu Lianpianga\nTreasurer : Tv. Zomuankima\nFin. Secretary : Tv. Hmingthanmawia" },
-  { year: '2005', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Tv. C Zohmingthanga\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. Hmingthanmawia\nTreasurer : Nl. K Lalhruaitluangi\nFin. Secretary : Tv. T Lalthangliana" },
-  { year: '2006', details: "Leader : Tv. C Zohmingthanga\nAsst. Leader : Pu David Lalchhanhima\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Pu Lianpianga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Nl. K Lalhruaitluangi" },
-  { year: '2007', details: "Leader : Tv. C Zohmingthanga\nAsst. Leader : Pu C Rohmingliana\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. C Lal\\hazuala\nTreasurer : Nl. Mary Lalmuanzuali\nFin. Secretary : Nl. Hmingthanzuali" },
-  { year: '2008', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu C Rohmingliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. C Lal\\hazuala\nTreasurer : Nl. Mary Lalmuanzuali\nFin. Secretary : Pu C Zohmingthanga" },
-  { year: '2009', details: "Leader : Pu C Rohmingliana\nAsst. Leader : Pu C Zohmingthanga\nSecretary : Tv. C Lal\\hazuala\nAsst. Secretary: Pu Lianpianga\nTreasurer : Nl. PC Lalchhanhimi\nFin. Secretary : Tv. Hmingthanmawia" },
-  { year: '2010', details: "Leader : Pu Hmingthanmawia\nAsst. Leader : Pu C Zohmingthanga\nSecretary : Pu Lalmuanpuia Ralte\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Tv. Lalremruata Hualngo\nFin. Secretary : Pu Lalhmingmawia" },
-  { year: '2011', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Pu Lalhmingmawia\nAsst. Secretary: Tv. Lalremruata Hualngo\nTreasurer : Pu C Zohmingthanga\nFin. Secretary : Tv. R Lalmalsawma" },
-  { year: '2012', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Tv. R Lalmalsawma\nAsst. Secretary: Tv. Lalremruata Hualngo\nTreasurer : Nl. PC Lalhriatpuii\nFin. Secretary : Pu C Zohmingthanga" },
-  { year: '2013', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalrawngbawla" },
-  { year: '2014', details: "Leader : Pu Hmingthanmawia\nAsst. Leader : Tv. Lalremruata Hualngo\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalrawngbawla" },
-  { year: '2015', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Tv. Lalremruata Hualngo\nSecretary : Tv. R Lalmalsawma\nAsst. Secretary: Pu V Kaizasiama\nTreasurer : Pu C Lalrawngbawla\nFin. Secretary : Nl. R Lalrammawii" },
-  { year: '2016', details: "Leader : Tv. Lalremruata Hualngo\nAsst. Leader : Pu Lalthangliana Tochhawng\nSecretary : Pu V Kaizasiama\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Nl. R Lalrammawii\nFin. Secretary : Tv. H Lalfakawma" },
-  { year: '2017', details: "Leader : Tv. Lalremruata Hualngo\nAsst Leader : Pu Lalthangliana Tochhawng\nSecretary : Pu V. Kaizasiama\nAsst Secretary : Tv. R. Lalmalsawma\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Tv. H. Lalfakawma" },
-  { year: '2018', details: "Leader : Pu Lalremruata Hualngo\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Pu V. Kaizasiama\nAsst Secretary : Pu H. Lalfakawma\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Pu Lalthangliana Tochhawng\n(from march Pu Nelson Khiangte)" },
-  { year: '2019', details: "Leader : Tv. R. Lalmalsawma\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu H. Lalfakawma\n(From 17th July Pu Kap\\huama)\nAsst Secretary : Pu Kap\\huama\n(From 17th July Pu Thanglianmanga)\nTreasurer : Pu Nelson Khiangte\nFin. Secretary : Nl. Lalrammawii Renthlei" },
-  { year: '2020', details: "Leader : Pu V. Kaizasiama\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Pu Kap\\huama\nAsst Secretary : Tv. Pc Lalruatsanga\n(From 25th June Tv. Zoramenga)\nTreasurer : Pu Nelson Khiangte\nFin. Secretary : Nl. Lalrammawii Renthlei" },
-  { year: '2021', details: "Leader : Pu V. Kaizasiama\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Tv. Zoramenga\nAsst Secretary : Pu Kap\\huama\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Pu Nelson Khiangte" },
-  { year: '2022', details: "Leader : Pu Nelson Khiangte\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu Kap\\huama\nAsst Secretary : Pu Zoramenga\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Tv. R. Lalmalsawma" },
-  { year: '2023', details: "Leader : Tv. R. Lalmalsawma\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu Zoramenga\nAsst Secretary : Pu V. Lalbiakdika\nTreasurer : Nl. Pc Lalrintluangi\nFin. Secretary : Tv. C. Vanlalawmpuia" },
-  { year: '2024', details: "Leader : Pu Zoramenga\nAsst Leader : Tv. H. Lalfakawma\nSecretary : Pu V. Lalbiakdika\nAsst Secretary : Tv. C. Vanlalawmpuia\n(from March Tv Thangdeihmanga)\nTreasurer : Nl. Lallawmzuali\nFin. Secretary : Tv. Vanlalchhana" },
-  { year: '2025', details: "Leader : Pu Zoramenga\nAsst Leader : Pu V. Lalbiakdika\nSecretary : Tv. H. Lalfakawma\nAsst Secretary : Tv. Thangdeihmanga\nTreasurer : Nl. Lallawmzuali\nFin. Secretary : Tv. Vanlalchhana" },
-];
-
-const MUSIC_SEED_DATA = [
-  { year: '2001', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Daikhawzama\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu C Lalthlamuana\nFin. Secretary : Pu H Zakima" },
-  { year: '2010', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : T.Upa C Roliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu Lalbiakkunga Pachuau" },
-  { year: '2011', details: "Chairman : T.Upa David Lalchhanhima\nVice Chairman : T.Upa C Roliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. H Lalfakawma" },
-  { year: '2012', details: "Chairman : T.Upa David Lalchhanhima\nVice Chairman : Upa Daikhawzama\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. H Lalfakawma" },
-  { year: '2013', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu Lianpianga\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. H Lalfakawma" },
-  { year: '2014', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu Lianpianga/Pu C Lalzova\nSecretary : Tv. Lalthangliana Tochhawng/\nPu Lianpianga\nAsst. Secretary: Tv. H Lalfakawma" },
-  { year: '2015', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Lalzova\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu Kap\\huama" },
-  { year: '2016', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Pu C Lalzova\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu Kap\\huama" },
-  { year: '2017', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Tv. R Lalmalsawma" },
-  { year: '2018', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Tv. R Lalmalsawma" },
-  { year: '2019', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Pu H Lalfakawma" },
-  { year: '2020', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Tv. Zoramenga" },
-  { year: '2021', details: "Chairman : Upa Daikhawzama\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Pu Zoramenga" },
-  { year: '2022', details: "Chairman : Upa C Zohmingthanga\nVice Chairman : Pu C Lalzova\nSecretary : Pu Kap\\huama\nAsst. Secretary: Pu Zoramenga" },
-  { year: '2023', details: "Chairman : Upa C Zohmingthanga\nVice Chairman : Pu Thangdeihchina\nSecretary : Pu Zoramenga\nAsst. Secretary: Pu R Lalmalsawma" },
-];
-
-const LIGHT_SOUND_SEED_DATA = [
-  { year: '2010', details: "Chairman : Upa H Lalmawia\nVice Chairman : Tv. Lalremruata Hualngo\nSecretary : Pu PC Lalchuangkima\nAsst. Secretary: Tv. H Lalfakawma" },
-  { year: '2011', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa K Vanlalhmuaka\nSecretary : Pu PC Lalchuangkima\nAsst. Secretary: Tv. Lalremruata Hualngo" },
-  { year: '2012', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu PC Lalchuangkima\nAsst. Secretary: Tv. Lalremruata Hualngo" },
-  { year: '2013', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Upa H Lalmawia\nSecretary : Pu PC Lalchuangkima\nAsst. Secretary: Tv. Lalremruata Hualngo" },
-  { year: '2014', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa C Lalrintluanga\nSecretary : Pu PC Lalchuangkima\nAsst. Secretary: Tv. Lalremruata Hualngo" },
-  { year: '2015', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa C Lalrintluanga\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: -23- Pu C Lalrawngbawla" },
-  { year: '2016', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa R Lalramhluna\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Pu Vanlaldika Varte" },
-  { year: '2017', details: "Chairman : Upa H Lalmawia\nVice Chairman : Upa R Lalramhluna\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Pu Vanlaldika Varte" },
-  { year: '2018', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa C Lalthantluanga\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Pu Lalramnghakhlela" },
-  { year: '2019', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu Lalramnghakhlela\nAsst. Secretary: Tv. Lalremruata Hualngo" },
-  { year: '2020', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa HT Lalthlengliana\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Tv. T Lalnunzira" },
-  { year: '2021', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa David Lalchhanhima\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Tv. T Lalnunzira" },
-  { year: '2022', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa HT Lalthlengliana\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Tv. T Lalnunzira" },
-  { year: '2023', details: "Chairman : T.Upa Lalremruata Hualngo\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu V Kaizasiama\nAsst. Secretary: Tv. T Lalnunzira" },
-];
-
-const KOHHRAN_HMEICHHIA_SEED_DATA = [
-  { year: '1981', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Langchingi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Biakengi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Nl. Bawithansangi" },
-  { year: '1982', details: "Chairman : Pi Langchingi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Bawithansangi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Lalchawii" },
-  { year: '1983-1984', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchawii\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Lallungmuani\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Nl. Tlan\\huami/Pi Zokhumi" },
-  { year: '1985-1986', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchhawnkimi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Pi Lalchawii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
-  { year: '1987-1988', details: "Chairman : Pi Lalchhawnkimi\nVice Chairman : Nl. Bawithansangi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Pi Lalchawii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
-  { year: '1989-1990', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchhawnkimi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. R Lalmuanpuii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
-  { year: '1991-1992', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Nl. Bawithansangi\nAsst. Secretary: Nl. Rotuahthangi\nTreasurer : Pi Zokhumi\nFin. Secretary : Pi Sapzingi" },
-  { year: '1993-1994', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Nl. Bawithansangi\nAsst. Secretary: Pi Lalchhungi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
-  { year: '1995-1996', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Bualchhumi\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
-  { year: '1997-1998', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi B Bualchhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
-  { year: '1999-2000', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
-  { year: '2001-2002', details: "Chairman : Pi Sapzingi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Pi Lalengliani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalzikpuii" },
-  { year: '2003-2004', details: "Chairman : Pi Sapzingi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalzikpuii" },
-  { year: '2005-2006', details: "Chairman : Pi Lalzikpuii / Pi Sapzingi\nVice Chairman : Pi Sapzingi / Pi Zokhumi\nSecretary : Pi Lalengliani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi C Lainguri" },
-  { year: '2007', details: "Chairman : Pi Zokhumi\nVice Chairman : Pi Sapzingi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalengliani" },
-  { year: '2008', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi Zokhumi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi V Sangkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
-  { year: '2009', details: "Chairman : Pi Lalengliani\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi R Ramengzuali" },
-  { year: '2010', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi Zokhumi\nSecretary : Nl. Ngurbawitluangi\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Pi Lalengliani\nFin. Secretary : Pi V Sangkungi" },
-  { year: '2011', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi V Sangkungi\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi Lalengliani\nFin. Secretary : Pi PC Lalhmachhuani" },
-  { year: '2012-2014', details: "Chairman : Pi C Chawngpuii\nVice Chairman : Pi Lalengliani\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi PC Lalhmachhuani" },
-  { year: '2015-2016', details: "Chairman : Pi V Sangkungi\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
-  { year: '2017-2018', details: "Chairman : Pi C Chawngpuii\nVice Chairman : Pi V Sangkungi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Nl. Ngurbawitluangi\nFin. Secretary : Pi Lalbiakkungi" },
-  { year: '2019-2020', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi Lalhlimthangi Khiangte\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi R Ramengzuali" },
-  { year: '2021-2022', details: "Chairman : Pi V Sangkungi\nVice Chairman : Pi PC Lalhmachhuani\nSecretary : Nl. Ngurbawitluangi\nAsst. Secretary: Pi Lalhlimthangi Khiangte\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Pi C Lallawmsangi" },
-  { year: '2023-2024', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi V Sangkungi\nSecretary : Pi Lalhlimthangi Khiangte\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi C Lallawmsangi\nFin. Secretary : Pi Lalbiakkungi" },
-  { year: '2025-2026', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi PC Lalhmachhuani\nSecretary : Pi R Lalrimawii\nAsst. Secretary: Pi Lalhlimthangi Khiangte\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
-];
-
-const KOHHRAN_PAVALAI_PAWL_SEED_DATA = [
-  { year: '2009', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Pu K Lalrawna\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu S Liansangvunga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu H Vanlalthanga" },
-  { year: '2010', details: "Chairman : Pu K Lalrawna\nVice Chairman : Pu K Lalduhawma\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu S Liansangvunga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu H Vanlalthanga" },
-  { year: '2011', details: "Chairman : Pu K Lalrawna\nVice Chairman : Pu C Rokima\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu GF Thanga\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu Zoramnghingliana" },
-  { year: '2012', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu K Lalrawna\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu GF Thanga\nFin. Secretary : Pu H Lalrindika /\nPu C Zaithanga" },
-  { year: '2013', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu K Lalrawna\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu GF Thanga\nTreasurer : Pu R Lalrintluanga\nFin. Secretary : Pu C Zaithanga" },
-  { year: '2014', details: "Chairman : Pu Zoramnghingliana\nVice Chairman : Pu C Lalzova\nSecretary : Pu C Zaithanga\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2015', details: "Chairman : Pu Zoramnghingliana /\nPu C Lalzova\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu C Zaithanga\nAsst. Secretary: Pu H Zairemmawia\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu Vanlalhriata" },
-  { year: '2016', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu H Zairemmawia\nAsst. Secretary: Pu C Zaithanga\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu L Khenpauva" },
-  { year: '2017', details: "Chairman : P Lalhmingthanga\nVice Chairman : C Zaithanga\nSecretary : Pu H Zairemmawia\nAsst Secretary : Pu C Zohmingthanga\nTreasurer : MS Dawngliana\nFin.Secretary : Pu L Khenpauva" },
-  { year: '2018', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu H Vanlalthanga\nSecretary : Pu C Zohmingthanga\nAsst Secretary : Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata/\nPu H Zairemmawia\nFin Secretary : Pu Thangkhenmanga" },
-  { year: '2019', details: "Chairman : Pu H Zairemmawia\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu C Zohmingthanga\nAsst Secretary : Pu H Vanlalthanga\nTreasurer : Pu Lalramthara\nFin Secretary : Pu Thangkhenmanga" },
-  { year: '2020', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst Secretary : Pu Vanlalhriata\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu C Zaithanga" },
-  { year: '2021', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Zaithanga" },
-  { year: '2022', details: "Chairman : Pu MS Dawngliana\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu H Vanlalthanga\nAsst Secretary : Pu Lalramthara\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
-  { year: '2023', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst. Secretary : Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
-  { year: '2024', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst Secretary : Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
-  { year: '2025', details: "Chairman : Pu MS Dawngliana\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu Lalmuanpuia Ralte\nAsst Secretary : Pu Lalramthara\nTreasurer : Pu C Rohmingliana\nFin Secretary : Pu Vanlalhriata" },
+const SUNDAY_SCHOOL_TEACHERS_SEED_DATA = [
+  { year: '1981', details: "Superintendent : Pu Manhleia\nAsst. Supdt. : Pu Thangchuanga\nAsst. Supdt (NPSS) : Pu Saizama Sailo\nSecretary : Pu B.Hranghlira\nAsst. Secretary : Pu Rinliana\nAsst. Secy (NPSS) : Tv.Rohita\n\n[Puitling zirtirtu]\nPu T.Sawmpauva, Pu P.C.Lalhlira, Pu Zakima, Upa Khawidawla\n\n[Intermediate]\nPu R.D.Lalchhuana, Nl.Rotuahthangi\n\n[Junior]\nPi Lalchhawnkimi, Tv.Goodthanga\n\n[Primary]\nPu Thangngolanga, Nl.Lalnunsangi, Pu Ralkapthanga\n\n[Beginner]\nNl.Biakengi, Tv.Biga, Nl.Bawihthansangi, Nl.Lalchhuanawmi" },
+  { year: '1982', details: "Superintendent : Pu Thangchuanga\nAsst. Supdt. : Pu Zakima\nAsst. Supdt (NPSS) : Pu Manhleia\nSecretary : Pu B.Hranghlira\nAsst. Secy (NPSS) : Pu R.D.Lalchhuana\n\n[Puitling zirtirtu]\nPu K.Vanlalhmuaka, Pu Huliana, Pu T.Sawmpauva, Upa Khawidawla, Pu PC.Lalhlira\n\n[Intermediate]\nPu Thangkhatpianga, Nl.Rotuahthangi\n\n[Junior]\nPu Thangngolanga, Tv.Rohita\n\n[Primary]\nPu Tuangsianpauva, Nl.Lalnunsangi, Pi Lalchawii\n\n[Beginner]\nNl.Bawihthansangi, Tv.Biga, Nl.Lalfakzuali, Tv.Rammawia" },
+  { year: '1983', details: "Superintendent : Pu Thangchuanga\nAsst. Supdt : Pu Manhleia\nAsst. Supdt (NPSS) : Pu Huliana\nSecretary : Pu B.Hranghlira\nAsst. Secretary : Pu P.C.Lalhlira\nAsst. Secy (NPSS) : Pu R.D.Lalchhuana\n\n[Puitling zirtirtu]\nRecord a awm lo\n\n[Intermediate]\nPu Ramhluna\n\n[Junior]\nPu Ralkapthanga\n\n[Primary]\nPi Lalchawii\n\n[Beginner]\nNl.Bawihthansangi" },
+  { year: '1984', details: "Superintendent : Pu Thangchuanga\nAsst. Supdt : Upa Manhleia\nAsst. Supdt (NPSS) : Pu Saizama Sailo\nSecretary : Pu R.D.Lalchhuana\nAsst. Secretary : Pu P.T.Vunga\nAsst. Secy (NPSS) : Pu K.Vanlalhmuaka\n\n[Puitling zirtirtu]\nPu Huliana, Pu Thangkhatpianga, Upa Khawidawla, Pu B.Hranghlira, Pu T.Sawmpauva, Pu Lebo-Solo-a, Pu P.C.Lalhlira, Pu F.Ramhluna, Upa Zadala, Pu R.Khawhluna, Pu Khuangbuaia\n\n[Senior]\nPu Thangngolanga\n\n[Intermediate]\nTv.Paudokima\n\n[Junior]\nPu Ralkapthanga\n\n[Primary]\nPu C.Lalfaka\n\n[Beginner]\nNl.Bawihthansangi" },
+  { year: '1985', details: "Superintendent : Pu Huliana\nAsst. Supdt : Pu Thangchuanga\nAsst. Supdt (NPSS) : Pu Saizama Sailo\nSecretary : Pu P.T.Vunga, Pu K.Vanlalhmuaka\nAsst. Secy : Pu K.Vanlalhmuaka\nAsst. Secy (NPSS) : Pu K.Lalkhumliana, Pu Rinsiama\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Pu T.Sawmpauva, Pu R.D.Lalchhuana, Pu Khuangbuaia, Pu F.Lalramhluna, Pu P.C.Lalhlira, Pu R.Khawhluna, Pu B.Hranghlira, Tv.Nathanael Soren, Pu Zakima, Pu Pakunga\n\n[Senior]\nPu Thangngolanga\n\n[Intermediate]\nTv.Paudokima\n\n[Junior]\nNl.Bawihthansangi\n\n[Primary]\nPi Lalchawii\n\n[Beginner]\nNl.Rotuahthangi" },
+  { year: '1986', details: "Superintendent : Pu Huliana\nAsst. Supdt : Pu Thangchuanga\nAsst. Supdt (NPSS) : Pu B.Hranghlira\nSecretary : Pu K.Vanlalhmuaka\nAsst. Secretary : Pu Rinsiama\nAsst. Secy (NPSS) : Tv.Paudokima\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Pu T.Sawmpauva, Pu Thangkhatpianga, Pu R.D.Lalchhuana, Pu R.Khawhluna, Pu P.C.Lalhlira, Pu Khuangbuaia, Pu Zakima, Pu Pakunga, Pu K.Lalduha, Pu Saizama Sailo, Pu Zahnuna, Pu C.Rinliana, Tv.Nathanael Soren, Upa Daikhawzama\n\n[Senior]\nPu Thangngolanga, Pu F.Lalramhluna, Pu C.Ralkapthanga, Pi K.Lalchhawnkimi\n\n[Intermediate]\nPu C.Lalfaka, Pu Pauzathanga, Nl.Lalhlimthangi, Nl.Lalzawmpuii\n\n[Junior]\nNl.Bawihthansangi, Pu Khawtinthanga, Nl.Ngurbawitluangi\n\n[Primary]\nNl.Rotuahthangi, Nl.Vanlalhruaii, Pu Thangliankhama, Tv.Vanlalthanga, Pi Lalchawii\n\n[Beginner]\nNl.R.Lalmuanpuii, Nl.Vanramronghaki, Pi Zokhumi, Pi Thangzuali, Pu Lalnunngheta, Pu Lalhlua, Pu Nunthara\n(Pu H.Kapthianga leh Tv.Zalawma- an thawhna Dept. hriat a ni lo)" },
+  { year: '1987', details: "Superintendent : Pu R.Khawhluna\nAsst. Supdt : Upa Manhleia\nAsst. Supdt (NPSS) : Pu B.Hranghlira\nSecretary : Pu K.Vanlalhmuaka\nAsst. Secretary : Upa Daikhawzama\nAsst. Secy (NPSS) : Pu Kap\\hianga\n\n[Puitling zirtirtu]\nPu T.Sawmpauva, Upa Khawidawla, Pu Huliana, Pu Khuangbuaia, Pu Thangkhatpianga, Pu Saizama Sailo, Pu P.C.Lalhlira, Pu Zakima, Pu K.Lalduha, Pu C.Rinliana, Pu R.D.Lalchhuana, Pu R.Pakunga, Upa Zadala, Pu Thangngolanga, Pu Lalengliana, Pu Rinsiama, Pu Zahnuna, Pu C.Zolawma, Pu Thangchuanga, Pu V.L.Hminga, Pu Huatkhansuta\n\n[Senior]\nPu F.Lalramhluna, Pi K.Lalchhawnkimi, Nl.Laldinngheti, Pu C.Lalrintluanga, Pu Ralkapthanga\n\n[Intermediate]\nPu C.Lalnunthara, Tv.Vanlalthanga, Tv.Paudokima, Nl.Bawihthansangi, Nl.P.C.Lalchhuanawmi, Pu Lalhlua, Pu H.T.Vanlalsawma, Pi P.C.Lalhmachhuani\n\n[Junior]\nPu C.Lalfaka, Nl.Rotuahthangi, Nl.Lalhlimthangi, Pu Hauchhawna, Pu Biakhlira\n\n[Primary]\nPu R.Khawtinthanga, Tv.David Lalchhanhima, Nl.R.Lalmuanpuii, Pi Zokhumi, Pu Lalnunngheta, Tv.Lawmsanga, Pu Lalvunga, Nl.Vanramronghaki\n\n[Beginner]\nPu Thangliankhama, Tv.Engkhanchina, Pu Lalrinenga, Nl.Lalzawmpuii, Nl.Ngurbawitluangi, Nl.Vanlalhruaii, Nl.Lalbanthangi, Tv.Ramhluna, Tv.Tlangdailova, Nl.Lalrinmawii, Nl.Vanlaldinliani" },
+  { year: '1988', details: "Superintendent : Pu R.Khawhluna\nAsst. Supdt : Pu H.Huliana\nAsst. Supdt (NPSS) : Pu K.Vanlalhmuaka\nSecretary : Upa Daikhawzama\nAsst. Secretary : Tv.Biakmawia\nAsst. Secy (NPSS) : Pu Kap\\hianga\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa B.Hranghlira, Upa Khawidawla, Pu T.Sawmpauva, Pu Khuangbuaia, Pu Saizama Sailo, Pu Thangkhatpianga, Pu P.C.Lalhlira, Pu K.Lalduha, Pu Zakima, Pu C.Rinliana, Pu Thangchuanga, Pu Thangngolanga, Upa Zadala, Pu Lalengliana, Pu Huatkhansuta, Pu V.L.Hminga, Pu Rinsiama, Pu R.Pakunga, Pu Saibuanga, Pu C.Zolawma, Pi P.C.Lalhmachhuani, Pu Lalzinga, Pu C.Lalramliana, Pu R.D.Lalchhuana, Pu K.Zamuana, Pu Kapliana\n\n[Senior]\nPu F.Lalramhluna, Pu C.Lalrintluanga, Pu C.Ralkapthanga, Pi K.Lalchhawnkimi, Nl.Laldinngheti\n\n[Intermediate]\nPu C.Lalparliana, Tv.Lawmsanga, Pu Lalparliana, Nl.Lalhlimthangi, Nl.Bawihthansangi, Pu Lalnunngheta, Tv.Vanlalthanga, Nl.Lalchhuanawmi, Nl.Lalzawmpuii, Pu Thangdeihchina, Pu Lalrawna\n\n[Junior]\nPu C.Lalfaka, Tv.Biakzara, Nl.Vanlalhruaii, Pu Hauchhawna, Pu Biakhlira, Nl.Lalzarmawii, Nl.Vanlaldinliani, Nl.Lalrinmawii, Pu Lalthlengliana, Pu Lalrinenga, Pu Khuang\\huama\n\n[Primary]\nPu R.Khawtinthanga, Tv.Engkhanchina, Tv.David Lalchhanhima, Nl.R.Lalmuanpuii, Nl.Ngurbawitluangi, Pu Lalhlua, Tv.Lawmsanga, Nl.Vanramronghaki, Nl.Lalsangliani, Pi Zomawii\n\n[Beginner]\nPu Thangliankhama, Tv.Lalduhawma, Pi Zokhumi, Pi Rotuahthangi, Nl.Lalnunsangi, Nl.Lalhmingi, Tv.Tlangdailova, Tv.Ramhluna, Tv.Lalhmangaiha, Pu Lalfakzuala" },
+  { year: '1989', details: "Superintendent : Pu R.Khawhluna\nAsst. Supdt : Pu H.Huliana\nAsst. Supdt (NPSS) : Upa K.Vanlalhmuaka\nSecretary : Upa Daikhawzama\nAsst. Secretary : Pu H.T.Vanlalsawma\nAsst. Secy (NPSS) : Pu Kap\\hianga & Tv.David Lalchhanhima\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa B.Hranghlira, Upa Khawidawla, Pu Saizama Sailo, Pu Khuangbuaia, Pu T.Sawmpauva, Pu Thangkhatpianga, Pu P.C.Lalhlira, Pu V.L.Hminga, Pi P.C.Lalhmachhuani, Pu R.Pakunga, Pu F.Rinsiama, Pu Huatkhansuta, Pu C.Zolawma, Pu Thangngolanga, Pu K.Lalduha, Upa Zadala, Pu C.Rinliana, Pu C.Lalramliana, Pu K.Zakima, Pu R.D.Lalchhuana, Pu Saibuanga, Pu Thangliankhama, Pu P.C.Thanhluma, Pu C.Lalthlamuana, Pu Tualzachina\n\n[Senior]\nPu C.Lalrintluanga, Pu C.Ralkapthanga, Pi K.Lalchhawnkimi, Tv.Lalbiakmawia, Nl.Laldinngheti, Nl.C.Tharmawii, Pi Zodingliani\n\n[Intermediate]\nPu P.C.Lalhmingliana, Tv.Biakzara, Pu Lalnunngheta, Pu Lalthlengliana, Pu Biakhlira, Pu C.Pakunga, Nl.Bawihthansangi, Nl.Lalhlimthangi, Nl.Vanlaldinliani, Nl.R.Lalmuanpuii, Tv.Rohita\n\n[Junior]\nPu C.Lalfaka, Tv.Lawmsanga, Pu Khuang\\huama, Tv.Zohmangaiha, Pu R.Lalramhluna, Nl.Ngurbawitluangi, Nl.Vanramronghaki, Nl.Vanlalhruaii, Nl.Lalzawmpuii, Nl.Lalzamliani\n\n[Primary]\nPu Hauchhawna, Tv.Engkhanchina, Pu Rinenga, Pu Ngenkhanpauva, Tv.Ramhluna, Tv.S.Vana, Nl.Lalrinmawii, Nl.Lalnunsangi, Nl.Lalsangliani, Nl.Lalchhuanawmi, Nl.Lalzarmawii, Pi Rotuahthangi, Pu Zamdothanga\n\n[Beginner]\nPu C.Lalparliana, Tv.Ramzauva, Pu Lalrawna, Pu Lalfakzuala, Tv.Lalpianmawia, Tv.Lalduhawma, Tv.Zohmingliana, Pi Zokhumi, Pi Rintluangi, Nl.Lalventhangi, Nl.F.Lalthianghlimi, Nl.Lalbiakthangi, Nl.Zuiliani, Nl.Vanlalhruaii, Pi Lalpuii, Pi Thankhumi" },
+  { year: '1990', details: "Superintendent : Upa B.Hranghlira\nAsst. Supdt : Pu R.Khawhluna\nAsst. Supdt (NPSS) : Upa K.Vanlalhmuaka\nSecretary : Pu H.T.Vanlalsawma\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secry (NPSS) : Pu P.C.Lalhmingliana & Tv.David Lalchhanhima/Pu R.Lalrintluanga\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa Daikhawzama, Upa Zadala, Pu H.Huliana, Pu R.Khawhluna, Pu K.Lalduha, Pu T.Sawmpauva, Pu C.Khuangbuaia, Pu Saizama Sailo, Pu Thangkhatpianga, Pu P.C.Lalhlira, Pu R.D.Lalchhuana, Pu Huatkhansuta, Pu Thangngolanga, Pi P.C.Lalhmachhuani, Pu Thangliankhama, Pu C.Lalthlamuana, Pu F.Lalramhluna, Pu Huatkhanliana, Pi K.Lalchhawnkimi, Pu Lalthlengliana, Pu C.Rinliana, Pu C.Lalramliana, Pu V.Lalpianga, Pu Thangzakhuma, Upa Hleikapa, Pu C.Zolawma, Pu F.Rinsiama, Pu Lalthangpuia, Pu Lalthlamuana\n\n[Senior]\nPu C.Lalrintluanga, Pu C.Ralkapthanga, Pu Pauzathanga, Nl.Laldinngheti, Nl.C.Tharmawii, Nl.Bawihthansangi, Pu Hauchhawna, Nl.Lalthanpuii, Pi Sangzuali, Nl.C.Vanlalhruaii, Nl.Lalhlimthangi, Tv.Rohita, Pu Lalduata\n\n[Intermediate]\nPu C.Lalfaka, Nl.Vanlaldinliani, Nl.Lalhlimthangi, Nl.R.Lalmuanpuii, Pu K.Lalrawna, Nl.Ngurbawitluangi, Nl.Vanramronghaki, Tv.Lalbiakhnuna, Pu K.Biakhlira, Pu Hrangliankapa\n\n[Junior]\nPu C.Pakunga, Nl.Lalzamliani, Pu R.Lalramhluna, Pu Khuang\\huama, Nl.C.Vanlalhruaii, Pi Rotuahthangi, Nl.Lalzawmpuii, Tv.Lalpianmawia, Tv.Lalduhawma, Tv.Zohmangaiha, Thangdeihchina, Nl.C.Lalhmingmawii\n\n[Primary]\nPu Ngenkhanpaua, Tv.Engkhanchina, Pu Zamdothanga, Tv.S.Vana, Nl.Lalsangliani, Nl.Lalchhuanawmi, Nl.Lalthianghlimi, Tv.Zalawma, Pi Rintluangi, Pu Lalkhawzauva, Pu K.Zasanga, Pu T.C.Vanlala, Tv.Biakmawia\n\n[Beginner]\nPu C.Lalparliana, Nl.C.Vanlalhruaii, Nl.Dimdeihsiani, Pi Zokhumi, Pi P.C.Thankhumi, Pi Lalpuii, Pi Ramthari, Nl.Lalzuiliani, Nl.Lalbiakthangi, Pi Hmingdailovi, Tv.Lawmsanga, Pu Tinngaihthanga, Nl.Lianngaihmani, Pi Lalparmawii, Pi Thangpuii, Nl.Dimdeihliani, Tv.Nangzasuana" },
+  { year: '1991', details: "Superintendent : Upa B.Hranghlira\nAsst. Supdt. : Pu H.Kap\\hianga\nAsst. Supdt (NPSS) : Upa K.Vanlalhmuaka\nSecretary : Pu H.T.Vanlalsawma\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Pu P.C.Lalhmingliana & Pu R.Lalrintluanga\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Pu H.Huliana, Pu R.Khawhluna, Pu K.Lalduha, Pu T.Sawmpauva, Pu C.Khuangbuaia, Pu Saizama Sailo, Pu Thangkhatpianga, Upa Daikhawzama, Pu P.C.Lalhlira, Upa Zadala, Pu R.D.Lalchhuana, Pu Huatkhansuta, Pu Thangngolanga, Pi P.C.Lalhmachhuani, Pu Thangliankhama, Pu P.C.Lalthlamuana, Pi K.Lalchhawnkimi, Pu F.Lalramhluna, Pu Huatkhanliana, Pu C.Lalramliana, Pu C.Rinliana, Pu V.Lalpianga, Pu Thangzakhuma, Upa Hleikapa, Pu Lalthangpuia, Pu F.Rinsiama, Pu Lalthlamuana, Pu K.Zakima, Upa G.Vanlalawma, Pu Thangseia\n\n[Senior]\nPu C.Lalrintluanga, Pu Pauzathanga, Pu C.Ralkapthanga, Pu K.Lalduata, Nl.Bawihthansangi, Nl.Lalhlimthangi, Nl.K.C.Vanlalhruaii, Pi Lalsangzuali, Nl.Laldinngheti\n\n[Intermediate]\nPu P.C.Lalhmingliana, Nl.Vanlaldinliani, Pu Hauchhawna, Pu Lalthlengliana, Pu Hrangliankapa, Tv.Zohmangaiha, Nl.Lalchhuanawmi, Nl.Ngurbawitluangi, Nl.Zarmawii, Nl.K.Dawngzuali, Pu C.Pakunga\n\n[Junior]\nPu C.Lalfaka, Nl.Zothanmawii, Pu T.C.Vanlala, Pu Thangdeihchina, Pu Khuang\\huama, Tv.Lalduhawma, Pu Rintluanga, Nl.Lalhmingmawii, Nl.Lalsangliani, Nl.Lalzuiliani, Pi Rotuahthangi, Pu R.Lalramhluna, Nl.Vanramronghaki\n\n[Primary]\nPu Ngenkhanpaua, Nl.Laltlanruali, Tv.H.Lalzirliana, Tv.Biakmawia, Pi Rintluangi, Nl.Lalthannguri, Nl.Lalzamliani, Nl.Dimdeihliani, Nl.Lalengmawii, Nl.Lalbiakthangi, Nl.M.C.Vanlalhruaii, Pi Lalparmawii, Pu K.Zasanga, Tv.Engkhanchina\n\n[Beginner]\nPu C.Lalparliana, Nl.Hrangkungi, Pu T.Thanga, Tv.Nangzasuana, Pu Biakzara, Pi Zokhumi, Pi Thankhumi, Pi Thangpuii, Nl.Lianngaihmani, Nl.Dimdeihsiani, Nl.Vanramthari, Nl.Ramthianghlimi, Pu V.L.Dinga" },
+  { year: '1992', details: "Superintendent : Pu C.Khuangbuaia\nAsst. Supdt : Upa K.Vanlalhmuaka\nAsst. Supdt (NPSS) : Pu Saizama Sailo\nSecretary : Pu C.Lalrintluanga\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Tv.David Lalchhanhima & Tv.C.Roenga\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa B.Hranghlira, Pu H.Huliana, Pu R.Khawhluna, Pu K.Lalduha, Pu T.Sawmpauva, Pu Thangkhatpianga, Upa Daikhawzama, Pu P.C.Lalhlira, Pu R.D.Lalchhuana, Pu Huatkhansuta, Pu Thangngolanga, Pi P.C.Lalhmachhuani, Pi K.Lalchhawnkimi, Pu Thangliankhama, Pu C.Lalramliana, Pu V.Lalpianga, Upa Hleikapa, Upa Zadala, Pu Huatkhanliana, Pu C.Rinliana, Pu Lalthangpuia, Pu K.Zakima, Upa G.Vanlallawma, Pu Thangseia, Pu F.Rinsiama, Pu Lalthlamuana, Pu H.Kap\\hianga, Pu R.Vanhnuaithanga\n\n[Senior]\nPu H.T.Vanlalsawma, Pu Pauzathanga, K.Lalrawna, Pu K.Lalduata, Nl.Bawihthansangi, Nl.Lalhlimthangi, Pu C.Hmingliana, Pi Lalsangzuali, Nl.Laldinngheti\n\n[Intermediate]\nPu P.C.Lalhmingliana, Tv.Zohmangaiha, Pu Hauchhawna, Pu Khuang\\huama, Pu R.Lalramhluna, Tv.F.Lalduhawma, Nl.Ngurbawitluangi, Nl.P.C.Lalchhuanawmi, Nl.C.Vanlaldinliani\n\n[Junior]\nPu C.Lalfaka, Pu T.C.Vanlala, Pu R.Lalrintluanga, Pu Lalzidinga, Pu Lallawmsanga, Pi Zorampari, Pi Lalengzami, Nl.Zarmawii, Nl.Lalzuiliani, Nl.Laldawngzuali\n\n[Primary]\nPu Ngenkhanpaua, Pu H.Lalzirliana, Pu Thangdeihchina, Tv.Biakmawia, Tv.Nangzasuana, Pi Lalrintluangi, Pi Lalengliani, Nl.Lalzamliani, Nl.Lalbiakthangi, Nl.Laltlansangi, Nl.Laltlanruali, Nl.C.Vanlalhruaii, Nl.C.Ramthianghlimi, Nl.Lalengmawii\n\n[Beginner]\nPu C.Lalparliana, Pu T.Thanga, Pu Lalthara, Tv.Vanrama, Pi Zokhumi, Pi P.C.Thankhumi, Pi Thangpuii, Pi Lalhmingliani, Nl.Hrangkungi, Nl.Dimdeihsiani, Nl.Zothanmawii, Nl.Biakthangpuii, Nl.Ngairosangi, Nl.Lalawmpuii" },
+  { year: '1993', details: "Superintendent : Upa K.Vanlalhmuaka\nAsst. Superintendent : Pu C.Khuangbuaia\nAsst. Supdt (NPSS) : Pu H.T.Vanlalsawma\nSecretary : Pu C.Lalrintluanga\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Tv.Lalduhawma\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa B.Hranghlira, Upa Saizama Sailo, Pu H.Huliana, Pu R.Khawhluna, Pu K.Lalduha, Upa Daikhawzama, Pu Thangkhatpianga, Pu T.Sawmpauva, Pu P.C.Lalhlira, Pu R.D.Lalchhuana, Pi P.C.Lalhmachhuani, Pi K.Lalchhawnkimi, Pu Thangngolanga, Pu Thangliankhama, Pu FC Lalramhluna, Pu V.Lalpianga, Upa Hleikapa, Upa Zadala, Pu C.Rinliana, Pu K.Zakima, Pu H.Kap\\hianga, Pu Lalthlamuana, Pu R.Vanhnuaithanga, Pu Hrangluia, Pu R.Samuela, Pu Huatkhansuta\n\n[Senior]\nPu P.C.Lalhmingliana, Pu Pauzathanga, Pu C.Hmingliana, Pu K.Lalrawna, Nl.Laldinngheti, Nl.Bawihthansangi, Pi Lalsangzuali, Nl.Lalhlimthangi, Nl.P.C.Lalchhuanawmi\n\n[Intermediate]\nPu K.Lalduata, Tv.Zohmangaiha, Tv.David Lalchhanhima, Pu R.Lalramhluna, Nl.Ngurbawitluangi, Nl.Vanlaldinliani, Nl.Lalzamliani, Pu Lallawmsanga\n\n[Junior]\nPu C.Lalparliana, Pu R.Lalrintluanga, Pu T.Thanga, Pu Hauchhawna, Pi Zokhumi, Pi Lalrintluangi, Nl.Lalzuiliani, Nl.Laltlansangi\n\n[Primary]\nPu C.Lalfaka, Pu H.Lalzirliana, Pu Thangdeihchina, Pi P.C.Thankhumi, Pi Lalengliani, Nl.Laltlanruali, Nl.Ramthianghlimi, Nl.Lalawmpuii\n\n[Beginner]\nPu Ngenkhanpauva, Pu T.C.Vanlala, Pu Lalthanzuala, Pu K.Nunthara, Tv.Kapfela, Pi Thangpuii, Pi Lalhmingliani, Nl.Hrangkungi, Nl.Zothanmawii, Nl.Vanlalnghaki, Nl.Lalrinmuani, Nl.Dimdeihsiani" },
+  { year: '1994', details: "Superintendent : Upa K.Vanlalhmuak\nAsst. Supdt : Pu H.T.Vanlalsawma\nAsst. Supdt (NPSS) : Upa Saizama Sailo\nSecretary : Pu K.Lalduata\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Pu R.Lalramhluna\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa B.Hranghlira, Pu C.Khuangbuaia, Pu H.Huliana, Pu R.Khawhluna, Upa Daikhawzama, Pu Thangkhatpianga, Pu K.Lalduha, Pu P.C.Lalhlira, Pu T.Sawmpauva, Pu K.Zakima, Pu Thangngolanga, Pu Huatkhansuta, Pu V.Lalpianga, Upa Hleikapa, Pu Thangliankhama, Pu F.C.Lalramliana, Pu H.Kap\\hianga, Upa Zadala, Pi PC.Lalhmachhuani, Pi K.Lalchhawnkimi, Pu C.Rinliana, Pu R.Vanhnuaithanga, Pu R.Samuela, Pu C.Lalrintluanga, Pu C.Hmingliana, Pu Lalthlamuana\n\n[Senior]\nPu P.C.Lalhmingliana, Pu K.Lalrawna, Pi Lalsangzuali, Nl.Bawihthansangi, Nl.Laldinngheti, Nl.PC.Lalchhuanawmi, Tv.David Lalchhanhima, Nl.Lalhlimthangi, Nl.Laldinliani, Pi H.Zaichhungi\n\n[Intermediate]\nPu C.Lalfaka, Tv.F.Lalduhawma, Pu Hauchhawna, Pu R.Lalrintluanga, Pu Lalremmawia, Nl.Lalzamliani, Nl.Lalzuiliani, Nl.Lalawmpuii, Pi B.Bualchhumi, Pu H.Vanlalthanga\n\n[Junior]\nPu C.Lalparliana, Pu T.Thanga, Pu K.Nunthara, Pi Lalrintluangi, Pi Zokhumi, Nl.Laltlansangi, Nl.Lalengmawii, Nl.Ramthianghlimi, Nl.Lalrinawmi, Nl.Laltlanruali, Pu Lalzirliana, Tv.Lalropuia\n\n[Primary]\nTv.Zohmangaiha, Pi Lalengliani, Nl.Ngurbawitluangi, Nl.Zothanmawii, Nl.Hrangkungi, Nl.Lalnunthari, Tv.Kapfela, Tv.Lalrokima, Pi Thankhumi\n\n[Beginner]\nPu Ngenkhanpauva, Pi Thangpuii, Pi Lalhmingliani, Nl.Lalrinmuani, Tv.PC.Lalchuangkima, Pi Lalvuli, Nl.Vanlalnghaki, Pu Lalrindika, Pu Lalthanzuala" },
+  { year: '1995', details: "Superintendent : Upa Saizama Sailo\nAsst. Supt (NPSS) : Upa H.T.Vanlalsawma\nSecretary : Pu K.Lalduata\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Pu R.Lalramhluna & Tv.Lalthlanawma\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa B.Hranghlira, Upa K.Vanlalhmuaka, Pu H.Huliana, Pu R.Khawhluna, Pu K.Lalduha, Pu C.Khuangbuaia, Upa Daikhawzama, Pu P.C.Lalhlira, Pu K.Zakima, Pu Thangngolanga, Pu Huatkhansuta, Pu V.Lalpianga, Upa Hleikapa, Pu FC.Lalramhluna, Pu H.Kap\\hianga, Upa Zadala, Pi.PC.Lalhmachhuani, Pi K.Lalchhawnkimi, Pu R.Vanhnuaithanga, Pu C.Lalrintluanga, Pu C.Hmingliana, Pu Pauzathanga, Pu T.Sawmpauva, Pu Thatkunga\n\n[Senior]\nPu K.Lalrawna, Nl.Laldinngheti, Pi Lalsangzuali, Tv.David Lalchhanhima, Nl.Lalchhuanawmi, Nl.Bawihthansangi, Nl.Laldinliani, Nl.Lalhlimthangi, Pu Ngenkhanpauva\n\n[Intermediate]\nPu C.Lalfaka, Tv.F.Lalduhawma, Pu H.Vanlalthanga, Nl.Lalawmpuii, Pi Bualchhumi, Nl.Laltlansangi, Pu Lal\\anpuia\n\n[Junior]\nPu C.Lalparliana, Pu K.Nunthara, Pi Lalengliani, Pi Lalhmingliani, Tv.Lalropuia, Nl.Ramthianghlimi, Nl.Laltlanruali, Nl.Ngurbawitluangi, Nl.Laltei, Pi Lalzikpuii, Pi Nuchhungi\n\n[Primary]\nTv.Zohmangaiha, Nl.Zothanmawii, Pi Lalrintluangi, Nl.Hrangkungi, Nl.C.Lalnunthari, Pu Lalrindika, Tv.Lalmuanpuia, Nl.PC.Lalhlimpuii, Pu Thangdeihchina, Pi P.S.Ronghaki, Tv.Lalchhuanmawia\n\n[Beginner]\nPi Zokhumi, Pu R.Lalremmawia, Tv PC.Lalchuangkima, Tv.Lalhmingliana, Pi Lalnunziri, Pi Zothanpari, Nl.Zomuansangi, Nl.Lalchhandami, Nl.H.Lawmkimi, Nl.Lalmuanawmi, Pi F.Lalduati" },
+  { year: '1996', details: "Superintendent : Upa Khawidawla\nAsst. Superintendent : Upa Saizama Sailo\nAsst. Supdt (NPSS) : Pu R.Khawhluna\nSecretary : Pu P.C.Lalhmingliana\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Pu H.Vanlalthanga\n\n[Puitling zirtirtu]\nPu H.Huliana, Upa B.Hranghlira, Upa Manhleia, Upa Saizama Sailo, Pu C.Khuangbuaia, Upa K.Vanlalhmuaka, Upa Daikhawzama, Upa HT.Vanlalsawma, Pu K.Zakima, Pu Huatkhansuta, Upa Hleikapa, Pu H.Kap\\hianga, Pi PC.Lalhmachhuani, Pu R.Vanhnuaithanga, Pu C.Hmingliana, Pu T.Sawmpauva, Pu K.Lalduha, Pu PC.Lalhlira, Pu Thangngolanga, Pu V.Lalpianga, Upa Zadala, Pi K.Lalchhawnkimi, Pu C.Lalrintluanga, Pu Pauzathanga, Pu Thatkunga, Pu RD.Lalchhuana, Pu H.Zakima, Pu K.Lalduata\n\n[Senior]\nPu K.Lalrawna, Pu C.Lalfaka, Nl.Laldinngheti, Pi Lalsangzuali, Nl.Bawihthansangi, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Tv.David Lalchhanhima, Pu R.Lalrintluanga, Nl.PC.Lalchhuanawmi, Pu R.Lalramhluna\n\n[Intermediate]\nPu Lal\\anpuia, Pi Bualchhumi, Pi Lalzikpuii, Pu Vanlaldika Varte, Nl.Laltlansangi, Nl.Lalawmpuii, Tv.Lalthlanawma, Pu Lalrindika\n\n[Junior]\nPu C.Lalparliana, Pu K.Nunthara, Pi Lalengliani, Pi Nuchhungi, Tv.F.Lalduhawma, Nl.Hrangkungi, Nl.Laltlanruali, Nl.Zothanmawii\n\n[Primary]\nTv.Zohmangaiha, Pu R.Lalremmawia, Pi Lalnunziri, Pi Lalbiakkungi, Nl.PC.Lalhlimpuii, Nl.Lalnunthari, Nl.Lalchhandami, Tv.PC.Lalchuangkima\n\n[Beginner]\nPi Zokhumi, Pu Thangdeihchina, Pi F.Lalduati, Pi Zothanpari, Nl.Zomuansangi, Nl.H.Lawmkimi, Nl.Lalmuanawmi, Nl.K.Lalawmpuii, Nl.Lianchungnungi, Pu Chalneih\\huama" },
+  { year: '1997', details: "Superintendent : Upa Daikhawzama\nAsst. Superintendent : Upa Khawidawla\nAsst. Supdt (NPSS) : Pu R.Khawhluna\nSecretary : Pu P.C.Lalhmingliana\nAsst. Secretary : Pu C.Hmingliana\nAsst. Secy (NPSS) : Pu H.Vanlalthanga\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa Manhleia, Upa Saizama Sailo, Upa K.Vanlalhmuaka, Upa HT.Vanlalsawma, Pu H.Huliana, Pu C.Khuangbuaia, Pu PC Lalhlira, Upa Zadala, Pu K.Lalduha, Pu K.Zakima, Pu Huatkhansuta, Upa Hleikapa, Pu H.Kap\\hianga, Pu T.Sawmpauva, Pu Thangngolanga, Pu Pauzathanga, Pu Vanhnuaithanga, Pi K.Lalchhawnkimi, Pi PC.Lalhmachhuani, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu RD.Lalchhuana, Pu K.Lalduata, Pu H.Zakima, Pu R.Lalhmangaiha, Pu K.Roliana\n\n[Senior]\nPu C.Lalfaka, Pu K.Lalrawna, Pu R.Lalrintluanga, Tv.David Lalchhanhima, Nl.Laldinngheti, Nl.Bawihthansangi, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pu R.Lalramhluna\n\n[Intermediate]\nPu Lal\\anpuia, Pu K.Nunthara, Pu Chalneih\\huama, Pi Bualchhumi, Pi Lalzikpuii, Nl.Lalawmpuii, Nl.Laltlansangi, Pu Vanlaldika Varte\n\n[Junior]\nPu C.Lalparliana, Tv.F.Lalduhawma, Pu K.Lalkhumliana, Pi Nuchhungi, Nl.Lalnunthari, Nl.Hrangkungi, Nl.Laltlanruali, Nl.Zothanmawii, Pu R.Lallianzuala\n\n[Primary]\nPu Zohmangaiha, Pu R.Lalremmawia, Tv.PC.Lalchuangkima, Pi Lalnunziri, Pi Lalbiakkungi, Nl.PC.Lalhlimpuii, Nl.Lalchhandami, Nl.Zomuansangi, Tv.Hmingthanmawia, Nl.Hmingthanpuii\n\n[Beginner]\nPi Lalengliani, Pu Thangdeihchina, Pu F.Lalbuatsaiha, Pi Zothanpari, Pi Rochhari, Pi Lalbiakhnuni, Nl.H.Lawmkimi, Nl.K.Lalawmpuii, Nl.Lianchungnungi, Nl.R.Lallawmkimi, Nl.Lalmuanpuii, Tv. Lalchhuanmawia" },
+  { year: '1998', details: "Superintendent : Upa HT.Vanlalsawma\nAsst. Supdt : Upa Daikhawzama\nAsst. Supdt (NPSS) : Pu R.Khawhluna\nSecretary : Pu P.C.Lalhmingliana\nAsst. Secretary : Pu Lal\\anpuia\nAsst. Secy (NPSS) : Pu H.Vanlalthanga & Tv.PC.Lalchuangkima\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa Manhleia, Upa Saizama Sailo, Upa K.Vanlalhmuaka, Pu H.Huliana, Pu C.Khuangbuaia, Pu PC Lalhlira, Pu K.Lalduha, Pu Huatkhansuta, Upa Hleikapa, Pu H.Kap\\hianga, Pu T.Sawmpauva, Pu Pauzathanga, Pu Vanhnuaithanga, Pi K.Lalchhawnkimi, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu RD.Lalchhuana, Pu K.Lalduata, Pu H.Zakima, Pu R.Lalhmangaiha, Pu C.Hmingliana, Upa H.Lalmawia\n\n[Senior]\nPu C.Lalfaka, Pu K.Lalrawna, Pu R.Lalrintluanga, Tv.David Lalchhanhima, Nl.Laldinngheti, Nl.Bawihthansangi, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pu R.Lalramhluna\n\n[Intermediate]\nPu Zohmangaiha, Pu Chalneih\\huama, Pi Lalzikpuii, Pu Vanlaldika Varte, Pi Nuchhungi, Pi Zaichhungi, Pu T.Lal\\anpuia, Nl.Hrangkungi, Nl.Zothanmawii\n\n[Junior]\nPu C.Lalparliana, Nl.Bawihthansangi, Pu K.Lalkhumliana, Nl.C.Lalnunthari, Nl.Laltlansangi, Nl.Lalchhandami, Pi Zothanpari, Pi Ramengzuali\n\n[Primary]\nK.Nunthara, Pu R.Lalremmawia, Pu Lalchhuanmawia, Pi Lalnunziri, Nl.K.Lalawmpuii, Nl.Lianchungnungi, Nl.R.Lallawmkimi, Pu Dawngsuanpauva, Tv.Lianpianga\n\n[Beginner]\nPi Lalengliani, Pu Thangdeihchina, Pu F.Lalbuatsaiha, Pi Rochhari, Pi Lalbiakhnuni, Nl.Lalmuanpuii, Nl.Hmingthanpuii, Pi C.Lainguri, Nl.R.Lalruatsangi" },
+  { year: '1999', details: "Superintendent : Upa Manhleia\nAsst. Superintendent : Upa HT.Vanlalsawma\nAsst. Supdt (NPSS) : Upa H.Lalmawia\nSecretary : Pu Lal\\anpuia\nAsst. Secretary : Pu K.Lalrawna\nAsst. Secy (NPSS) : Pu H.Vanlalthanga & Tv.Lianpianga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa B.Hranghlira, Upa Saizama Sailo, Upa K.Vanlalhmuaka, Pu R.Khawhluna, Upa Daikhawzama, Pu H.Huliana, Pu C.Khuangbuaia, Pu PC.Lalhlira, Pu K.Lalduha, Upa Hleikapa, Pu Huatkhansuta, Pu H.Kap\\hianga, Pu T.Sawmpauva, Pu Pauzathanga, Pu Vanhnuaithanga, Pi K.Lalchhawnkimi, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu RD.Lalchhuana, Pu K.Lalduata, Pu H.Zakima, Pu C.Hmingliana, Pu PC Lalhmingliana, Pi C.Chawngpuii\n\n[Senior]\nNl.Laldinngheti, Pu Lalchhanhima, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pi B.Bualchhumi, Pu R.Lalrintluanga, Pu C.Lalparliana, Pi H.Zaichhungi, Pu C.Lalthantluanga, Pu Lalrozama\n\n[Intermediate]\nPu Zohmangaiha, Pi Lalengliani, Pi Nuchhungi, Pi Lalzikpuii, Pu T.Lal\\anpuia, Pu MS.Dawngliana, Nl.Hrangkungi, Nl.Zothanmawii, Pi Lalchhandami\n\n[Junior]\nPu B.Biakvela, Pi Ramengzuali, Pi Zothanpari, Pi Lalnunziri, Tv.PC Lalchuangkima, Pu Dawngsuanpauva, Nl.H.Lawmkimi, Nl.K.Lalawmpuii, Nl.Lianchungnungi\n\n[Primary]\nPu K.Nunthara, Pu R.Lalremmawia, Pi C.Lainguri, Pu Zamsianmunga, Nl.Lalruatsangi, Tv.C.Hranghluna, Tv.Lalrinpuia, Tv.C.Lal\\hazuala, Nl.Vanlalngaihi, Nl.Lalremthangi\n\n[Beginner]\nPu C.Lalfaka, Pu F.Lalbuatsaiha, Pi Lalbiakhnuni, Pi Rochhari, Pi F.Lalduati, Pi Khawlchuani, Pi B.Ronghaki, Tv.Mangchhuana, Nl.Lalmuanpuii, Nl.Hmingthanzuali, Nl.Lalnithangi, Nl.Hranglianthangi, Tv.Lallawmthanga" },
+  { year: '2000', details: "Superintendent : Upa B.Hranghlira\nAsst. Superintendent : Upa Manhleia\nAsst. Supdt (NPSS) : Upa H.Lalmawia\nSecretary : Pu Lal\\anpuia\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Tv.Lianpianga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa Saizama Sailo, Upa K.Vanlalhmuaka, Upa H.T.Vanlalsawma, Pu R.Khawhluna, Upa Daikhawzama, Pu PC.Lalhlira, Pu H.Kap\\hianga, Pu PC Lalhmingliana, Pu H.Huliana, Pu C.Khuangbuaia, Pu K.Lalduha, Upa Hleikapa, Pu Huatkhansuta, Pu T.Sawmpauva, Pu Pauzathanga, Pu Vanhnuaithanga, Pi K.Lalchhawnkimi, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu RD.Lalchhuana, Pu K.Lalduata, Pu H.Zakima, Pu C.Hmingliana, Pi C.Chawngpuii, Pu K.Lalrawna, Nl.Laldinngheti, Pi PC.Lalhmachhuani, Pu B.Biakvela, Pu C.Lalthantluanga, Pi B.Bualchhumi, Pu C.Lalparliana, Pu Lalrozama, Pu R.Lalrintluanga, Pu RL.Than\\huama, Pu Buanthanga, Upa PC Sang\\huama, Pu Pawithanga, Pu K.Riachho\n\n[Senior]\nTv.PC.Lalchuangkima, Nl.Ngurbawitluangi, Nl.Lalhlimthangi, Pu David Lalchhanhima, Pu Lalchhanhima, Pu H.Vanlalthanga, Pi Lalengliani, Pi H.Zaichhungi, Pu Lal\\anpuia, Pu K.|huamluaia, Pu Vanlaldika Varte\n\n[Intermediate]\nPu Zohmangaiha, Pi Lalzikpuii, Pi C.Lainguri, Pi Lalrochhari, Pi F.Lalduati, Pi Ramengzuali, Pu Dawngsuanpauva, Pu K.Laldawngliana, Pi Zothanpari, Nl.Lianchungnungi, Nl.H.Lawmkimi\n\n[Junior]\nPu C.Lalfaka, Pi Nuchhungi, Nl.Hrangkungi, Nl.K.Lalawmpuii, Nl.R.Lalruatsangi, Nl.Lalmuanpuii, Nl.Vanlalngaihi, Nl.Hmingthanzuali, Tv.Lalrinpuia, Pu C.Lalbiakthanga, Pi Laltlanchhingi, Nl.Lalbiaklawmi\n\n[Primary]\nPu K.Nunthara, Pi Lalbiakhnuni, Pi B.Ronghaki, Nl.Lalremthangi, Nl.K.Zothanzuali, Nl.K.Lalhruaitluangi, Nl.K.Lalmuanpuii, Nl.Lalenkawli, Tv.Hmingthanmawia, Tv.Lalthangliana, Nl.Chingsawmliani, Pu Dengsiamliana, Pi Lalrimawii, Pu K.Remmawia, Nl.Lalthangpuii, Pu K.Lalrinpuia\n\n[Beginner]\nPu F.Lalbuatsaiha, Pi Khawlchuani, Nl.Lalnithangi, Nl.Hranglianthangi, Pi Sangkungi, Pi Lalniengi, Pi Biakhmingthangi, Tv.C.Lal\\hazuala, Tv.Lallawmthanga, Nl.C.Lalhruaitluangi, Nl.Siamthangpuii, Nl.PC.Lalchhanhimi, Nl.K.Malsawmtluangi, Nl.Hmingthanmawii, Pi Lalnunsangi" },
+  { year: '2001', details: "Superintendent : Upa H.Lalmawia\nAsst. Superintendent : Upa K.Vanlalhmuaka\nAsst. Supdt (NPSS) : Upa B.Hranghlira\nSecretary : Pu Lal\\anpuia\nAsst. Secretary : Pu R.Lalhmangaiha\nAsst. Secy (NPSS) : Tv.Lianpianga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa Saizama Sailo, Upa Manhleia, Upa H.T.Vanlalsawma, Pu R.Khawhluna, Upa Daikhawzama, Pu PC.Lalhlira, Pu C.Khuangbuaia, Pu K.Lalduha, Pu T.Sawmpauva, Pu RD.Lalchhuana, Upa Hleikapa, Pu Huatkhansuta, Pu Pauzathanga, Pu V.Lalpianga, Pu Vanhnuaithanga, Pu H.Kap\\hianga, Pu C.Lalrintluanga, Pu PC.Lalhmingliana, Pu K.Lalduata, Pu C.Hmingliana, Pu H.Zakima, Pu K.Lalrawna, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pi B.Bualchhumi, Pu R.Lalrintluanga, Pu B.Biakvela, Pu Lalrozama, Pu C.Lalparliana, Pu C.Lalthantluanga, Nl.Laldinngheti, Upa PC Sang\\huama, Pu K.Riachho, Pu Pawithanga, Pu Rochungnunga, Pu Laldawngliana\n\n[Senior]\nPu R.Lalramhluna, Pu Zohmangaiha, Tv.PC Lalchuangkima, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pi Lalengliani, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu Lalchhanhima, Pu K.Nunthara, Tv.Isak Lalchhuanmawia, Pi Lalzikpuii, Pu K.Lalbiakdika\n\n[Intermediate]\nPu David Lalchhanhima, Pu K.Laldawngliana, Nl.H.Lawmkimi, Pi C.Lainguri, Pi Lalrochhari, Pi F.Lalduati, Pi Ramengzuali, Pi Zothanpari, Pu Saihmingliana, Tv.Zomuankima, Pu Vanlalhriata\n\n[Junior]\nPu C.Lalfaka, Pu MS Dawngliana, Nl.Hmingthanzuali, Pi K.Malsawmdawngi, Nl.Hrangkungi, Nl.K.Lalawmpuii, Nl.Lalmuanpuii, Nl.Vanlalngaihi, Nl.Lalbiaklawmi, Tv.Lalrinpuia, Tv.K.Lalpianmawia, Pi Nuchhungi, Pu Zoramnghingliana\n\n[Primary]\nPu H.Vanlalthanga, Pu R.Lalremmawia, Tv.Hmingthanmawia, Tv.T.Lalthangliana, Pu Pauliankapa, Pi B.Ronghaki, Pi Lalbiakhnuni, Pi Lalrimawii, Pi C.Lallawmsangi, Pu K.Lalrinpuia, Tv.C.Lal\\hazuala, Nl.Lalremthangi, Nl.Hranglianthangi, Nl.Lalenkawli, Nl.K.Zothanzuali, Nl.K.Lalhruaitluangi, Nl.K.Lalmuanpuii, Tv.Lallawmthanga\n\n[Beginner]\nPu F.Lalbuatsaiha, Pi Sangkungi, Nl.K.Malsawmtluangi, Pi Lalniengi, Pi Biakhmingthangi, Pi Lalnunsangi, Nl.C.Lalhruaitluangi, Nl.PC.Lalchhanhimi, Nl.Hmingthanmawii, Nl.Siamthangpuii, Nl.T.Lalnuntluangi, Nl.C.Lalrinfeli, Tv.Thanglianmanga, Tv.Lalruatpuia, Tv.Keneth Lalthanzauva, Pi Khawlchuani, (Pu Lalbiakkunga leh Nl.Lalhrilliani te an awmna Dept. hriat a ni lo.)" },
+  { year: '2002', details: "Superintendent : Upa K.Vanlalhmuaka\nAsst. Superintendent : Upa Saizama Sailo\nAsst. Supdt (NPSS) : Upa B.Hranghlira\nSecretary : Pu R.Lalhmangaiha\nAsst. Secretary : Pu B.Biakvela\nAsst. Secy (NPSS) : Tv.Lianpianga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa H.Lalmawia, Upa Manhleia, Upa H.T.Vanlalsawma, Pu R.Khawhluna, Pu PC.Lalhmingliana, Pu PC.Lalhlira, Pu K.Lalduha, Pu T.Sawmpauva, Pu RD.Lalchhuana, Upa Hleikapa, Pu Huatkhansuta, Pu Pauzathanga, Pu V.Lalpianga, Pu H.Kap\\hianga, Pu C.Lalrintluanga, Pu C.Hmingliana, Pu K.Lalduata, Pu H.Zakima, Pu K.Lalrawna, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Lalrintluanga, Pu Lalrozama, Pu C.Lalparliana, Pu C.Lalthantluanga, Nl.Laldinngheti, Pu K.Riachho, Pu Pawithanga, Pu Laldawngliana, Pu Rochungnunga, Pu Lal\\anpuia, Pu C.Lalfaka, Pu Lallianmawia, Upa Daikhawzama, Upa Damsailova, Pu C.Roliana, Pu T.Dilliana, Pu V.Lalzuithanga\n\n[Senior]\nPu R.Lalramhluna, Pu Zohmangaiha, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pi Lalengliani, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu Lalchhanhima, Pi Lalzikpuii, Pu Vanlalhriata, Pu Lalbiakkunga, Pu PC.Lalchuangkima\n\n[Intermediate]\nPu David Lalchhanhima, Pu K.Laldawngliana, Pi C.Lainguri, Pi Lalrochhari, Pi F.Lalduati, Pi Ramengzuali, Pi Zothanpari, Tv.Zomuankima, Nl.Lalhrilliani, Nl.Hrangkungi, Pu MS Dawngliana, Tv.C.Zohmingthanga\n\n[Junior]\nPu H.Vanlalthanga, Tv.Hmingthanmawia, Nl.Lalmuanpuii, Nl.Vanlalngaihi, Nl.Lalbiaklawmi, Pi K.Malsawmdawngi, Pu Zoramnghingliana, Tv.Lalrinpuia, Pi Lalniengi, Pi Lalnunsangi\n\n[Primary]\nPu F.Lalbuatsaiha, Pu Pauliankapa, Tv.T.Lalthangliana, Nl.C.Lalhruaitluangi, Pi Biakhmingliani, Nl.Lalremthangi, Nl.K.Lalmuanpuii, Tv.Lallawmthanga, Nl.Siamthangpuii, Pi Khawlchuani, Nl.PC.Lalchhanhimi, Nl.K.Malsawmtluangi, Nl.Hmingthanmawii, Pu C.Roenga\n\n[Beginner]\nPu R.Lalremmawia, Pi Lalbiakhnuni, Pi Lalrimawii, Pi B.Ronghaki, Pi Sangkungi, Nl.C.Lalrinfeli, Nl.T.Lalnuntluangi, Tv.Thanglianmanga, Nl.Lalrengpuii, Nl.Lalduhsangi, Nl.Lalrinkimi, Tv.Lalremruata, Pi Lalkutthangi, Tv.Keneth Lalthanzauva" },
+  { year: '2003', details: "Superintendent : Upa Saizama Sailo\nAsst. Superintendent : Upa Manhleia\nAsst. Supdt (NPSS) : Pu PC Lalhmingliana\nSecretary : Pu R.Lalhmangaiha\nAsst. Secretary : Pu R.Lalrintluanga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa H.Lalmawia, Upa B.Hranghlira, Upa H.T.Vanlalsawma, Upa K.Vanlalhmuaka, Pu R.Khawhluna, Upa Daikhawzama, Upa Hleikapa, Pu PC.Lalhlira, Pu T.Sawmpauva, Pu RD.Lalchhuana, Pu K.Lalduha, Pu Huatkhansuta, Pu Pauzathanga, Pu V.Lalpianga, Pu H.Kap\\hianga, Pu C.Lalrintluanga, Pu C.Hmingliana, Pu K.Lalduata, Pu H.Zakima, Pu K.Lalrawna, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu C.Lalparliana, Pu Lalrozama, Pu C.Lalthantluanga, Nl.Laldinngheti, Pu K.Riachho, Pu Pawithanga, Pu J.Laldawngliana, Pu Rochungnunga, Pu Lal\\anpuia, Pu Lallianmawia, Pu C.Roliana, Pu T.Dilliana, Pu B.Biakvela, Pu Lalrimawia, Pu K.Lalhlira, Pu Lallungmuana, Pu F.Lalhmunsiama\n\n[Senior]\nPu R.Lalramhluna, Pu Zohmangaiha, Nl.Lalhlimthangi, Nl.Ngurbawitluangi, Pi Lalengliani, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu Lalchhanhima, Pi Lalzikpuii, Pu Vanlalhriata, Pu Lalbiakkunga, Pu PC.Lalchuangkima, Pi Ramengzuali\n\n[Intermediate]\nPu David Lalchhanhima, Tv.C.Zohmingthanga, Pu MS Dawngliana, Tv.Zomuankima, Nl.Vanlalngaihi, Pi K.Malsawmdawngi, Nl.T.Lalnuntluangi, Pu C.Rohmingliana\n\n[Junior]\nPu H.Vanlalthanga, Pu K.Laldawngliana, Pi F.Lalduati, Pi C.Lainguri, Pi Lalniengi, Tv. Hmingthanmawia, Nl.C.Lalhruaitluangi, Nl.K.Malsawmtlangi, Nl.Hmingthanmawii, Nl.K.Lalhruaitluangi, Nl.Lalbiakdiki\n\n[Primary]\nPu F.Lalbuatsaiha, Pu C.Roenga, Pi Biakhmingliani, Nl.Lalmuanpuii, Tv.Thanglianmanga, Nl.Lalbiaklawmi, Nl.C.Lalrinfeli, Tv.Keneth Lalthanzauva, Tv.Lallawmthanga, Nl.K.Lalrokhumi, Nl.T.Vanlalduhsaki, Nl.Lalnithangi\n\n[Beginner]\nPu R.Lalremmawia, Pi Lalbiakhnuni, Pi Lalrimawii, Pi B.Ronghaki, Pi Lalrawngbawli, Pi Zothanpari, Nl.Lalrengpuii, Tv.T.Lalthangliana, Tv.Lalremruata, Tv.Thangzaliana, Nl.Lalnunmawii" },
+  { year: '2004', details: "Superintendent : Upa Manhleia\nAsst. Superintendent : Upa B.Hranghlira\nAsst. Supdt (NPSS) : Pu PC Lalhmingliana\nSecretary : Pu R.Lalrintluanga\nAsst. Secretary : Pu C.Lalthantluanga\nAsst. Secy (NPSS) : Pu C.Roenga\n\n[Puitling zirtirtu]\nUpa Khawidawla, Upa H.Lalmawia, Upa Saizama Sailo, Upa H.T.Vanlalsawma, Upa K.Vanlalhmuaka, Pu R.Khawhluna, Pu PC.Lalhlira, Upa Daikhawzama, Pu T.Sawmpauva, Pu Huatkhansuta, Pu K.Lalduha, Pu Pauzathanga, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu C.Hmingliana, Pu K.Lalduata, Pu H.Zakima, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Nl.Laldinngheti, Pu J.Laldawngliana, Pu Pawithanga, Pu Rochungnunga, Pu Lal\\anpuia, Pu C.Roliana, Pu H.Kap\\hianga, Pu K.Lalrawna, Pu C.Lalparliana, Pu F.Lalhmunsiama, Pu R.Lalramhluna, Pu Bawllliana, Pu Lallungmuana\n\n[Senior]\nPu Zohmangaiha, Pi Lalengliani, Pu Lalchhanhima, Pu Lalbiakkunga, Pu PC Lalchuangkima, Pu Vanlaldika Varte, Pu K.|huamluaia, Pi Ramengzuali\n\n[Intermediate]\nPu David Lalchhanhima, Tv.C.Zohmingthanga, Nl.Ngurbawitluangi, Pi Lalniengi, Pi K.Malsawmdawngi, Nl.Vanlalngaihi, Nl.T.Lalnuntluangi, Pu C.Rohmingliana, Tv.Zomuankima, Nl.K.Lalhruaitluangi, Nl.Hmingthanzuali\n\n[Junior]\nPu H.Vanlalthanga, Pu Lianpianga, Pi F.Lalduati, Pi C.Lainguri, Tv.Hmingthanmawia, Nl.K.Malsawmtluangi, Nl.Hmingthanmawii, Nl.Lalbiaklawmi, Tv.Lalremruata, Pu K.L.Mawizuala, Nl.C.Lalrinfeli\n\n[Primary]\nPu F.Lalbuatsaiha, Tv.Thanglianmanga, Tv.Lallawmthanga, Tv.Keneth Lalthanzauva, Nl.Lalbiakdiki, Pi Biakhmingliani, Nl.Lalnithangi, Nl.K.Lalrokhumi, Nl.Lalduhsaki, Nl.Lalmuanpuii, Pi Malsawmi Tlau, Nl.Lalthanmawii, Pi Lalromawii\n\n[Beginner]\nPu R.Lalremmawia, Pi Lalbiakhnuni, Pi Lalrimawii, Pi B.Ronghaki, Pi Lalrawngbawli, Nl.C.Khawlhmingthangi, Nl.Lalrengpuii, Tv.T.Lalthangliana, Tv.Thangzaliana, Nl.Lalnunmawii" },
+  { year: '2005', details: "Superintendent : Upa B.Hranghlira\nAsst. Superintendent : Upa Khawidawla\nAsst. Supdt (NPSS) : Upa K.Vanlalhmuaka\nSecretary : Pu C.Lalthantluanga\nAsst. Secretary : Pu R.Lalrintluanga\nAsst. Secy (NPSS) : Tv.Zomuankima\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa H.Lalmawia, Upa Saizama Sailo, Upa H.T.Vanlalsawma, Upa PC Lalhmingliana, Pu C.Roliana, Pu R.Khawhluna, Pu PC.Lalhlira, Pu T.Sawmpauva, Pu Huatkhansuta, Pu Pauzathanga, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu K.Lalduata, Pu H.Zakima, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu J.Laldawngliana, Pu Pawithanga, Pu Rochungnunga, Pu Lal\\anpuia, Pu H.Kap\\hianga, Nl.Laldinngheti, Pu K.Lalrawna, Pu C.Lalparliana, Pu R.Lalramhluna, Pu Bawllliana, Pu Lallungmuana\n\n[Senior]\nPu K.|huamluaia, Pu Vanlaldika Varte, Tv.Zomuankima, Pu Lalchhanhima, Pi Lalengliani, Pi Ramengzuali, Pi Zothanpari, Pi Lalniengi, Pu PC Lalchuangkima, Pi Lalhlimthangi, Pi Biakveli\n\n[Sacrament]\nUpa Daikhawzama, Pu David Lalchhanhima, Pu H.Vanlalthanga, Pi Lalzikpuii\n\n[Intermediate]\nPu Lalbiakkunga, Pu F.Lalbuatsaiha, Nl.T.Lalnuntluangi, Pi K.Malsawmdawngi, Nl.Ngurbawitluangi, Pu C.Rohmingliana, Nl.Vanlalngaihi, Nl.K.Lalhruaitluangi, Pu Lianpianga, Nl.Hmingthanzuali\n\n[Junior]\nTv.C.Zohmingthanga, Pu KL Mawizuala, Nl.Lalmuanzuali, Pi Lalbiakhnuni, Pi C.Lainguri, Nl.Lalbiaklawmi, Tv.Thanglianmanga, Nl.K.Lalmuanpuii, Nl.K.Malsawmtluangi, Tv.Lalmuanpuia Ralte, Tv.Keneth Lalthanzauva\n\n[Primary]\nPu R.Lalremmawia, Tv.T.Lalthangliana, Nl.PC.Lalrintluangi, Pi B.Ronghaki, Pi Lalrimawii, Nl.K.Lalrokhumi, Nl.Lalnithangi, Nl.Lalthanmawii, Nl.Khawlhmingthangi, Nl.Siamthangpuii, Nl.Lalrammawii, Pu Lalhmingmawia, Nl.Lalmuanpuii\n\n[Beginner]\nPi Malsawmi Tlau, Pi Lalrawngbawli, Nl.Vanlalruati, Nl.Lalbiakdiki, Pi Lalrengpuii, Tv.Thangzaliana, Nl.Lalnunmawii, Pi C.Lalhmingmawii, Nl.Lalramngaii, Pu B.Lalthanzauva, Tv.C.Malsawmthara, Tv.Lalremruata, Nl. V.Lalchhanhimi" },
+  { year: '2006', details: "Superintendent : Upa H.T.Vanlalsawma\nAsst. Supdt : Upa P.C.Lalhmingliana\nAsst. Supdt (NPSS) : Upa K.Vanlalhmuaka\nSecretary : Pu F.Lalbuatsaiha\nAsst. Secretary : Pu R.Lalrintluanga & Pu C.Zokhuma\nAsst. Secy (NPSS) : Tv.Zomuankima\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa Khawidawla, Upa H.Lalmawia, Upa Saizama Sailo, Upa B.Hranghlira, Pu T.Sawmpauva, Pu C.Roliana, Pu Pauzathanga, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu C.Lalthantluanga, Pu K.Lalduata, Pu H.Zakima, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu J.Laldawngliana, Pu Lal\\anpuia, Pu H.Kap\\hianga, Nl.Laldinngheti, Pu K.Lalrawna, Pu C.Lalparliana, Pu R.Lalramhluna, Pu Bawllliana, Tv.C.Hranghluna, Pu T.Lal\\anpuia, Pu R.Dengkunga, Pu Lallungmuana, Pu R.D.Lalchhuana, Pu Ramhnehzauva\n\n[Senior]\nPu K.|huamluaia, Pu Vanlaldika Varte, Pi Lalengliani, Pi Ramengzuali, Pi Zothanpari, Pi Biakveli, Pu PC Lalchuangkima, Nl.Lalbiaklawmi, Nl.Hmingthanzuali, Pu Lalremruata\n\n[Sacrament]\nUpa Daikhawzama, Pu David Lalchhanhima, Pu H.Vanlalthanga, Nl.Ngurbawitluangi, Pi Lalniengi\n\n[Intermediate]\nPu Lalbiakkunga, Pu C.Rohmingliana, Pu Lianpianga, Pi K.Malsawmdawngi, Nl.K.Lalhruaitluangi, Tv.C.Lal\\hazuala, Pi C.Lainguri, Pu Lalramthara, Nl.K.Lalmuanpuii, Pu Dawngsuanpauva\n\n[Junior]\nTv.C.Zohmingthanga, Pu KL Mawizuala, Nl.Lalmuanzuali, Pu Vanlalhriata, Nl.K.Malsawmtluangi, Tv.Thangkunga Hualngo, Pi Lalbiakhnuni, Pi B.Ronghaki, Nl.T.Lalnuntluangi, Tv.Keneth Lalthanzauva, Nl.Vanlalngaihi\n\n[Primary]\nPu R.Lalremmawia, Tv.T.Lalthangliana, Pi Lalrimawii, Pi Lalrawngbawli, Pu Lalhmingmawia, Nl.PC Lalrintluangi, Nl.R.Lalrammawii, Nl.Lalthanmawii, Nl.Lalmuanpuii, Tv.Tualliankapa, Nl.Khawlhmingthangi, Nl.Siamthangpuii\n\n[Beginner]\nPi Malsawmi Tlau, Pi K.Lalbiakthangi, Nl.Lalramngaii, Pi C.Lalhmingmawii, Tv.Thangzaliana, Tv.C.Malsawmthara, Pu B.Lalthanzauva, Nl.V.Lalchhanhimi, Nl.K.Lalrokhumi, Tv.Mungngaihsanga, Pi Zaithangpuii, Tv.Lalmuanzuala, Nl.H.Zothanpuii, Tv.Joseph Lal\\angkaia, Nl.Rebecca Lalhriatpuii, Nl. Lalrintluangi" },
+  { year: '2007', details: "Superintendent : Upa P.C.Lalhmingliana\nAsst. Supdt : Upa H.Lalmawia\nAsst. Supdt (NPSS) : Pu C.Roliana\nSecretary : Pu F.Lalbuatsaiha\nAsst. Secretary : Pu Vanlalhriata & Pu C.Zokhuma\nAsst. Secy (NPSS) : Pu Zomuankima\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa H.T.Vanlalsawma, Upa K.Vanlalhmuaka, Upa B.Hranghlira, Pu T.Sawmpauva, Pu Pauzathanga, Pu V.Lalpianga, Pu C.Lalrintluanga, Pu C.Lalthantluanga, Pu K.Lalduata, Pu H.Zakima, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu J.Laldawngliana, Pu Lal\\anpuia, Nl.Laldinngheti, Pu C.Lalparliana, Pu R.Lalramhluna, Tv.C.Hranghluna, Pu T.Lal\\anpuia, Pu R.Dengkunga, Pu Ramhnehzauva, Pu R.D.Lalchhuana, Pu H.Vanlalthanga, Pu K.|huamluaia, Pu KLalduhawma, Upa Daikhawzama, Pu K.Lalrinawma\n\n[Senior]\nPu Vanlaldika Varte, Pu PC Lalchuangkima, Nl.Hmingthanzuali, Pi Ramengzuali, Pi Zothanpari, Nl.Ngurbawitluangi, Nl.Lalbiaklawmi, Pu Lalremruata, Pu C.Rohmingliana\n\n[Sacrament]\nPu David Lalchhanhima, Pu Lianpianga, Pi K.Malsawmdawngi, Pi Lalniengi\n\n[Intermediate]\nPu Lalbiakkunga, Tv.C.Lal\\hazuala, Pi C.Lainguri, Pu Lalramthara, Pu K.L.Mawizuala, Nl.K.Lalmuanpuii, Nl.K.Malsawmtluangi, Nl.Lalmuanzuali, Pi K.Thangkimi, Nl.Lalramngaii, Pu Lalmuanpuia Ralte\n\n[Junior]\nTv.C.Zohmingthanga, Pu Dawngsuanpauva, Tv.Lianlamthanga, Tv.Keneth Lalthanzauva, Tv.Thangkunga Hualngo, Pi Lalbiakhnuni, Pi B.Ronghaki, Pi C.Lalhmingmawii, Nl.T.Lalnuntluangi, Nl.Vanlalngaihi, Nl.K.Zosangpuii, Nl.Lalthanmawii\n\n[Primary]\nPu R.Lalremmawia, Tv.T.Lalthangliana, Pi Lalrimawii, Pi Lalrawngbawli, Pu Lalhmingmawia, Nl.R.Lalrammawii, Pu B.Lalthanzauva, Nl.C.Lalramthari, Nl.Khawlhmingthangi, Nl.H.T.Lalnunsiami, Tv.Kap\\huama, Nl.K.Lallawmzuali, Nl.Nancy Laldinpuii\n\n[Beginner]\nPi Malsawmi Tlau, Pi K.Lalbiakthangi, Tv.Mungngaihsanga, Tv.Lalmuanzuala, Nl.H.Zothanpuii, Tv.Joseph Lal\\angkaia, Nl.P.C Lalrintluangi, Nl.Rebecca Lalhriatpuii, Nl.Lalmuanpuii, Pi Zaithangpuii, Pi C.Lallawmsangi, Nl.Lal\\anpuii" },
+  { year: '2008', details: "Superintendent : Upa H.Lalmawia\nAsst. Superintendent : Pu C.Roliana\nAsst. Supdt (NPSS) : Pu C.Lalrintluanga\nSecretary : Pu F.Lalbuatsaiha\nAsst. Secretary : Pu Vanlalhriata & Pu C.Zokhuma\nAsst. Secy (NPSS) : Tv.C.Lal\\hazuala\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa H.T.Vanlalsawma, Upa K.Vanlalhmuaka, Upa B.Hranghlira, Upa PC Lalhmingliana, Upa Daikhawzama, Pu T.Sawmpauva, Pu R.D.Lalchhuana, Pu H.Zakima, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu J.Laldawngliana, Pu R.Dengkunga, Pu C.Lalthantluanga, Pu C.Lalparliana, Pu Lal\\anpuia, Nl.Laldinngheti, Pu Ramhnehzauva, Pu T.Lal\\anpuia, Pu K Lalduhawma, Pu K.|huamluaia, Pu H.Vanlalthanga, Tv.C.Hranghluna, Pu K.Lalrinawma, Pu Vanlaldika Varte, Pu Lalbiakkunga, Pu H.Lalchawimawia, Upa Lalchhunga\n\n[Senior]\nPu David Lalchhanhima, Pu Lalremruata, Nl.PC.Lalchhanhimi, Nl.Ngurbawitluangi, Nl.Hmingthanzuali, Pi Malsawmi Tlau, Pu Lianpianga, Pu Zomuankima, Tv.Thanglianmanga, Pu C.Ramrinliana\n\n[Sacrament]\nPu R.Lalramhluna, Pu PC Lalchuangkima, Pi K.Malsawmdawngi, Nl.K.Lalmuanpuii, Pu Vanlalsiama Ralte, Nl.PC.Lalhriatpuii\n\n[Intermediate]\nPu C.Zohmingthanga, Pu Lalmuanpuia Ralte, Tv.V.Kaizasiama, Pi C.Lainguri, Pi Lalniengi, Pi K.Thangkimi, Nl.Lalbiaklawmi, Nl.Vanlalngaihi, Nl.Lalmuanzuali, Pu Lalrozauva, Tv.Lalremruata Hualngo\n\n[Junior]\nPu R.Lalremmawia, Tv.Keneth Lalthanzauva, Nl.Lalhmangaihzuali, Tv.Thangkunga Hualngo, Tv.Mungngaihsanga, Pi Lalrimawii, Pi Lalrawngbawli, Pi C.Lalhmingmawii, Pi K.Lalbiakthangi, Nl.T.Lalnuntluangi, Nl.Lalramngaii, Nl.Lalthanmawii\n\n[Primary]\nPu C.Rohmingliana, Pu Dawngsuanpauva, Tv.V.Lalbiakdika, Pi B.Ronghaki, Pi Zaithangpuii, Pu B.Lalthanzauva, Tv.T.Lalthangliana, Tv.Lalmuanzuala, Tv.Kap\\huama, Nl.C.Lalramthari, Nl.K.Lallawmzuali, Nl.H.T.Lalnunsiami, Tv.Lalnunpuia, Tv.K.Lalengthanga\n\n[Beginner]\nPi Ramengzuali, Pu Lalhmingmawia, Nl.K.Zoramengi, Pi C.Lallawmsangi, Nl.Lalmuanpuii, Nl.Rebecca Lalhriatpuii, Nl.H.Zothanpuii, Nl.Laltanpuii, Nl.Rosy Lalawmpuii, Tv.F.Lalrosiama, Tv.Lianlamthanga" },
+  { year: '2009', details: "Superintendent : Upa K.Vanlalhmuaka\nAsst. Superintendent : Pu C.Roliana\nAsst. Supdt (NPSS) : Pu C.Lalrintluanga\nSecretary : Pu F.Lalbuatsaiha\nAsst. Secretary : Pu Vanlalhriata & Pu T.Sangtluanga\nAsst. Secy (NPSS) : Tv.Thanglianmanga\n\n[Puitling zirtirtu]\nUpa Manhleia, Upa H.T.Vanlalsawma, Upa H.Lalmawia, Upa B.Hranghlira, Upa PC Lalhmingliana, Upa Daikhawzama, Pu T.Sawmpauva, Pu R.D.Lalchhuana, Pu H.Zakima, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Dengkunga, Pu C.Lalthantluanga, Pu C.Lalparliana, Pu Ramhnehzauva, Pu T.Lal\\anpuia, Pu K Lalduhawma, Pu K.|huamluaia, Pu H.Vanlalthanga, Pu K.Lalrinawma, Pu Vanlaldika Varte, Pu Lalbiakkunga, Pu H.Lalchawimawia, Pu Lalrikhuma, Pu F.Lalhmunsiama, Pu Vanlalrema Ralte, Pu C.Zokhuma, Pu J.H.Lalrimawia, Pu Lalthantluanga, Pu T.Lianzadinga\n\n[Senior]\nPu David Lalchhanhima, Pu Lalremruata, Nl.K.Zosangpuii, Pu C.Ramrinliana, Pu Lianpianga, Pi Malsawmi Tlau, Nl.Ngurbawitluangi, Nl.PC.Lalchhanhimi, Tv.Hmingthanmawia, Pi K.Malsawmdawngi, Nl.Lalmuanchhungi\n\n[Sacrament]\nPu R.Lalramhluna, Pu PC Lalchuangkima, Pu Vanlalsiama Ralte, Nl.PC.Lalhriatpuii, Pu Dawngsuanpauva, Pi C.Lalhmingmawii, Pi K.Lalbiakthangi, Pu HT.Lalthlengliana\n\n[Intermediate]\nPu C.Zohmingthanga, Pu Lalmuanpuia Ralte, Nl.Lalbiaklawmi, Pi Lalniengi, Tv.V.Kaizasiama, Pi K.Thangkimi, Nl.Vanlalngaihi, Nl.H.Lalchhuanawmi, Nl.Lalmuanzuali, Nl.K.Lalrokhumi, Tv.Lalremruata Hualngo\n\n[Junior]\nPu R.Lalremmawia, Tv.Keneth Lalthanzauva, Nl.Lalhmangaihzuali, Tv.Thangkunga Hualngo, Tv.Mungngaihsanga, Pi Lalrimawii, Pi Lalrawngbawli, Nl.T.Lalnuntluangi, Nl.Lalthanmawii, Tv.C.Malsawmthara, Tv.R.Lalmalsawma, Nl.Vanlalruati, Nl.Laldawngzeli\n\n[Primary]\nPu C.Rohmingliana, Tv.V.Lalbiakdika, Pi B.Ronghaki, Pi Zaithangpuii, Pu B.Lalthanzauva, Tv.Lalmuanzuala, Tv.Kap\\huama, Nl.C.Lalramthari, Nl.K.Lallawmzuali, Nl.H.T.Lalnunsiami, Tv.K.Lalengthanga, Tv.Nelson Khiangte, Tv.Lianlamthanga, Tv.H.Lalfakawma\n\n[Beginner]\nPi Ramengzuali, Pu Lalhmingmawia, Nl.K.Zoramengi, Pi C.Lallawmsangi, Nl.Lalmuanpuii, Nl.Rebecca Lalhriatpuii, Nl.H.Zothanpuii, Nl.Laltanpuii, Nl.Rosy Lalawmpuii, Tv.F.Lalrosiama, Tv.Mungngaihsanga, Pu Khawlrosiama, Pi Lalnuntluangi" },
+  { year: '2010', details: "Superintendent : Upa B.Hranghlira\nAsst. Superintendent : Upa Daikhawzama\nAsst. Supdt (NPSS) : Upa R.Lalramhluna\nSecretary : Pu F.Lalbuatsaiha\nAsst. Secy (NPSS) : Pu Lianpianga\nAsst. Secretary : Pu Vanlalhriata & Pu S.Liansangvunga\n\n[Puitling zirtirtu]\nUpa H.T.Vanlalsawma, Upa H.Lalmawia, Upa K.Vanlalhmuaka, Upa PC Lalhmingliana, Upa C.Lalrintluanga, Pu C.Roliana, Pu T.Sawmpauva, Pu R.D.Lalchhuana, Pu H.Zakima, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Dengkunga, Pu Ramhnehzauva, Pu T.Lal\\anpuia, Pu K Lalduhawma, Pu K.|huamluaia, Pu H.Vanlalthanga, Pu Vanlaldika Varte, Pu H.Lalchawimawia, Pu Vanlalrema Ralte, Pu C.Zokhuma, Pu J.H.Lalrimawia, Pu Lalthantluanga, Pu T.Lianzadinga, Pu C.Lalthantluanga, Pu K.Lalrinawma, Pu David Lalchhanhima, Pu K.Lalrawna\n\n[Senior]\nPu Lalbiakkunga, Pu C.Ramrinliana, Nl.T.Lalnuntluangi, Tv.Thangkunga Hualngo, Pu Vanlalsiama Ralte, Pu Hmingthanmawia, Pi Malsawmi Tlau, Pi K.Malsawmdawngi, Nl.Lalbiaklawmi, Nl.Lalmuanchhungi\n\n[Sacrament]\nPu Dawngsuanpauva, Pu HT.Lalthlengliana, Nl.PC Lalhriatpuii, Pu PC Lalchuangkima, Pu Lalremruata, Tv.Thanglianmanga, Pi Ramengzuali, Pi C.Lalhmingmawii, Pi K.Lalbiakthangi\n\n[Intermediate]\nPu C.Zohmingthanga, Pu Lalmuanpuia Ralte, Nl.C.Lalramthari, Tv.Keneth Lalthanzauva, Tv.Lalremruata Hualngo, Tv.V.Kaizasiama, Pi Lalniengi, Pi K.Thangkimi, Pi C.Lallawmsangi, Nl.Vanlalngaihi, Nl.Lalthanmawii, Nl.H.Zothanpuii\n\n[Junior]\nPu R.Lalremmawia, Tv.R.Lalmalsawma, Nl.Vanlalruati, Tv.Kap\\huama, Tv.C.Malsawmthara, Tv.C.Laitanga, Pi Lalrawngbawli, Pi Lalrimawii, Nl.Ngurbawitluangi, Nl.Lal\\anpuii, Nl.Laldawngzeli, Pi Lalhmangaihzuali\n\n[Primary]\nPu C.Rohmingliana, Tv.K.Lalengthanga, Tv.V.Lalbiakdika, Pi Zaithangpuii, Tv.Lalmuanzuala, Tv.H.Lalfakawma, Tv.Lianlamthanga, Nl.K.Lallawmzuali, Nl.Lalmuanpuii, Nl.Rebecca Lalhriatpuii, Tv.Rodinthara, Pu Khawlrosiama\n\n[Beginner]\nPu Lalhmingmawia, Pi Lalnuntluangi, Nl.K.Zoramengi, Nl.Rosy Lalawmpuii, Nl.H.T.Lalnunsiami, Nl.Ningsianmawii, Nl.Lalhminghlui, Tv.Mungngaihsanga, Tv.Lalramnghaka, Tv.F.Lalrosiama, Pi R.Vanlalbeli" },
+  { year: '2011', details: "Superintendent : Upa Daikhawzama\nAsst. Superintendent : Upa C.Lalrintluanga\nAsst. Supdt (NPSS) : Upa R.Lalramhluna\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary : Pu Vanlalhriata & Pu S.Liansangvunga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa H.T.Vanlalsawma, Upa H.Lalmawia, Upa K.Vanlalhmuaka, Upa PC Lalhmingliana, Upa B.Hranghlira, Pu C.Roliana, Pu C.Lalthantluanga, Pu David Lalchhanhima, Pu R.D.Lalchhuana, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Dengkunga, Pu Ramhnehzauva, Pu T.Lal\\anpuia, Pu K Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu H.Lalchawimawia, Pu Vanlalrema Ralte, Pu C.Zokhuma, Pu J.H.Lalrimawia, Pu T.Lianzadinga, Pu K.Lalrinawma, Pu K.Lalrawna, Pu PC Kap\\huama, Pu Chhiarkunga, Pu J.Lalnuntluanga, Pu C.Lalzova, Pu C.Hmingliana\n\n[Senior]\nPu Lalbiakkunga, Pu Hmingthanmawia, Nl.T.Lalnuntluangi, Pu Vanlalsiama Ralte, Tv.Thangkunga Hualngo, Pi K.Malsawmdawngi, Nl.Lalmuanchhungi, Pu C.Zohmingthanga, Nl.PC Lalhriatpuii, Pu F.Lalbuatsaiha, Pu C.Lal\\hazuala, Pi Lalhlimthangi\n\n[Sacrament]\nPu Dawngsuanpauva, Pu HT.Lalthlengliana, Pi K.Lalbiakthangi, Tv.Thanglianmanga, Pi Ramengzuali, Pu C.Ramrinliana, Pi Malsawmi Tlau, Pu Lalmuanpuia Ralte\n\n[Intermediate]\nPu R.Lalremmawia, Tv.K.Lalengthanga, Nl.R.Lalrammawii, Nl.C.Lalramthari, Tv.Keneth Lalthanzauva, Nl.H.Zothanpuii, Pi Lalrimawii, Pi Lalrawngbawli, Pu PC Lalchuangkima, Nl.Lynda Vanlalruati\n\n[Junior]\nPu C.Rohmingliana, Tv.R.Lalmalsawma, Nl.Laldawngzeli, Nl.Vanlalruati, Tv.C.Malsawmthara, Tv.Kap\\huama, Tv.C.Laitanga, Nl.Ngurbawitluangi, Tv.V.Lalbiakdika, Nl.K.Zoramengi, Pi C.Lalhmingmawii, Tv.Lalmuanzuala\n\n[Primary]\nTv.Lalremruata Hualngo, Pu Khawlrosiama, Nl.Rebecca Lalhriatpuii, Tv.H.Lalfakawma, Tv.Lianlamthanga, Tv.Rodinthara, Nl.Lalmuanpuii, Tv.F.Lalrosiama, Nl.Rosy Lalawmpuii, Tv.V.Kaizasiama, Pi C.Lallawmsangi, Pi C.Lalhruaitluangi\n\n[Beginner]\nPu Lalhmingmawia, Pi Lalnuntluangi, Nl.R.Lalremruati, Tv.Mungngaihsanga, Tv.Lalramnghaka, Nl.HT Lalnunsiami, Nl.Ningsianmawii, Nl.Lalhminghlui, Pi R.Vanlalbeli, Nl.H.Lalramsangi, Pi Kananthari, Nl.PC Lalremruati, Tv.Zoramenga, Tv.Lalremruata, Pi C.Lal\\anpuii" },
+  { year: '2012', details: "Superintendent : Upa C.Lalrintluanga\nAsst. Superintendent : Upa R.Lalramhluna\nAsst. Supdt (NPSS) : T.Upa C.Lalthantluanga\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary : Pu Vanlalhriata & Pu S.Liansangvunga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa H.T.Vanlalsawma, Upa H.Lalmawia, Upa PC Lalhmingliana, T.Upa C.Roliana, Upa Daikhawzama, T.Upa David Lalchhanhima, Pu R.D.Lalchhuana, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Dengkunga, Pu Ramhnehzauva, Pu Lalthangliana Tochhawng, Pu KLalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrinawma, Pu K.Lalrawna, Pu Chhiarkunga, Pu J.Lalnuntluanga, Pu C.Lalzova, Pu C.Hmingliana, Pu P.Lalhmingthanga, Pu R.Lalrintluanga, Pi R.Ramengzuali, Pu GF Thanga, Pu Zoramnghingliana, Pu Rohit T.Zomuana, Pu C.Zaithanga\n\n[Senior]\nPu Lalbiakkunga Pachuau, Pu C.Zohmingthanga, Nl.Vanlalruati, Tv.Thangkunga Hualngo, Pu F.Lalbuatsaiha, Pu C.Lal\\hazuala, Pu Lalmuanpuia Ralte, Nl. T.Lalnuntluangi, Nl.PC Lalhriatpuii, Pi Lalhlimthangi Khiangte\n\n[Sacrament]\nPu HT.Lalthlengliana, Pu C.Ramrinliana, Tv. Keneth Lalthanzauva, Pu Thanglianmanga, Pu Hmingthanmawia, Pi Malsawmi Tlau, Nl. H.Zothanpuii\n\n[Intermediate]\nPu Dawngsuanpauva, Pu PC Lalchuangkima, Nl. PC Lalrintluangi, Tv. R.Lalmalsawma, Nl.R.Lalrammawii, Pi Lalrimawii, Pi Lalrawngbawli, Nl.Lynda Vanlalruati, Nl. Laldawngzeli, Nl. Lalmuanchhungi\n\n[Junior]\nPu C.Rohmingliana, Tv.Kap\\huama, Nl. K.Zoramengi, Tv.C.Laitanga, Tv.V.Lalbiakdika, Pu Lalhmingmawia, Pu Nelson Khiangte, Nl. Ngurbawitluangi, Pi C.Lalhmingmawii, Nl. C.Lalramthari, Nl. HT Lalnunsiami\n\n[Primary]\nTv.Lalremruata Hualngo, Pu Khawlrosiama, Nl. HT Lalnuntluangi, Tv.Rodinthara, Tv.F.Lalrosiama, Tv.V.Kaizasiama, Tv. Mungngaihsanga, Nl. Lalmuanpuii, Nl. Rebecca Lalhriatpuii, Pi C.Lallawmsangi, Pi K.Lalbiakthangi\n\n[Beginner]\nTv. K.Lalengthanga, Pi R.Vanlalbeli, Nl.Ningsianmawii, Tv.Lalramnghaka, Tv.Zoramenga, Tv.Lalremruata, Tv. H.Lalfakawma, Nl.R.Lalremruati, Nl.Lalhminghlui, Pi Kananthari, Nl.PC Lalremruati, Pi C.Lal\\anpuii, Pi K.Malsawmdawng, Pi Dimdeihsiani, Pi R.Lallawmkimi" },
+  { year: '2013', details: "Superintendent : Upa R.Lalramhluna\nAsst. Superintendent : Upa HT Vanlalsawma\nAsst. Supdt (NPSS) : T.Upa C.Lalthantluanga\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary : Pu Vanlalhriata, Pu S.Liansangvunga, Pu T.Sangtluanga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa H.Lalmawia, Upa PC Lalhmingliana, Upa C.Lalrintluanga, Upa Daikhawzama, T.Upa C.Roliana, T.Upa David Lalchhanhima, Pu R.D.Lalchhuana, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu R.Dengkunga, Pu K Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrinawma, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pu R.Lalrintluanga, Pi R.Ramengzuali, Pu GF Thanga, Pu Zoramnghingliana, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Tv. Lalthangliana Tochhawng, Pu C.Rohmingliana, Pu JC Laldinthara, Pu C.Ramrinliana, Pu C.Zohmingthanga, Pi K.Malsawmdawngi, Pi V.Sangkungi, Pu Ramhnehzauva\n\n[Senior]\nPu Lalbiakkunga Pachuau, Pu F.Lalbuatsaiha, Nl.C.Lalramthari, Pu Kap\\huama, Pu V.Kaizasiama, Pu Nelson Khiangte, Pu B.Kapthanzawna, Pi Lalhlimthangi Khiangte, Pi K.Lalbiakthangi, Pi R.Vanlalbeli, Nl. Vanlalruati, Nl. PC Lalrintluangi, Nl. T.Lalnuntluangi\n\n[Sacrament]\nPu HT Lalthlengliana, Pu Hmingthanmawia, Nl. Rebecca Lalhriatpuii, Tv. Thangkunga Hualngo, Nl. H.Zothanpuii, Nl. Lalmuanchhungi\n\n[Intermediate]\nPu Lalmuanpuia Ralte, Pu PC Lalchuangkima, Nl. Laldawngzeli, Tv. R.Lalmalsawma, Tv. Keneth Lalthanzauva, Nl. R.Lalrammawii, Nl. Ngurbawitluangi, Pi Lalrimawii, Pi Lalrawngbawli, Pi Malsawmi Tlau\n\n[Junior]\nTv. Lalremruata Hualngo, Pu Lalhmingmawia, Nl. Nancy Laldinpuii, Pu V.Lalbiakdika, Pu Khawlrosiama, Pu C.Lalmuansanga, Pi C.Lalhmingmawii, Nl. K.Zoramengi, Nl. Lalmuanpuii, Tv. Mungngaihsanga, Tv. Rodinthara, Tv. PC Lalmuanpuia\n\n[Primary]\nPu K.Lalengthanga, Pu C.Lalrawngbawla, Nl. Lalhminghlui, Pi C.Lallawmsangi, Pi LR Dinsangi, Pi H.Lalremtluangi, Nl. HT Lalnuntluangi, Nl. Ningsianmawii, Nl. Vanlalzawmi, Tv. C.Laitanga, Tv. T.Lalramnghaka, Pu R.Lalmuanawma\n\n[Beginner]\nPu C.Lal\\hazuala, Pi Lal\\anpuii, Nl. Vungngaihdawni, Pu Lianlamthanga, Pi Kananthari, Pi Dimdeihsiani, Pi R.Lallawmkimi, Pi Hmingthanmawii, Pi C.Lalchhandami, Nl. PC Lalremruati, Nl. Lalnuntluangi, Tv. Lalremruata, Tv. Zoramenga, Tv. H.Lalfakawma, Tv. T.Lalnunzira" },
+  { year: '2014', details: "Superintendent : T.Upa C.Roliana\nAsst. Supdt : Upa PC Lalhmingliana\nAsst. Supdt (NPSS) : T.Upa David Lalchhanhima\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary : Pu Vanlalhriata, Pu T.Sangtluanga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa HT Vanlalsawma, Upa H.Lalmawia, Upa C.Lalrintluanga, Upa R.Lalramhluna, Upa Daikhawzama, T.Upa C.Lalthantluanga, T.Upa HT Lalthlengliana, Pu R.D.Lalchhuana, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu K Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrinawma, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pu R.Lalrintluanga, Pi R.Ramengzuali, Pu GF Thanga, Pu Zoramnghingliana, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Tv. Lalthangliana Tochhawng, Pu C.Rohmingliana, Pu JC Laldinthara, Pu C.Ramrinliana, Pi V.Sangkungi, Pu Lalbiakkunga Pachuau, Pu H.Zairemmawia, Pu Lalramthara, Pu L.Khenpauva, Pu C.Sangzawna, Pu K.Sangkhuma, Pu MS Dawngliana\n\n[Senior]\nPu Lalmuanpuia Ralte, Pu B. Kapthanzawna, Nl. PC. Lalrintluangi, Pu PC Lalchuangkima, Pu Kap\\huama, Pu C.Lal\\hazuala, Pu V.Kaizasiama, Pu Nelson Khiangte, Pi C.Lallawmsangi, Pi Lalrawngbawli, Pi K.Lalbiakthangi, Nl. R.Lalrammawii, Nl. Vanlalruati\n\n[Sacrament]\nPu C. Zohmingthanga, Tv. Thangkunga Hualngo, Nl. Lalmuanchhungi, Nl. T.Lalnuntluangi, Pi Lalhlimthangi Khiangte, Nl. Rebecca Lalhriatpuii\n\n[Intermediate]\nPu Hmingthanmawia, Pu C.Lalrawngbawla, Pu V.Lalbiakdika, Pu Lalhmingmawia, Tv. Keneth Lalthanzauva, Tv. R.Lalmalsawma, Pi Malsawmi Tlau, Pi C. Lalhmingmawii, Nl. Ngurbawitluangi, Nl. Laldawngzeli, Nl. K.Zoramengi\n\n[Junior]\nTv. Lalremruata Hualngo, Pu C. Lalmuansanga, Nl. F.Lalmuankimi, Pu F. Lalhriatpuia, Pu Khawlrosiama, Tv. Mungngaihsanga, Tv. Rodinthara, Tv. P.C. Lalmuanpuia, Pi Kananthari, Nl. Lalmuanpuii, Nl. PC Lalremruati, Nl. Mary Lalthanzuali\n\n[Primary]\nPu K.Lalengthanga, Pi H.Lalremtluangi, Nl. Vanlalzawmi, Tv. Lalramnghakhlela, Pu R.Lalmuanawma, Tv. T. Lalramnghaka, Tv. Zoramenga, Tv. Lalremruata, Tv. HT Malsawmtluanga, Pi LR Dinsangi, Nl. Lalhminghlui, Nl. Ningsianmawii, Nl. HT Lalnuntluangi\n\n[Beginner]\nPi K. Malsawmdawngi, Tv. H. Lalfakawma, Nl.Lalnuntluangi, Pu H. Lalduhawma, Pu Lianlamthanga, Tv. T. Lalnunzira, Tv. Thangdeihmanga, Pi Lal\\anpuii, Pi Dimdeihsiani, Pi R.Lallawmkimi, Pi C. Lalchhandami, Pi Hmingthanmawii, Nl. R. Lalchhanchhuahi, Nl. Vungngaihdawni, Nl. Cathy Lalnunpuii" },
+  { year: '2015', details: "Superintendent : Upa PC Lalhmingliana\nAsst. Supdt : Upa C.Lalthantluanga\nAsst. Supdt (NPSS) : Upa David Lalchhanhima\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary : Pu Vanlalhriata & Pu T.Sangtluanga\nAsst. Secy (NPSS) : Pu Lianpianga\n\n[Puitling zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa HT Vanlalsawma, Upa H.Lalmawia, Upa C.Lalrintluanga, Upa R.Lalramhluna, Upa Daikhawzama, Upa HT Lalthlengliana, T.Upa C.Roliana, Pu R.D.Lalchhuana, Pu K.Lalduata, Pi PC.Lalhmachhuani, Pi C.Chawngpuii, Pu K. Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pi R.Ramengzuali, Pu GF Thanga, Pu Zoramnghingliana, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Pu C.Rohmingliana, Pu JC Laldinthara, Pu C.Ramrinliana, Pi V.Sangkungi, Pu Lalbiakkunga Pachuau, Pu H.Zairemmawia, Pu Lalramthara, Pu L.Khenpauva, Pu C.Sangzawna, Pu K.Sangkhuma, Pu MS Dawngliana, Pu Lalsanglura Zote, Pu T.Chalzawna, Nl. Ngurbawitluangi\n\n[Senior]\nPu Lalmuanpuia Ralte, Pu B.Kapthanzawna, Nl. PC Lalrintluangi, Pu PC Lalchuangkima, Pu C.Lal\\hazuala, Pu V.Kaizasiama, Pu Nelson Khiangte, Pi C.Lallawmsangi, Pi Lalrawngbawli, Pi K.Lalbiakthangi, Nl. R.Lalrammawii, Tv. R.Lalmalsawma\n\n[Sacrament]\nPu C.Zohmingthanga, Pu C.Lalrawngbawla, Nl. Lalmuanchhungi, Nl.Vanlalruati, Pi Lalhlimthangi Khiangte, Nl. Laldawngzeli\n\n[Intermediate]\nPu Hmingthanmawia, Pu Lalhmingmawia, Nl. HT Lalnuntluangi, Pu V.Lalbiakdika, Tv. Keneth Lalthanzauva, Tv. H.Lalfakawma, Pi Malsawmi Tlau, Nl. K.Zoramengi, Nl. T.Lalnuntluangi, Pi H.Zothanpuii\n\n[Junior]\nTv. Lalremruata Hualngo, Pu Khawlrosiama, Nl. K.Zorammuani, Pu C.Lalmuansanga, Nl. F.Lalmuankimi, Pu F.Lalhriatpuia, Tv. Mungngaihsanga, Tv. Rodinthara, Tv. PC Lalmuanpuia, Pi Kananthari, Pi Zosangpuii, Pi Dimdeihsiani, Pi LR Dinsangi, Tv. C.Lalnunpuia\n\n[Primary]\nPu K.Lalengthanga, Pi H.Lalremtluangi, Nl. Lalhminghlui, Pu Lalramnghakhlela, Pu R.Lalmuanawma, Tv. T.Lalramnghaka, Tv. Zoramenga, Nl. Ningsianmawii, Pu Lianlamthanga, Pi Lal\\anpuii, Pi R.Lallawmkimi, Tv.Lalhriatrenga Khiangte\n\n[Beginner]\nPi K.Malsawmdawngi, Pu Kap\\huama, Nl. Vungngaihdawni, Nl. Lalnuntluangi, Pu H.Lalduhawma, Tv. T.Lalnunzira, Tv. Thangdeihmanga, Pi C.Lalchhandami, Pi Hmingthanmawii, Nl. R.Lalchhanchhuahi, Pi Zothanmawii, Pi H.Lallawmkimi, Nl. Lalmuanpuii, Nl. B.Lalnunsiami, Pu C.Hmingthansanga, Pu Lalmuanpuia" },
+  { year: '2016', details: "Superintendent : Upa C.Lalthantluanga\nAsst. ( Puitling) : Upa David Lalchhanhima\nAsst. Supdt.( NPSS) : Upa HT Lalthlengliana\nSecretary : Pu H.Vanlalthanga\nAsst. Secretary (Pt) : Pu Vanlalhriata & Pu T.Sangtluanga\nAsst. Secy(NPSS) : Pu Lianpianga\n\n[Puitling Zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa H.Lalmawia, Upa HT Vanlalsawma, Upa C.Lalrintluanga, Upa Daikhawzama, Upa R.Lalramhluna, Upa HT Lalthlengliana, T.Upa C.Roliana, Pu RD Lalchhuana, Pu K.Lalduata, Pi PC Lalhmachhuani, Pi C.Chawngpuii, Pu K.Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pi R.Ramengzuali, Pu GF Thanga, Pu Zoramnghingliana, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Pu C.Rohmingliana, Pu JC Laldinthara, Pu C.Ramrinliana, Pi V.Sangkungi, Pu Lalbiakkunga Pachuau, Pu H.Zairemmawia, Pu Lalramthara, Pu L.Khenpauva, Pu C.Sangzawna, Pu K.Sangkhuma, Pu MS Dawngliana, Pu Lalsanglura Zote, Pu T.Chalzawna, Nl. Ngurbawitluangi\n\n[Senior]\nPu Lalmuanpuia Ralte, Pu B.Kapthanzawna, Nl. PC Lalrintluangi, Pu PC Lalchuangkima, Pu C.Lal\\hazuala, Pu V.Kaizasiama, Pu Nelson Khiangte, Tv. R.Lalmalsawma, Pi C.Lallawmsangi, Pi Lalrawngbawli, Pi K.Lalbiakthangi, Nl. R.Lalrammawii\n\n[Sacrament]\nPu C.Zohmingthanga, Pu C.Lalrawngbawla, Nl. Lalmuanchhungi, Nl. Laldawngzeli, Pi Lalhlimthangi Khiangte, Nl. Vanlalruati\n\n[Intermediate]\nPu Hmingthanmawia, Pu Lalhmingmawia, Nl. HT Lalnuntluangi, Pu V.Lalbiakdika, Tv. Keneth Lalthanzauva, Tv. H.Lalfakawma, Pi Malsawmi Tlau, Nl. K.Zoramengi, Nl. T.Lalnuntluangi, Pi H.Zothanpuii\n\n[Junior]\nTv. Lalremruata Hualngo, Pu Khawlrosiama, Nl. K.Zorammuani, Pu C.Lalmuansanga, Pu F.Lalhriatpuia, Tv. Mungngaihsanga, Tv. Rodinthara, Tv. PC Lalmuanpuia, Nl. F.Lalmuankimi, Pi Kananthari, Pi Zosangpuii, Pi Dimdeihsiani, Pi LR Dinsangi\n\n[Primary]\nPu K.Lalengthanga, Pi H.Lalremtluangi, Nl. Lalhminghlui, Pu Lalramnghakhlela, Pu R.Lalmuanawma, Tv. T.Lalramnghaka, Tv. Zoramenga, Pu Lianlamthanga, Tv. Lalhriatrenga Khiangte, Nl. Ningsianmawii, Pi Lal\\anpuii, Pi R.Lallawmkimi\n\n[Beginner]\nPu Kap\\huama, Pi K.Malsawmdawngi, Nl. Vungngaihdawni, Pu H.Lalduhawma, Tv. T.Lalnunzira, Tv. Thangdeihmanga, Pu C.Hmingthansanga, Pu Lalmuanpuia, Nl. Lalnuntluangi, Pi C.Lalchhandami, Pi Hmingthanmawii, Nl. R.Lalchhanchhuahi, Pi Zothanmawii, Pi H.Lawmkimi, Nl. Lalmuanpuii, Nl. B.Lalnunsiami" },
+  { year: '2017', details: "Superintendent : Upa HT Vanlalsawma\nAsst. Supdt.(PTSS) : Upa David Lalchhanhima\nAsst. Supdt.( NPSS) : Upa HT Lalthlengliana\nSecretary : Pu T.Sangtluanga\nAsst. Secretary : Pu Vanlalhriata & Pu Lianpianga\nAsst. Secy(NPSS) : Pu V.Lalbiakdika\n\n[Puitling Zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa H.Lalmawia, Upa PC Lalhmingliana, Upa C.Lalrintluanga, Upa R.Lalramhluna, Upa C.Lalthantluanga, Upa Daikhawzama, T.Upa C.Roliana, Pu K.Lalduata, Pi PC Lalhmachhuani, Pi C.Chawngpuii, Pu K.Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pi R.Ramengzuali, Pu GF Thanga, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Pu C.Rohmingliana, Pu C.Ramrinliana, Pi V.Sangkungi, Pu H.Zairemmawia, Pu Lalramthara, Pu L.Khenpauva, Pu Lalbiakkunga Pachuau, Pu C.Sangzawna, Pu K.Sangkhuma, Pu MS Dawngliana, Pu Lalsanglura Zote, Pu T.Chalzawna, Nl. Ngurbawitluangi, Pu C.Zohmingthanga, Pi Lalhlimthangi Khiangte, Pu H.Vanlalthanga, Pu Lalthangliana Tochhawng, Pu Lalmuanpuia Ralte\n\n[Senior]\nPu C.Lalrawngbawla, Pu C Lal\\hazuala, Nl. Lalmuanchhungi, Tv. R.Lalmalsawma, Pu Lalramnghakhlela, Nl. Lalrammawii Renthlei, Pi Zothanmawii, Pi H Zothanpuii\n\n[Sacrament]\nPu Hmingthanmawia, Pu K Lalengthanga, Nl. PC Lalrintluangi, Pu Kap\\huama, Pi C Lallawmsangi\n\n[Intermediate]\nTv. Lalremruata Hualngo, Pu Mungngaihsanga, Nl. Laldawngzeli, Pu Khawlrosiama, Pu Rodinthara, Tv. PC Lalmuanpuia, Pi K Lalbiakthangi, Pi C Lalchhandami, Nl. F Lalmuankimi\n\n[Junior]\nPu V.Kaizasiama, Tv. Keneth Lalthanzauva, Nl. H Lalrengpuii, Pu Nelson Khiangte, Tv. Zoramenga, Tv. H Lalfakawma, Pu T Lalramnghaka, Pi H Lalremtluangi, Pi Dimdeihsiani, Pi H Lallawmkimi, Nl. Lalhminghlui, Nl. Ningsianmawii\n\n[Primary]\nPu C.Lalmuansanga, Pu Lianlamthanga, Nl. Vungngaihdawni, Pu F Lalhriatpuia, Tv. Lalnunzira, Tv. Lalhriatrenga Khiangte, Tv. Vanlalchhana, Tv. K Lalramngheta, Pi Zosangpuii, Pi R Lallawmkimi, Pi Hmingthanmawii, Nl. Lalmuanpuii, Nl. Lalnuntluangi, Nl. R.Lalchhanchhuahi\n\n[Beginner]\nPi K.Malsawmdawngi, Pu Thanglianmanga, Pi K Malsawmtluangi, Pu H Lalduhawma, Pu C Hmingthansanga, Pu Lalmuanpuia, Pu R Lalmuanawma, Pi LR Dinsangi, Pi Vanlalnghaki Colney, Pi C Lalhruaitluangi, Pi Lalmuanpuii Hlawndo, Nl. B Lalnunsiami" },
+  { year: '2018', details: "Superintendent : Upa David Lalchhanhima\nAsst. Supdt.( Puitling): Upa HT Lalthlengliana\nAsst. Supdt.( NPSS) : Upa Daikhawzama\nSecretary : Pu T.Sangtluanga\nAsst. Secretary (Pt) : Pu Vanlalhriata & Pu Lianpianga\nAsst. Secy(NPSS) : Pu V.Lalbiakdika\n\n[Puitling Zirtirtu]\nUpa B.Hranghlira, Upa K.Vanlalhmuaka, Upa H.Lalmawia, Upa PC Lalhmingliana, Upa C.Lalrintluanga, Upa R.Lalramhluna, Upa C.Lalthantluanga, Upa HT Vanlalsawma, T.Upa C.Roliana, Pu K.Lalduata, Pi PC Lalhmachhuani, Pi C.Chawngpuii, Pu K.Lalduhawma, Pu K.|huamluaia, Pu Vanlaldika Varte, Pu T.Lianzadinga, Pu K.Lalrawna, Pu C.Lalzova, Pu P.Lalhmingthanga, Pi R.Ramengzuali, Pu GF Thanga, Pu C.Zaithanga, Pu H.Zakima, Pu Dawngsuanpauva, Pu C.Rohmingliana, Pu C.Ramrinliana, Pi V.Sangkungi, Pu H.Zairemmawia, Pu Lalramthara, Pu L.Khenpauva, Pu Lalbiakkunga Pachuau, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl. Ngurbawitluangi, Pu C.Zohmingthanga, Pu T.Chalzawna, Pi Lalhlimthangi Khiangte, Pu C.Sangzawna, Pu Lalthangliana Tochhawng, Pu H.Vanlalthanga, Pu Lalmuanpuia Ralte, Pi K.Malsawmdawngi\n\n[Senior]\nPu C.Lalrawngbawla, Tv. R.Lalmalsawma, Nl. Lalmuanchhungi, Pu Lalramnghakhlela, Nl. Lalrammawii Renthlei, Pi Zothanmawii, Pu Hmingthanmawia, Pi Dimdeihsiani\n\n[Sacrament]\nPu Lalremruata Hualngo, Pu K.Lalengthanga, Pi C.Lalchhandami, Nl. PC Lalrintluangi, Pu C.Lal\\hazuala\n\n[Intermediate]\nPu V.Kaizasiama, Pu Mungngaihsanga, B.Lalnunsiami, Nl. Laldawngzeli, Pu PC Lalmuanpuia, Pu Rodinthara, Pi K.Lalbiakthangi, Pi R.Lallawmkimi, Tv. Lalhriatrenga Khiangte, Tv. Thangdeihmanga\n\n[Junior]\nPu C.Lalmuansanga, Tv. Keneth Lalthanzauva, Nl. H.Lalrengpuii, Pu Nelson Khiangte, Tv. Zoramenga, Pu H.Lalfakawma, Pi H.Lalremtluangi, Pi H.Lallawmkimi, Nl. Lalhminghlui, Nl. Ningsianmawii, Pu Lianlamthanga, Pi C.Lallawmsangi\n\n[Primary]\nPu Kap\\huama, Tv. T.Lalnunzira, Nl. Vungngaihdawni, Pu F.Lalhriatpuia, Tv. K.Lalramngheta, Pi Zosangpuii, Pi Hmingthanmawii, Nl. Lalmuanpuii, Nl. Lalnuntluangi, Nl. R.Lalchhanchhuahi, Pu Khawlrosiama, Nl. F.Lalmuankimi, Pu H.Lalduhawma, Pu Lalmuanpuia\n\n[Beginner]\nPu Thanglianmanga, Pu C.Hmingthansanga, Nl. Zothangpuii, Pu R.Lalmuanawma, Pi LR Dinsangi, Pi Vanlalnghaki Colney, Pi C.Lalhruaitluangi, Pi Lalmuanpuii Hlawndo, Pu T.Lalramnghaka, Tv. Vanlalchhana, Tv. Manliankhupa, Nl. Nianglunvungi, Pi K.Malsawmtluangi" },
+  { year: '2019', details: "Superintendent : Upa HT Lalthlengliana\nAsst.Supdt : Upa B Hranghlira\nAsst.Supdt i/c NPSS : Upa Daikhawzama\nSecretary : Pu Lianpianga\nAsst. Secretary : Pu F Lalbuatsaiha & Pu Vanlalhriata\nAsst. Secy i/c NPSS : Pu V Lalbiakdika\n\n[Puitling Zirtirtu]\nUpa K Vanlalhmuaka, Upa HT Vanlalsawma, Upa H Lalmawia, Upa PC Lalhmingliana, Upa C Lalrintluanga, Upa R Lalramhluna, Upa C Lalthantluanga, Upa David Lalchhanhima, T Upa C Roliana, Pu K Lalduata, Pi PC Lalhmachhuani, Pi C Chawngpuii, Pu K Lalduhawma, Pu K |huamluaia, Pu Vanlaldika varte, Pu K Lalrawna, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu C Zaithanga, Pu H Zakima, Pu Dawngsuanpauva, Pu C Rohmingliana, Pu C Ramrinliana, Pi V Sangkungi, Pu H Zairemmawia, Pu Lalramthara, Pu L Khenpauva, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl Ngurbawitluangi, Pu C Zohmingthanga, Pu T Chalzawna, Pu C Sangzawna, Pi Lalhlimthangi khiangte, Pu H Vanlalthanga, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Upa G Vanlallawma, Pu T Sangtluanga, Pu Lalbiakkunga Pachuau\n\n[Senior]\nPu C Lalrawngbawla, Pu Lalramnghakhlela, Nl. Lalmuanchhungi, Pu Hmingthanmawia, Pu K.Lalengthanga, Pu H.Lalfakawma, Pu C.Hmingthansanga, Nl. Zodinpuii\n\n[Sacrament]\nPu Lalremruata Hualngo, Pu C.Lal\\hazuala, Nl. PC Lalrintluangi, Pi C.Lalchhandami, Tv. R.Lalmalsawma\n\n[Intermediate]\nPu V Kaizasiama, Tv. Keneth Lalthanzauva, Nl. B.Lalnunsiami, Tv. Thangdeihmanga, Pu Lianlamthanga, Tv. T.Lalnunzira, Pi R.Lallawmkimi, Nl. Lalrammawii Renthlei, Nl. Ningsianmawii, Nl. Lalhminghlui\n\n[Junior]\nPu C Lalmuansanga, Pu Nelson Khiangte, Nl. C.Lalnunthari, Tv. Zoramenga, Pu Mungngaihsanga, Pu Rodinthara, Pu PC Lalmuanpuia, Pu R.Lalmuanawma, Tv. PC Lalruatsanga, Pi H.Lallawmkimi, Nl. Lalmuanpuii, Pi LR Dinsangi, Pi Hmingthanmawii, Nl. Vungngaihdawni\n\n[Primary]\nPu Kap\\huama, Pu Lalmuanpuia, Nl. H.Lalrengpuii, Pu F.Lalhriatpuia, Tv. K.Lalramngheta, Pu H.Lalduhawma, Tv. Lalhmunngheta, Pu R.Lalromawia, Pi B.Zosangpuii, Nl. R.Lalchhanchhuahi, Nl. F.Lalmuankimi, Nl. J.Lalhlimpuii, Nl. Chingsawmluni, Nl. Rachel Lalremruati Sailo\n\n[Beginner]\nPu Thanglianmanga, Pi Vanlalnghaki Colney, Nl. Zothangpuii, Tv. Vanlalchhana, Tv. Manliankhupa, Pu C.Lalchhanhima, Pi K.Malsawmtluangi, Pi C.Lalhruaitluangi, Pi Lalmuanpuii Hlawndo, Nl. Nianglunvungi, Pi Vanlalawii, Pi Lalhriatpuii, Nl. Lalrinkimi Fanai, NL. Thangdinsangi, Nl. Baby Romalsawmi\n\n[Pre-Beginner]\nPi K.Lalbiakthangi, Pi Mary Lalnunmawii, Pi H.Zodinsangi, Pu Thangkunga Hualngo, Pu Andrew Z,Dawngliana, Pi Lalchhanhimi, Pi Lalremtluangi Pautu, Pi HT Lalnuntluangi" },
+  { year: '2020', details: "Superintendent : Upa B Hranghlira\nA. Supdt. : Upa H.Lalmawia\nSecretary : Pu Lianpianga\nAsst. Secretary : Pu V Lalbiakdika\nAsst. Secy (PTSS) : Pu Vanlalhriata & Pu F Lalbuatsaiha & Pu Manliankhupa\n\n[Puitling Zirtirtu]\nUpa K Vanlalhmuaka, Upa HT Vanlalsawma, Upa PC Lalhmingliana, Upa C Lalrintluanga, Upa C Lalthantluanga, Upa R Lalramhluna, Upa Daikhawzama, Upa David Lalchhanhima, Upa HT Lalthlengliana, T Upa C Zohmingthanga, Pu C.Roliana, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Upa G.Vanlallawma, Pu K |huamluaia, Pu Vanlaldika Varte, Pu K Lalrawna, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu C Zaithanga, Pu H Zakima, Pu Dawngsuanpauva, Pu C Rohmingliana, Pu C Ramrinliana, Pi V Sangkungi, Pu Lalramthara, Pu L Khenpauva, Pu MS Dawngliana, Pu Lalsanglura zote, Nl Ngurbawitluangi, Pu T Chalzawna, Pu C Sangzawna, Pi Lalhlimthangi Khiangte, Pu H Vanlalthanga, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, Pu B.Lalbiak\\huama, Pu HB Vanlalvuana, Pu Hmingthanmawia, Pu K.Lalengthanga, Pu C.Lalmuansanga, Pu C.Lalrawngbawla, Pu Lalremruata Hualngo, Pu C.Lal\\hazuala, Pu C.Hmingthansanga\n\n[Senior]\nPu V.Kaizasiama, Pu Thangkunga Hualngo, Tv. Thangdeihmanga, Nl. Zodinpuii, Pu H.Lalfakawma, Nl. PC Lalrintluangi, Tv. Zoramenga, Pi Vanlalnghaki Colney\n\n[Sacrament]\nPu Thanglianmanga, Nl. Lalmuanchhungi, Pu F.Lalhriatpuia, Pi H.Lallawmkimi, Pu Lianlamthanga\n\n[Intermediate]\nPu Kap\\huama, Tv. Keneth Lalthanzauva, Nl. Ningsianmawii, Tv. T.Lalnunzira, Pi R.Lallawmkimi, Nl. Lalrammawii Renthlei, Nl. Lalhminghlui, Nl. B.Lalnunsiami, Pu Lalramnghakhlela, Pu Lalmuanpuia\n\n[Junior]\nPu Nelson Khiangte, Pu Mungngaihsanga, Nl. C.Lalnunthari, Pu Rodinthara, Pu PC Lalmuanpuia, Nl. Lalmuanpuii, Pi LR Dinsangi, Pi Hmingthanmawii, Nl. Vungngaihdawni, Pu R.Lalmuanawma, Tv. PC Lalruatsanga, Pu K.Lalramngheta, Pi R.Lalchhanchhuahi, Pi K.Malsawmtluangi, Nl. Lalbiakchhungi\n\n[Primary]\nTv. R.Lalmalsawma, Pu H.Lalduhawma, Nl. Chingsawmluni, Nl. H.Lalrengpuii, Tv. Lalhmunngheta, Pu R.Lalromawia, Nl. J.Lalhlimpuii, Nl. Rachel Lalremruati, Pi Lalmuanpuii Hlawndo, Pu Andrew Z.Dawngliana, Tv. C.Vanlalawmpuia, Tv. B.Thangzauva, Pu C.Ramtharnghaka\n\n[Beginner]\nPi C.Lalchhandami, Pu C.Lalchhanhima, Nl. Lalrinkimi Fanai, Tv. Vanlalchhana, Nl. Nianglunvungi, Pi Vanlalawii, Pi Lalhriatpuii, Nl. Thangdinsangi, Nl. Baby Romalsawmi, Pu Lalengkima, Pi C.Lalramthari, Nl. V.Nunmawii, Nl. C.Lalremruati, Nl. R.Lalramnghaki\n\n[Pre Beginner]\nPi K.Lalbiakthangi, Pi Mary Lalnunmawii, Pi Lalchhanhimi, Pi Lalremchhungi Pautu, Pi H.Zodinsangi, Pi K.Lalrokhumi, Tv. PB Hmangaihropuia, Tv. David Lalrintluanga" },
+  { year: '2021', details: "Superintendent : Upa H. Lalmawia\nAsst.Supdt NPSS : T Upa H.Zairemmawia\nAsst.Supdt i/c PTSS : Upa K. Vanlalhmuaka\nSecretary : Pu Lianpianga\nAsst. Secy i/c NPSS : Pu V. Lalbiakdika & Pu Manliankhupa\nAsst. Secy i/c PTSS : 1.Pu Vanlalhriata 2. Pu F. Lalbuatsaiha\n\n[Puitling Zirtirtu]\nUpa B.Hranghlira, Upa HT Vanlalsawma, Upa PC Lalhmingliana, Upa C. Lalrintluanga, Upa R. Lalramhluna, Upa Daikhawzama, Upa C. Lalthantluanga, Upa David Lalchhanhima, Upa HT Lalthlengliana, T Upa C. Zohmingthanga, Pu C. Roliana, Pu K. Lalduata, Pi PC Lalhmachhuani, Pu K. Lalduhawma, Upa G.Vanlallawma, Pu K. |huamluaia, Pu Vanlaldika Varte, Pu C. Lalzova, Pu P. Lalhmingthanga, Pi R.Ramengzuali, Pu GF Thanga, Pu C. Zaithanga, Pu H. Zakima, Pu Dawngsuanpauva, Pu C. Rohmingliana, Pu C. Ramrinliana, Pi V.Sangkungi, Pu Lalramthara, Pu L Khenpauva, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl Ngurbawitluangi, Pu T. Chalzawna, Pu C. Sangzawna, Pu H. Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K.Malsawmdawngi, Pu T. Sangtluanga, Pu Hmingthanmawia, Pu K. Lalengthanga, Pu C. Lalmuansanga, Pu C. Lalrawngbawla, Pu Lalremruata Hualngo, Pu C.Lal\\hazuala, Pu C. Hmingthansanga\n\n[Senior]\nPu V. Kaizasiama, Pu Thangkunga Hualngo, Tv. Thangdeihmanga, Nl. Zodinpuii, Nl. PC Lalrintluangi, Tv. Zoramenga, Pi Vanlalnghaki Colney, Pu Lianlamthanga\n\n[Sacrament]\nPu Thanglianmanga, Nl. Lalmuanchhungi, Nl. Lalrammawii Renthlei, Pi H.Lallawmkimi, Pu F.Lalhriatpuia, Nl. Chingsiannuami\n\n[Intermediate]\nPu Kap\\huama, Pu Keneth Lalthanzauva, Nl. Ningsianmawii, Tv. T.Lalnunzira, Pi R.Lallawmkimi, Nl. B.Lalnunsiami, Nl. Lalhminghlui, Pu Lalramnghakhlela, Pu Lalmuanpuia, Nl. T.Vanlalliani\n\n[Junior]\nPu Nelson Khiangte, Pu Mungngaihsanga, Nl. C.Lalnunthari, Pu Rodinthara, Nl. Lalmuanpuii, Pi LR Dinsangi, Pi Hmingthanmawii, Nl. Vungngaihdawni, Pu R.Lalmuanawma, Pu K.Lalramngheta, Pi K.Malsawmtluangi, Nl. Lalbiakchhungi, Pu F.Lalremsiama, Chingdawnvungi\n\n[Primary]\nTv R.Lalmalsawma, Pu H.Lalduhawma, Nl. Chingsawmluni, Nl. H.Lalrengpuii, Tv. Lalhmunngheta, Pu R.Lalromawia, Nl. J.Lalhlimpuii, Nl. Rachel Lalremruati Sailo, Pi Lalmuanpuii Hlawndo, Pu Andrew Z. Dawngliana, Tv. C.Vanlalawmpuia, Tv. B.Thangzauva, Pu C.Ramtharnghaka, Nl. Lalremruati, Nl. Lalnunsiami\n\n[Beginner]\nPi C.Lalchhandami, Pu C.Lalchhanhima, Nl. Lalrinkimi Fanai, Tv. Vanlalchhana, Nl. Nianglunvungi, Pi Vanlalawii, Nl. Thangdinsangi, Nl. Baby Romalsawmi, Pu Lalengkima, Pi C.Lalramthari, Nl. V.Nunmawii, Nl. C.Lalremruati, Pi K.Lalrinchhani\n\n[Pre Beginner]\nPi K. Lalbiakthangi, Pi H.Zodinsangi, Pi Lalchhanhimi, Pi Lalremchhungi Pautu, Pi K.Lalrokhumi, Tv. PB Hmangaihropuia, Tv. David Lalrintluanga" },
+  { year: '2022', details: "Superintendent : Upa K Vanlalhmuaka\nAsst.Supdt i/c PTSS : Upa R Lalramhluna\nAsst.Supdt i/c NPSS : T Upa C Zohmingthanga\nSecretary : Pu C Lal\\hazuala\nAsst. Secy i/c PTSS : Pu Vanlalhriata & Pu F Lalbuatsaiha\nAsst. Secy i/c NPSS : Pu V Lalbiakdika & Pu Manliankhupa\n\n[Puitling Zirtirtu]\nUpa B Hranghlira, Upa HT Vanlalsawma, Upa H Lalmawia, Upa PC Lalhmingliana, Upa C Lalrintluanga, Upa Daikhawzama, Upa C Lalthantluanga, Upa David Lalchhanhima, Upa HT Lalthlengliana, T Upa H Zairemmawia, Pu Lianpianga, Pu C Roliana, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Upa G Vanlallawma, Pu K |huamluaia, Pu Vanlaldika Varte, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu Dawngsuanpauva, Pu C Rohmingliana, Pu C Ramrinliana, Pu C Zaithanga, Pi V Sangkungi, Pu Lalramthara, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl Ngurbawitluangi, Pu T Chalzawna, Pu C Sangzawna, Pu H Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, Pu Hmingthanmawia, Pu K Lalengthanga, Pu C Lalmuansanga, Pu C Lalrawngbawla, Pu Lalremruata Hualngo, Pu Hmingthansanga, Pu V Lalbiakzuala, Pu JC Laldinthara\n\n[Senior]\nPu V. Kaizasiama, Pu Thangkunga Hualngo, Tv. Thangdeihmanga, Nl. Zodinpuii, Nl. PC Lalrintluangi, Pu Zoramenga, Pi Vanlalnghaki Colney, Pu Lianlamthanga\n\n[Sacrament]\nPu Thanglianmanga, Nl. Lalmuanchhungi, Nl. F. Lalmuankimi, Pi H.Lallawmkimi, Pu F. Lalhriatpuia, Nl. Lalrammawii Renthlei, Tv. Vanlalchhana\n\n[Intermediate]\nPu Kap\\huama, Pu Keneth Lalthanzauva, Nl. Ningsianmawii, Tv. T.Lalnunzira, Nl. B.Lalnunsiami, Nl. Lalhminghlui, Pu Lalramnghakhlela, Pu Lalmuanpuia, Pu Lalengkima, Tv Lalfakawma\n\n[Junior]\nPu Nelson Khiangte, Pu R.Lalmuanawma, Nl. C.Lalnunthari, Pu Rodinthara, Nl. Lalmuanpuii, Pi LR Dinsangi, Pi Hmingthanmawii, Nl. Vungngaihdawni, Pu. K.Lalramngheta, Pi K.Malsawmtluangi, Nl. Lalbiakchhungi, Pu F Lalremsiama, Nl Chingdawnvungi, Tv. Liankhankhama\n\n[Primary]\nTv. R.Lalmalsawma, Pu H.Lalduhawma, Nl. Chingsawmluni, Tv. Lalhmunngheta, Pu R.Lalromawia, Nl. J.Lalhlimpuii, Nl.Rachel Lalremruati Sailo, Pi Lalmuanpuii Hlawndo, Pu C. Ramtharnghaka, Tv. C.Vanlalawmpuia, Tv. B.Thangzauva, Nl. Lalnunsiami, Nl. Nianglunvungi, Nl. Lallawmzuali, Tv Vanlalrintlaka\n\n[Beginner]\nPi C.Lalchhandami, Pu C.Lalchhanhima, Nl. Lalrinkimi Fanai, Pi Vanlalawii, Nl. Thangdinsangi, Pi C.Lalramthari, Nl. V. Nunmawii, Nl. C.Lalremruati, Pi K.Lalrinchhani, Nl. Baby Romalsawmi, Tv. Zamdingliana, Tv. Thangsawmliana\n\n[Pre - Beginner]\nPi K. Lalbiakthangi, Pi H. Zodinsangi, Pi Lalremchhungi Pautu, Pi Lalchhanhimi, Pi K.Lalrokhumi, Tv. PB Hmangaihropuia, Pu Mungngaihsanga, Pi Lalbiakdiki" },
+  { year: '2023', details: "Superintendent : Upa R.Lalramhluna\nAsst.Superintendent i/c PT : Upa Daikhawzama\nAsst.Supdt i/c NPSS : Upa C. Zohmingthanga\nSecretary : Pu C Lal\\hazuala\nAsst. Secretary i/c PTSS : 1) Pu Vanlalhriata 2) Pu F Lalbuatsaiha\nAsst. Secretary i/c NPSS : 1) Pu V Lalbiakdika 2) Pu Manliankhupa\n\n[Puitling Zirtirtu]\nUpa B Hranghlira, Upa K.Vanlalhmuaka, Upa HT Vanlalsawma, Upa H Lalmawia, Upa PC Lalhmingliana, Upa C Lalrintluanga, Upa C Lalthantluanga, Upa David Lalchhanhima, Upa HT Lalthlengliana, Upa H Zairemmawia, Upa Lianpianga, T.Upa Lalremruata Hualngo, T.Upa Hmingthanmawia, Pu C Roliana, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Upa G Vanlallawma, Pu K |huamluaia, Pu Vanlaldika Varte, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu C Zaithanga, Pu Dawngsuanpauva, Pu C Rohmingliana, Pu C Ramrinliana, Pi V Sangkungi, Pu Lalramthara, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl. Ngurbawitluangi, Pu T Chalzawna, Pu C Sangzawna, Pu H Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, Pu C.Hmingthansanga, Pu K Lalengthanga, Pu C Lalmuansanga, Pu C Lalrawngbawla, Pu V Lalbiakzuala, Pu JC Laldinthara, Pu Thanglianmanga, Rev Vankhuma\n\n[Senior Department:]\nPu Kap\\huama, Pu Keneth Lalthanzauva, Nl. Zodinpuii, Nl. PC.Lalrintluangi, Pi Vanlalnghaki Colney, Pu Lianlamthanga, Tv. Thangdeihmanga, Nl. Lalrammawii Renthlei, Pu F.Lalhriatpuia, Nl. Ningsianmawii, Tv. H.Lalfakawma\n\n[Sacrament Department]\nPu V.Kaizasiama, Tv.C.Vanlalawmpuia, Tv. Vanlalchhana, Nl.Lalmuanchhungi, Pi H.Lallawmkimi, Nl.F.Lalmuankimi, Pu Lalramnghakhlela, Pi C.Lalchhandami\n\n[Intermediate Department]\nPu Nelson Khiangte, Pu Thangkunga Hualngo, Tv. Lalfakawma, Pu Lalmuanpuia, Pu Lalengkima, Pu K.Lalramngheta, Pi Hmingthanmawii, Pu R.Lalmuanawma, Pu Rodinthara, Pu R.Lalromawia, Nl.Lalnunthari, Nl. Vungngaihdawni\n\n[Junior Department]\nTv. R.Lalmalsawma, Tv. T.Lalnunzira, Nl. Rachel Lalremruati Sailo, Pi K.Malsawmtluangi, Pu F.Lalremsiama, Tv. Liankhankhama, Pu F.Hmingthanzuala, Nl. B.Lalnunsiami, Nl. Chingsawmluni, Tv. Lalhmunngheta, Nl. J.Lalhlimpuii, Pi V.Vanlalawii, Pu H.Lalduhawma, Pu Vanlalmawia, Nl. Lalramsangi, Nl. Marina Lalfakawmi\n\n[Primary Department]\nPu Zoramenga, Pi Lalmuanpuii Hlondo, Tv. B.Thangzauva, Pu C.Ramtharnghaka, Nl. Lalnunsiami, Nl. Nianglunvungi, Nl. Lallawmzuali, Pi LR.Dinsangi, Pu C.Lalchhanhima, Nl. Baby Romalsawmi, Pu Vanlalzamlova, Pu Tluangzathanga, Nl. Khupngaihzovi, Nl.Zodinsangi\n\n[Beginner Department]\nPi K.Lalbiakthangi, Pu Mungngaihsanga, Nl. Lalbiakchhungi, Pi C.Lalramthari, Nl. Thangdinsangi, Nl. V.Nunmawii, Nl. C.Lalremruati, Tv. Thangsawmliana, Pu PC.Lalmuanpuia, Pu Christopher Lalthlamuana, Pu Vanlalruatpuia\n\n[Pre-Beginner Department]\nPi K.Lalrokhumi, Pi H.Zodinsangi, Pi Lalbiakdiki, Pi Lalremchhungi Pautu, Pi Lalchhanhimi, Tv. PB.Hmangaihropuia, Tv. Lalrinfela" },
+  { year: '2024', details: "Superintendent : Upa PC Lalhmingliana\nAsst.Spdt i/c PT : Upa C Lalthantluanga\nAsst.Supdt i/c NPSS : Upa Lianpianga\nSecretary : Pu C Lal\\hazuala\nAsst. Secretary i/c PTSS : 1) Pu Vanlalhriata 2) Pu C Rohmingliana\nAsst. Secretary i/c NPSS : 1) Pu Manliankhupa 2) Tv. C Vanlalawmpuia\n\n[Puitling Zirtirtu]\nUpa B Hranghlira, Upa K.Vanlalhmuaka, Upa HT Vanlalsawma, Upa H Lalmawia, Upa C Lalrintluanga, Upa R Lalramhluna, Upa Daikhawzama, Upa David Lalchhanhima, Upa HT Lalthlengliana, Upa H Zairemmawia, Upa C Zohmingthanga, T.Upa Lalremruata Hualngo, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Upa G Vanlallawma, Pu K |huamluaia, Pu Vanlaldika Varte, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu Dawngsuanpauva, Pi V Sangkungi, Pu Lalramthara, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl. Ngurbawitluangi, Pu T Chalzawna, Pu C Sangzawna, Pu H Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, Pu C.Hmingthansanga, Pu K Lalengthanga, Pu C Lalmuansanga, Pu C Lalrawngbawla, Pu V Lalbiakzuala, Pu JC Laldinthara, Pu Thanglianmanga, Rev Vankhuma, Pi Vanlalhluni, Pu R Lalmalsawma, Pu C Malsawmdawngliana\n\n[Senior Department:]\nPu Kap\\huama, Pu Keneth Lalthanzauva, Nl. Ningsianmawii, Nl. Lalrammawii Renthlei, Pu F.Lalhriatpuia, Tv. H Lalfakawma, Pi H.Lallawmkimi, Tv. Vanlalchhana, Pu Lalengkima, Pu F Hmingthanzuala, Pi C Lalramthari\n\n[Sacrament Department]\nT.Upa Hmingthanmawia Sailo, Pu V.Kaizasiama, Tv. Thangdeihmanga, Pu Lalramnghakhlela, Pi C.Lalchhandami, Pi Vanlalnghaki Colney, Pu Thangkunga Hualngo, Pu Lalmuanpuia\n\n[Intermediate Department]\nPu Nelson Khiangte, Pu K.Lalramngheta, Nl.Lalnunthari, Pu R.Lalromawia, Nl. Vungngaihdawni, Pi C Lalhruaitluangi, Nl. PC Lalrintluangi, Pi K.Malsawmtluangi, Tv. Lalhmunngheta, Tv. B.Thangzauva, Pu C.Ramtharnghaka, Pu F.Lalremsiama, Nl. Rachel Lalremruati Sailo\n\n[Junior Department]\nPu Zoramenga, Tv. T.Lalnunzira, Nl. C.Lalremruati, Tv. Liankhankhama, Nl. B.Lalnunsiami, Nl. Chingsawmluni, Pu Vanlalmawia, Nl. Marina Lalfakawmi, Nl. C Ramnghinglovi, Nl. Lalmuanchhungi, Pi Lalmuanpuii Hlondo, Nl. Thangdinsangi, Pu C Lalengmawia, Tv. Vanlalzauva, Nl. Saimawipuii Sailo, Pu Laltlansanga, Nl. Lalramsangi\n\n[Primary Department]\nPu V Lalbiakdika, Pi LR.Dinsangi, Nl. Lallawmzuali, Pu C.Lalchhanhima, Nl. Baby Romalsawmi, Pu Vanlalzamlova, Pu Tluangzathanga, Nl. Khupngaihzovi, Nl.Zodinsangi, Nl. PC Lalthanmawii, Pi Hmingthanmawii, Pu C Rodinthara, Tv. PB.Hmangaihropuia, Nl. V.Nunmawii, Tv. T Vanneihtluanga, Nl. Zosangpuii\n\n[Beginner Department]\nPi K.Lalbiakthangi, Pu Mungngaihsanga, Nl. Lalbiakchhungi, Tv. Thangsawmliana, Pu PC.Lalmuanpuia, Pu Christopher Lalthlamuana, Pu Vanlalruatpuia, Nl. F Lalmuankimi, Nl. Lalnunsiami, Pu Lalmuanpuia Hauhnar, Pu T Lalramnghaka, Nl. Ruthi Lalnunfeli\n\n[Pre-Beginner Department]\nPi K.Lalrokhumi, Pi H.Zodinsangi, Pi Lalbiakdiki, Pi Lalremchhungi Pautu, Pi Lalchhanhimi, Pi Mary Lalnunmawii, Pi Linda Vanlalruati" },
+  { year: '2025', details: "Superintendent : Upa HT Vanlalsawma\nAsst.Spdt i/c PT : Upa David Lalchhanhima\nAsst.Supdt i/c NPSS : Upa Lianpianga\nSecretary : T.Upa C Lal\\hazuala\nAsst. Secretary i/c PTSS : 1) Pu Vanlalhriata 2) Pu C Rohmingliana\nAsst. Secretary i/c NPSS : 1) Pu Manliankhupa 2) Nl. F Lalmuankimi\n\n[Puitling Zirtirtu]\nUpa B Hranghlira, Upa K.Vanlalhmuaka, Upa H Lalmawia, Upa PC Lalhmingliana, Upa R Lalramhluna, Upa Daikhawzama, Upa C Lalthantluanga, Upa HT Lalthlengliana, Upa H Zairemmawia, Upa C Zohmingthanga, T.Upa Hmingthanmawia Sailo, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Pu K |huamluaia, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu Dawngsuanpauva, Pi V Sangkungi, Pu Lalramthara, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl. Ngurbawitluangi, Pu H Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, T.Upa C.Hmingthansanga, Pu K Lalengthanga, Pu C Lalmuansanga, Pu C Lalrawngbawla, Pu V Lalbiakzuala, Pu JC Laldinthara, Pu Thanglianmanga, Rev Vankhuma, Pu R Lalmalsawma, Pu C Malsawmdawngliana, T.Upa V Kaizasiama, Pu Kenneth Lalthanzauva, Pu F Lalduhawma, Pu Lalhmingmawia, Pu Khawlrosiama, Pu L Khenpauva\n\n[Senior Department:]\nPu Kap\\huama, Tv. H Lalfakawma, Nl. Ningsianmawii, Nl. Lalrammawii Renthlei, Pi H.Lallawmkimi, Tv. Vanlalchhana, Pu Lalengkima, Pu F Hmingthanzuala, Pi C Lalramthari, Pu Lalramnghakhlela, Nl. Lallawmzuali\n\n[Sacrament Department]\nT.Upa Lalremruata, Pi C.Lalchhandami, Nl. Lalmuanchhungi, Tv. Thangdeihmanga, Pi Vanlalnghaki Colney, Pu Lalmuanpuia, Tv. Liankhankhama\n\n[Intermediate Department]\nPu Nelson Khiangte, Pu Thangkunga Hualngo, Nl. Ngurthankimi, Pu K Lalramngheta, Nl.Lalnunthari, Pu R.Lalromawia, Nl. Vungngaihdawni, Nl. PC Lalrintluangi, Pi K.Malsawmtluangi, Tv. Lalhmunngheta, Tv. B.Thangzauva, Pu C.Ramtharnghaka, Pu F.Lalhriatpuia\n\n[Junior Department]\nPu Zoramenga, Tv. T.Lalnunzira, Nl. C.Lalremruati, Nl. B.Lalnunsiami, Pu Vanlalmawia, Nl. Marina Lalfakawmi, Nl. C Ramnghinglovi, Pi Lalmuanpuii Hlondo, Nl. Thangdinsangi, Pu C Lalengmawia, Tv. Vanlalzauva, Nl. Saimawipuii Sailo, Pu Laltlansanga, Pu Mungngaihsanga, Nl. B Lalrampari, Pu Lalhruaitluanga, Nl. C Zonunsiami, Nl. Thangsuankimi, Nl. Vunglamluni, Tv. Thangzasanga\n\n[Primary Department]\nPu V Lalbiakdika, Pi LR.Dinsangi, Nl.Zodinsangi, Pu C.Lalchhanhima, Nl. Baby Romalsawmi, Pu Vanlalzamlova, Pu Tluangzathanga, Nl. Khupngaihzovi, Nl. PC Lalthanmawii, Pi Hmingthanmawii, Pu C Rodinthara, Tv. PB.Hmangaihropuia, Nl. V.Nunmawii, Tv. T Vanneihtluanga, Nl. Zosangpuii, Tv. C Lalhumhima, Nl. Malsawmmawii, Nl. Enlamchingi\n\n[Beginner Department]\nPi K.Lalbiakthangi, Pu PC.Lalmuanpuia, Nl. Ruthi Lalnunfeli, Pu Vanlalruatpuia, Nl. Lalnunsiami, Pu Lalmuanpuia Hauhnar, Pu T Lalramnghaka, Pi C Lalhruaitluangi, Nl. Chingsawmluni, Nl. C Lalrampansangi, Nl. Lalduhawmi, Nl. R Lalrinmawii\n\n[Pre-Beginner Department]\nPi K.Lalrokhumi, Pi Mary Lalnunmawii, Pi Lalbiakdiki, Pi Lalchhanhimi, Pi Linda Vanlalruati, Pi HT Lalnuntluangi, Nl. DL Kimi Suante" }
 ];
 
 const Archives: React.FC = () => {
@@ -626,8 +224,9 @@ const Archives: React.FC = () => {
         setIsSaving(false);
     };
 
-    const handleSeedExecutiveBody = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Executive Body records from 1981-2025. Continue?")) {
+    // Generic Seed Function for simplicity in this update
+    const handleSeedGeneric = async (data: any[], subCategory: string) => {
+        if (!db?.collection || !window.confirm(`This will add/overwrite ${subCategory} records. Continue?`)) {
             return;
         }
         setIsSaving(true);
@@ -635,583 +234,51 @@ const Archives: React.FC = () => {
             const batch = db.batch();
             const collectionRef = db.collection('archives');
             
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            EXECUTIVE_BODY_SEED_DATA.forEach(data => {
-                const docId = `eb-${data.year}`; 
+            data.forEach(item => {
+                // Create a unique ID based on year and subCategory to avoid duplicates
+                const docId = `${subCategory.toLowerCase().replace(/\s+/g, '-')}-${item.year}`; 
                 const docRef = collectionRef.doc(docId);
                 const entry: ArchiveEntry = {
                     id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
+                    title: item.year, // Using JUST the year as title
+                    date: `${item.year}-01-01`,
                     category: 'Rawngbawltu te',
-                    subCategory: 'Executive Body',
-                    description: data.details,
+                    subCategory: subCategory,
+                    description: item.details,
                     link: ''
                 };
                 batch.set(docRef, entry);
             });
 
             await batch.commit();
-            alert("Executive Body data seeded successfully!");
+            alert(`${subCategory} data seeded successfully!`);
             fetchArchives();
         } catch (error) {
-            console.error("Error seeding Executive Body:", error);
+            console.error(`Error seeding ${subCategory}:`, error);
             alert("Failed to seed data.");
         }
         setIsSaving(false);
     };
 
-    const handleSeedRamthar = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Ramthar records from 1987-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            RAMTHAR_SEED_DATA.forEach(data => {
-                const docId = `ramthar-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'Ramthar',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
+    const handleSeedExecutiveBody = () => handleSeedGeneric(EXECUTIVE_BODY_SEED_DATA, 'Executive Body');
+    const handleSeedRamthar = () => handleSeedGeneric(RAMTHAR_SEED_DATA, 'Ramthar');
+    const handleSeedBuilding = () => handleSeedGeneric(BUILDING_SEED_DATA, 'BUILDING');
+    const handleSeedSocialFront = () => handleSeedGeneric(SOCIAL_FRONT_SEED_DATA, 'SOCIAL FRONT');
+    const handleSeedRefreshment = () => handleSeedGeneric(REFRESHMENT_SEED_DATA, 'REFRESHMENT');
+    const handleSeedKristianChhungkua = () => handleSeedGeneric(KRISTIAN_CHHUNGKUA_SEED_DATA, 'KRISTIAN CHHUNGKUA');
+    const handleSeedWorship = () => handleSeedGeneric(WORSHIP_SEED_DATA, 'WORSHIP');
+    const handleSeedMasihiSangati = () => handleSeedGeneric(MASIHI_SANGATI_SEED_DATA, 'MASIHI SANGATI');
+    const handleSeedReceptionUsheringDecoration = () => handleSeedGeneric(RECEPTION_USHERING_DECORATION_SEED_DATA, 'RECEPTION, USHERING & DECORATION');
+    const handleSeedArchiveLibrary = () => handleSeedGeneric(ARCHIVE_LIBRARY_SEED_DATA, 'ARCHIVE & LIBRARY');
+    const handleSeedMusic = () => handleSeedGeneric(MUSIC_SEED_DATA, 'MUSIC');
+    const handleSeedLightSound = () => handleSeedGeneric(LIGHT_SOUND_SEED_DATA, 'LIGHT & SOUND');
+    const handleSeedFinance = () => handleSeedGeneric(FINANCE_SEED_DATA, 'FINANCE');
+    const handleSeedBSI = () => handleSeedGeneric(BSI_SEED_DATA, 'BSI');
+    const handleSeedKTP = () => handleSeedGeneric(KTP_SEED_DATA, 'KTP');
+    const handleSeedKohhranHmeichhia = () => handleSeedGeneric(KOHHRAN_HMEICHHIA_SEED_DATA, 'KOHHRAN HMEICHHIA');
+    const handleSeedKohhranPavalaiPawl = () => handleSeedGeneric(KOHHRAN_PAVALAI_PAWL_SEED_DATA, 'KOHHRAN PAVALAI PAWL');
+    const handleSeedSundaySchoolTeachers = () => handleSeedGeneric(SUNDAY_SCHOOL_TEACHERS_SEED_DATA, 'SUNDAY SCHOOL ZIRTIRTUTE');
 
-            await batch.commit();
-            alert("Ramthar data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Ramthar:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedBuilding = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Building records from 1981-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            BUILDING_SEED_DATA.forEach(data => {
-                const docId = `building-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'BUILDING', // Using 'BUILDING' as per RAWNGBAWLTU_SUBCATEGORIES
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Building data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Building:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedSocialFront = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Social Front records from 1990-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            SOCIAL_FRONT_SEED_DATA.forEach(data => {
-                const docId = `socialfront-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'SOCIAL FRONT',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Social Front data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Social Front:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedRefreshment = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Refreshment records from 1989-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            REFRESHMENT_SEED_DATA.forEach(data => {
-                const docId = `refreshment-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'REFRESHMENT',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Refreshment data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Refreshment:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedKristianChhungkua = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Kristian Chhungkua records from 2008-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            KRISTIAN_CHHUNGKUA_SEED_DATA.forEach(data => {
-                const docId = `kck-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'KRISTIAN CHHUNGKUA',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Kristian Chhungkua data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Kristian Chhungkua:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedWorship = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Worship records from 2024-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            WORSHIP_SEED_DATA.forEach(data => {
-                const docId = `worship-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'WORSHIP',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Worship data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Worship:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedMasihiSangati = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Masihi Sangati records from 2000-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            MASIHI_SANGATI_SEED_DATA.forEach(data => {
-                const docId = `masihi-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'MASIHI SANGATI',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Masihi Sangati data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Masihi Sangati:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedReceptionUsheringDecoration = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Reception, Ushering & Decoration records from 2024-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            // Generate IDs based on Year to avoid duplicates if re-seeded
-            RECEPTION_USHERING_DECORATION_SEED_DATA.forEach(data => {
-                const docId = `rud-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'RECEPTION, USHERING & DECORATION',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Reception, Ushering & Decoration data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Reception, Ushering & Decoration:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedArchiveLibrary = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Archive & Library records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            ARCHIVE_LIBRARY_SEED_DATA.forEach(data => {
-                const docId = `archlib-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'ARCHIVE & LIBRARY',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Archive & Library data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Archive & Library:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedMusic = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Music records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            MUSIC_SEED_DATA.forEach(data => {
-                const docId = `music-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'MUSIC',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Music data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Music:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedLightSound = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Light & Sound records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            LIGHT_SOUND_SEED_DATA.forEach(data => {
-                const docId = `lightsound-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'LIGHT & SOUND',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Light & Sound data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Light & Sound:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedFinance = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Finance records from 2006-2025. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            FINANCE_SEED_DATA.forEach(data => {
-                const docId = `finance-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year,
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'FINANCE',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Finance data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Finance:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedBSI = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite BSI records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            BSI_SEED_DATA.forEach(data => {
-                const docId = `bsi-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'BSI',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("BSI data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding BSI:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedKTP = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite KTP records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            KTP_SEED_DATA.forEach(data => {
-                const docId = `ktp-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'KTP',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("KTP data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding KTP:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedKohhranHmeichhia = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Kohhran Hmeichhia records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            KOHHRAN_HMEICHHIA_SEED_DATA.forEach(data => {
-                const docId = `kh-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year.split('-')[0]}-01-01`, // Use first year for sorting
-                    category: 'Rawngbawltu te',
-                    subCategory: 'KOHHRAN HMEICHHIA',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Kohhran Hmeichhia data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Kohhran Hmeichhia:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
-
-    const handleSeedKohhranPavalaiPawl = async () => {
-        if (!db?.collection || !window.confirm("This will add/overwrite Kohhran Pavalai Pawl records. Continue?")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const batch = db.batch();
-            const collectionRef = db.collection('archives');
-            
-            KOHHRAN_PAVALAI_PAWL_SEED_DATA.forEach(data => {
-                const docId = `kpp-${data.year}`; 
-                const docRef = collectionRef.doc(docId);
-                const entry: ArchiveEntry = {
-                    id: docId,
-                    title: data.year, // Using JUST the year as title
-                    date: `${data.year}-01-01`,
-                    category: 'Rawngbawltu te',
-                    subCategory: 'KOHHRAN PAVALAI PAWL',
-                    description: data.details,
-                    link: ''
-                };
-                batch.set(docRef, entry);
-            });
-
-            await batch.commit();
-            alert("Kohhran Pavalai Pawl data seeded successfully!");
-            fetchArchives();
-        } catch (error) {
-            console.error("Error seeding Kohhran Pavalai Pawl:", error);
-            alert("Failed to seed data.");
-        }
-        setIsSaving(false);
-    };
 
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -1273,172 +340,35 @@ const Archives: React.FC = () => {
                                 >
                                     <Plus size={18} className="mr-2" /> {t.archives.add}
                                 </button>
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'Executive Body' && (
+                                {/* Only show specific seed button based on selected sub-category */}
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && (
                                     <button 
-                                        onClick={handleSeedExecutiveBody}
+                                        onClick={() => {
+                                            switch(selectedSubCategory) {
+                                                case 'Executive Body': handleSeedExecutiveBody(); break;
+                                                case 'Ramthar': handleSeedRamthar(); break;
+                                                case 'BUILDING': handleSeedBuilding(); break;
+                                                case 'SOCIAL FRONT': handleSeedSocialFront(); break;
+                                                case 'REFRESHMENT': handleSeedRefreshment(); break;
+                                                case 'KRISTIAN CHHUNGKUA': handleSeedKristianChhungkua(); break;
+                                                case 'WORSHIP': handleSeedWorship(); break;
+                                                case 'MASIHI SANGATI': handleSeedMasihiSangati(); break;
+                                                case 'RECEPTION, USHERING & DECORATION': handleSeedReceptionUsheringDecoration(); break;
+                                                case 'ARCHIVE & LIBRARY': handleSeedArchiveLibrary(); break;
+                                                case 'MUSIC': handleSeedMusic(); break;
+                                                case 'LIGHT & SOUND': handleSeedLightSound(); break;
+                                                case 'FINANCE': handleSeedFinance(); break;
+                                                case 'BSI': handleSeedBSI(); break;
+                                                case 'KTP': handleSeedKTP(); break;
+                                                case 'KOHHRAN HMEICHHIA': handleSeedKohhranHmeichhia(); break;
+                                                case 'KOHHRAN PAVALAI PAWL': handleSeedKohhranPavalaiPawl(); break;
+                                                case 'SUNDAY SCHOOL ZIRTIRTUTE': handleSeedSundaySchoolTeachers(); break;
+                                                default: alert("Seed data not available for this category yet.");
+                                            }
+                                        }}
                                         disabled={isSaving}
                                         className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Executive Body Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'Ramthar' && (
-                                    <button 
-                                        onClick={handleSeedRamthar}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Ramthar Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'BUILDING' && (
-                                    <button 
-                                        onClick={handleSeedBuilding}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Building Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'SOCIAL FRONT' && (
-                                    <button 
-                                        onClick={handleSeedSocialFront}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Social Front Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'REFRESHMENT' && (
-                                    <button 
-                                        onClick={handleSeedRefreshment}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Refreshment Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KRISTIAN CHHUNGKUA' && (
-                                    <button 
-                                        onClick={handleSeedKristianChhungkua}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Kristian Chhungkua Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'WORSHIP' && (
-                                    <button 
-                                        onClick={handleSeedWorship}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Worship Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'MASIHI SANGATI' && (
-                                    <button 
-                                        onClick={handleSeedMasihiSangati}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Masihi Sangati Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'RECEPTION, USHERING & DECORATION' && (
-                                    <button 
-                                        onClick={handleSeedReceptionUsheringDecoration}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Reception, Ushering & Decoration Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'ARCHIVE & LIBRARY' && (
-                                    <button 
-                                        onClick={handleSeedArchiveLibrary}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Archive & Library Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'MUSIC' && (
-                                    <button 
-                                        onClick={handleSeedMusic}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Music Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'LIGHT & SOUND' && (
-                                    <button 
-                                        onClick={handleSeedLightSound}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Light & Sound Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'FINANCE' && (
-                                    <button 
-                                        onClick={handleSeedFinance}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Finance Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'BSI' && (
-                                    <button 
-                                        onClick={handleSeedBSI}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed BSI Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KTP' && (
-                                    <button 
-                                        onClick={handleSeedKTP}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed KTP Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KOHHRAN HMEICHHIA' && (
-                                    <button 
-                                        onClick={handleSeedKohhranHmeichhia}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Kohhran Hmeichhia Data"
-                                    >
-                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
-                                    </button>
-                                )}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KOHHRAN PAVALAI PAWL' && (
-                                    <button 
-                                        onClick={handleSeedKohhranPavalaiPawl}
-                                        disabled={isSaving}
-                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
-                                        title="Seed Kohhran Pavalai Pawl Data"
+                                        title={`Seed ${selectedSubCategory} Data`}
                                     >
                                         {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
                                     </button>

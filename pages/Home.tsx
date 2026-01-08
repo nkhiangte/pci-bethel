@@ -671,11 +671,17 @@ export const Home: React.FC = () => {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center mb-16">
                   {churchPastors.map((pastor, index) => (
                     <Card key={pastor.id} className="text-center relative group">
-                      <img
-                        src={pastor.imageUrl}
-                        alt={pastor.name}
-                        className="w-full h-64 object-cover object-top"
-                      />
+                      <div className="w-full h-64 overflow-hidden relative">
+                        <img
+                            src={pastor.imageUrl}
+                            alt={pastor.name}
+                            className="w-full h-full object-cover transition-transform duration-500"
+                            style={{
+                                objectPosition: `${pastor.imagePositionX ?? 50}% ${pastor.imagePositionY ?? 0}%`, // Default top center
+                                transform: `scale(${pastor.imageScale ?? 1})`
+                            }}
+                        />
+                      </div>
                       <div className="p-6">
                         <h3 className="text-2xl font-bold text-slate-900 mb-1">{pastor.name}</h3>
                         <p className="text-church-700 font-semibold text-lg">{pastor.role}</p>
@@ -684,7 +690,7 @@ export const Home: React.FC = () => {
                         )}
                         {/* Admin Controls */}
                         {isAdmin && (
-                          <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <button
                               onClick={() => handleMoveStaff(pastor.id!, 'up', churchPastors, setChurchPastors)}
                               disabled={index === 0 || loadingPastors}
@@ -766,11 +772,17 @@ export const Home: React.FC = () => {
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
                       {churchProPastors.map((proPastor, index) => (
                         <Card key={proPastor.id} className="text-center relative group">
-                          <img 
-                            src={proPastor.imageUrl} 
-                            alt={proPastor.name} 
-                            className="w-full h-48 object-cover object-top" 
-                          />
+                          <div className="w-full h-48 overflow-hidden relative">
+                            <img 
+                                src={proPastor.imageUrl} 
+                                alt={proPastor.name} 
+                                className="w-full h-full object-cover transition-transform duration-500"
+                                style={{
+                                    objectPosition: `${proPastor.imagePositionX ?? 50}% ${proPastor.imagePositionY ?? 0}%`,
+                                    transform: `scale(${proPastor.imageScale ?? 1})`
+                                }}
+                            />
+                          </div>
                           <div className="p-4">
                             <h3 className="text-lg font-bold text-slate-900">{proPastor.name}</h3>
                             <p className="text-church-700 font-medium">{proPastor.role}</p>
@@ -779,7 +791,7 @@ export const Home: React.FC = () => {
                             )}
                           </div>
                           {isAdmin && (
-                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                               <button 
                                 onClick={() => handleMoveStaff(proPastor.id!, 'up', churchProPastors, setChurchProPastors)}
                                 disabled={index === 0 || loadingProPastors}
@@ -867,11 +879,17 @@ export const Home: React.FC = () => {
                         
                         return (
                         <Card key={elder.id} className="text-center relative group">
-                          <img 
-                            src={elder.imageUrl} 
-                            alt={elder.name} 
-                            className="w-full h-48 object-cover object-top" 
-                          />
+                          <div className="w-full h-48 overflow-hidden relative">
+                            <img 
+                                src={elder.imageUrl} 
+                                alt={elder.name} 
+                                className="w-full h-full object-cover transition-transform duration-500"
+                                style={{
+                                    objectPosition: `${elder.imagePositionX ?? 50}% ${elder.imagePositionY ?? 0}%`,
+                                    transform: `scale(${elder.imageScale ?? 1})`
+                                }}
+                            />
+                          </div>
                           <div className="p-4">
                             <h3 className="text-lg font-bold text-slate-900">{displayName}</h3>
                             <p className="text-church-700 font-medium">{elder.role}</p>
@@ -883,7 +901,7 @@ export const Home: React.FC = () => {
                             )}
                           </div>
                           {isAdmin && (
-                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                               <button 
                                 onClick={() => handleMoveStaff(elder.id!, 'up', churchElders, setChurchElders)}
                                 disabled={index === 0 || loadingElders}
