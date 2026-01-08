@@ -133,6 +133,11 @@ const DATA = {
         morning: 'Morning Service',
         evening: 'Evening Service'
       },
+      servicePrograms: {
+        sundaySchool: 'Puitling & Naupang Sunday School',
+        morning: 'Thuhriltu: Pastor',
+        evening: 'Thuhriltu: Pro Pastor'
+      },
       midWeek: {
         nilai: {
           title: 'Wednesday Service',
@@ -252,6 +257,11 @@ const DATA = {
         sundaySchool: 'Sunday School',
         morning: 'Chawhma Inkhawm',
         evening: 'Zan Inkhawm'
+      },
+      servicePrograms: {
+        sundaySchool: 'Puitling & Naupang Sunday School',
+        morning: 'Thuhriltu: Bialtu Pastor',
+        evening: 'Thuhriltu: Pro. Pastor'
       },
       midWeek: {
         nilai: {

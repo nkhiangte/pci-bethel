@@ -265,9 +265,11 @@ export const Home: React.FC = () => {
                         <Calendar className="mx-auto mb-2 opacity-80" />
                         <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.sundaySchool || t.home.sundaySchool}</h4>
                     </div>
-                    <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}</p>
-                        <p className="text-slate-500 mt-2">Every Sunday</p>
+                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
+                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.sundaySchool || 'Program TBD'}</p>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}
+                        </div>
                     </div>
                 </Card>
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300 transform md:-translate-y-4 border-church-200 border-2">
@@ -275,9 +277,11 @@ export const Home: React.FC = () => {
                         <Clock className="mx-auto mb-2 opacity-80" />
                         <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.morning || t.home.morningService}</h4>
                     </div>
-                    <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.morning || '01:30 PM'}</p>
-                        <p className="text-slate-500 mt-2">Every Sunday</p>
+                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
+                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.morning || 'Program TBD'}</p>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.morning || '01:30 PM'}
+                        </div>
                     </div>
                 </Card>
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300">
@@ -285,9 +289,11 @@ export const Home: React.FC = () => {
                         <Mic className="mx-auto mb-2 opacity-80" />
                         <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.evening || t.home.eveningService}</h4>
                     </div>
-                    <div className="p-8">
-                        <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.evening || '07:00 PM'}</p>
-                        <p className="text-slate-500 mt-2">Every Sunday</p>
+                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
+                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.evening || 'Program TBD'}</p>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.evening || '07:00 PM'}
+                        </div>
                     </div>
                 </Card>
             </div>

@@ -217,6 +217,12 @@ export interface WeeklyDuty {
     morning: string;
     evening: string;
   };
+  // Added servicePrograms to display program details instead of just time
+  servicePrograms?: {
+    sundaySchool: string;
+    morning: string;
+    evening: string;
+  };
   // Added Mid-week programs
   midWeek?: {
     nilai: {

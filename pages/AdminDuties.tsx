@@ -44,6 +44,11 @@ const AdminDuties: React.FC = () => {
                       morning: 'Chawhma Inkhawm',
                       evening: 'Zan Inkhawm'
                   },
+                  servicePrograms: {
+                      sundaySchool: 'Puitling & Naupang Sunday School',
+                      morning: 'Thuhriltu: Bialtu Pastor',
+                      evening: 'Thuhriltu: Pro. Pastor'
+                  },
                   midWeek: {
                       nilai: { title: 'Nilai Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' },
                       inrinni: { title: 'Inrinni Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' }
@@ -104,6 +109,16 @@ const AdminDuties: React.FC = () => {
         }));
     };
 
+    const handleServiceProgramChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
+        setDuties(prev => ({
+            ...prev,
+            servicePrograms: {
+                ...(prev.servicePrograms || { sundaySchool: '', morning: '', evening: '' }),
+                [timeType]: value
+            }
+        }));
+    };
+
     const handleMidWeekChange = (day: 'nilai' | 'inrinni', field: string, value: string) => {
         setDuties(prev => ({
             ...prev,
@@ -157,10 +172,16 @@ const AdminDuties: React.FC = () => {
                                         placeholder="Custom Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
                                         value={duties.serviceTimes?.sundaySchool || ''} 
                                         onChange={e => handleServiceTimeChange('sundaySchool', e.target.value)} 
                                         placeholder="Time (e.g. 10:00 AM)"
+                                    />
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.servicePrograms?.sundaySchool || ''} 
+                                        onChange={e => handleServiceProgramChange('sundaySchool', e.target.value)} 
+                                        placeholder="Program (e.g. Zirlai 5)"
                                     />
                                 </div>
                                 {/* Morning */}
@@ -173,10 +194,16 @@ const AdminDuties: React.FC = () => {
                                         placeholder="Custom Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
                                         value={duties.serviceTimes?.morning || ''} 
                                         onChange={e => handleServiceTimeChange('morning', e.target.value)} 
                                         placeholder="Time (e.g. 01:30 PM)"
+                                    />
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.servicePrograms?.morning || ''} 
+                                        onChange={e => handleServiceProgramChange('morning', e.target.value)} 
+                                        placeholder="Program (e.g. Thuhriltu: Pastor)"
                                     />
                                 </div>
                                 {/* Evening */}
@@ -189,10 +216,16 @@ const AdminDuties: React.FC = () => {
                                         placeholder="Custom Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
                                         value={duties.serviceTimes?.evening || ''} 
                                         onChange={e => handleServiceTimeChange('evening', e.target.value)} 
                                         placeholder="Time (e.g. 07:00 PM)"
+                                    />
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
+                                        value={duties.servicePrograms?.evening || ''} 
+                                        onChange={e => handleServiceProgramChange('evening', e.target.value)} 
+                                        placeholder="Program (e.g. Thuhriltu: T.Upa)"
                                     />
                                 </div>
                             </div>
