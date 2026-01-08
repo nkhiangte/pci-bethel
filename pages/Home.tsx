@@ -11,12 +11,14 @@ import { Link } from 'react-router-dom';
 export const Home: React.FC = () => {
   const { t, language } = useLanguage();
   const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay();
-  const { weeklyDuty: staticWeeklyDuty, pastors: staticPastors } = getConstants(language);
+  const { weeklyDuty: staticWeeklyDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
 
   const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticWeeklyDuty);
   const [loadingDuty, setLoadingDuty] = useState(true);
   const [churchPastors, setChurchPastors] = useState<Staff[]>(staticPastors);
   const [loadingPastors, setLoadingPastors] = useState(true);
+  const [churchElders, setChurchElders] = useState<Staff[]>(staticElders);
+  const [loadingElders, setLoadingElders] = useState(true);
 
   // Fetch Pastors
   const fetchPastors = useCallback(async () => {
@@ -51,6 +53,32 @@ export const Home: React.FC = () => {
     setLoadingPastors(false);
   }, [staticPastors]);
 
+  // Fetch Elders
+  const fetchElders = useCallback(async () => {
+    setLoadingElders(true);
+    if (!db || !db.collection) {
+      setChurchElders(staticElders);
+      setLoadingElders(false);
+      return;
+    }
+    try {
+      const snapshot = await db.collection('elders').orderBy('order', 'asc').orderBy('name', 'asc').get();
+      if (!snapshot.empty) {
+        const fetchedData = snapshot.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Staff[];
+        setChurchElders(fetchedData);
+      } else {
+        setChurchElders(staticElders);
+      }
+    } catch (error) {
+      console.error("Error fetching elders:", error);
+      setChurchElders(staticElders);
+    }
+    setLoadingElders(false);
+  }, [staticElders]);
+
   // Fetch Weekly Duty
   const fetchWeeklyDuty = useCallback(async () => {
       setLoadingDuty(true);
@@ -76,8 +104,9 @@ export const Home: React.FC = () => {
 
   useEffect(() => {
       fetchPastors();
+      fetchElders();
       fetchWeeklyDuty();
-  }, [fetchPastors, fetchWeeklyDuty]);
+  }, [fetchPastors, fetchElders, fetchWeeklyDuty]);
 
   const renderVerseContent = () => {
     if (verseLoading) {
@@ -107,30 +136,13 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-16 pb-12">
-      {/* Hero Section */}
-      <section className="relative -mt-6 mb-12">
-         <div className="relative h-[500px] w-full overflow-hidden">
-            <div className="absolute inset-0 bg-church-900/60 z-10"></div>
-            <img src="https://i.ibb.co/V06hg04Q/WEBBAN.png" className="w-full h-full object-cover" alt="Banner" />
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center text-white px-4">
-                <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">Mizoram Synod</h1>
-                <h2 className="text-2xl md:text-4xl font-light mb-6">Champhai Bethel Kohhran</h2>
-                <p className="text-lg md:text-xl max-w-2xl text-slate-200 mb-8 italic">"{t.home.heroTagline}"</p>
-                <div className="flex gap-4">
-                    <Link to="/about" className="px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/50 rounded-full hover:bg-white/30 transition font-medium">{t.home.newHere}</Link>
-                    <Link to="/gallery/kohhran-hunpui" className="px-6 py-3 bg-church-600 rounded-full hover:bg-church-500 transition font-bold shadow-lg">{t.home.watchSermons}</Link>
-                </div>
-            </div>
-         </div>
-      </section>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="space-y-12 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Verse of the Day */}
-        <section>
-            <div className="relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-church-100 text-center max-w-4xl mx-auto -mt-24 z-30">
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-church-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-md">
+        <section className="mt-8">
+            <div className="bg-white p-8 md:p-10 rounded-2xl shadow-lg border border-church-100 text-center max-w-4xl mx-auto relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-church-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-md">
                     {t.home.verseOfTheDay}
                 </div>
                 {renderVerseContent()}
@@ -284,6 +296,35 @@ export const Home: React.FC = () => {
                 </div>
             </section>
         )}
+
+        {/* Elders Section */}
+        <section>
+            <div className="text-center mb-10">
+                <h2 className="text-3xl font-serif font-bold text-church-900 mb-2">{t.home.kohhranElders}</h2>
+                <div className="h-1 w-20 bg-church-500 mx-auto rounded-full"></div>
+            </div>
+            
+            {loadingElders ? (
+                <div className="py-12 flex justify-center"><Loader className="animate-spin text-church-500" /></div>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {churchElders.map((elder) => (
+                        <Card key={elder.id} className="text-center p-6 hover:shadow-xl transition-all duration-300 border border-slate-100">
+                            <div className="h-40 w-40 mx-auto rounded-full overflow-hidden mb-4 bg-slate-200 shadow-md ring-4 ring-slate-50">
+                                <img 
+                                    src={elder.imageUrl} 
+                                    alt={elder.name} 
+                                    className="w-full h-full object-cover" 
+                                />
+                            </div>
+                            <h3 className="font-bold text-slate-800 text-base mb-1">{elder.name}</h3>
+                            <p className="text-church-600 text-xs font-bold uppercase tracking-wider">{elder.role}</p>
+                            {elder.period && <p className="text-slate-400 text-xs mt-1">Ordained: {elder.period}</p>}
+                        </Card>
+                    ))}
+                </div>
+            )}
+        </section>
 
       </div>
     </div>

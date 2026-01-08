@@ -2,6 +2,7 @@
 
 
 
+
 export type Language = 'en' | 'mizo';
 
 export const translations = {
@@ -213,7 +214,7 @@ export const translations = {
       archives: 'Archives',
       admin: 'Admin',
       statistics: 'Statistics',
-      duties: 'Tunkar Inruatna',
+      duties: 'Tunkar Hun Ruatna',
     },
     home: {
       newHere: 'I vawi khatna em ni?',
