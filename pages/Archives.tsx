@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -120,6 +120,77 @@ const SUNDAY_SCHOOL_TEACHERS_SEED_DATA = [
   { year: '2025', details: "Superintendent : Upa HT Vanlalsawma\nAsst.Spdt i/c PT : Upa David Lalchhanhima\nAsst.Supdt i/c NPSS : Upa Lianpianga\nSecretary : T.Upa C Lal\\hazuala\nAsst. Secretary i/c PTSS : 1) Pu Vanlalhriata 2) Pu C Rohmingliana\nAsst. Secretary i/c NPSS : 1) Pu Manliankhupa 2) Nl. F Lalmuankimi\n\n[Puitling Zirtirtu]\nUpa B Hranghlira, Upa K.Vanlalhmuaka, Upa H Lalmawia, Upa PC Lalhmingliana, Upa R Lalramhluna, Upa Daikhawzama, Upa C Lalthantluanga, Upa HT Lalthlengliana, Upa H Zairemmawia, Upa C Zohmingthanga, T.Upa Hmingthanmawia Sailo, Pu K Lalduata, Pi PC Lalhmachhuani, Pu K Lalduhawma, Pu K |huamluaia, Pu C Lalzova, Pu P Lalhmingthanga, Pi R Ramengzuali, Pu GF Thanga, Pu Dawngsuanpauva, Pi V Sangkungi, Pu Lalramthara, Pu MS Dawngliana, Pu Lalsanglura Zote, Nl. Ngurbawitluangi, Pu H Vanlalthanga, Pi Lalhlimthangi Khiangte, Pu Lalmuanpuia Ralte, Pi K Malsawmdawngi, Pu T Sangtluanga, T.Upa C.Hmingthansanga, Pu K Lalengthanga, Pu C Lalmuansanga, Pu C Lalrawngbawla, Pu V Lalbiakzuala, Pu JC Laldinthara, Pu Thanglianmanga, Rev Vankhuma, Pu R Lalmalsawma, Pu C Malsawmdawngliana, T.Upa V Kaizasiama, Pu Kenneth Lalthanzauva, Pu F Lalduhawma, Pu Lalhmingmawia, Pu Khawlrosiama, Pu L Khenpauva\n\n[Senior Department:]\nPu Kap\\huama, Tv. H Lalfakawma, Nl. Ningsianmawii, Nl. Lalrammawii Renthlei, Pi H.Lallawmkimi, Tv. Vanlalchhana, Pu Lalengkima, Pu F Hmingthanzuala, Pi C Lalramthari, Pu Lalramnghakhlela, Nl. Lallawmzuali\n\n[Sacrament Department]\nT.Upa Lalremruata, Pi C.Lalchhandami, Nl. Lalmuanchhungi, Tv. Thangdeihmanga, Pi Vanlalnghaki Colney, Pu Lalmuanpuia, Tv. Liankhankhama\n\n[Intermediate Department]\nPu Nelson Khiangte, Pu Thangkunga Hualngo, Nl. Ngurthankimi, Pu K Lalramngheta, Nl.Lalnunthari, Pu R.Lalromawia, Nl. Vungngaihdawni, Nl. PC Lalrintluangi, Pi K.Malsawmtluangi, Tv. Lalhmunngheta, Tv. B.Thangzauva, Pu C.Ramtharnghaka, Pu F.Lalhriatpuia\n\n[Junior Department]\nPu Zoramenga, Tv. T.Lalnunzira, Nl. C.Lalremruati, Nl. B.Lalnunsiami, Pu Vanlalmawia, Nl. Marina Lalfakawmi, Nl. C Ramnghinglovi, Pi Lalmuanpuii Hlondo, Nl. Thangdinsangi, Pu C Lalengmawia, Tv. Vanlalzauva, Nl. Saimawipuii Sailo, Pu Laltlansanga, Pu Mungngaihsanga, Nl. B Lalrampari, Pu Lalhruaitluanga, Nl. C Zonunsiami, Nl. Thangsuankimi, Nl. Vunglamluni, Tv. Thangzasanga\n\n[Primary Department]\nPu V Lalbiakdika, Pi LR.Dinsangi, Nl.Zodinsangi, Pu C.Lalchhanhima, Nl. Baby Romalsawmi, Pu Vanlalzamlova, Pu Tluangzathanga, Nl. Khupngaihzovi, Nl. PC Lalthanmawii, Pi Hmingthanmawii, Pu C Rodinthara, Tv. PB.Hmangaihropuia, Nl. V.Nunmawii, Tv. T Vanneihtluanga, Nl. Zosangpuii, Tv. C Lalhumhima, Nl. Malsawmmawii, Nl. Enlamchingi\n\n[Beginner Department]\nPi K.Lalbiakthangi, Pu PC.Lalmuanpuia, Nl. Ruthi Lalnunfeli, Pu Vanlalruatpuia, Nl. Lalnunsiami, Pu Lalmuanpuia Hauhnar, Pu T Lalramnghaka, Pi C Lalhruaitluangi, Nl. Chingsawmluni, Nl. C Lalrampansangi, Nl. Lalduhawmi, Nl. R Lalrinmawii\n\n[Pre-Beginner Department]\nPi K.Lalrokhumi, Pi Mary Lalnunmawii, Pi Lalbiakdiki, Pi Lalchhanhimi, Pi Linda Vanlalruati, Pi HT Lalnuntluangi, Nl. DL Kimi Suante" }
 ];
 
+// Helper function to generate static data for fallback
+const getStaticArchives = (): ArchiveEntry[] => {
+    const staticEntries: ArchiveEntry[] = [];
+
+    // 1. Process SS Data
+    SUNDAY_SCHOOL_TEACHERS_SEED_DATA.forEach(item => {
+        const fullText = item.details;
+        const year = item.year;
+        const lines = fullText.split('\n');
+        
+        let currentDept = 'SS Zirtirtute - O.B.';
+        let currentContent: string[] = [];
+        
+        const addEntry = (dept: string, content: string[]) => {
+            if (content.length === 0) return;
+            const desc = content.join('\n').trim();
+            if (!desc) return;
+            
+            const subCatSlug = dept.replace(/SS Zirtirtute - /g, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            const docId = `static-ss-${subCatSlug}-${year}`;
+            
+            staticEntries.push({
+                id: docId,
+                title: year,
+                date: `${year}-01-01`,
+                category: 'Rawngbawltu te',
+                subCategory: dept,
+                description: desc,
+                link: ''
+            });
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line && currentContent.length === 0) continue; 
+
+            const match = line.match(/^\[(.*?)\]/);
+            
+            if (match) {
+                addEntry(currentDept, currentContent);
+                currentContent = []; 
+                const rawDeptName = match[1].toLowerCase();
+                
+                if (rawDeptName.includes('puitling')) currentDept = 'SS Zirtirtute - Puitling';
+                else if (rawDeptName.includes('senior')) currentDept = 'SS Zirtirtute - Senior';
+                else if (rawDeptName.includes('sacrament')) currentDept = 'SS Zirtirtute - Sacrament';
+                else if (rawDeptName.includes('intermediate')) currentDept = 'SS Zirtirtute - Intermediate';
+                else if (rawDeptName.includes('junior')) currentDept = 'SS Zirtirtute - Junior';
+                else if (rawDeptName.includes('primary')) currentDept = 'SS Zirtirtute - Primary';
+                else if (rawDeptName.includes('pre') && rawDeptName.includes('beginner')) currentDept = 'SS Zirtirtute - Pre-Beginner';
+                else if (rawDeptName.includes('beginner')) currentDept = 'SS Zirtirtute - Beginner';
+                else currentDept = 'SS Zirtirtute - O.B.';
+                
+            } else {
+                currentContent.push(line);
+            }
+        }
+        addEntry(currentDept, currentContent);
+    });
+
+    // 2. Add other mock/seed data if necessary (e.g. MOCK_ARCHIVES)
+    const MOCK_ARCHIVES: ArchiveEntry[] = [
+        { id: '1', title: 'Church Foundation Stone Laying', date: '1985-04-12', category: 'History', description: 'Records of the foundation stone laying ceremony.', link: '#' },
+        { id: '2', title: 'Silver Jubilee Souvenir', date: '2010-10-15', category: 'Document', description: 'Scanned copy of the Silver Jubilee souvenir book.', link: '#' },
+        { id: '3', title: 'Old Church Building Photo', date: '1990-05-20', category: 'Photo', description: 'Photograph of the first church building.', link: '#' },
+        { id: '4', title: '2023', date: '2023-01-01', category: 'Rawngbawltu te', subCategory: 'Executive Body', description: 'List of executive committee members for the year 2023.', link: '#' }
+    ];
+
+    return [...staticEntries, ...MOCK_ARCHIVES];
+};
+
 export const Archives: React.FC = () => {
     const { t } = useLanguage();
     const { isAdmin } = useAuth();
@@ -129,69 +200,130 @@ export const Archives: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
     const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
+    const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState<Partial<ArchiveEntry>>({});
     const [isSaving, setIsSaving] = useState(false);
 
-    // Initial Mock Data (Fallback)
-    const MOCK_ARCHIVES: ArchiveEntry[] = [
-        { id: '1', title: 'Church Foundation Stone Laying', date: '1985-04-12', category: 'History', description: 'Records of the foundation stone laying ceremony.', link: '#' },
-        { id: '2', title: 'Silver Jubilee Souvenir', date: '2010-10-15', category: 'Document', description: 'Scanned copy of the Silver Jubilee souvenir book.', link: '#' },
-        { id: '3', title: 'Old Church Building Photo', date: '1990-05-20', category: 'Photo', description: 'Photograph of the first church building.', link: '#' },
-        { id: '4', title: '2023', date: '2023-01-01', category: 'Rawngbawltu te', subCategory: 'Executive Body', description: 'List of executive committee members for the year 2023.', link: '#' }
-    ];
-
     const fetchArchives = useCallback(async () => {
         setLoading(true);
+        setMissingIndexUrl(null);
+        
+        let fetchedData: ArchiveEntry[] = [];
+        let useStatic = false;
+
         if (!db || !db.collection) {
-            setArchives(MOCK_ARCHIVES);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            let query = db.collection('archives').orderBy('date', 'desc');
-            
-            // Check specific logic for Sunday School Teachers vs general SubCategories
-            if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
-                if (selectedSubCategory === 'Sunday School Teachers') {
-                    // If we are in the main SS Teachers view but haven't selected a dept, don't fetch any list
-                    if (!activeSSDepartment) {
-                        setArchives([]); 
-                        setLoading(false);
-                        return; 
+            useStatic = true;
+        } else {
+            try {
+                // Base Reference
+                let collectionRef = db.collection('archives');
+                let baseQuery: any = collectionRef;
+                let requiresSortInJs = false;
+                
+                // Construct Filters
+                if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
+                    if (selectedSubCategory === 'Sunday School Teachers') {
+                        if (!activeSSDepartment) {
+                             // If no dept selected in UI, fetch nothing from DB
+                             setArchives([]); 
+                             setLoading(false);
+                             return; 
+                        }
+                        baseQuery = baseQuery.where('subCategory', '==', `SS Zirtirtute - ${activeSSDepartment}`);
+                    } else if (selectedSubCategory !== 'All') {
+                        baseQuery = baseQuery.where('subCategory', '==', selectedSubCategory);
+                    } else {
+                        baseQuery = baseQuery.where('category', '==', 'Rawngbawltu te');
                     }
-                    // Fetch specifically for the active department
-                    query = db.collection('archives').where('subCategory', '==', `SS Zirtirtute - ${activeSSDepartment}`).orderBy('date', 'desc');
-                } else if (selectedSubCategory !== 'All') {
-                    // Regular subcategory filtering
-                    query = db.collection('archives').where('subCategory', '==', selectedSubCategory).orderBy('date', 'desc');
-                } else {
-                    // 'All' subcategory under Rawngbawltu te
-                    query = db.collection('archives').where('category', '==', 'Rawngbawltu te').orderBy('date', 'desc');
+                } else if (selectedCategory !== 'All') {
+                    baseQuery = baseQuery.where('category', '==', selectedCategory);
                 }
-            } else if (selectedCategory !== 'All') {
-                query = db.collection('archives').where('category', '==', selectedCategory).orderBy('date', 'desc');
-            }
 
-            const snapshot = await query.get();
-            if (!snapshot.empty) {
-                const fetchedData = snapshot.docs.map((doc: any) => ({
-                    id: doc.id,
-                    ...doc.data()
-                })) as ArchiveEntry[];
-                setArchives(fetchedData);
-            } else {
-                setArchives([]); // Empty if no data found for criteria
+                // Attempt 1: Query WITH server-side sorting (Fastest, but needs index)
+                try {
+                    const sortedQuery = baseQuery.orderBy('date', 'desc');
+                    const snapshot = await sortedQuery.get();
+                    if (!snapshot.empty) {
+                        fetchedData = snapshot.docs.map((doc: any) => ({
+                            id: doc.id,
+                            ...doc.data()
+                        })) as ArchiveEntry[];
+                    } else {
+                        // Empty result from DB, could be truly empty or just not populated yet.
+                        // If it's empty, we might want to check if we should show static content?
+                        // For now, let's assume empty DB means empty result unless it fails.
+                        if (snapshot.empty && selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'Sunday School Teachers') {
+                             // Special case: if SS data is empty in DB, maybe fallback to static so users see something?
+                             // But let's stick to the principle: DB overrides static unless DB fails.
+                        }
+                    }
+                } catch (indexError: any) {
+                    // Check if error is missing index
+                    if (indexError.code === 'failed-precondition' || indexError.message?.includes('index')) {
+                        console.warn("Index missing for Archives query. Falling back to client-side sorting.", indexError);
+                        
+                        // Extract URL for admin convenience
+                        const match = indexError.message?.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
+                        if (match && isAdmin) {
+                             setMissingIndexUrl(match[0]);
+                        }
+
+                        // Attempt 2: Query WITHOUT sorting (Slower if list is huge, but works without composite index)
+                        const unsortedSnapshot = await baseQuery.get();
+                        if (!unsortedSnapshot.empty) {
+                            fetchedData = unsortedSnapshot.docs.map((doc: any) => ({
+                                id: doc.id,
+                                ...doc.data()
+                            })) as ArchiveEntry[];
+                            requiresSortInJs = true;
+                        } else {
+                             // If unsorted query is also empty, then it's truly empty.
+                        }
+                    } else {
+                        throw indexError; // Rethrow other errors (permission, network) to trigger static fallback
+                    }
+                }
+
+                // Client-side sort if needed
+                if (requiresSortInJs) {
+                    fetchedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                }
+
+            } catch (error) {
+                console.error("Error fetching archives:", error);
+                useStatic = true; // Error, fallback to static
             }
-        } catch (error) {
-            console.error("Error fetching archives:", error);
-            setArchives([]);
         }
+
+        if (useStatic) {
+            const allStatic = getStaticArchives();
+            // Filter static data in memory to match the query parameters
+            fetchedData = allStatic.filter(item => {
+                // Category Filter
+                if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
+
+                // Sub Category Filter (Only for Rawngbawltu te)
+                if (selectedCategory === 'Rawngbawltu te') {
+                    if (selectedSubCategory === 'All') return true;
+                    if (selectedSubCategory === 'Sunday School Teachers') {
+                        if (!activeSSDepartment) return false;
+                        return item.subCategory === `SS Zirtirtute - ${activeSSDepartment}`;
+                    }
+                    return item.subCategory === selectedSubCategory;
+                }
+                
+                return true;
+            });
+            // Sort static data
+            fetchedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        }
+
+        setArchives(fetchedData);
         setLoading(false);
-    }, [selectedCategory, selectedSubCategory, activeSSDepartment]);
+    }, [selectedCategory, selectedSubCategory, activeSSDepartment, isAdmin]);
 
     useEffect(() => {
         fetchArchives();
@@ -230,6 +362,10 @@ export const Archives: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
+        if (id.startsWith('static-')) {
+            alert("Cannot delete static/seed data directly. Please seed the database first to manage records.");
+            return;
+        }
         if (!db?.collection || !window.confirm("Are you sure you want to delete this archive entry?")) return;
         try {
             await db.collection('archives').doc(id).delete();
@@ -255,7 +391,7 @@ export const Archives: React.FC = () => {
                 delete data.subCategory;
             }
 
-            if (id) {
+            if (id && !id.startsWith('static-')) {
                 await db.collection('archives').doc(id).set(data, { merge: true });
             } else {
                 await db.collection('archives').add(data);
@@ -459,6 +595,33 @@ export const Archives: React.FC = () => {
                     <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">{t.archives.title}</h1>
                     <p className="text-slate-600 max-w-2xl mx-auto">{t.archives.subtitle}</p>
                 </div>
+
+                {/* Database Index Warning for Admins */}
+                {isAdmin && missingIndexUrl && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center">
+                            <div className="bg-yellow-100 p-2 rounded-full mr-3">
+                                <AlertTriangle className="text-yellow-700" size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-sm">Database Index Required</h3>
+                                <p className="text-xs mt-1 max-w-xl">
+                                    To optimize sorting for this category, Firestore requires a composite index. 
+                                    Please click the button to create it automatically. 
+                                    <span className="font-bold text-yellow-900 block mt-1">Your data is currently visible using a client-side fallback.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <a 
+                            href={missingIndexUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-yellow-600 text-white text-xs font-bold rounded-lg hover:bg-yellow-700 transition shadow-sm whitespace-nowrap flex items-center"
+                        >
+                            Create Index <ExternalLink size={12} className="ml-1" />
+                        </a>
+                    </div>
+                )}
 
                 {/* Main Category Filters */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
