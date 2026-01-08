@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, AlertTriangle, Users, Database } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -15,6 +16,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 // Sub-categories for Rawngbawltu te
+// Consolidated 'SS Zirtirtute - ...' into 'Sunday School Teachers'
 const RAWNGBAWLTU_SUBCATEGORIES = [
     'Executive Body',
     'Ramthar',
@@ -30,17 +32,8 @@ const RAWNGBAWLTU_SUBCATEGORIES = [
     'ARCHIVE & LIBRARY',
     'MUSIC',
     'LIGHT & SOUND',
-    'SUNDAY SCHOOL', // Committee
-    // Broken down Sunday School Teachers
-    'SS Zirtirtute - O.B.',
-    'SS Zirtirtute - Puitling',
-    'SS Zirtirtute - Senior',
-    'SS Zirtirtute - Sacrament',
-    'SS Zirtirtute - Intermediate',
-    'SS Zirtirtute - Junior',
-    'SS Zirtirtute - Primary',
-    'SS Zirtirtute - Beginner',
-    'SS Zirtirtute - Pre-Beginner',
+    'SUNDAY SCHOOL', // This is the committee
+    'Sunday School Teachers', // New consolidated category
     'THUHRILTU',
     'ṬANTU',
     'KOHHRAN HMEICHHIA',
@@ -48,8 +41,19 @@ const RAWNGBAWLTU_SUBCATEGORIES = [
     'KOHHRAN PAVALAI PAWL'
 ];
 
-// Placeholder seed data for other categories to keep file size manageable and focus on the requested change
-// In a real app, these would be populated similarly or fetched from a separate file
+const SS_DEPARTMENTS = [
+    'O.B.',
+    'Puitling',
+    'Senior',
+    'Sacrament',
+    'Intermediate',
+    'Junior',
+    'Primary',
+    'Beginner',
+    'Pre-Beginner'
+];
+
+// Placeholder seed data for other categories
 const EXECUTIVE_BODY_SEED_DATA: any[] = [];
 const RAMTHAR_SEED_DATA: any[] = [];
 const BUILDING_SEED_DATA: any[] = [];
@@ -124,6 +128,7 @@ export const Archives: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
+    const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
     
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -147,7 +152,31 @@ export const Archives: React.FC = () => {
         }
 
         try {
-            const snapshot = await db.collection('archives').orderBy('date', 'desc').get();
+            let query = db.collection('archives').orderBy('date', 'desc');
+            
+            // Check specific logic for Sunday School Teachers vs general SubCategories
+            if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
+                if (selectedSubCategory === 'Sunday School Teachers') {
+                    // If we are in the main SS Teachers view but haven't selected a dept, don't fetch any list
+                    if (!activeSSDepartment) {
+                        setArchives([]); 
+                        setLoading(false);
+                        return; 
+                    }
+                    // Fetch specifically for the active department
+                    query = db.collection('archives').where('subCategory', '==', `SS Zirtirtute - ${activeSSDepartment}`).orderBy('date', 'desc');
+                } else if (selectedSubCategory !== 'All') {
+                    // Regular subcategory filtering
+                    query = db.collection('archives').where('subCategory', '==', selectedSubCategory).orderBy('date', 'desc');
+                } else {
+                    // 'All' subcategory under Rawngbawltu te
+                    query = db.collection('archives').where('category', '==', 'Rawngbawltu te').orderBy('date', 'desc');
+                }
+            } else if (selectedCategory !== 'All') {
+                query = db.collection('archives').where('category', '==', selectedCategory).orderBy('date', 'desc');
+            }
+
+            const snapshot = await query.get();
             if (!snapshot.empty) {
                 const fetchedData = snapshot.docs.map((doc: any) => ({
                     id: doc.id,
@@ -155,14 +184,14 @@ export const Archives: React.FC = () => {
                 })) as ArchiveEntry[];
                 setArchives(fetchedData);
             } else {
-                setArchives(MOCK_ARCHIVES); // Use mock data if empty for demo purposes, or empty array in production
+                setArchives([]); // Empty if no data found for criteria
             }
         } catch (error) {
             console.error("Error fetching archives:", error);
-            setArchives(MOCK_ARCHIVES);
+            setArchives([]);
         }
         setLoading(false);
-    }, []);
+    }, [selectedCategory, selectedSubCategory, activeSSDepartment]);
 
     useEffect(() => {
         fetchArchives();
@@ -172,8 +201,16 @@ export const Archives: React.FC = () => {
     useEffect(() => {
         if (selectedCategory !== 'Rawngbawltu te') {
             setSelectedSubCategory('All');
+            setActiveSSDepartment(null);
         }
     }, [selectedCategory]);
+
+    // When switching subcategories, reset SS department selection unless staying within SS context
+    useEffect(() => {
+        if (selectedSubCategory !== 'Sunday School Teachers') {
+            setActiveSSDepartment(null);
+        }
+    }, [selectedSubCategory]);
 
     const handleAddNew = () => {
         setEditingEntry({
@@ -373,17 +410,47 @@ export const Archives: React.FC = () => {
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               item.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-        
-        // Sub-category filter logic
-        const matchesSubCategory = selectedCategory !== 'Rawngbawltu te' || 
-                                   selectedSubCategory === 'All' || 
-                                   item.subCategory === selectedSubCategory;
-
-        return matchesSearch && matchesCategory && matchesSubCategory;
+        // Category filtering is handled in fetch, but search is client side
+        return matchesSearch; 
     });
 
     const categories = ['All', 'Document', 'Photo', 'Video', 'History', 'Minute', 'Rawngbawltu te'];
+
+    // Render Department Grid
+    const renderDepartmentGrid = () => (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-800">Sunday School Departments</h2>
+                {isAdmin && (
+                    <button 
+                        onClick={handleSeedSundaySchoolTeachers}
+                        disabled={isSaving}
+                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50 text-sm"
+                    >
+                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Database size={16} className="mr-2" />}
+                        Seed SS Teachers Data
+                    </button>
+                )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {SS_DEPARTMENTS.map((dept) => (
+                    <button
+                        key={dept}
+                        onClick={() => setActiveSSDepartment(dept)}
+                        className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-church-200 transition text-left group flex items-center"
+                    >
+                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 group-hover:bg-church-100 transition-colors">
+                            <FolderOpen size={24} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-800 text-lg group-hover:text-church-700 transition-colors">{dept}</h3>
+                            <p className="text-xs text-slate-500 mt-1">View Teacher Records</p>
+                        </div>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
@@ -431,32 +498,28 @@ export const Archives: React.FC = () => {
                                     <Plus size={18} className="mr-2" /> {t.archives.add}
                                 </button>
                                 {/* Only show specific seed button based on selected sub-category */}
-                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && (
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory !== 'All' && selectedSubCategory !== 'Sunday School Teachers' && (
                                     <button 
                                         onClick={() => {
-                                            if (selectedSubCategory.startsWith('SS Zirtirtute')) {
-                                                handleSeedSundaySchoolTeachers();
-                                            } else {
-                                                switch(selectedSubCategory) {
-                                                    case 'Executive Body': handleSeedExecutiveBody(); break;
-                                                    case 'Ramthar': handleSeedRamthar(); break;
-                                                    case 'BUILDING': handleSeedBuilding(); break;
-                                                    case 'SOCIAL FRONT': handleSeedSocialFront(); break;
-                                                    case 'REFRESHMENT': handleSeedRefreshment(); break;
-                                                    case 'KRISTIAN CHHUNGKUA': handleSeedKristianChhungkua(); break;
-                                                    case 'WORSHIP': handleSeedWorship(); break;
-                                                    case 'MASIHI SANGATI': handleSeedMasihiSangati(); break;
-                                                    case 'RECEPTION, USHERING & DECORATION': handleSeedReceptionUsheringDecoration(); break;
-                                                    case 'ARCHIVE & LIBRARY': handleSeedArchiveLibrary(); break;
-                                                    case 'MUSIC': handleSeedMusic(); break;
-                                                    case 'LIGHT & SOUND': handleSeedLightSound(); break;
-                                                    case 'FINANCE': handleSeedFinance(); break;
-                                                    case 'BSI': handleSeedBSI(); break;
-                                                    case 'KTP': handleSeedKTP(); break;
-                                                    case 'KOHHRAN HMEICHHIA': handleSeedKohhranHmeichhia(); break;
-                                                    case 'KOHHRAN PAVALAI PAWL': handleSeedKohhranPavalaiPawl(); break;
-                                                    default: alert("Seed data not available for this category yet.");
-                                                }
+                                            switch(selectedSubCategory) {
+                                                case 'Executive Body': handleSeedExecutiveBody(); break;
+                                                case 'Ramthar': handleSeedRamthar(); break;
+                                                case 'BUILDING': handleSeedBuilding(); break;
+                                                case 'SOCIAL FRONT': handleSeedSocialFront(); break;
+                                                case 'REFRESHMENT': handleSeedRefreshment(); break;
+                                                case 'KRISTIAN CHHUNGKUA': handleSeedKristianChhungkua(); break;
+                                                case 'WORSHIP': handleSeedWorship(); break;
+                                                case 'MASIHI SANGATI': handleSeedMasihiSangati(); break;
+                                                case 'RECEPTION, USHERING & DECORATION': handleSeedReceptionUsheringDecoration(); break;
+                                                case 'ARCHIVE & LIBRARY': handleSeedArchiveLibrary(); break;
+                                                case 'MUSIC': handleSeedMusic(); break;
+                                                case 'LIGHT & SOUND': handleSeedLightSound(); break;
+                                                case 'FINANCE': handleSeedFinance(); break;
+                                                case 'BSI': handleSeedBSI(); break;
+                                                case 'KTP': handleSeedKTP(); break;
+                                                case 'KOHHRAN HMEICHHIA': handleSeedKohhranHmeichhia(); break;
+                                                case 'KOHHRAN PAVALAI PAWL': handleSeedKohhranPavalaiPawl(); break;
+                                                default: alert("Seed data not available for this category yet.");
                                             }
                                         }}
                                         disabled={isSaving}
@@ -502,61 +565,84 @@ export const Archives: React.FC = () => {
                     </div>
                 )}
 
+                {/* Loading State */}
                 {loading ? (
                     <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
-                ) : filteredArchives.length > 0 ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredArchives.map(entry => {
-                            const Icon = CATEGORY_ICONS[entry.category] || Archive;
-                            const isOfficeBearer = entry.category === 'Rawngbawltu te';
-
-                            return (
-                                <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
-                                    {isAdmin && (
-                                        <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
-                                            <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
-                                        </div>
-                                    )}
-                                    <div className="flex items-start mb-4">
-                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
-                                            <Icon size={24} />
-                                        </div>
-                                        <div>
-                                            {!isOfficeBearer && (
-                                                <div className="flex flex-wrap gap-2 mb-1">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
-                                                    {entry.subCategory && (
-                                                        <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                            {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
-                                        </div>
-                                    </div>
-                                    <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
-                                        {entry.description}
-                                    </div>
-                                    {entry.link && (
-                                        <a 
-                                            href={entry.link} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
-                                        >
-                                            View Resource <ExternalLink size={14} className="ml-1" />
-                                        </a>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
                 ) : (
-                    <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
-                        <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                        <p className="text-slate-500">{t.archives.empty}</p>
-                    </div>
+                    // Logic for displaying content based on selection
+                    selectedSubCategory === 'Sunday School Teachers' && !activeSSDepartment ? (
+                        renderDepartmentGrid()
+                    ) : (
+                        <div>
+                            {activeSSDepartment && (
+                                <div className="mb-6 flex items-center">
+                                    <button 
+                                        onClick={() => setActiveSSDepartment(null)}
+                                        className="flex items-center text-slate-500 hover:text-church-600 transition font-medium"
+                                    >
+                                        <ChevronLeft size={20} className="mr-1" /> Back to Departments
+                                    </button>
+                                    <span className="mx-3 text-slate-300">|</span>
+                                    <h2 className="text-xl font-bold text-slate-800">{activeSSDepartment} Teachers</h2>
+                                </div>
+                            )}
+
+                            {filteredArchives.length > 0 ? (
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in duration-200">
+                                    {filteredArchives.map(entry => {
+                                        const Icon = CATEGORY_ICONS[entry.category] || Archive;
+                                        const isOfficeBearer = entry.category === 'Rawngbawltu te';
+
+                                        return (
+                                            <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
+                                                {isAdmin && (
+                                                    <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                        <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
+                                                        <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-start mb-4">
+                                                    <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0">
+                                                        <Icon size={24} />
+                                                    </div>
+                                                    <div>
+                                                        {!isOfficeBearer && (
+                                                            <div className="flex flex-wrap gap-2 mb-1">
+                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
+                                                                {entry.subCategory && (
+                                                                    <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
+                                                        {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
+                                                    {entry.description}
+                                                </div>
+                                                {entry.link && (
+                                                    <a 
+                                                        href={entry.link} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto"
+                                                    >
+                                                        View Resource <ExternalLink size={14} className="ml-1" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
+                                    <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                                    <p className="text-slate-500">{t.archives.empty}</p>
+                                </div>
+                            )}
+                        </div>
+                    )
                 )}
             </div>
 
@@ -650,3 +736,5 @@ export const Archives: React.FC = () => {
         </div>
     );
 };
+
+export default Archives;
