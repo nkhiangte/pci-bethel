@@ -6,9 +6,58 @@ import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import Card from '../components/Card';
 import { WeeklyDuty, Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun } from 'lucide-react';
+import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun, UserCheck, Home as HomeIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+const StatsSlideshow = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  const stats = [
+    { label: "Kohhran Pum", value: "2,094", icon: User, sub: "Total Members" },
+    { label: "Dan Zawhkim", value: "1,475", icon: UserCheck, sub: "Full Communicant" },
+    { label: "Chhungkua", value: "440", icon: HomeIcon, sub: "Families" },
+    { label: "Sunday School", value: "1,773", icon: BookOpen, sub: "Zirtu & Zirtirtu" },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % stats.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentStat = stats[currentIndex];
+  const Icon = currentStat.icon;
+
+  return (
+    <div className="h-full min-h-[250px] bg-gradient-to-br from-church-600 to-church-800 rounded-2xl shadow-lg text-white p-8 relative overflow-hidden flex flex-col justify-center items-center text-center">
+       {/* Background Decoration */}
+       <Icon className="absolute -bottom-6 -right-6 w-40 h-40 text-white opacity-10 rotate-12 transition-transform duration-700 transform hover:rotate-45" />
+       
+       <div key={currentIndex} className="animate-in fade-in slide-in-from-right-8 duration-500 w-full relative z-10">
+          <div className="inline-flex p-3 bg-white/20 rounded-full mb-4 backdrop-blur-md shadow-inner">
+             <Icon size={32} className="text-white" />
+          </div>
+          <h3 className="text-5xl font-bold mb-2 tracking-tight drop-shadow-sm">{currentStat.value}</h3>
+          <p className="text-xl font-bold text-church-100 uppercase tracking-wide">{currentStat.label}</p>
+          <p className="text-xs text-church-200 mt-1 font-medium bg-black/10 inline-block px-2 py-0.5 rounded-full">{currentStat.sub}</p>
+       </div>
+
+       {/* Indicators */}
+       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
+          {stats.map((_, idx) => (
+            <button
+              key={idx} 
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'}`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+       </div>
+    </div>
+  );
+};
 
 export const Home: React.FC = () => {
   const { t, language } = useLanguage();
@@ -166,14 +215,23 @@ export const Home: React.FC = () => {
     <div className="space-y-12 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
-        {/* Verse of the Day */}
+        {/* Top Section: Verse & Stats */}
         <section className="mt-8">
-            <div className="bg-white p-8 md:p-10 rounded-2xl shadow-lg border border-church-100 text-center max-w-4xl mx-auto relative">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-church-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-md">
-                    {t.home.verseOfTheDay}
-                </div>
-                {renderVerseContent()}
-            </div>
+           {/* Changed grid-cols from lg:grid-cols-3 to md:grid-cols-3 to show side-by-side on tablet */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Verse of the Day - Span 2 cols */}
+              <div className="md:col-span-2 bg-white p-8 md:p-12 rounded-2xl shadow-lg border border-church-100 text-center relative flex flex-col justify-center min-h-[250px]">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-church-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-md">
+                      {t.home.verseOfTheDay}
+                  </div>
+                  {renderVerseContent()}
+              </div>
+
+              {/* Stats Slideshow - Span 1 col */}
+              <div className="md:col-span-1 h-full">
+                 <StatsSlideshow />
+              </div>
+           </div>
         </section>
 
         {/* Weekly Duties */}
