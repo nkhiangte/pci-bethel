@@ -82,7 +82,7 @@ const DATA = {
       {
         id: 'p1',
         name: 'Rev. Lalhmingthanga Chhangte',
-        role: 'Senior Pastor',
+        role: 'Pastor', // Changed to Pastor as requested
         imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
         description: 'Serving as the spiritual head and guiding our church with wisdom and grace.',
         order: 0, // Added order for consistency

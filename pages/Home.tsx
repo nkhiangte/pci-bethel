@@ -540,12 +540,6 @@ export const Home: React.FC = () => {
     setLoadingFunc(false);
   };
 
-
-  // Featured pastor: Always the first in the fetched list, if any
-  const featuredPastor = churchPastors.length > 0 ? churchPastors[0] : null;
-  // Other pastors (if you decide to display more, currently only one featured pastor is shown in the layout)
-  const otherPastors = churchPastors.slice(1);
-
   return (
     <div className="bg-slate-50 min-h-screen">
       <div className="py-12">
@@ -672,93 +666,28 @@ export const Home: React.FC = () => {
              <div className="text-center"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>
           ) : (
             <>
-              <div className="grid lg:grid-cols-3 gap-8 justify-center mb-16">
-                {/* Senior Pastor Card - now dynamically fetched */}
-                {featuredPastor && (
-                  <Card className="text-center col-span-1 lg:col-start-2 border-t-4 border-church-500 relative group">
-                    <img 
-                      src={featuredPastor.imageUrl} 
-                      alt={featuredPastor.name} 
-                      className="w-full h-64 object-cover object-top" 
-                    />
-                    <div className="p-6">
-                      <h3 className="text-2xl font-bold text-slate-900 mb-1">{featuredPastor.name}</h3>
-                      <p className="text-church-700 font-semibold text-lg">{featuredPastor.role}</p>
-                      {featuredPastor.description && (
-                         <p className="text-sm text-slate-600 mt-2 italic">{featuredPastor.description}</p>
-                      )}
-                      {featuredPastor.period && (
-                        <p className="text-sm text-slate-500 mt-1">{featuredPastor.period}</p>
-                      )}
-                      {isAdmin && (
-                        <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button 
-                                onClick={() => handleMoveStaff(featuredPastor.id!, 'up', churchPastors, setChurchPastors)}
-                                disabled={0 === 0 || loadingPastors} // Only applies if there were multiple pastors displayed as a list
-                                className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
-                                title="Move Up"
-                            >
-                                <ArrowUp size={16} />
-                            </button>
-                            <button 
-                                onClick={() => handleMoveStaff(featuredPastor.id!, 'down', churchPastors, setChurchPastors)}
-                                disabled={0 === churchPastors.length - 1 || loadingPastors} // Only applies if there were multiple pastors displayed as a list
-                                className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
-                                title="Move Down"
-                            >
-                                <ArrowDown size={16} />
-                            </button>
-                            <button 
-                                onClick={() => { setEditingPastor(featuredPastor); setIsPastorModalOpen(true); }}
-                                className="p-1.5 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition"
-                                title="Edit Pastor"
-                            >
-                                <Edit size={16} />
-                            </button>
-                            <button 
-                                onClick={() => setShowDeletePastorConfirm(featuredPastor.id || '')}
-                                className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition"
-                                title="Delete Pastor"
-                            >
-                                <Trash size={16} />
-                            </button>
-                        </div>
-                      )}
-                      <Link to="/about" className="mt-4 inline-flex items-center text-church-600 hover:text-church-800 font-medium transition">
-                        View All Leaders <ArrowRight size={16} className="ml-1" />
-                      </Link>
-                    </div>
-                  </Card>
-                )}
-                {!featuredPastor && (
-                   <div className="col-span-1 lg:col-start-2 text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
-                       <Shield size={48} className="mx-auto text-slate-300 mb-4" />
-                       <p className="text-slate-500">No pastor listed. {isAdmin && "Use the 'Add New Pastor' or 'Seed Pastor Data' button to populate."}</p>
-                   </div>
-                )}
-              </div>
-
-              {/* Other Pastors (if any) - can be expanded later if needed */}
-              {otherPastors.length > 0 && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {otherPastors.map((pastor, index) => (
+              {/* Pastors Grid */}
+              {churchPastors.length > 0 ? (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center mb-16">
+                  {churchPastors.map((pastor, index) => (
                     <Card key={pastor.id} className="text-center relative group">
                       <img
                         src={pastor.imageUrl}
                         alt={pastor.name}
-                        className="w-full h-48 object-cover object-top"
+                        className="w-full h-64 object-cover object-top"
                       />
-                      <div className="p-4">
-                        <h3 className="text-lg font-bold text-slate-900">{pastor.name}</h3>
-                        <p className="text-church-700 font-medium">{pastor.role}</p>
+                      <div className="p-6">
+                        <h3 className="text-2xl font-bold text-slate-900 mb-1">{pastor.name}</h3>
+                        <p className="text-church-700 font-semibold text-lg">{pastor.role}</p>
                         {pastor.description && (
-                          <p className="text-sm text-slate-500 mt-2 line-clamp-3">{pastor.description}</p>
+                          <p className="text-sm text-slate-600 mt-2 italic line-clamp-3">{pastor.description}</p>
                         )}
+                        {/* Admin Controls */}
                         {isAdmin && (
                           <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => handleMoveStaff(pastor.id!, 'up', churchPastors, setChurchPastors)}
-                              disabled={(index + 1) === 0 || loadingPastors} // index+1 because featuredPastor is at index 0 conceptually
+                              disabled={index === 0 || loadingPastors}
                               className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
                               title="Move Up"
                             >
@@ -766,7 +695,7 @@ export const Home: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleMoveStaff(pastor.id!, 'down', churchPastors, setChurchPastors)}
-                              disabled={(index + 1) === churchPastors.length - 1 || loadingPastors}
+                              disabled={index === churchPastors.length - 1 || loadingPastors}
                               className="p-1.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition disabled:opacity-50"
                               title="Move Down"
                             >
@@ -792,6 +721,11 @@ export const Home: React.FC = () => {
                     </Card>
                   ))}
                 </div>
+              ) : (
+                   <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+                       <Shield size={48} className="mx-auto text-slate-300 mb-4" />
+                       <p className="text-slate-500">No pastor listed. {isAdmin && "Use the 'Add New Pastor' or 'Seed Pastor Data' button to populate."}</p>
+                   </div>
               )}
 
               {/* New: Church Pro Pastors Grid */}
