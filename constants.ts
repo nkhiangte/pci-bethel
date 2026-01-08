@@ -39,7 +39,7 @@ const DATA = {
         id: 's1',
         title: 'The Good Shepherd',
         date: '2024-05-12',
-        preacher: 'Rev. Dr. Lalnunsanga',
+        preacher: 'Rev. Lalhmingthanga Chhangte',
         scripture: 'Psalm 23',
         description: 'An exposition on the comforting words of Psalm 23, exploring how Jesus is our Good Shepherd through life\'s valleys and peaks.',
         audioUrl: '#',
@@ -59,7 +59,7 @@ const DATA = {
         id: 's3',
         title: 'The Sermon on the Mount',
         date: '2024-04-28',
-        preacher: 'Rev. Dr. Lalnunsanga',
+        preacher: 'Rev. Lalhmingthanga Chhangte',
         scripture: 'Matthew 5-7',
         description: 'A deep dive into the core teachings of Jesus from the Sermon on the Mount.',
         audioUrl: '#',
@@ -81,9 +81,9 @@ const DATA = {
     pastors: [
       {
         id: 'p1',
-        name: 'Rev. Dr. Lalnunsanga',
+        name: 'Rev. Lalhmingthanga Chhangte',
         role: 'Senior Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=20',
+        imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
         description: 'Serving as the spiritual head and guiding our church with wisdom and grace.',
         order: 0, // Added order for consistency
       }
@@ -141,7 +141,7 @@ const DATA = {
             id: 's1',
             title: 'Berampu Ṭha',
             date: '2024-05-12',
-            preacher: 'Rev. Dr. Lalnunsanga',
+            preacher: 'Rev. Lalhmingthanga Chhangte',
             scripture: 'Sam 23',
             description: 'Sam 23-na thuchah thlamuanthlak tak, Isua chu engtin nge kan dam chhung kawng zawhah Berampu Ṭha a nih tih zir chianna.',
             audioUrl: '#',
@@ -173,9 +173,9 @@ const DATA = {
     pastors: [
       {
         id: 'p1',
-        name: 'Rev. Dr. Lalnunsanga',
-        role: 'Senior Pastor',
-        imageUrl: 'https://picsum.photos/200/200?random=20',
+        name: 'Rev. Lalhmingthanga Chhangte',
+        role: 'Bialtu Pastor',
+        imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
         description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.',
         order: 0, // Added order for consistency
       }
