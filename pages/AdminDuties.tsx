@@ -4,7 +4,7 @@ import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getConstants } from '../constants';
-import { Loader, Save, X, Database, Shield, ClipboardList, Clock } from 'lucide-react';
+import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -38,6 +38,15 @@ const AdminDuties: React.FC = () => {
                       sundaySchool: '10:00 AM',
                       morning: '01:30 PM',
                       evening: '07:00 PM'
+                  },
+                  serviceTitles: {
+                      sundaySchool: 'Sunday School',
+                      morning: 'Chawhma Inkhawm',
+                      evening: 'Zan Inkhawm'
+                  },
+                  midWeek: {
+                      nilai: { title: 'Nilai Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' },
+                      inrinni: { title: 'Inrinni Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' }
                   }
                 });
             }
@@ -85,6 +94,29 @@ const AdminDuties: React.FC = () => {
         }));
     };
 
+    const handleServiceTitleChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
+        setDuties(prev => ({
+            ...prev,
+            serviceTitles: {
+                ...(prev.serviceTitles || { sundaySchool: '', morning: '', evening: '' }),
+                [timeType]: value
+            }
+        }));
+    };
+
+    const handleMidWeekChange = (day: 'nilai' | 'inrinni', field: string, value: string) => {
+        setDuties(prev => ({
+            ...prev,
+            midWeek: {
+                ...prev.midWeek,
+                [day]: {
+                    ...(prev.midWeek?.[day] || {}),
+                    [field]: value
+                }
+            } as any
+        }));
+    };
+
     if (!currentUser) return <Navigate to="/login" replace />;
     if (!isAdmin) return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -112,35 +144,85 @@ const AdminDuties: React.FC = () => {
                         {/* Service Times Section */}
                         <div className="bg-church-50 p-6 rounded-lg border border-church-100">
                             <h3 className="text-lg font-bold text-church-800 mb-4 flex items-center">
-                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times)
+                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times & Titles)
                             </h3>
                             <div className="grid md:grid-cols-3 gap-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Sunday School</label>
+                                {/* Sunday School */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase">Sunday School</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        value={duties.serviceTitles?.sundaySchool || 'Sunday School'} 
+                                        onChange={e => handleServiceTitleChange('sundaySchool', e.target.value)} 
+                                        placeholder="Custom Title"
+                                    />
                                     <input 
                                         className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
                                         value={duties.serviceTimes?.sundaySchool || ''} 
                                         onChange={e => handleServiceTimeChange('sundaySchool', e.target.value)} 
-                                        placeholder="e.g. 10:00 AM"
+                                        placeholder="Time (e.g. 10:00 AM)"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Morning Service</label>
+                                {/* Morning */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase">Morning Service</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        value={duties.serviceTitles?.morning || 'Chawhma Inkhawm'} 
+                                        onChange={e => handleServiceTitleChange('morning', e.target.value)} 
+                                        placeholder="Custom Title"
+                                    />
                                     <input 
                                         className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
                                         value={duties.serviceTimes?.morning || ''} 
                                         onChange={e => handleServiceTimeChange('morning', e.target.value)} 
-                                        placeholder="e.g. 01:30 PM"
+                                        placeholder="Time (e.g. 01:30 PM)"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Evening Service</label>
+                                {/* Evening */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase">Evening Service</label>
+                                    <input 
+                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        value={duties.serviceTitles?.evening || 'Zan Inkhawm'} 
+                                        onChange={e => handleServiceTitleChange('evening', e.target.value)} 
+                                        placeholder="Custom Title"
+                                    />
                                     <input 
                                         className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
                                         value={duties.serviceTimes?.evening || ''} 
                                         onChange={e => handleServiceTimeChange('evening', e.target.value)} 
-                                        placeholder="e.g. 07:00 PM"
+                                        placeholder="Time (e.g. 07:00 PM)"
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* New Mid-Week Program Section */}
+                        <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                                <CalendarDays size={20} className="mr-2"/> Mid-Week Programs
+                            </h3>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {/* Nilai Zan */}
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-church-600 border-b pb-1">Nilai Zan (Wednesday)</h4>
+                                    <input className="w-full border p-2 rounded" placeholder="Title (e.g. Nilai Zan Inkhawm)" value={duties.midWeek?.nilai?.title || ''} onChange={e => handleMidWeekChange('nilai', 'title', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Time (e.g. 07:00 PM)" value={duties.midWeek?.nilai?.time || ''} onChange={e => handleMidWeekChange('nilai', 'time', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Hruaitu" value={duties.midWeek?.nilai?.hruaitu || ''} onChange={e => handleMidWeekChange('nilai', 'hruaitu', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Ṭantu" value={duties.midWeek?.nilai?.tantu || ''} onChange={e => handleMidWeekChange('nilai', 'tantu', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Thupui (Topic)" value={duties.midWeek?.nilai?.thupui || ''} onChange={e => handleMidWeekChange('nilai', 'thupui', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Thuhriltu / Hawngtu" value={duties.midWeek?.nilai?.thuhriltu || ''} onChange={e => handleMidWeekChange('nilai', 'thuhriltu', e.target.value)} />
+                                </div>
+                                {/* Inrinni Zan */}
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-church-600 border-b pb-1">Inrinni Zan (Saturday)</h4>
+                                    <input className="w-full border p-2 rounded" placeholder="Title (e.g. Inrinni Zan Inkhawm)" value={duties.midWeek?.inrinni?.title || ''} onChange={e => handleMidWeekChange('inrinni', 'title', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Time (e.g. 07:00 PM)" value={duties.midWeek?.inrinni?.time || ''} onChange={e => handleMidWeekChange('inrinni', 'time', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Hruaitu" value={duties.midWeek?.inrinni?.hruaitu || ''} onChange={e => handleMidWeekChange('inrinni', 'hruaitu', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Ṭantu" value={duties.midWeek?.inrinni?.tantu || ''} onChange={e => handleMidWeekChange('inrinni', 'tantu', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Thupui (Topic)" value={duties.midWeek?.inrinni?.thupui || ''} onChange={e => handleMidWeekChange('inrinni', 'thupui', e.target.value)} />
+                                    <input className="w-full border p-2 rounded" placeholder="Thuhriltu / Hawngtu" value={duties.midWeek?.inrinni?.thuhriltu || ''} onChange={e => handleMidWeekChange('inrinni', 'thuhriltu', e.target.value)} />
                                 </div>
                             </div>
                         </div>
@@ -172,7 +254,7 @@ const AdminDuties: React.FC = () => {
                         </div>
 
                         <div>
-                            <h3 className="text-lg font-bold text-slate-800 border-t pt-6">Kohhran Hun Ruatna</h3>
+                            <h3 className="text-lg font-bold text-slate-800 border-t pt-6">Kohhran Hun Ruatna (Sunday)</h3>
                             <div className="grid md:grid-cols-2 gap-6 mt-4">
                                 <div><label className="block text-sm font-bold mb-1">Zai Hruaitu</label><input className="w-full border p-2 rounded-lg" value={duties.zaiHruaitu || ''} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} /></div>
                                 <div><label className="block text-sm font-bold mb-1">Piano Tumtu</label><input className="w-full border p-2 rounded-lg" value={duties.pianoTumtu || ''} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} /></div>

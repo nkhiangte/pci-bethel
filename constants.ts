@@ -127,6 +127,29 @@ const DATA = {
         sundaySchool: '10:00 AM',
         morning: '01:30 PM',
         evening: '07:00 PM'
+      },
+      serviceTitles: {
+        sundaySchool: 'Sunday School',
+        morning: 'Morning Service',
+        evening: 'Evening Service'
+      },
+      midWeek: {
+        nilai: {
+          title: 'Wednesday Service',
+          time: '07:00 PM',
+          hruaitu: '',
+          tantu: '',
+          thupui: '',
+          thuhriltu: ''
+        },
+        inrinni: {
+          title: 'Saturday Prayer',
+          time: '07:00 PM',
+          hruaitu: '',
+          tantu: '',
+          thupui: '',
+          thuhriltu: ''
+        }
       }
     } as WeeklyDuty
   },
@@ -224,6 +247,29 @@ const DATA = {
         sundaySchool: '10:00 AM',
         morning: '01:30 PM',
         evening: '07:00 PM'
+      },
+      serviceTitles: {
+        sundaySchool: 'Sunday School',
+        morning: 'Chawhma Inkhawm',
+        evening: 'Zan Inkhawm'
+      },
+      midWeek: {
+        nilai: {
+          title: 'Nilai Zan Inkhawm',
+          time: '07:00 PM',
+          hruaitu: '',
+          tantu: '',
+          thupui: '',
+          thuhriltu: ''
+        },
+        inrinni: {
+          title: 'Inrinni Zan Inkhawm',
+          time: '07:00 PM',
+          hruaitu: '',
+          tantu: '',
+          thupui: '',
+          thuhriltu: ''
+        }
       }
     } as WeeklyDuty
   }

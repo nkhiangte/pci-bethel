@@ -6,7 +6,7 @@ import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import Card from '../components/Card';
 import { WeeklyDuty, Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit } from 'lucide-react';
+import { Loader, Calendar, Clock, User, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -249,7 +249,7 @@ export const Home: React.FC = () => {
             )}
         </section>
 
-        {/* Service Times */}
+        {/* Service Times (Inkhawm Hun) */}
         <section>
             <div className="text-center mb-10 relative">
                 <h2 className="text-3xl font-serif font-bold text-church-900 inline-block">{t.home.serviceTimes}</h2>
@@ -263,7 +263,7 @@ export const Home: React.FC = () => {
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6 bg-church-800 text-white rounded-t-lg">
                         <Calendar className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{t.home.sundaySchool}</h4>
+                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.sundaySchool || t.home.sundaySchool}</h4>
                     </div>
                     <div className="p-8">
                         <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}</p>
@@ -273,7 +273,7 @@ export const Home: React.FC = () => {
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300 transform md:-translate-y-4 border-church-200 border-2">
                     <div className="p-6 bg-church-900 text-white rounded-t-lg">
                         <Clock className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{t.home.morningService}</h4>
+                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.morning || t.home.morningService}</h4>
                     </div>
                     <div className="p-8">
                         <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.morning || '01:30 PM'}</p>
@@ -283,7 +283,7 @@ export const Home: React.FC = () => {
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300">
                     <div className="p-6 bg-church-800 text-white rounded-t-lg">
                         <Mic className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{t.home.eveningService}</h4>
+                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.evening || t.home.eveningService}</h4>
                     </div>
                     <div className="p-8">
                         <p className="text-3xl font-bold text-slate-800">{weeklyDuty.serviceTimes?.evening || '07:00 PM'}</p>
@@ -292,6 +292,58 @@ export const Home: React.FC = () => {
                 </Card>
             </div>
         </section>
+
+        {/* Mid-Week Programs */}
+        {weeklyDuty.midWeek && (
+            <section className="mb-12">
+                <div className="text-center mb-8 relative">
+                    <h2 className="text-2xl font-serif font-bold text-slate-800 inline-block">Mid-Week Services</h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                    {/* Nilai Zan */}
+                    <Card className="border border-slate-200 bg-white">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-church-100 p-2 rounded-lg text-church-600"><Sun size={24}/></div>
+                                    <div>
+                                        <h3 className="font-bold text-lg text-slate-800">{weeklyDuty.midWeek.nilai.title || 'Nilai Zan Inkhawm'}</h3>
+                                        <span className="text-sm text-slate-500">{weeklyDuty.midWeek.nilai.time || '07:00 PM'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between"><span className="text-slate-500">Hruaitu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.hruaitu || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Ṭantu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.tantu || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Thupui:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.thupui || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Hawngtu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.thuhriltu || 'TBD'}</span></div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Inrinni Zan */}
+                    <Card className="border border-slate-200 bg-white">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600"><Moon size={24}/></div>
+                                    <div>
+                                        <h3 className="font-bold text-lg text-slate-800">{weeklyDuty.midWeek.inrinni.title || 'Inrinni Zan Inkhawm'}</h3>
+                                        <span className="text-sm text-slate-500">{weeklyDuty.midWeek.inrinni.time || '07:00 PM'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between"><span className="text-slate-500">Hruaitu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.hruaitu || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Ṭantu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.tantu || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Thupui:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.thupui || 'TBD'}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Thuhriltu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.thuhriltu || 'TBD'}</span></div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </section>
+        )}
 
         {/* Pastor Section */}
         {churchPastors.length > 0 && (

@@ -211,6 +211,31 @@ export interface WeeklyDuty {
     morning: string;
     evening: string;
   };
+  // Added serviceTitles to allow renaming the service cards
+  serviceTitles?: {
+    sundaySchool: string;
+    morning: string;
+    evening: string;
+  };
+  // Added Mid-week programs
+  midWeek?: {
+    nilai: {
+      title: string;
+      time: string;
+      hruaitu: string;
+      tantu: string;
+      thupui: string;
+      thuhriltu: string;
+    };
+    inrinni: {
+      title: string;
+      time: string;
+      hruaitu: string;
+      tantu: string;
+      thupui: string;
+      thuhriltu: string;
+    };
+  };
 }
 
 // KTP Hruaitute Types
