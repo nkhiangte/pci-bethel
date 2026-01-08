@@ -382,6 +382,50 @@ const BSI_SEED_DATA = [
   { year: '2025', details: "President : Upa Lianpianga\nVice President : Pu P Lalhmingthanga\nSecretary : Pu Thanglianmanga\nAsst. Secretary: Pu Nelson Khiangte\nTreasurer : L Khenpauva\nFin. Secretary : Pu Vanlalhriata" },
 ];
 
+const KTP_SEED_DATA = [
+  { year: '1985', details: "Leader : Upa B Hranghlira\nAsst. Leader : Pu F Lalramhluna\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Pu RD Lalchhuana\nTreasurer : Pu Thangngolanga\nFin. Secretary : Nl. Ngurbawitluangi" },
+  { year: '1986', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Tv. Paudokima\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Ralkapthanga" },
+  { year: '1987', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu RD Lalchhuana\nSecretary : Pu K Vanlalhmuaka\nAsst. Secretary: Tv. Paudokima\nTreasurer : Nl. Laldinngheti\nFin. Secretary : Pu Thangngolanga" },
+  { year: '1988', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Pu H Kap\\hianga\nAsst. Secretary: Nl. Laldinngheti\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu Khawtinthanga /\n: Nl. Lalhlimthangi Khiangte" },
+  { year: '1989', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu Thangngolanga\nSecretary : Tv. F Lalbiakmawia\nAsst. Secretary: Tv. David Lalchhanhima\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Lalrintluanga" },
+  { year: '1990', details: "Leader : Pu F Lalramhluna\nAsst. Leader : Pu PC Lalhmingliana\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu C Pakunga /\nPu HT Vanlalsawma\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu C Lalrintluanga" },
+  { year: '1991', details: "Leader : Pu PC Lalhmingliana\nAsst. Leader : Pu HT Vanlalsawma\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu C Lalfaka\nFin. Secretary : Pu K Lalduata" },
+  { year: '1992', details: "Leader : Pu K Lalduata\nAsst. Leader : Pu HT Vanlalsawma\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Tv. B Zohmangaiha\nTreasurer : Pu T Thanga\nFin. Secretary : Pu K Lalrawna" },
+  { year: '1993', details: "Leader : Pu HT Vanlalsawma\nAsst. Leader : Pu K Lalduata\nSecretary : Pu K Lalrawna\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu T Thanga\nFin. Secretary : Tv. David Lalchhanhima" },
+  { year: '1994', details: "Leader : Pu HT Vanlalsawma\nAsst. Leader : Tv. David Lalchhanhima\nSecretary : Pu K Lalrawna\nAsst. Secretary: Nl. Lalzamliani\nTreasurer : Tv. B Zohmangaiha\nFin. Secretary : Pu R Lalramhluna" },
+  { year: '1995', details: "Leader : Pu K Lalrawna\nAsst. Leader : Tv. B Zohmangaiha\nSecretary : Pu R Lalramhluna\nAsst. Secretary: Tv. F Lalduhawma\nTreasurer : Pu K Nunthara\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '1996', details: "Leader : Pu K Lalrawna\nAsst. Leader : Tv. B Zohmangaiha\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu R Lalramhluna\nTreasurer : Pu K Nunthara\nFin. Secretary : Tv. Vanlalthlanawma" },
+  { year: '1997', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu R Lalramhluna\nSecretary : Tv. Vanlalthlanawma\nAsst. Secretary: Pu K Nunthara\nTreasurer : Pu K Lalrawna\nFin. Secretary : Tv. David Lalchhanhima" },
+  { year: '1998', details: "Leader : Pu R Lalramhluna\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Tv. David Lalchhanhima\nAsst. Secretary: Pu Lalchhuanmawia\nTreasurer : Pu K Nunthara\nFin. Secretary : Nl. Lalhlimthangi Khiangte" },
+  { year: '1999', details: "Leader : Pu K Nunthara\nAsst. Leader : Pu David Lalchhanhima\nSecretary : Pu B Zohmangaiha\nAsst. Secretary: Nl. Lalhlimthangi Khiangte\nTreasurer : Pu R Lalramhluna\nFin. Secretary : Pu K Lalrawna" },
+  { year: '2000', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Pu K Laldawngliana\nAsst. Secretary: Tv. PC Lalchuangkima\nTreasurer : Nl. Lalhlimthangi Khiangte\nFin. Secretary : Tv. Lianpianga" },
+  { year: '2001', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu K Laldawngliana\nSecretary : Tv. PC Lalchuangkima\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu K Lalbiakdika /\n: Nl. Lalhlimthangi Khiangte" },
+  { year: '2002', details: "Leader : Pu B Zohmangaiha\nAsst. Leader : Pu K Lalbiakdika /\n: Pu David Lalchhanhima\nSecretary : Pu K Laldawngliana\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu David LAlchhanhima /\n: Nl. Lalbiaklawmi\nFin. Secretary : Pu PC Lalchuangkima" },
+  { year: '2003', details: "Leader : Pu K Laldawngliana\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. C Zohmingthanga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Nl. Lalbiaklawmi" },
+  { year: '2004', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu B Zohmangaiha\nSecretary : Tv. C Zohmingthanga\nAsst. Secretary: Pu Lianpianga\nTreasurer : Tv. Zomuankima\nFin. Secretary : Tv. Hmingthanmawia" },
+  { year: '2005', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Tv. C Zohmingthanga\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. Hmingthanmawia\nTreasurer : Nl. K Lalhruaitluangi\nFin. Secretary : Tv. T Lalthangliana" },
+  { year: '2006', details: "Leader : Tv. C Zohmingthanga\nAsst. Leader : Pu David Lalchhanhima\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Pu Lianpianga\nTreasurer : Pu C Rohmingliana\nFin. Secretary : Nl. K Lalhruaitluangi" },
+  { year: '2007', details: "Leader : Tv. C Zohmingthanga\nAsst. Leader : Pu C Rohmingliana\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. C Lal\\hazuala\nTreasurer : Nl. Mary Lalmuanzuali\nFin. Secretary : Nl. Hmingthanzuali" },
+  { year: '2008', details: "Leader : Pu David Lalchhanhima\nAsst. Leader : Pu C Rohmingliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Tv. C Lal\\hazuala\nTreasurer : Nl. Mary Lalmuanzuali\nFin. Secretary : Pu C Zohmingthanga" },
+  { year: '2009', details: "Leader : Pu C Rohmingliana\nAsst. Leader : Pu C Zohmingthanga\nSecretary : Tv. C Lal\\hazuala\nAsst. Secretary: Pu Lianpianga\nTreasurer : Nl. PC Lalchhanhimi\nFin. Secretary : Tv. Hmingthanmawia" },
+  { year: '2010', details: "Leader : Pu Hmingthanmawia\nAsst. Leader : Pu C Zohmingthanga\nSecretary : Pu Lalmuanpuia Ralte\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Tv. Lalremruata Hualngo\nFin. Secretary : Pu Lalhmingmawia" },
+  { year: '2011', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Pu Lalhmingmawia\nAsst. Secretary: Tv. Lalremruata Hualngo\nTreasurer : Pu C Zohmingthanga\nFin. Secretary : Tv. R Lalmalsawma" },
+  { year: '2012', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Tv. R Lalmalsawma\nAsst. Secretary: Tv. Lalremruata Hualngo\nTreasurer : Nl. PC Lalhriatpuii\nFin. Secretary : Pu C Zohmingthanga" },
+  { year: '2013', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Pu Hmingthanmawia\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalrawngbawla" },
+  { year: '2014', details: "Leader : Pu Hmingthanmawia\nAsst. Leader : Tv. Lalremruata Hualngo\nSecretary : Tv. Lalthangliana Tochhawng\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Pu Lalmuanpuia Ralte\nFin. Secretary : Pu C Lalrawngbawla" },
+  { year: '2015', details: "Leader : Pu Lalmuanpuia Ralte\nAsst. Leader : Tv. Lalremruata Hualngo\nSecretary : Tv. R Lalmalsawma\nAsst. Secretary: Pu V Kaizasiama\nTreasurer : Pu C Lalrawngbawla\nFin. Secretary : Nl. R Lalrammawii" },
+  { year: '2016', details: "Leader : Tv. Lalremruata Hualngo\nAsst. Leader : Pu Lalthangliana Tochhawng\nSecretary : Pu V Kaizasiama\nAsst. Secretary: Tv. R Lalmalsawma\nTreasurer : Nl. R Lalrammawii\nFin. Secretary : Tv. H Lalfakawma" },
+  { year: '2017', details: "Leader : Tv. Lalremruata Hualngo\nAsst Leader : Pu Lalthangliana Tochhawng\nSecretary : Pu V. Kaizasiama\nAsst Secretary : Tv. R. Lalmalsawma\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Tv. H. Lalfakawma" },
+  { year: '2018', details: "Leader : Pu Lalremruata Hualngo\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Pu V. Kaizasiama\nAsst Secretary : Pu H. Lalfakawma\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Pu Lalthangliana Tochhawng\n(from march Pu Nelson Khiangte)" },
+  { year: '2019', details: "Leader : Tv. R. Lalmalsawma\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu H. Lalfakawma\n(From 17th July Pu Kap\\huama)\nAsst Secretary : Pu Kap\\huama\n(From 17th July Pu Thanglianmanga)\nTreasurer : Pu Nelson Khiangte\nFin. Secretary : Nl. Lalrammawii Renthlei" },
+  { year: '2020', details: "Leader : Pu V. Kaizasiama\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Pu Kap\\huama\nAsst Secretary : Tv. Pc Lalruatsanga\n(From 25th June Tv. Zoramenga)\nTreasurer : Pu Nelson Khiangte\nFin. Secretary : Nl. Lalrammawii Renthlei" },
+  { year: '2021', details: "Leader : Pu V. Kaizasiama\nAsst Leader : Tv. R. Lalmalsawma\nSecretary : Tv. Zoramenga\nAsst Secretary : Pu Kap\\huama\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Pu Nelson Khiangte" },
+  { year: '2022', details: "Leader : Pu Nelson Khiangte\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu Kap\\huama\nAsst Secretary : Pu Zoramenga\nTreasurer : Nl. Lalrammawii Renthlei\nFin. Secretary : Tv. R. Lalmalsawma" },
+  { year: '2023', details: "Leader : Tv. R. Lalmalsawma\nAsst Leader : Pu V. Kaizasiama\nSecretary : Pu Zoramenga\nAsst Secretary : Pu V. Lalbiakdika\nTreasurer : Nl. Pc Lalrintluangi\nFin. Secretary : Tv. C. Vanlalawmpuia" },
+  { year: '2024', details: "Leader : Pu Zoramenga\nAsst Leader : Tv. H. Lalfakawma\nSecretary : Pu V. Lalbiakdika\nAsst Secretary : Tv. C. Vanlalawmpuia\n(from March Tv Thangdeihmanga)\nTreasurer : Nl. Lallawmzuali\nFin. Secretary : Tv. Vanlalchhana" },
+  { year: '2025', details: "Leader : Pu Zoramenga\nAsst Leader : Pu V. Lalbiakdika\nSecretary : Tv. H. Lalfakawma\nAsst Secretary : Tv. Thangdeihmanga\nTreasurer : Nl. Lallawmzuali\nFin. Secretary : Tv. Vanlalchhana" },
+];
+
 const MUSIC_SEED_DATA = [
   { year: '2001', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : Upa Daikhawzama\nSecretary : Pu David Lalchhanhima\nAsst. Secretary: Tv. Lianpianga\nTreasurer : Pu C Lalthlamuana\nFin. Secretary : Pu H Zakima" },
   { year: '2010', details: "Chairman : Upa K Vanlalhmuaka\nVice Chairman : T.Upa C Roliana\nSecretary : Pu Lianpianga\nAsst. Secretary: Pu Lalbiakkunga Pachuau" },
@@ -415,6 +459,55 @@ const LIGHT_SOUND_SEED_DATA = [
   { year: '2021', details: "Chairman : Upa HT Lalthlengliana\nVice Chairman : Upa David Lalchhanhima\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Tv. T Lalnunzira" },
   { year: '2022', details: "Chairman : Upa David Lalchhanhima\nVice Chairman : Upa HT Lalthlengliana\nSecretary : Tv. Lalremruata Hualngo\nAsst. Secretary: Tv. T Lalnunzira" },
   { year: '2023', details: "Chairman : T.Upa Lalremruata Hualngo\nVice Chairman : Upa David Lalchhanhima\nSecretary : Pu V Kaizasiama\nAsst. Secretary: Tv. T Lalnunzira" },
+];
+
+const KOHHRAN_HMEICHHIA_SEED_DATA = [
+  { year: '1981', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Langchingi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Biakengi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Nl. Bawithansangi" },
+  { year: '1982', details: "Chairman : Pi Langchingi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Bawithansangi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Lalchawii" },
+  { year: '1983-1984', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchawii\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. Lallungmuani\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Nl. Tlan\\huami/Pi Zokhumi" },
+  { year: '1985-1986', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchhawnkimi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Pi Lalchawii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
+  { year: '1987-1988', details: "Chairman : Pi Lalchhawnkimi\nVice Chairman : Nl. Bawithansangi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Pi Lalchawii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
+  { year: '1989-1990', details: "Chairman : Nl. Bawithansangi\nVice Chairman : Pi Lalchhawnkimi\nSecretary : Nl. Rotuahthangi\nAsst. Secretary: Nl. R Lalmuanpuii\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
+  { year: '1991-1992', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Nl. Bawithansangi\nAsst. Secretary: Nl. Rotuahthangi\nTreasurer : Pi Zokhumi\nFin. Secretary : Pi Sapzingi" },
+  { year: '1993-1994', details: "Chairman : Pi K Lalchhawnkimi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Nl. Bawithansangi\nAsst. Secretary: Pi Lalchhungi\nTreasurer : Pi Lalrinpuii\nFin. Secretary : Pi Zokhumi" },
+  { year: '1995-1996', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Bualchhumi\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
+  { year: '1997-1998', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi B Bualchhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
+  { year: '1999-2000', details: "Chairman : Pi Kap\\hiangi\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi H Zaichhungi\nFin. Secretary : Pi F Lalduati" },
+  { year: '2001-2002', details: "Chairman : Pi Sapzingi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Pi Lalengliani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalzikpuii" },
+  { year: '2003-2004', details: "Chairman : Pi Sapzingi\nVice Chairman : Pi Kap\\hiangi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalzikpuii" },
+  { year: '2005-2006', details: "Chairman : Pi Lalzikpuii / Pi Sapzingi\nVice Chairman : Pi Sapzingi / Pi Zokhumi\nSecretary : Pi Lalengliani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi C Lainguri" },
+  { year: '2007', details: "Chairman : Pi Zokhumi\nVice Chairman : Pi Sapzingi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Pi C Lainguri\nFin. Secretary : Pi Lalengliani" },
+  { year: '2008', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi Zokhumi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi Lalengliani\nTreasurer : Pi V Sangkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
+  { year: '2009', details: "Chairman : Pi Lalengliani\nVice Chairman : Pi Zokhumi\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi R Ramengzuali" },
+  { year: '2010', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi Zokhumi\nSecretary : Nl. Ngurbawitluangi\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Pi Lalengliani\nFin. Secretary : Pi V Sangkungi" },
+  { year: '2011', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi V Sangkungi\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi Lalengliani\nFin. Secretary : Pi PC Lalhmachhuani" },
+  { year: '2012-2014', details: "Chairman : Pi C Chawngpuii\nVice Chairman : Pi Lalengliani\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi PC Lalhmachhuani" },
+  { year: '2015-2016', details: "Chairman : Pi V Sangkungi\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi PC Lalhmachhuani\nAsst. Secretary: Pi R Ramengzuali\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
+  { year: '2017-2018', details: "Chairman : Pi C Chawngpuii\nVice Chairman : Pi V Sangkungi\nSecretary : Pi R Ramengzuali\nAsst. Secretary: Pi PC Lalhmachhuani\nTreasurer : Nl. Ngurbawitluangi\nFin. Secretary : Pi Lalbiakkungi" },
+  { year: '2019-2020', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi C Chawngpuii\nSecretary : Pi Lalhlimthangi Khiangte\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi V Sangkungi\nFin. Secretary : Pi R Ramengzuali" },
+  { year: '2021-2022', details: "Chairman : Pi V Sangkungi\nVice Chairman : Pi PC Lalhmachhuani\nSecretary : Nl. Ngurbawitluangi\nAsst. Secretary: Pi Lalhlimthangi Khiangte\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Pi C Lallawmsangi" },
+  { year: '2023-2024', details: "Chairman : Pi PC Lalhmachhuani\nVice Chairman : Pi V Sangkungi\nSecretary : Pi Lalhlimthangi Khiangte\nAsst. Secretary: Nl. Ngurbawitluangi\nTreasurer : Pi C Lallawmsangi\nFin. Secretary : Pi Lalbiakkungi" },
+  { year: '2025-2026', details: "Chairman : Pi R Ramengzuali\nVice Chairman : Pi PC Lalhmachhuani\nSecretary : Pi R Lalrimawii\nAsst. Secretary: Pi Lalhlimthangi Khiangte\nTreasurer : Pi Lalbiakkungi\nFin. Secretary : Nl. Ngurbawitluangi" },
+];
+
+const KOHHRAN_PAVALAI_PAWL_SEED_DATA = [
+  { year: '2009', details: "Chairman : Upa C Lalrintluanga\nVice Chairman : Pu K Lalrawna\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu S Liansangvunga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu H Vanlalthanga" },
+  { year: '2010', details: "Chairman : Pu K Lalrawna\nVice Chairman : Pu K Lalduhawma\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu S Liansangvunga\nTreasurer : Pu David Lalchhanhima\nFin. Secretary : Pu H Vanlalthanga" },
+  { year: '2011', details: "Chairman : Pu K Lalrawna\nVice Chairman : Pu C Rokima\nSecretary : Pu C Lalzova\nAsst. Secretary: Pu GF Thanga\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu Zoramnghingliana" },
+  { year: '2012', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu K Lalrawna\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu GF Thanga\nFin. Secretary : Pu H Lalrindika /\nPu C Zaithanga" },
+  { year: '2013', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu K Lalrawna\nSecretary : Pu Zoramnghingliana\nAsst. Secretary: Pu GF Thanga\nTreasurer : Pu R Lalrintluanga\nFin. Secretary : Pu C Zaithanga" },
+  { year: '2014', details: "Chairman : Pu Zoramnghingliana\nVice Chairman : Pu C Lalzova\nSecretary : Pu C Zaithanga\nAsst. Secretary: Pu K Lalrawna\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2015', details: "Chairman : Pu Zoramnghingliana /\nPu C Lalzova\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu C Zaithanga\nAsst. Secretary: Pu H Zairemmawia\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu Vanlalhriata" },
+  { year: '2016', details: "Chairman : Pu C Lalzova\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu H Zairemmawia\nAsst. Secretary: Pu C Zaithanga\nTreasurer : Pu MS Dawngliana\nFin. Secretary : Pu L Khenpauva" },
+  { year: '2017', details: "Chairman : P Lalhmingthanga\nVice Chairman : C Zaithanga\nSecretary : Pu H Zairemmawia\nAsst Secretary : Pu C Zohmingthanga\nTreasurer : MS Dawngliana\nFin.Secretary : Pu L Khenpauva" },
+  { year: '2018', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu H Vanlalthanga\nSecretary : Pu C Zohmingthanga\nAsst Secretary : Pu Vanlaldika Varte\nTreasurer : Pu Vanlalhriata/\nPu H Zairemmawia\nFin Secretary : Pu Thangkhenmanga" },
+  { year: '2019', details: "Chairman : Pu H Zairemmawia\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu C Zohmingthanga\nAsst Secretary : Pu H Vanlalthanga\nTreasurer : Pu Lalramthara\nFin Secretary : Pu Thangkhenmanga" },
+  { year: '2020', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst Secretary : Pu Vanlalhriata\nTreasurer : Pu H Vanlalthanga\nFin. Secretary : Pu C Zaithanga" },
+  { year: '2021', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst. Secretary: Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin. Secretary : Pu C Zaithanga" },
+  { year: '2022', details: "Chairman : Pu MS Dawngliana\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu H Vanlalthanga\nAsst Secretary : Pu Lalramthara\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
+  { year: '2023', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst. Secretary : Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
+  { year: '2024', details: "Chairman : Pu P Lalhmingthanga\nVice Chairman : Pu MS Dawngliana\nSecretary : Pu Lalramthara\nAsst Secretary : Pu H Vanlalthanga\nTreasurer : Pu Vanlalhriata\nFin Secretary : Pu Vanlaldika Varte" },
+  { year: '2025', details: "Chairman : Pu MS Dawngliana\nVice Chairman : Pu P Lalhmingthanga\nSecretary : Pu Lalmuanpuia Ralte\nAsst Secretary : Pu Lalramthara\nTreasurer : Pu C Rohmingliana\nFin Secretary : Pu Vanlalhriata" },
 ];
 
 const Archives: React.FC = () => {
@@ -1018,6 +1111,108 @@ const Archives: React.FC = () => {
         setIsSaving(false);
     };
 
+    const handleSeedKTP = async () => {
+        if (!db?.collection || !window.confirm("This will add/overwrite KTP records. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            KTP_SEED_DATA.forEach(data => {
+                const docId = `ktp-${data.year}`; 
+                const docRef = collectionRef.doc(docId);
+                const entry: ArchiveEntry = {
+                    id: docId,
+                    title: data.year, // Using JUST the year as title
+                    date: `${data.year}-01-01`,
+                    category: 'Rawngbawltu te',
+                    subCategory: 'KTP',
+                    description: data.details,
+                    link: ''
+                };
+                batch.set(docRef, entry);
+            });
+
+            await batch.commit();
+            alert("KTP data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding KTP:", error);
+            alert("Failed to seed data.");
+        }
+        setIsSaving(false);
+    };
+
+    const handleSeedKohhranHmeichhia = async () => {
+        if (!db?.collection || !window.confirm("This will add/overwrite Kohhran Hmeichhia records. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            KOHHRAN_HMEICHHIA_SEED_DATA.forEach(data => {
+                const docId = `kh-${data.year}`; 
+                const docRef = collectionRef.doc(docId);
+                const entry: ArchiveEntry = {
+                    id: docId,
+                    title: data.year, // Using JUST the year as title
+                    date: `${data.year.split('-')[0]}-01-01`, // Use first year for sorting
+                    category: 'Rawngbawltu te',
+                    subCategory: 'KOHHRAN HMEICHHIA',
+                    description: data.details,
+                    link: ''
+                };
+                batch.set(docRef, entry);
+            });
+
+            await batch.commit();
+            alert("Kohhran Hmeichhia data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding Kohhran Hmeichhia:", error);
+            alert("Failed to seed data.");
+        }
+        setIsSaving(false);
+    };
+
+    const handleSeedKohhranPavalaiPawl = async () => {
+        if (!db?.collection || !window.confirm("This will add/overwrite Kohhran Pavalai Pawl records. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            KOHHRAN_PAVALAI_PAWL_SEED_DATA.forEach(data => {
+                const docId = `kpp-${data.year}`; 
+                const docRef = collectionRef.doc(docId);
+                const entry: ArchiveEntry = {
+                    id: docId,
+                    title: data.year, // Using JUST the year as title
+                    date: `${data.year}-01-01`,
+                    category: 'Rawngbawltu te',
+                    subCategory: 'KOHHRAN PAVALAI PAWL',
+                    description: data.details,
+                    link: ''
+                };
+                batch.set(docRef, entry);
+            });
+
+            await batch.commit();
+            alert("Kohhran Pavalai Pawl data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding Kohhran Pavalai Pawl:", error);
+            alert("Failed to seed data.");
+        }
+        setIsSaving(false);
+    };
+
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1218,6 +1413,36 @@ const Archives: React.FC = () => {
                                         {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
                                     </button>
                                 )}
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KTP' && (
+                                    <button 
+                                        onClick={handleSeedKTP}
+                                        disabled={isSaving}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                        title="Seed KTP Data"
+                                    >
+                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                    </button>
+                                )}
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KOHHRAN HMEICHHIA' && (
+                                    <button 
+                                        onClick={handleSeedKohhranHmeichhia}
+                                        disabled={isSaving}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                        title="Seed Kohhran Hmeichhia Data"
+                                    >
+                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                    </button>
+                                )}
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'KOHHRAN PAVALAI PAWL' && (
+                                    <button 
+                                        onClick={handleSeedKohhranPavalaiPawl}
+                                        disabled={isSaving}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                        title="Seed Kohhran Pavalai Pawl Data"
+                                    >
+                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1260,6 +1485,8 @@ const Archives: React.FC = () => {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredArchives.map(entry => {
                             const Icon = CATEGORY_ICONS[entry.category] || Archive;
+                            const isOfficeBearer = entry.category === 'Rawngbawltu te';
+
                             return (
                                 <div key={entry.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col h-full">
                                     {isAdmin && (
@@ -1273,19 +1500,21 @@ const Archives: React.FC = () => {
                                             <Icon size={24} />
                                         </div>
                                         <div>
-                                            <div className="flex flex-wrap gap-2 mb-1">
-                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
-                                                {entry.subCategory && (
-                                                    <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
-                                                )}
-                                            </div>
+                                            {!isOfficeBearer && (
+                                                <div className="flex flex-wrap gap-2 mb-1">
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>
+                                                    {entry.subCategory && (
+                                                        <span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>
+                                                    )}
+                                                </div>
+                                            )}
                                             <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                            <p className="text-xs text-slate-500 mt-1">{entry.date}</p>
+                                            {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow whitespace-pre-wrap">
+                                    <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>
                                         {entry.description}
-                                    </p>
+                                    </div>
                                     {entry.link && (
                                         <a 
                                             href={entry.link} 
