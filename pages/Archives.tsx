@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, AlertTriangle, Users } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, AlertTriangle, Users, Database } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -36,6 +36,54 @@ const RAWNGBAWLTU_SUBCATEGORIES = [
     'KOHHRAN HMEICHHIA',
     'KTP',
     'KOHHRAN PAVALAI PAWL'
+];
+
+const EXECUTIVE_BODY_SEED_DATA = [
+  { year: '1981', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa Khawidawla\nTreasurer : Pu Zakima\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1982', details: "Secretary : Upa Khawidawla\nAsst. Secretary: Pu Thangchuanga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1983', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Pu Manhleia\nTreasurer : Pu T Sawmpauva\nFin. Secretary : Pu Thangkhatpianga" },
+  { year: '1984', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Pu B Hranghlira\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1985', details: "Secretary : Pu RD Lalchhuana\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1986', details: "Secretary : Pu RD Lalchhuana/ Pu Saizama Sailo\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1987', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa Manhleia\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1988', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Pu K Vanlalhmuaka\nTreasurer : Pu Thangkhatpianga\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1989', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu Thangkhatpianga (Tch)\nFin. Secretary : Pu T Sawmpauva" },
+  { year: '1990', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1991', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Pu Saizama Sailo\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1992', details: "Secretary : Pu Saizama Sailo\nAsst. Secretary: Upa K Vanlalhmuaka\nTreasurer : Upa B Hranghlira (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1993', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa Khawidawla\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1994', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1995', details: "Secretary : Upa B Hranghlira\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa K Vanlalhmuaka (Synod)\n: Pu K Lalduha (Tualchhung)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1996', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1997', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1998', details: "Secretary : Upa B Hranghlira\nAsst. Secretary: Upa Saizama Sailo\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '1999', details: "Secretary : Upa Saizama Sailo\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Manhleia (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Upa K Vanlalhmuaka" },
+  { year: '2000', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa B Hranghlira\nTreasurer : Upa Manhleia (Synod)\n: Upa Saizama Sailo (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '2001', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '2002', details: "Secretary : Upa K Vanlalhmuaka\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa HT Vanlalsawma (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '2003', details: "Secretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Pu R Khawhluna" },
+  { year: '2004', details: "Secretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Pu R Khawhluna/ Pu PC Lalhmingliana" },
+  { year: '2005', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa Khawidawla (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
+  { year: '2006', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
+  { year: '2007', details: "Secretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa H Lalmawia\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
+  { year: '2008', details: "Chairman : Rev. TM Thangzaliana\nSecretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
+  { year: '2009', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa H Lalmawia\nAsst. Secretary: Upa HT Vanlalsawma\nTreasurer : Upa B Hranghlira (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa PC Lalhmingliana" },
+  { year: '2010', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa C Lalrintluanga" },
+  { year: '2011', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa HT Vanlalsawma\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa C Lalrintluanga" },
+  { year: '2012', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa PC Lalhmingliana\nAsst. Secretary: Upa C Lalrintluanga\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
+  { year: '2013', details: "Chairman : Rev. C Lalremruata\nSecretary : Upa PC Lalhmingliana\nAsst. Secretary: Upa C Lalrintluanga\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
+  { year: '2014', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalrintluanga\nAsst. Secretary: Upa PC Lalhmingliana\nTreasurer : Upa H Lalmawia (Synod)\n: Upa K Vanlalhmuaka (Tch)\nFin. Secretary : Upa R Lalramhluna" },
+  { year: '2015', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalrintluanga\nAsst. Secretary: Upa R Lalramhluna\nTreasurer : Upa H Lalmawia (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
+  { year: '2016', details: "Chairman : Rev. H Zathuama\nSecretary : Upa R Lalramhluna\nAsst. Secretary: Upa C Lalthantluanga\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
+  { year: '2017', details: "Chairman : Rev. H Zathuama\nSecretary : Upa R Lalramhluna\nAsst. Secretary: Upa C Lalthantluanga\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa David Lalchhanhima" },
+  { year: '2018', details: "Chairman : Rev. H Zathuama\nSecretary : Upa C Lalthantluanga\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Lalthlengliana" },
+  { year: '2019', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa HT Lalthlengliana\nTreasurer : Upa C Lalrintluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Lalthlengliana" },
+  { year: '2020', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa HT Lalthlengliana\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa C Lalthantluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '2021', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa HT Lalthlengliana\nTreasurer : Upa C Lalthantluanga (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '2022', details: "Chairman : Rev. F Lalrinawma\nSecretary : Upa HT Lalthlengliana\nAsst. Secretary: Upa David Lalchhanhima\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '2023', details: "Chairman : Rev. F Lalrinawma/ Rev. Dr. Rualthankhuma\nSecretary : Upa David Lalchhanhima\nAsst. Secretary: Upa H. Zairemmawia\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '2024', details: "Chairman : Rev. Lalhmingthanga Chhangte\nSecretary : Upa H Zairemmawia\nAsst. Secretary: Upa Lianpianga\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
+  { year: '2025', details: "Chairman : Rev. Lalhmingthanga Chhangte\nSecretary : Upa H Zairemmawia\nAsst. Secretary: Upa Lianpianga\nTreasurer : Upa R Lalramhluna (Synod)\n: Upa PC Lalhmingliana (Tch)\nFin. Secretary : Upa HT Vanlalsawma" },
 ];
 
 const Archives: React.FC = () => {
@@ -154,6 +202,41 @@ const Archives: React.FC = () => {
         setIsSaving(false);
     };
 
+    const handleSeedExecutiveBody = async () => {
+        if (!db?.collection || !window.confirm("This will add/overwrite Executive Body records from 1981-2025. Continue?")) {
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const batch = db.batch();
+            const collectionRef = db.collection('archives');
+            
+            // Generate IDs based on Year to avoid duplicates if re-seeded
+            EXECUTIVE_BODY_SEED_DATA.forEach(data => {
+                const docId = `eb-${data.year}`; 
+                const docRef = collectionRef.doc(docId);
+                const entry: ArchiveEntry = {
+                    id: docId,
+                    title: `Executive Body ${data.year}`,
+                    date: `${data.year}-01-01`,
+                    category: 'Rawngbawltu te',
+                    subCategory: 'Executive Body',
+                    description: data.details,
+                    link: ''
+                };
+                batch.set(docRef, entry);
+            });
+
+            await batch.commit();
+            alert("Executive Body data seeded successfully!");
+            fetchArchives();
+        } catch (error) {
+            console.error("Error seeding Executive Body:", error);
+            alert("Failed to seed data.");
+        }
+        setIsSaving(false);
+    };
+
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -207,12 +290,24 @@ const Archives: React.FC = () => {
                             />
                         </div>
                         {isAdmin && (
-                            <button 
-                                onClick={handleAddNew}
-                                className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap"
-                            >
-                                <Plus size={18} className="mr-2" /> {t.archives.add}
-                            </button>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={handleAddNew}
+                                    className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap"
+                                >
+                                    <Plus size={18} className="mr-2" /> {t.archives.add}
+                                </button>
+                                {selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'Executive Body' && (
+                                    <button 
+                                        onClick={handleSeedExecutiveBody}
+                                        disabled={isSaving}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition whitespace-nowrap disabled:opacity-50"
+                                        title="Seed Executive Body Data"
+                                    >
+                                        {isSaving ? <Loader className="animate-spin w-4 h-4" /> : <Database size={18} />}
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -277,7 +372,7 @@ const Archives: React.FC = () => {
                                             <p className="text-xs text-slate-500 mt-1">{entry.date}</p>
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">
+                                    <p className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow whitespace-pre-wrap">
                                         {entry.description}
                                     </p>
                                     {entry.link && (
