@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -29,7 +26,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import SundaySchool from './pages/SundaySchool';
 import Statistics from './pages/Statistics';
 import Records from './pages/Records';
-import Archives from './pages/Archives';
+import { Archives } from './pages/Archives';
 
 const App: React.FC = () => {
   return (
