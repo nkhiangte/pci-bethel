@@ -217,11 +217,20 @@ export interface WeeklyDuty {
     morning: string;
     evening: string;
   };
-  // Added servicePrograms to display program details instead of just time
+  // Detailed Service Programs
   servicePrograms?: {
-    sundaySchool: string;
-    morning: string;
-    evening: string;
+    sundaySchool: {
+        tantu: string;
+        zirlai: string;
+    };
+    morning: { // Corresponds to Chawhnu Inkhawm (1:30 PM) usually
+        tantu: string;
+        thuhriltu: string;
+    };
+    evening: { // Corresponds to Zan Inkhawm (7:00 PM)
+        tantu: string;
+        thuhriltu: string;
+    };
   };
   // Added Mid-week programs
   midWeek?: {

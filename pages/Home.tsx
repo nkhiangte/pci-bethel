@@ -94,7 +94,16 @@ export const Home: React.FC = () => {
           const docRef = db.collection('weeklyDuties').doc('current');
           const docSnap = await docRef.get();
           if (docSnap.exists) {
-              setWeeklyDuty(docSnap.data() as WeeklyDuty);
+              const data = docSnap.data() as WeeklyDuty;
+              // Handle potential structure mismatch from old data
+              if (!data.servicePrograms || typeof data.servicePrograms.sundaySchool === 'string') {
+                  data.servicePrograms = {
+                      sundaySchool: { tantu: '', zirlai: typeof data.servicePrograms?.sundaySchool === 'string' ? data.servicePrograms.sundaySchool : '' },
+                      morning: { tantu: '', thuhriltu: typeof data.servicePrograms?.morning === 'string' ? data.servicePrograms.morning : '' },
+                      evening: { tantu: '', thuhriltu: typeof data.servicePrograms?.evening === 'string' ? data.servicePrograms.evening : '' }
+                  };
+              }
+              setWeeklyDuty(data);
           } else {
               setWeeklyDuty(staticWeeklyDuty);
           }
@@ -266,8 +275,24 @@ export const Home: React.FC = () => {
                         <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.sundaySchool || t.home.sundaySchool}</h4>
                     </div>
                     <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.sundaySchool || 'Program TBD'}</p>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
+                            {weeklyDuty.servicePrograms?.sundaySchool?.tantu && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.sundaySchool.tantu}</span>
+                                </p>
+                            )}
+                            {weeklyDuty.servicePrograms?.sundaySchool?.zirlai && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Zirlai / Topic</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.sundaySchool.zirlai}</span>
+                                </p>
+                            )}
+                            {(!weeklyDuty.servicePrograms?.sundaySchool?.tantu && !weeklyDuty.servicePrograms?.sundaySchool?.zirlai) && (
+                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
+                            )}
+                        </div>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
                             <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}
                         </div>
                     </div>
@@ -275,11 +300,27 @@ export const Home: React.FC = () => {
                 <Card className="text-center hover:shadow-xl transition-shadow duration-300 transform md:-translate-y-4 border-church-200 border-2">
                     <div className="p-6 bg-church-900 text-white rounded-t-lg">
                         <Clock className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.morning || t.home.morningService}</h4>
+                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.morning || 'Chawhnu Inkhawm'}</h4>
                     </div>
                     <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.morning || 'Program TBD'}</p>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
+                            {weeklyDuty.servicePrograms?.morning?.thuhriltu && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Thuhriltu</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.morning.thuhriltu}</span>
+                                </p>
+                            )}
+                            {weeklyDuty.servicePrograms?.morning?.tantu && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.morning.tantu}</span>
+                                </p>
+                            )}
+                            {(!weeklyDuty.servicePrograms?.morning?.thuhriltu && !weeklyDuty.servicePrograms?.morning?.tantu) && (
+                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
+                            )}
+                        </div>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
                             <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.morning || '01:30 PM'}
                         </div>
                     </div>
@@ -290,8 +331,24 @@ export const Home: React.FC = () => {
                         <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.evening || t.home.eveningService}</h4>
                     </div>
                     <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <p className="text-xl font-bold text-slate-800 mb-3 leading-tight">{weeklyDuty.servicePrograms?.evening || 'Program TBD'}</p>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
+                            {weeklyDuty.servicePrograms?.evening?.thuhriltu && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Thuhriltu</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.evening.thuhriltu}</span>
+                                </p>
+                            )}
+                            {weeklyDuty.servicePrograms?.evening?.tantu && (
+                                <p className="text-md text-slate-800">
+                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
+                                    <span className="font-bold">{weeklyDuty.servicePrograms.evening.tantu}</span>
+                                </p>
+                            )}
+                            {(!weeklyDuty.servicePrograms?.evening?.thuhriltu && !weeklyDuty.servicePrograms?.evening?.tantu) && (
+                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
+                            )}
+                        </div>
+                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
                             <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.evening || '07:00 PM'}
                         </div>
                     </div>

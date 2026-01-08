@@ -4,7 +4,7 @@ import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getConstants } from '../constants';
-import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays } from 'lucide-react';
+import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays, Mic, BookOpen } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -27,37 +27,22 @@ const AdminDuties: React.FC = () => {
             const docRef = db.collection('weeklyDuties').doc('current');
             const docSnap = await docRef.get();
             if (docSnap.exists) {
-                setDuties(docSnap.data() as WeeklyDuty);
+                const data = docSnap.data() as WeeklyDuty;
+                // Ensure new structure exists if migrating from old data
+                if (!data.servicePrograms || typeof data.servicePrograms.sundaySchool === 'string') {
+                    data.servicePrograms = {
+                        sundaySchool: { tantu: '', zirlai: typeof data.servicePrograms?.sundaySchool === 'string' ? data.servicePrograms.sundaySchool : '' },
+                        morning: { tantu: '', thuhriltu: typeof data.servicePrograms?.morning === 'string' ? data.servicePrograms.morning : '' },
+                        evening: { tantu: '', thuhriltu: typeof data.servicePrograms?.evening === 'string' ? data.servicePrograms.evening : '' }
+                    };
+                }
+                setDuties(data);
             } else {
-                // If no doc, start with a blank slate based on the type
-                setDuties({
-                  month: '', thawhlawmChiartute: [], buhfaithamHralhtute: [], ushers: [],
-                  weekRange: '', zaiHruaitu: '', pianoTumtu: '', hlaHriltu: '',
-                  lightAndSoundDuty: '', pangparKhawitu: '',
-                  serviceTimes: {
-                      sundaySchool: '10:00 AM',
-                      morning: '01:30 PM',
-                      evening: '07:00 PM'
-                  },
-                  serviceTitles: {
-                      sundaySchool: 'Sunday School',
-                      morning: 'Chawhma Inkhawm',
-                      evening: 'Zan Inkhawm'
-                  },
-                  servicePrograms: {
-                      sundaySchool: 'Puitling & Naupang Sunday School',
-                      morning: 'Thuhriltu: Bialtu Pastor',
-                      evening: 'Thuhriltu: Pro. Pastor'
-                  },
-                  midWeek: {
-                      nilai: { title: 'Nilai Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' },
-                      inrinni: { title: 'Inrinni Zan Inkhawm', time: '07:00 PM', hruaitu: '', tantu: '', thupui: '', thuhriltu: '' }
-                  }
-                });
+                setDuties(staticDuty);
             }
         } catch (error) {
             console.error("Error fetching duties:", error);
-            setDuties(staticDuty); // Fallback on error
+            setDuties(staticDuty); 
         }
         setLoading(false);
     }, [staticDuty]);
@@ -109,13 +94,24 @@ const AdminDuties: React.FC = () => {
         }));
     };
 
-    const handleServiceProgramChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
+    const handleServiceProgramDetailChange = (
+        timeType: 'sundaySchool' | 'morning' | 'evening', 
+        field: 'tantu' | 'zirlai' | 'thuhriltu', 
+        value: string
+    ) => {
         setDuties(prev => ({
             ...prev,
             servicePrograms: {
-                ...(prev.servicePrograms || { sundaySchool: '', morning: '', evening: '' }),
-                [timeType]: value
-            }
+                ...(prev.servicePrograms || { 
+                    sundaySchool: { tantu: '', zirlai: '' }, 
+                    morning: { tantu: '', thuhriltu: '' }, 
+                    evening: { tantu: '', thuhriltu: '' } 
+                }),
+                [timeType]: {
+                    ...prev.servicePrograms?.[timeType],
+                    [field]: value
+                }
+            } as any
         }));
     };
 
@@ -159,74 +155,106 @@ const AdminDuties: React.FC = () => {
                         {/* Service Times Section */}
                         <div className="bg-church-50 p-6 rounded-lg border border-church-100">
                             <h3 className="text-lg font-bold text-church-800 mb-4 flex items-center">
-                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times & Titles)
+                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times & Programs)
                             </h3>
                             <div className="grid md:grid-cols-3 gap-6">
                                 {/* Sunday School */}
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase">Sunday School</label>
+                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
+                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><BookOpen size={16}/> Sunday School</h4>
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
                                         value={duties.serviceTitles?.sundaySchool || 'Sunday School'} 
                                         onChange={e => handleServiceTitleChange('sundaySchool', e.target.value)} 
-                                        placeholder="Custom Title"
+                                        placeholder="Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
                                         value={duties.serviceTimes?.sundaySchool || ''} 
                                         onChange={e => handleServiceTimeChange('sundaySchool', e.target.value)} 
-                                        placeholder="Time (e.g. 10:00 AM)"
+                                        placeholder="Time"
                                     />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
-                                        value={duties.servicePrograms?.sundaySchool || ''} 
-                                        onChange={e => handleServiceProgramChange('sundaySchool', e.target.value)} 
-                                        placeholder="Program (e.g. Zirlai 5)"
-                                    />
+                                    <div className="pt-2 border-t border-slate-100 mt-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
+                                            value={duties.servicePrograms?.sundaySchool?.tantu || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('sundaySchool', 'tantu', e.target.value)} 
+                                            placeholder="Tantu Hming"
+                                        />
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Zirlai / Topic</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
+                                            value={duties.servicePrograms?.sundaySchool?.zirlai || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('sundaySchool', 'zirlai', e.target.value)} 
+                                            placeholder="Zirlai"
+                                        />
+                                    </div>
                                 </div>
-                                {/* Morning */}
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase">Morning Service</label>
+
+                                {/* Morning (Chawhnu) */}
+                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
+                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><Clock size={16}/> Chawhnu Inkhawm</h4>
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
-                                        value={duties.serviceTitles?.morning || 'Chawhma Inkhawm'} 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
+                                        value={duties.serviceTitles?.morning || 'Chawhnu Inkhawm'} 
                                         onChange={e => handleServiceTitleChange('morning', e.target.value)} 
-                                        placeholder="Custom Title"
+                                        placeholder="Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
                                         value={duties.serviceTimes?.morning || ''} 
                                         onChange={e => handleServiceTimeChange('morning', e.target.value)} 
-                                        placeholder="Time (e.g. 01:30 PM)"
+                                        placeholder="Time"
                                     />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
-                                        value={duties.servicePrograms?.morning || ''} 
-                                        onChange={e => handleServiceProgramChange('morning', e.target.value)} 
-                                        placeholder="Program (e.g. Thuhriltu: Pastor)"
-                                    />
+                                    <div className="pt-2 border-t border-slate-100 mt-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Thuhriltu</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
+                                            value={duties.servicePrograms?.morning?.thuhriltu || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('morning', 'thuhriltu', e.target.value)} 
+                                            placeholder="Thuhriltu Hming"
+                                        />
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
+                                            value={duties.servicePrograms?.morning?.tantu || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('morning', 'tantu', e.target.value)} 
+                                            placeholder="Tantu Hming"
+                                        />
+                                    </div>
                                 </div>
-                                {/* Evening */}
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase">Evening Service</label>
+
+                                {/* Evening (Zan) */}
+                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
+                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><Mic size={16}/> Zan Inkhawm</h4>
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
                                         value={duties.serviceTitles?.evening || 'Zan Inkhawm'} 
                                         onChange={e => handleServiceTitleChange('evening', e.target.value)} 
-                                        placeholder="Custom Title"
+                                        placeholder="Title"
                                     />
                                     <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white mb-2" 
+                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
                                         value={duties.serviceTimes?.evening || ''} 
                                         onChange={e => handleServiceTimeChange('evening', e.target.value)} 
-                                        placeholder="Time (e.g. 07:00 PM)"
+                                        placeholder="Time"
                                     />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded-lg bg-white" 
-                                        value={duties.servicePrograms?.evening || ''} 
-                                        onChange={e => handleServiceProgramChange('evening', e.target.value)} 
-                                        placeholder="Program (e.g. Thuhriltu: T.Upa)"
-                                    />
+                                    <div className="pt-2 border-t border-slate-100 mt-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Thuhriltu</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
+                                            value={duties.servicePrograms?.evening?.thuhriltu || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('evening', 'thuhriltu', e.target.value)} 
+                                            placeholder="Thuhriltu Hming"
+                                        />
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
+                                        <input 
+                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
+                                            value={duties.servicePrograms?.evening?.tantu || ''} 
+                                            onChange={e => handleServiceProgramDetailChange('evening', 'tantu', e.target.value)} 
+                                            placeholder="Tantu Hming"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

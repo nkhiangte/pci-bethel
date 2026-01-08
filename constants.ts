@@ -33,7 +33,6 @@ const DATA = {
         imageUrl: 'https://picsum.photos/seed/community/1200/800'
       }
     ] as Announcement[],
-    // FIX: Add sermon data.
     sermons: [
       {
         id: 's1',
@@ -130,13 +129,13 @@ const DATA = {
       },
       serviceTitles: {
         sundaySchool: 'Sunday School',
-        morning: 'Morning Service',
-        evening: 'Evening Service'
+        morning: 'Chawhnu Inkhawm',
+        evening: 'Zan Inkhawm'
       },
       servicePrograms: {
-        sundaySchool: 'Puitling & Naupang Sunday School',
-        morning: 'Thuhriltu: Pastor',
-        evening: 'Thuhriltu: Pro Pastor'
+        sundaySchool: { tantu: '', zirlai: '' },
+        morning: { tantu: '', thuhriltu: '' },
+        evening: { tantu: '', thuhriltu: '' }
       },
       midWeek: {
         nilai: {
@@ -255,13 +254,13 @@ const DATA = {
       },
       serviceTitles: {
         sundaySchool: 'Sunday School',
-        morning: 'Chawhma Inkhawm',
+        morning: 'Chawhnu Inkhawm',
         evening: 'Zan Inkhawm'
       },
       servicePrograms: {
-        sundaySchool: 'Puitling & Naupang Sunday School',
-        morning: 'Thuhriltu: Bialtu Pastor',
-        evening: 'Thuhriltu: Pro. Pastor'
+        sundaySchool: { tantu: '', zirlai: '' },
+        morning: { tantu: '', thuhriltu: '' },
+        evening: { tantu: '', thuhriltu: '' }
       },
       midWeek: {
         nilai: {
