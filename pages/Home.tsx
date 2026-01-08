@@ -344,11 +344,11 @@ export const Home: React.FC = () => {
                             <div className="space-y-3 text-sm">
                                 <div>
                                     <span className="block text-xs text-slate-400 uppercase">Thawhlawm Chhiar</span>
-                                    <p className="font-medium text-slate-800 line-clamp-2">{weeklyDuty.thawhlawmChiartute?.join(', ') || 'TBD'}</p>
+                                    <p className="font-medium text-slate-800">{weeklyDuty.thawhlawmChiartute?.join(', ') || 'TBD'}</p>
                                 </div>
                                 <div>
                                     <span className="block text-xs text-slate-400 uppercase">Ushers</span>
-                                    <p className="font-medium text-slate-800 line-clamp-2">{weeklyDuty.ushers?.join(', ') || 'TBD'}</p>
+                                    <p className="font-medium text-slate-800">{weeklyDuty.ushers?.join(', ') || 'TBD'}</p>
                                 </div>
                             </div>
                         </div>
@@ -367,7 +367,7 @@ export const Home: React.FC = () => {
                                 </div>
                                 <div>
                                     <span className="block text-xs text-slate-400 uppercase">Buhfaitham Hralh</span>
-                                    <p className="font-medium text-slate-800 line-clamp-2">{weeklyDuty.buhfaithamHralhtute?.join(', ') || 'TBD'}</p>
+                                    <p className="font-medium text-slate-800">{weeklyDuty.buhfaithamHralhtute?.join(', ') || 'TBD'}</p>
                                 </div>
                             </div>
                         </div>

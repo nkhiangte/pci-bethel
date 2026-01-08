@@ -90,23 +90,6 @@ const SS_DEPARTMENTS = [
 const EXECUTIVE_BODY_SEED_DATA: any[] = [];
 // ... (Keeping empty arrays for brevity, seed logic remains)
 const RAMTHAR_SEED_DATA: any[] = [];
-const BUILDING_SEED_DATA: any[] = [];
-const SOCIAL_FRONT_SEED_DATA: any[] = [];
-const REFRESHMENT_SEED_DATA: any[] = [];
-const KRISTIAN_CHHUNGKUA_SEED_DATA: any[] = [];
-const WORSHIP_SEED_DATA: any[] = [];
-const MASIHI_SANGATI_SEED_DATA: any[] = [];
-const RECEPTION_USHERING_DECORATION_SEED_DATA: any[] = [];
-const ARCHIVE_LIBRARY_SEED_DATA: any[] = [];
-const MUSIC_SEED_DATA: any[] = [];
-const LIGHT_SOUND_SEED_DATA: any[] = [];
-const FINANCE_SEED_DATA: any[] = [];
-const BSI_SEED_DATA: any[] = [];
-const KTP_SEED_DATA: any[] = [];
-const KOHHRAN_HMEICHHIA_SEED_DATA: any[] = [];
-const KOHHRAN_PAVALAI_PAWL_SEED_DATA: any[] = [];
-
-// Seed Data for SS Teachers (Used only for initial seeding to DB)
 const SUNDAY_SCHOOL_TEACHERS_SEED_DATA = [
   { year: '1981', details: "Superintendent : Pu Manhleia\nAsst. Supdt. : Pu Thangchuanga\nAsst. Supdt (NPSS) : Pu Saizama Sailo\nSecretary : Pu B.Hranghlira\nAsst. Secretary : Pu Rinliana\nAsst. Secy (NPSS) : Tv.Rohita\n\n[Puitling zirtirtu]\nPu T.Sawmpauva, Pu P.C.Lalhlira, Pu Zakima, Upa Khawidawla\n\n[Intermediate]\nPu R.D.Lalchhuana, Nl.Rotuahthangi\n\n[Junior]\nPi Lalchhawnkimi, Tv.Goodthanga\n\n[Primary]\nPu Thangngolanga, Nl.Lalnunsangi, Pu Ralkapthanga\n\n[Beginner]\nNl.Biakengi, Tv.Biga, Nl.Bawihthansangi, Nl.Lalchhuanawmi" },
 ];
@@ -151,6 +134,7 @@ export const Archives: React.FC = () => {
     const [ssSearchResults, setSsSearchResults] = useState<ArchiveEntry[]>([]);
     const [allRawngbawltuRecords, setAllRawngbawltuRecords] = useState<ArchiveEntry[]>([]);
     const [isSearchingRealData, setIsSearchingRealData] = useState(false);
+    const [localSearchTerm, setLocalSearchTerm] = useState(''); // New local search state
 
     // Departments Management
     const [subCategories, setSubCategories] = useState<string[]>(DEFAULT_RAWNGBAWLTU_SUBCATEGORIES);
@@ -297,7 +281,12 @@ export const Archives: React.FC = () => {
         setActiveSSDepartment(null);
         setSsSearchTerm('');
         setSsSearchResults([]);
+        setLocalSearchTerm('');
     }, [selectedCategory]);
+
+    useEffect(() => {
+        setLocalSearchTerm('');
+    }, [selectedSubCategory]);
 
     const handleCategorySelect = (categoryId: string) => {
         setSelectedCategory(categoryId);
@@ -500,13 +489,6 @@ export const Archives: React.FC = () => {
         setIsSaving(false);
     };
 
-    const handleSeedFunctions: Record<string, () => void> = {
-        'Executive Body': () => handleSeedGeneric(EXECUTIVE_BODY_SEED_DATA, 'Executive Body'),
-        // ... map other functions here similarly
-        'Ramthar': () => handleSeedGeneric(RAMTHAR_SEED_DATA, 'Ramthar'),
-        // Mapping just a few examples to save space, logic is generic
-    };
-
     // Client-side search for main archives list
     const filteredArchives = archives.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -619,7 +601,7 @@ export const Archives: React.FC = () => {
                                         <span className="text-xs text-slate-400 font-medium uppercase truncate max-w-[150px]">{entry.subCategory}</span>
                                     </div>
                                     {/* Highlight matched text logic simplified for brevity */}
-                                    <div className="text-slate-800 text-sm whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                    <div className="text-slate-800 text-sm whitespace-pre-wrap">
                                         {entry.description}
                                     </div>
                                 </div>
@@ -652,6 +634,10 @@ export const Archives: React.FC = () => {
             )}
         </div>
     );
+
+    const localSearchResults = localSearchTerm 
+    ? archives.filter(doc => doc.description.toLowerCase().includes(localSearchTerm.toLowerCase()))
+    : [];
 
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
@@ -805,7 +791,48 @@ export const Archives: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {filteredArchives.length > 0 ? (
+                                        {selectedCategory === 'Rawngbawltu te' && selectedSubCategory && (
+                                            <div className="mb-6 relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder={`Search names in ${activeSSDepartment || selectedSubCategory}...`} 
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-church-500 outline-none shadow-sm"
+                                                    value={localSearchTerm}
+                                                    onChange={(e) => setLocalSearchTerm(e.target.value)}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {localSearchTerm && localSearchResults.length > 0 ? (
+                                            <div className="space-y-4">
+                                                <h3 className="font-bold text-slate-700">Found in {localSearchResults.length} years</h3>
+                                                {localSearchResults.map(entry => {
+                                                    const lines = entry.description.split('\n');
+                                                    const matchingLines = lines.filter(line => line.toLowerCase().includes(localSearchTerm.toLowerCase()));
+                                                    
+                                                    return (
+                                                        <div key={entry.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 hover:border-church-200 transition">
+                                                            <div className="flex justify-between items-start mb-2 border-b border-slate-50 pb-2">
+                                                                 <h4 className="text-lg font-bold text-church-700">{entry.title}</h4>
+                                                                 <span className="text-xs text-slate-400">{entry.date}</span>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                {matchingLines.map((line, idx) => (
+                                                                    <p key={idx} className="text-sm text-slate-800 bg-yellow-50 p-2 rounded border border-yellow-100">
+                                                                        {line}
+                                                                    </p>
+                                                                ))}
+                                                                {matchingLines.length === 0 && <p className="text-sm text-slate-500 italic">Match found in raw text.</p>}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : localSearchTerm ? (
+                                            <div className="text-center py-10 text-slate-500">No matches found for "{localSearchTerm}".</div>
+                                        ) : (
+                                            filteredArchives.length > 0 ? (
                                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {filteredArchives.map(entry => {
                                                     const Icon = CATEGORY_ICONS[entry.category] || Archive;
@@ -856,7 +883,7 @@ export const Archives: React.FC = () => {
                                                 <Archive className="w-12 h-12 mx-auto mb-4 text-slate-300" />
                                                 <p className="text-slate-500">{t.archives.empty}</p>
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
                                 )
                             )
