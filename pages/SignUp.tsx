@@ -162,7 +162,6 @@ const SignUp: React.FC = () => {
                   placeholder="Code"
                 />
               </div>
-              <p className="text-xs text-church-600 mt-1 font-medium">Use code "PCIADMIN" for admin privileges (for testing).</p>
             </div>
           </div>
 
