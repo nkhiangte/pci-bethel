@@ -57,7 +57,7 @@ service cloud.firestore {
     // Publicly readable. Admins can create, update, AND DELETE.
     match /proPastors/{docId} {
       allow read: if true;
-      allow write: if isAdmin(); // Reverted to allow all write operations for admins
+      allow write: if isAdmin();
     }
 
     match /events/{docId} {
@@ -96,7 +96,6 @@ service cloud.firestore {
     }
 
     // Unified collection for all record types: baptism, wedding, death, inkhawmpui
-    // This single rule covers the new 'wedding' records as they are stored here with type='wedding'
     match /records/{docId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -113,6 +112,12 @@ service cloud.firestore {
     }
 
     match /weeklyDuties/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Settings collection (Contact info, etc.)
+    match /settings/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }

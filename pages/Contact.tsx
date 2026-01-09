@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Phone, Mail, Clock, Edit, X, Save, Loader } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Edit, X, Save, Loader, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 
@@ -21,7 +21,7 @@ const INITIAL_CONTACT_DATA: ContactInfo = {
   email: "office@bethelkohhran.pci",
   officeHoursWeekdays: "Tue - Fri: 10am - 4pm",
   officeHoursWeekend: "Sat: 10am - 1pm",
-  // Updated map URL to point exactly to PCI Champhai Bethel Kohhran
+  // Updated map URL to point exactly to PCI Champhai Bethel Kohhran per request
   mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.849280860851!2d93.3283253!3d23.4735394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374d810056637385%3A0x6a2c3c6f24056250!2sPCI%20Champhai%20Bethel%20Kohhran!5e0!3m2!1sen!2sin"
 };
 
@@ -34,6 +34,7 @@ const Contact: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<ContactInfo>(INITIAL_CONTACT_DATA);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,22 +56,28 @@ const Contact: React.FC = () => {
 
   const handleEditClick = () => {
     setEditForm(data);
+    setSaveError(null);
     setIsEditing(true);
   };
 
   const handleSave = async () => {
     if (!db || !db.collection) {
-        alert("Database connection not available.");
+        setSaveError("Database connection not available.");
         return;
     }
     setIsSaving(true);
+    setSaveError(null);
     try {
       await db.collection('settings').doc('contact').set(editForm);
       setData(editForm);
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving contact info:", error);
-      alert("Failed to save changes.");
+      if (error.code === 'permission-denied') {
+          setSaveError("Permission denied. Ensure you are logged in as admin and rules allow writes to 'settings'.");
+      } else {
+          setSaveError("Failed to save changes. " + (error.message || ''));
+      }
     }
     setIsSaving(false);
   };
@@ -168,6 +175,13 @@ const Contact: React.FC = () => {
                     <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
                 </div>
                 <div className="p-6 space-y-6">
+                    {saveError && (
+                        <div className="bg-red-50 text-red-700 p-4 rounded-lg flex items-start text-sm border border-red-200">
+                            <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                            {saveError}
+                        </div>
+                    )}
+                    
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <h4 className="font-bold text-church-600 text-sm uppercase tracking-wider border-b pb-2">Location Details</h4>
