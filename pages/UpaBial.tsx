@@ -10,6 +10,7 @@ interface UpaBialData {
   areaDescription: string;
   leader: string;
   members: string[];
+  imageUrl?: string;
 }
 
 const INITIAL_BIAL_DATA: UpaBialData[] = [
@@ -18,21 +19,24 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     number: 1,
     areaDescription: 'Venglai Kawng phei chung lam zawng leh DC Complex hlui zawng',
     leader: 'Upa PC Lalhmingliana',
-    members: ['Pu C Lalrawngbawla', 'Pu Lalmuanpuia']
+    members: ['Pu C Lalrawngbawla', 'Pu Lalmuanpuia'],
+    imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg'
   },
   {
     id: 'bial-2',
     number: 2,
     areaDescription: 'MJA Building leh BSI Building atangin Pu K Lalrawna In thlengin chhuah lam zawng',
     leader: 'Upa Lalremruata',
-    members: ['Pu C Rohmingliana', 'Pu JC Laldinthara']
+    members: ['Pu C Rohmingliana', 'Pu JC Laldinthara'],
+    imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg'
   },
   {
     id: 'bial-3',
     number: 3,
     areaDescription: 'Upa PC Lalhmingliana In atangin kawngui dung zelah Pu L Khenpauva In huamin Biak In leh Soil Comlex huamin chhuah lam zawng',
     leader: 'Upa R Lalramhluna',
-    members: ['Pu Thanglianmanga', 'Pu H Lalzuitluanga']
+    members: ['Pu Thanglianmanga', 'Pu H Lalzuitluanga'],
+    imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg'
   },
   {
     id: 'bial-4',
@@ -53,7 +57,8 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     number: 6,
     areaDescription: 'Pu K Zakima In bul step-ah chhuk thlain, Pu Salmanga tuikhur suin, Zion Veng ramri thleng',
     leader: 'Upa David Lalchhanhima',
-    members: ['Pu Kapthuama', 'Pu Thangdeihchina']
+    members: ['Pu Kapthuama', 'Pu Thangdeihchina'],
+    imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg'
   },
   {
     id: 'bial-7',
@@ -67,35 +72,40 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     number: 8,
     areaDescription: 'PWD Complex zawng leh Upa HT Vanlalsawma In atangin Pu JC Laldinthara Inah kualin Pu TC Vanlalchuana In/Pu Buka tuikhur thlengin',
     leader: 'Upa H Zairemmawia',
-    members: ['Pu Nelson Khiangte', 'Pu C Lalengmawia']
+    members: ['Pu Nelson Khiangte', 'Pu C Lalengmawia'],
+    imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg'
   },
   {
     id: 'bial-9',
     number: 9,
     areaDescription: 'Upa R Lalramhluna In atangin Chhura hmun mual zawng',
     leader: 'Upa Hmingthanmawia Sailo',
-    members: ['Pu K Lalengthanga', 'Pu T Sangtluanga', 'Pu Khawlrosiama']
+    members: ['Pu K Lalengthanga', 'Pu T Sangtluanga', 'Pu Khawlrosiama'],
+    imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg'
   },
   {
     id: 'bial-10',
     number: 10,
     areaDescription: 'Chhura hmun peng atangin kawngpui dungah Vengthar ramri thlengin, Mualnuam mual huamin tlak lam zawng',
     leader: 'Upa Lianpianga',
-    members: ['Pu Lalramthara', 'Pu Lalramnghakhlela', 'Pu K Lalengkima']
+    members: ['Pu Lalramthara', 'Pu Lalramnghakhlela', 'Pu K Lalengkima'],
+    imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg'
   },
   {
     id: 'bial-11',
     number: 11,
     areaDescription: 'Pu PC Thanhluma In atangin Kohhran ram huamin, Vengthar ramri su in kawngpui dung chhuah lam zawng',
     leader: 'Upa HT Vanlalsawma',
-    members: ['Pu Keneth Lalthanzauva', 'Pu PC Zoramthanga']
+    members: ['Pu Keneth Lalthanzauva', 'Pu PC Zoramthanga'],
+    imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg'
   },
   {
     id: 'bial-12',
     number: 12,
     areaDescription: 'Pu T Sawmpauva In bul step atangin Pu Salmanga tuikhur suin chhuah lam mual zawng',
     leader: 'Upa C Zohmingthanga',
-    members: ['Pu C Malsawmdawngliana', 'Pu Lalthanghulha']
+    members: ['Pu C Malsawmdawngliana', 'Pu Lalthanghulha'],
+    imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg'
   },
   {
     id: 'bial-13',
@@ -214,12 +224,23 @@ const UpaBial: React.FC = () => {
                 <div key={bial.id} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'shadow-lg border-church-300 ring-1 ring-church-200 col-span-1 md:col-span-2 lg:col-span-3' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
                   <button 
                     onClick={() => toggleExpand(bial.id)}
-                    className="w-full text-left p-6 flex justify-between items-center"
+                    className="w-full text-left p-4 flex justify-between items-center"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-church-50 text-church-600 flex items-center justify-center font-bold text-lg shadow-sm border border-church-100 shrink-0">
-                        {bial.number}
-                      </div>
+                      {bial.imageUrl ? (
+                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-church-100 shadow-sm shrink-0">
+                          <img 
+                            src={bial.imageUrl} 
+                            alt={`Upa Bial ${bial.number}`} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-church-50 text-church-600 flex items-center justify-center font-bold text-lg shadow-sm border border-church-100 shrink-0">
+                          {bial.number}
+                        </div>
+                      )}
+                      
                       <div>
                         <h3 className="font-bold text-lg text-slate-800">BIAL - {bial.number}</h3>
                         <p className="text-sm text-church-600 font-medium">{bial.leader}</p>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const { isAdmin, currentUser } = useAuth();
@@ -26,6 +26,7 @@ const AdminDashboard: React.FC = () => {
       { title: 'Manage Weekly Duties', icon: ClipboardList, link: '/admin/duties', color: 'bg-indigo-500', desc: 'Update ushers, song leaders, etc.' },
       { title: 'Upload Reports', icon: FileText, link: '/resources', color: 'bg-green-500', desc: 'Upload weekly bulletins and annual reports.' },
       { title: 'Manage Gallery', icon: Image, link: '/gallery', color: 'bg-purple-500', desc: 'Upload photos from recent events.' },
+      { title: 'Manage Users', icon: UserCog, link: '/admin/users', color: 'bg-pink-500', desc: 'Manage registered users and admin roles.' },
       { title: 'Approve Forms', icon: CheckCircle, link: '#', color: 'bg-teal-500', desc: 'Review membership and prayer requests. (Coming Soon)' },
   ];
 

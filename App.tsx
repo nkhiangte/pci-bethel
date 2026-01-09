@@ -20,6 +20,7 @@ import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
 import AdminDuties from './pages/AdminDuties'; // Import new page
+import AdminUsers from './pages/AdminUsers'; // Added AdminUsers
 import StaffEditModal from './components/StaffEditModal'; // FIX: Import new generic modal component
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/ministries" element={<AdminMinistries />} />
                 <Route path="/admin/duties" element={<AdminDuties />} /> 
+                <Route path="/admin/users" element={<AdminUsers />} /> {/* Added AdminUsers Route */}
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> 
                 <Route path="/archives" element={<Archives />} />
