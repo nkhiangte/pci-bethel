@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Phone, Mail, Clock, Edit, X, Save, Loader, AlertCircle } from 'lucide-react';
+import { MapPin, Phone, Edit, X, Save, Loader, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 
@@ -9,8 +9,6 @@ interface ContactInfo {
   addressLine2: string;
   phone: string;
   email: string;
-  officeHoursWeekdays: string;
-  officeHoursWeekend: string;
   mapUrl: string;
 }
 
@@ -19,8 +17,6 @@ const INITIAL_CONTACT_DATA: ContactInfo = {
   addressLine2: "Mizoram 796321",
   phone: "+91 98620 12345",
   email: "office@bethelkohhran.pci",
-  officeHoursWeekdays: "Tue - Fri: 10am - 4pm",
-  officeHoursWeekend: "Sat: 10am - 1pm",
   // Updated map URL to point exactly to PCI Champhai Bethel Kohhran per request
   mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.849280860851!2d93.3283253!3d23.4735394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374d810056637385%3A0x6a2c3c6f24056250!2sPCI%20Champhai%20Bethel%20Kohhran!5e0!3m2!1sen!2sin"
 };
@@ -108,7 +104,7 @@ const Contact: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Location Card */}
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
                 <div className="p-4 bg-church-50 text-church-600 rounded-full mb-4 ring-4 ring-church-50/50"><MapPin size={32} /></div>
@@ -126,16 +122,6 @@ const Contact: React.FC = () => {
                 <div className="text-slate-600 leading-relaxed space-y-1">
                     <p className="font-medium text-slate-800">{data.phone}</p>
                     <p className="text-sm">{data.email}</p>
-                </div>
-            </div>
-
-             {/* Office Hours Card */}
-             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
-                <div className="p-4 bg-orange-50 text-orange-600 rounded-full mb-4 ring-4 ring-orange-50/50"><Clock size={32} /></div>
-                <h3 className="font-bold text-lg mb-3 text-slate-800">Office Hours</h3>
-                <div className="text-slate-600 leading-relaxed space-y-1">
-                    <p>{data.officeHoursWeekdays}</p>
-                    <p>{data.officeHoursWeekend}</p>
                 </div>
             </div>
         </div>
@@ -203,20 +189,6 @@ const Contact: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                                 <input className="w-full border p-2 rounded" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h4 className="font-bold text-orange-600 text-sm uppercase tracking-wider border-b pb-2">Office Hours</h4>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Weekdays</label>
-                                <input className="w-full border p-2 rounded" value={editForm.officeHoursWeekdays} onChange={e => setEditForm({...editForm, officeHoursWeekdays: e.target.value})} />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Weekend</label>
-                                <input className="w-full border p-2 rounded" value={editForm.officeHoursWeekend} onChange={e => setEditForm({...editForm, officeHoursWeekend: e.target.value})} />
                             </div>
                         </div>
                     </div>
