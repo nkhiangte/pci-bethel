@@ -5,7 +5,7 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCSRTF152npIkPrKYAH9d-O3MFkyKwdiRA", // Placeholder
+  apiKey: "AIzaSyCSRTF152npIkPrKYAH9d-O3MFkyKwdiRA", // Placeholder - ensure your project settings match
   authDomain: "bethelpci.firebaseapp.com",
   projectId: "bethelpci",
   storageBucket: "bethelpci.firebasestorage.app",
@@ -23,24 +23,26 @@ let storage: any;
 const mockDb = {
   collection: () => ({
     onSnapshot: (cb: any, errCb: any) => {
-      // Simulate permission denied or empty to trigger fallback logic in components
       if (errCb) setTimeout(() => errCb({ message: 'Offline/Mock Mode' }), 100);
       return () => {};
     },
-    get: async () => ({ docs: [] }),
+    get: async () => ({ docs: [], empty: true }),
     doc: () => ({
         get: async () => ({ exists: false, data: () => undefined }),
         set: async () => {},
         update: async () => {},
         delete: async () => {}
     }),
+    where: function() { return this; },
+    orderBy: function() { return this; },
   }),
   batch: () => ({
     set: () => {},
     update: () => {},
     delete: () => {},
     commit: async () => {}
-  })
+  }),
+  settings: () => {}
 };
 
 const mockAuth = {
@@ -58,7 +60,6 @@ const mockAuth = {
 };
 
 try {
-  // Check if firebase app is already initialized
   if (!firebase.apps.length) {
     app = firebase.initializeApp(firebaseConfig);
   } else {
@@ -69,21 +70,26 @@ try {
   auth = firebase.auth();
   storage = firebase.storage();
   
-  // Enable offline persistence to avoid errors when offline
+  // FIX: Force Long Polling and explicitly disable AutoDetect to prevent "cannot be used together" error.
+  // This addresses connectivity issues in restricted network environments.
+  db.settings({
+    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: false
+  });
+
+  // Enable offline persistence
   db.enablePersistence({ synchronizeTabs: true }).catch((err: any) => {
       if (err.code == 'failed-precondition') {
-          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+          console.warn('Multiple tabs open, persistence limited.');
       } else if (err.code == 'unimplemented') {
-          console.warn('The current browser does not support all of the features required to enable persistence');
+          console.warn('Browser does not support persistence');
       }
   });
   
-  console.log("Firebase initialized successfully");
+  console.log("Firebase initialized with Long Polling enabled");
 
 } catch (error) {
   console.error("FIREBASE INITIALIZATION ERROR:", error);
-  console.warn("Falling back to Mock Database Mode.");
-  // Fallback to mocks
   db = mockDb;
   auth = mockAuth;
   storage = {};

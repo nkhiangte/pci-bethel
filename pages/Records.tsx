@@ -4,12 +4,18 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { BookUser, HeartHandshake, Baby, Cross, Users, Plus, Edit, Trash, X, Save, Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, Search, ExternalLink, FileText } from 'lucide-react';
+import { 
+  BookUser, Baby, Cross, Users, Plus, Edit, Trash, X, Save, 
+  Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
+  Search, ExternalLink, FileText, ChevronLeft, Droplet, 
+  Heart, Church, ArrowRight
+} from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
+type ViewMode = 'selection' | 'details';
 
 const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
@@ -27,20 +33,13 @@ const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
 
 const formatDateCell = (value: any): string => {
   if (!value && value !== 0) return '';
-
-  // Handle Excel serial numbers (which are numbers)
   if (typeof value === 'number' && value > 1) {
     const date = new Date((value - 25569) * 86400 * 1000);
-    if (isNaN(date.getTime()) || date.getUTCFullYear() < 1900 || date.getUTCFullYear() > 2100) {
-        return String(value);
-    }
+    if (isNaN(date.getTime()) || date.getUTCFullYear() < 1800 || date.getUTCFullYear() > 2100) return String(value);
     const day = String(date.getUTCDate()).padStart(2, '0');
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const year = date.getUTCFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day}/${month}/${date.getUTCFullYear()}`;
   }
-
-  // Handle strings (like 'YYYY-MM-DD' from newer imports)
   if (typeof value === 'string') {
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
@@ -49,22 +48,20 @@ const formatDateCell = (value: any): string => {
     }
     return value;
   }
-
   return String(value);
 };
-
 
 const Records: React.FC = () => {
     const { t, language } = useLanguage();
     const { isAdmin } = useAuth();
+    const [viewMode, setViewMode] = useState<ViewMode>('selection');
     const [activeTab, setActiveTab] = useState<RecordType>('baptism');
     const [records, setRecords] = useState<ChurchRecord[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isOfflineMode, setIsOfflineMode] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
-    // Modals State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState<Partial<BaptismRecord> | Partial<WeddingRecord> | Partial<DeathRecord> | Partial<InkhawmpuiRecord> | null>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -74,9 +71,11 @@ const Records: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchRecords = useCallback(async () => {
+        if (viewMode === 'selection') return;
+        
         setLoading(true);
         setIsOfflineMode(false);
-        setMissingIndexUrl(null); // Reset error state on new fetch
+        setMissingIndexUrl(null);
         
         const sortField = DATE_SORT_FIELD_MAP[activeTab];
 
@@ -88,29 +87,29 @@ const Records: React.FC = () => {
         }
 
         try {
-            // Attempt 1: Optimized Query (Filter + Sort)
-            const snapshot = await db.collection('records')
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('timeout')), 8000)
+            );
+
+            const fetchPromise = db.collection('records')
                                      .where('type', '==', activeTab)
                                      .orderBy(sortField, 'desc')
                                      .get();
                                      
-            if (snapshot.empty) {
-                setRecords([]);
-            } else {
-                const data = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
-                setRecords(data);
-            }
+            const snapshot: any = await Promise.race([fetchPromise, timeoutPromise]);
+            const data = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
+            setRecords(data);
+            
         } catch (error: any) {
-            console.error("Error fetching records (primary query):", error);
+            console.error("Fetch Error:", error.message);
             const errorMessage = error.message || '';
-            const isIndexError = error.code === 'failed-precondition' || errorMessage.includes('index');
+            const isIndexError = error.code === 'failed-precondition' || errorMessage.toLowerCase().includes('index');
+            const isTimeout = errorMessage === 'timeout';
 
-            if (isIndexError) {
-                 const match = errorMessage.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
-                 if (match) {
-                     setMissingIndexUrl(match[0]);
-                 } else {
-                     setMissingIndexUrl("https://console.firebase.google.com/project/_/firestore/indexes");
+            if (isIndexError || isTimeout) {
+                 if (isIndexError) {
+                    const match = errorMessage.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
+                    setMissingIndexUrl(match ? match[0] : "https://console.firebase.google.com/project/bethelpci/firestore/indexes");
                  }
 
                  try {
@@ -118,38 +117,34 @@ const Records: React.FC = () => {
                                               .where('type', '==', activeTab)
                                               .get();
                     
-                     if (!fallbackSnapshot.empty) {
-                         const data = fallbackSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
-                         data.sort((a: any, b: any) => {
-                             const dateA = a[sortField] || '';
-                             const dateB = b[sortField] || '';
-                             if (activeTab === 'inkhawmpui') {
-                                 return Number(dateB) - Number(dateA);
-                             }
-                             return dateA > dateB ? -1 : 1;
-                         });
-                         setRecords(data);
-                     } else {
-                         setRecords([]);
-                     }
+                     const data = fallbackSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
+                     data.sort((a: any, b: any) => {
+                         const valA = a[sortField];
+                         const valB = b[sortField];
+                         if (activeTab === 'inkhawmpui') return (Number(valB) || 0) - (Number(valA) || 0);
+                         return String(valB || '').localeCompare(String(valA || ''));
+                     });
+                     setRecords(data);
+                     if (isTimeout) setIsOfflineMode(true);
                  } catch (fallbackError) {
                      setRecords([]);
                  }
-
-            } else if (error.code === 'permission-denied' || errorMessage.includes('permission')) {
-                setIsOfflineMode(true);
-                setRecords([]);
             } else {
                 setRecords([]);
             }
         }
         setLoading(false);
-    }, [activeTab]);
+    }, [activeTab, viewMode]);
 
     useEffect(() => {
         fetchRecords();
     }, [fetchRecords]);
 
+    const handleSelectCategory = (type: RecordType) => {
+        setActiveTab(type);
+        setViewMode('details');
+        setSearchTerm('');
+    };
 
     const handleAddNew = () => {
         switch(activeTab) {
@@ -190,39 +185,23 @@ const Records: React.FC = () => {
             fetchRecords();
         } catch (error) {
             console.error("Error saving record:", error);
+            alert("Connection error. Record might not have saved to server yet.");
         }
         setLoading(false);
-    };
-
-    const handleDownloadTemplate = (format: 'xlsx' | 'csv') => {
-        const headers = TEMPLATE_HEADERS[activeTab];
-        const placeholderData = [Object.fromEntries(headers.map(h => [h, `Sample ${h}`]))];
-
-        const ws = XLSX.utils.json_to_sheet(placeholderData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Template");
-        
-        XLSX.writeFile(wb, `${activeTab}_template.${format}`);
     };
 
     const handleExportExcel = () => {
         const headers = TEMPLATE_HEADERS[activeTab];
         const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
-        
         const exportData = searchedRecords.map(rec => {
             const row: any = {};
             headers.forEach(header => {
                 const displayHeader = t.records.theads[header as keyof typeof t.records.theads] || header;
                 const value = (rec as any)[header];
-                if (dateFields.includes(header)) {
-                    row[displayHeader] = formatDateCell(value);
-                } else {
-                    row[displayHeader] = value;
-                }
+                row[displayHeader] = dateFields.includes(header) ? formatDateCell(value) : value;
             });
             return row;
         });
-
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Records");
@@ -233,25 +212,13 @@ const Records: React.FC = () => {
         const doc = new jsPDF();
         const headers = TEMPLATE_HEADERS[activeTab];
         const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
-
         const tableHead = headers.map(h => t.records.theads[h as keyof typeof t.records.theads] || h);
-        const tableBody = searchedRecords.map(rec => {
-            return headers.map(header => {
-                const value = (rec as any)[header];
-                if (dateFields.includes(header)) {
-                    return formatDateCell(value);
-                }
-                return value || '';
-            });
-        });
-
-        const title = `${t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Records`;
-        
+        const tableBody = searchedRecords.map(rec => headers.map(header => {
+            const value = (rec as any)[header];
+            return dateFields.includes(header) ? formatDateCell(value) : (value || '');
+        }));
         doc.setFontSize(16);
-        doc.text(title, 14, 20);
-        doc.setFontSize(10);
-        doc.text(`Bethel Kohhran - Exported on ${new Date().toLocaleDateString()}`, 14, 28);
-
+        doc.text(`${t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Records`, 14, 20);
         autoTable(doc, {
             head: [tableHead],
             body: tableBody,
@@ -260,284 +227,235 @@ const Records: React.FC = () => {
             headStyles: { fillColor: [134, 120, 79] }, 
             styles: { fontSize: 8 }
         });
-
         doc.save(`Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
-
         setImportFileName(file.name);
-        setImportError(null);
-        setImportData(null);
-
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = e.target?.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet) as any[];
-
-                if (json.length === 0) {
-                    setImportError("The file is empty or could not be read.");
-                    return;
-                }
-
-                const fileHeaders = Object.keys(json[0] as object).map(h => h.trim());
-                const templateHeaders = TEMPLATE_HEADERS[activeTab];
-
-                const allHeadersMatch = templateHeaders.every(h => fileHeaders.includes(h));
-
-                if (!allHeadersMatch) {
-                    setImportError(`File headers do not match the template. Expected: [${templateHeaders.join(', ')}]. Found: [${fileHeaders.join(', ')}]`);
-                    return;
-                }
-
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]) as any[];
                 const processedData = json.map(row => {
                     const newRow: { [key: string]: any } = {};
-                    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
-                    
+                    const templateHeaders = TEMPLATE_HEADERS[activeTab];
                     templateHeaders.forEach(header => {
-                        let value = (row as any)[header];
-                        
-                        if (value === undefined || value === null) {
-                            value = '';
-                        }
-
-                        if (dateFields.includes(header) && value) {
-                            let formattedDate: string | null = null;
-                            if (typeof value === 'number' && value > 1) { 
-                                const date = XLSX.SSF.parse_date_code(value);
-                                if (date) {
-                                    formattedDate = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
-                                }
-                            } else if (value instanceof Date) { 
-                                formattedDate = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-                            } else if (typeof value === 'string') { 
-                                const parsedDate = new Date(value);
-                                if (!isNaN(parsedDate.getTime())) {
-                                    const year = parsedDate.getFullYear();
-                                    if (year > 1900 && year < 2100) {
-                                       formattedDate = `${year}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
-                                    }
-                                }
-                            }
-                            newRow[header] = formattedDate || value.toString();
-                        } else {
-                            newRow[header] = value.toString();
-                        }
+                        let value = (row as any)[header] || '';
+                        newRow[header] = value.toString();
                     });
                     return newRow;
                 });
-
                 setImportData(processedData);
+                setIsImportModalOpen(true);
             } catch (err) {
-                setImportError("Failed to parse the file. Please ensure it's a valid XLSX or CSV.");
+                console.error("Import error", err);
             }
         };
         reader.readAsBinaryString(file);
-        setIsImportModalOpen(true);
-        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleConfirmImport = async () => {
         if (!db?.batch || !importData) return;
-
         setLoading(true);
         try {
             const batch = db.batch();
             const recordsRef = db.collection('records');
-            
             importData.forEach(row => {
                 const newDocRef = recordsRef.doc();
-                const recordWithType = { ...row, type: activeTab };
-                batch.set(newDocRef, recordWithType);
+                batch.set(newDocRef, { ...row, type: activeTab });
             });
-
             await batch.commit();
             setIsImportModalOpen(false);
             fetchRecords();
         } catch (error) {
-            setImportError("An error occurred while uploading records to the database.");
-            console.error(error);
+            console.error("Upload failed", error);
         }
         setLoading(false);
     };
 
-    const tabs = [
-        { id: 'baptism', label: t.records.tabs.baptism, icon: Baby },
-        { id: 'wedding', label: t.records.tabs.wedding, icon: HeartHandshake },
-        { id: 'death', label: t.records.tabs.death, icon: Cross },
-        { id: 'inkhawmpui', label: t.records.tabs.conference, icon: Users },
-    ];
-    
     const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
 
     const searchedRecords = records.filter(rec => {
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();
-
         switch (rec.type) {
-            case 'baptism':
-                return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
-            case 'wedding':
-                return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
-            case 'death':
-                return (rec.name?.toLowerCase().includes(term));
-            case 'inkhawmpui':
-                return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
-            default:
-                return false;
+            case 'baptism': return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
+            case 'wedding': return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
+            case 'death': return (rec.name?.toLowerCase().includes(term));
+            case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
+            default: return false;
         }
     });
 
-    return (
-        <div className="bg-slate-50 min-h-screen">
-            {/* Immersive Big Header Section */}
-            <div className="bg-church-900 py-16 mb-12 text-center text-white relative overflow-hidden shadow-inner">
-                {/* Decorative Watermark Icon */}
-                <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none transform -rotate-12 scale-150">
-                    <BookUser size={400} />
+    const categoryCards = [
+        { 
+            id: 'baptism', 
+            title: 'Baptisma Record', 
+            sub: 'Hming & Ni chhinchhiahte', 
+            icon: Droplet, 
+            img: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' 
+        },
+        { 
+            id: 'wedding', 
+            title: 'Inneihna Record', 
+            sub: 'Inneih hriatpuina hrang hrang', 
+            icon: Heart, 
+            img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' 
+        },
+        { 
+            id: 'death', 
+            title: 'Thihna Record', 
+            sub: 'Mithi chhinchhiahna leh thlan', 
+            icon: Church, 
+            img: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' 
+        },
+        { 
+            id: 'inkhawmpui', 
+            title: 'Khawmpui Record', 
+            sub: 'Bial leh Inkhawmpui Liante', 
+            icon: Users, 
+            img: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' 
+        },
+    ];
+
+    if (viewMode === 'selection') {
+        return (
+            <div className="bg-[#0f0a1a] min-h-screen text-white pb-24">
+                {/* Header matching screenshot */}
+                <div className="max-w-4xl mx-auto px-6 pt-12 mb-8">
+                    <p className="text-purple-600 font-bold tracking-widest text-xs mb-3 uppercase">CHAMPHAI BETHEL KOHHRAN</p>
+                    <h1 className="text-4xl md:text-5xl font-serif font-black mb-2 tracking-tight">Record hrang hrangte</h1>
+                    <p className="text-slate-400 text-sm md:text-base font-medium">Zawnna awlsam zawk nan leh hriatpuina atan.</p>
                 </div>
-                <div className="relative z-10 max-w-7xl mx-auto px-4">
-                    <h1 className="text-5xl md:text-7xl font-serif font-bold mb-4 tracking-tight drop-shadow-md">{t.records.title}</h1>
-                    <p className="text-lg md:text-xl text-church-100 max-w-2xl mx-auto font-medium tracking-wide">
-                        {t.records.subtitle}
-                    </p>
-                    <div className="h-1.5 w-32 bg-church-500 mx-auto mt-8 rounded-full shadow-sm"></div>
-                </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2 mb-8 flex flex-wrap gap-2 justify-center">
-                    {tabs.map((tab) => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id as RecordType)} className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${ activeTab === tab.id ? 'bg-church-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>
-                            <tab.icon size={16} className="mr-2" /> {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {isOfflineMode && (
-                    <div className="mb-6 p-3 bg-blue-50 text-blue-700 text-xs rounded text-center flex items-center justify-center">
-                        <AlertTriangle size={14} className="mr-2" />
-                        Public View Mode. Admin controls are disabled due to database permissions.
-                    </div>
-                )}
-
-                {isAdmin && missingIndexUrl && (
-                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center">
-                            <div className="bg-yellow-100 p-2 rounded-full mr-3">
-                                <AlertTriangle className="text-yellow-700" size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-sm">Database Index Required</h3>
-                                <p className="text-xs mt-1 max-w-xl">
-                                    To sort and filter records efficiently, Firestore requires a composite index. 
-                                    <span className="font-bold text-yellow-900 block mt-1">Your data is currently visible using a fallback method.</span>
-                                </p>
-                            </div>
-                        </div>
-                        <a 
-                            href={missingIndexUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-yellow-600 text-white text-xs font-bold rounded-lg hover:bg-yellow-700 transition shadow-sm whitespace-nowrap flex items-center"
-                        >
-                            Create Index <ExternalLink size={12} className="ml-1" />
-                        </a>
-                    </div>
-                )}
-
-                {isAdmin && !isOfflineMode && (
-                     <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-8">
-                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                             <div className="text-center md:text-left">
-                                 <h3 className="font-bold text-slate-800">Data Management</h3>
-                                 <p className="text-xs text-slate-500">Tools for importing, exporting, and managing bulk records.</p>
-                             </div>
-                             <div className="flex items-center gap-2 flex-wrap justify-center">
-                                 <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-md border border-slate-200 mr-2">
-                                     <button onClick={handleExportExcel} disabled={records.length === 0} className="flex items-center gap-1.5 text-xs font-bold text-green-700 hover:bg-white hover:shadow-sm px-3 py-1.5 rounded-md transition disabled:opacity-50" title="Export current list to Excel">
-                                         <FileSpreadsheet size={14}/> Export Excel
-                                     </button>
-                                     <div className="w-px h-4 bg-slate-300"></div>
-                                     <button onClick={handleExportPDF} disabled={records.length === 0} className="flex items-center gap-1.5 text-xs font-bold text-red-700 hover:bg-white hover:shadow-sm px-3 py-1.5 rounded-md transition disabled:opacity-50" title="Export current list to PDF">
-                                         <FileText size={14}/> Export PDF
-                                     </button>
-                                 </div>
-
-                                 <button onClick={() => handleDownloadTemplate('xlsx')} className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-md transition"><FileDown size={14}/> Templates</button>
-                                 <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-xs font-bold text-white bg-church-600 hover:bg-church-700 px-3 py-2 rounded-md transition"><FileUp size={14}/> Import Data</button>
-                                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .csv" />
-                             </div>
-                         </div>
-                     </div>
-                )}
-
-                <div className="mb-6">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                {/* Search Bar matching screenshot */}
+                <div className="max-w-4xl mx-auto px-6 mb-12">
+                    <div className="relative group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-purple-600 group-focus-within:text-purple-400 transition-colors" size={20} />
                         <input
                             type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by name, minister, etc..."
-                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-church-500 shadow-sm outline-none transition-all"
+                            placeholder="Zawnna (Hming/Ni/Thla/Kum)..."
+                            className="w-full bg-[#1c142b] border-none rounded-2xl pl-14 pr-6 py-5 text-lg font-medium placeholder-slate-500 focus:ring-2 focus:ring-purple-600 outline-none transition-all shadow-lg"
                         />
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
-                    {isAdmin && !isOfflineMode && (
-                        <div className="p-4 bg-white border-b border-slate-100 flex justify-end">
-                            <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition">
-                                <Plus size={18} className="mr-2" /> {t.records.add}
-                            </button>
-                        </div>
-                    )}
-                    
+                {/* Selection Grid matching screenshot */}
+                <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {categoryCards.map((card) => (
+                        <button 
+                            key={card.id} 
+                            onClick={() => handleSelectCategory(card.id as RecordType)}
+                            className="relative aspect-[1.2/1] rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-300 shadow-2xl"
+                        >
+                            <img src={card.img} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
+                            
+                            {/* Floating Purple Icon Badge */}
+                            <div className="absolute top-6 right-6 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform">
+                                <card.icon size={22} className="text-white fill-current" />
+                            </div>
+
+                            <div className="absolute bottom-8 left-8 text-left">
+                                <h3 className="text-2xl font-serif font-black text-white leading-tight mb-2">{card.title}</h3>
+                                <p className="text-slate-300 text-sm font-medium">{card.sub}</p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-slate-50 min-h-screen">
+            {/* Details View Header */}
+            <div className="bg-church-900 py-12 text-white relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none transform -rotate-12 scale-150">
+                    <BookUser size={300} />
+                </div>
+                <div className="relative z-10 max-w-7xl mx-auto px-6">
+                    <button 
+                        onClick={() => setViewMode('selection')}
+                        className="flex items-center text-church-200 hover:text-white mb-4 transition font-bold"
+                    >
+                        <ChevronLeft size={20} /> Back to Records
+                    </button>
+                    <h1 className="text-4xl font-serif font-black">{t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Register</h1>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                {isOfflineMode && (
+                    <div className="mb-6 p-3 bg-blue-50 text-blue-700 text-xs rounded text-center border border-blue-100 flex items-center justify-center">
+                        <AlertTriangle size={14} className="mr-2" />
+                        Operating in limited connectivity mode.
+                    </div>
+                )}
+
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <div className="relative w-full md:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search in these records..."
+                            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        {isAdmin && (
+                            <>
+                                <button onClick={handleExportExcel} className="p-2.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" title="Export Excel"><FileSpreadsheet size={20}/></button>
+                                <button onClick={handleExportPDF} className="p-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition" title="Export PDF"><FileText size={20}/></button>
+                                <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition" title="Import Data"><FileUp size={20}/></button>
+                                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .csv" />
+                                <div className="h-8 w-px bg-slate-200 mx-2"></div>
+                                <button onClick={handleAddNew} className="flex items-center px-4 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold transition shadow-sm">
+                                    <Plus size={18} className="mr-2" /> Add Entry
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                     <div className="overflow-x-auto">
-                        {loading ? <Loader className="animate-spin mx-auto my-12" /> : searchedRecords.length === 0 ? (
-                            <p className="text-center text-slate-500 py-8">
-                                {missingIndexUrl && records.length === 0 ? "Waiting for database index creation..." : (searchTerm ? `No records found for "${searchTerm}".` : t.records.empty)}
-                            </p>
+                        {loading ? (
+                            <div className="text-center py-24"><Loader className="animate-spin h-10 w-10 mx-auto text-church-500" /></div>
+                        ) : searchedRecords.length === 0 ? (
+                            <div className="text-center py-24 text-slate-400 italic">No records found.</div>
                         ) : (
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-b-4 border-church-600">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
                                     <tr>
-                                        {TEMPLATE_HEADERS[activeTab].map(header => {
-                                            let label = t.records.theads[header as keyof typeof t.records.theads] || header;
-                                            // Conditional overrides for the Minister column based on the active record type
-                                            if (header === 'minister' && language === 'mizo') {
-                                                if (activeTab === 'wedding') label = 'Inneihtir tu';
-                                                if (activeTab === 'baptism') label = 'Baptistu';
-                                            }
-                                            
-                                            return (
-                                                <th key={header} className="px-6 py-6 text-base md:text-xl font-black uppercase tracking-wider whitespace-nowrap">
-                                                    {label}
-                                                </th>
-                                            );
-                                        })}
-                                        {isAdmin && !isOfflineMode && <th className="px-6 py-6 text-base md:text-xl font-black uppercase tracking-wider">Actions</th>}
+                                        {TEMPLATE_HEADERS[activeTab].map(header => (
+                                            <th key={header} className="px-6 py-5">{t.records.theads[header as keyof typeof t.records.theads] || header}</th>
+                                        ))}
+                                        {isAdmin && <th className="px-6 py-5 text-right">Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {searchedRecords.map(rec => (
-                                        <tr key={rec.id} className="bg-white hover:bg-slate-50 transition-colors">
+                                        <tr key={rec.id} className="hover:bg-slate-50 transition">
                                             {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                <td key={header} className="px-6 py-5 font-normal text-slate-600">
+                                                <td key={header} className="px-6 py-5 text-sm text-slate-700 font-medium">
                                                     {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
                                                 </td>
                                             ))}
-                                            {isAdmin && !isOfflineMode && (
-                                                <td className="px-6 py-5 flex space-x-2">
-                                                    <button onClick={() => handleEdit(rec)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition"><Edit size={16} /></button>
-                                                    <button onClick={() => handleDelete(rec.id!)} className="p-1.5 text-red-600 hover:bg-red-100 rounded transition"><Trash size={16} /></button>
+                                            {isAdmin && (
+                                                <td className="px-6 py-5 text-right">
+                                                    <div className="flex justify-end space-x-2">
+                                                        <button onClick={() => handleEdit(rec)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit size={16} /></button>
+                                                        <button onClick={() => handleDelete(rec.id!)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash size={16} /></button>
+                                                    </div>
                                                 </td>
                                             )}
                                         </tr>
@@ -547,85 +465,38 @@ const Records: React.FC = () => {
                         )}
                     </div>
                 </div>
-
-                {isEditModalOpen && editingRecord && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full">
-                            <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
-                                <h3 className="text-lg font-bold text-church-900">{editingRecord.id ? 'Edit' : 'Add'} {tabs.find(t=>t.id === activeTab)?.label} Record</h3>
-                                <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                            </div>
-                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                                {TEMPLATE_HEADERS[activeTab].map(field => (
-                                    <div key={field}>
-                                        <label className="capitalize block text-sm font-medium text-slate-600 mb-1">{field.replace(/([A-Z])/g, ' $1')}</label>
-                                        <input 
-                                           type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'}
-                                           className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
-                                           placeholder={`Enter ${field}`}
-                                           value={(editingRecord as any)[field] || ''} 
-                                           onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} 
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
-                                <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
-                                <button onClick={handleSave} className="px-5 py-2 bg-church-600 text-white rounded-lg flex items-center shadow-md hover:bg-church-700 transition">
-                                    {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                 {/* Import Modal */}
-                {isImportModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full">
-                            <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
-                                <h3 className="text-lg font-bold flex items-center gap-2 text-church-900"><FileSpreadsheet size={20}/> Import Preview</h3>
-                                <button onClick={() => setIsImportModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                            </div>
-                            <div className="p-6 max-h-[70vh] overflow-y-auto">
-                                <p className="text-sm text-slate-600 mb-2">File: <span className="font-medium">{importFileName}</span></p>
-                                {importError ? (
-                                    <div className="bg-red-50 text-red-700 p-4 rounded text-sm"><AlertTriangle className="inline w-4 h-4 mr-2"/>{importError}</div>
-                                ) : !importData ? (
-                                    <div className="text-center py-8"><Loader className="animate-spin mx-auto"/> <p>Processing file...</p></div>
-                                ) : (
-                                    <div>
-                                        <p className="text-sm text-green-700 bg-green-50 p-3 rounded mb-4">
-                                            Successfully parsed <span className="font-bold">{importData.length}</span> records. Please review the preview below before uploading.
-                                        </p>
-                                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                                            <table className="w-full text-xs">
-                                                <thead className="bg-slate-50">
-                                                    <tr>{Object.keys(importData[0]).map(h => <th key={h} className="p-2 text-left font-medium border-b">{h}</th>)}</tr>
-                                                </thead>
-                                                <tbody>
-                                                    {importData.slice(0, 5).map((row, idx) => (
-                                                        <tr key={idx} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                                                            {Object.values(row).map((val: any, i) => <td key={i} className="p-2 whitespace-nowrap">{String(val)}</td>)}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                            {importData.length > 5 && <p className="text-center text-xs text-slate-500 bg-slate-50 p-2 border-t">...and {importData.length - 5} more rows.</p>}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
-                                <button onClick={() => setIsImportModalOpen(false)} className="px-5 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
-                                <button onClick={handleConfirmImport} disabled={!!importError || !importData || loading} className="px-5 py-2 bg-church-600 text-white rounded-lg flex items-center shadow-md hover:bg-church-700 transition disabled:opacity-50">
-                                    {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} 
-                                    Confirm & Upload {importData?.length || ''} Records
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {/* Existing Edit Modal */}
+            {isEditModalOpen && editingRecord && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+                        <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-2xl">
+                            <h3 className="text-xl font-bold text-church-900">{editingRecord.id ? 'Edit' : 'Add'} Record</h3>
+                            <button onClick={() => setIsEditModalOpen(false)}><X size={20}/></button>
+                        </div>
+                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                            {TEMPLATE_HEADERS[activeTab].map(field => (
+                                <div key={field}>
+                                    <label className="capitalize block text-sm font-bold text-slate-600 mb-1">{field.replace(/([A-Z])/g, ' $1')}</label>
+                                    <input 
+                                       type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'}
+                                       className="w-full border border-slate-300 p-2.5 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" 
+                                       value={(editingRecord as any)[field] || ''} 
+                                       onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} 
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-6 bg-slate-50 flex justify-end space-x-2 rounded-b-2xl">
+                            <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl">Cancel</button>
+                            <button onClick={handleSave} className="px-5 py-2.5 bg-church-600 text-white rounded-xl flex items-center shadow-lg font-bold hover:bg-church-700 transition">
+                                {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
