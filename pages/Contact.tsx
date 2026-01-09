@@ -18,7 +18,7 @@ const INITIAL_CONTACT_DATA: ContactInfo = {
   phone: "+91 98620 12345",
   email: "office@bethelkohhran.pci",
   // Updated map URL to point exactly to PCI Champhai Bethel Kohhran per request
-  mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.849280860851!2d93.3283253!3d23.4735394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374d810056637385%3A0x6a2c3c6f24056250!2sPCI%20Champhai%20Bethel%20Kohhran!5e0!3m2!1sen!2sin"
+  mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11111.96502726909!2d93.32881935!3d23.47795035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374c5b850f896b29%3A0x59635515cb423e25!2sChamphai%20Bethel%20Presbyterian%20Church!5e1!3m2!1sen!2sin!4v1767936549517!5m2!1sen!2sin"
 };
 
 const Contact: React.FC = () => {
@@ -54,6 +54,16 @@ const Contact: React.FC = () => {
     setEditForm(data);
     setSaveError(null);
     setIsEditing(true);
+  };
+
+  const handleMapUrlChange = (value: string) => {
+    // Check if the input is an iframe string and extract the src
+    const iframeMatch = value.match(/src="([^"]+)"/);
+    if (iframeMatch && iframeMatch[1]) {
+        setEditForm({...editForm, mapUrl: iframeMatch[1]});
+    } else {
+        setEditForm({...editForm, mapUrl: value});
+    }
   };
 
   const handleSave = async () => {
@@ -196,9 +206,16 @@ const Contact: React.FC = () => {
                     <div className="space-y-4">
                         <h4 className="font-bold text-slate-600 text-sm uppercase tracking-wider border-b pb-2">Map Configuration</h4>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Google Maps Embed URL (iframe src)</label>
-                            <input className="w-full border p-2 rounded text-sm font-mono text-slate-600" value={editForm.mapUrl} onChange={e => setEditForm({...editForm, mapUrl: e.target.value})} />
-                            <p className="text-xs text-slate-400 mt-1">Copy the 'src' attribute from Google Maps 'Embed a map' feature.</p>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Google Maps Embed URL</label>
+                            <input 
+                                className="w-full border p-2 rounded text-sm font-mono text-slate-600" 
+                                value={editForm.mapUrl} 
+                                onChange={e => handleMapUrlChange(e.target.value)}
+                                placeholder="Paste iframe code here..."
+                            />
+                            <p className="text-xs text-slate-400 mt-1">
+                                You can paste the full &lt;iframe&gt; code from Google Maps here, and we will extract the link for you.
+                            </p>
                         </div>
                     </div>
                 </div>
