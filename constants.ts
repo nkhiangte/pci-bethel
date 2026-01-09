@@ -132,10 +132,20 @@ const DATA = {
         morning: 'Chawhnu Inkhawm',
         evening: 'Zan Inkhawm'
       },
+      // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
-        sundaySchool: { tantu: '', zirlai: '' },
-        morning: { tantu: '', thuhriltu: '' },
-        evening: { tantu: '', thuhriltu: '' }
+        sundaySchool: [
+          { id: 'ss1', label: 'Tantu', value: '' },
+          { id: 'ss2', label: 'Zirlai', value: '' }
+        ],
+        morning: [
+          { id: 'm1', label: 'Tantu', value: '' },
+          { id: 'm2', label: 'Thuhriltu', value: '' }
+        ],
+        evening: [
+          { id: 'e1', label: 'Tantu', value: '' },
+          { id: 'e2', label: 'Thuhriltu', value: '' }
+        ]
       },
       midWeek: {
         nilai: {
@@ -257,10 +267,20 @@ const DATA = {
         morning: 'Chawhnu Inkhawm',
         evening: 'Zan Inkhawm'
       },
+      // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
-        sundaySchool: { tantu: '', zirlai: '' },
-        morning: { tantu: '', thuhriltu: '' },
-        evening: { tantu: '', thuhriltu: '' }
+        sundaySchool: [
+          { id: 'ss1', label: 'Tantu', value: '' },
+          { id: 'ss2', label: 'Zirlai', value: '' }
+        ],
+        morning: [
+          { id: 'm1', label: 'Tantu', value: '' },
+          { id: 'm2', label: 'Thuhriltu', value: '' }
+        ],
+        evening: [
+          { id: 'e1', label: 'Tantu', value: '' },
+          { id: 'e2', label: 'Thuhriltu', value: '' }
+        ]
       },
       midWeek: {
         nilai: {

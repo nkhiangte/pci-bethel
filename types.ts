@@ -17,7 +17,6 @@ export interface Announcement {
   imageUrl?: string;
 }
 
-// FIX: Add Sermon interface to support sermon data.
 export interface Sermon {
   id: string;
   title: string;
@@ -205,6 +204,12 @@ export interface ArchiveEntry {
   link?: string; // Optional URL to the file
 }
 
+export interface ProgramField {
+  id: string;
+  label: string;
+  value: string;
+}
+
 export interface WeeklyDuty {
   id: string; // Should be 'current'
   month: string;
@@ -217,34 +222,22 @@ export interface WeeklyDuty {
   hlaHriltu: string;
   lightAndSoundDuty: string;
   pangparKhawitu: string;
-  // Added serviceTimes to allow dynamic editing of Inkhawm Hun
   serviceTimes?: {
     sundaySchool: string;
     morning: string;
     evening: string;
   };
-  // Added serviceTitles to allow renaming the service cards
   serviceTitles?: {
     sundaySchool: string;
     morning: string;
     evening: string;
   };
-  // Detailed Service Programs
+  // Updated to support dynamic fields
   servicePrograms?: {
-    sundaySchool: {
-        tantu: string;
-        zirlai: string;
-    };
-    morning: { // Corresponds to Chawhnu Inkhawm (1:30 PM) usually
-        tantu: string;
-        thuhriltu: string;
-    };
-    evening: { // Corresponds to Zan Inkhawm (7:00 PM)
-        tantu: string;
-        thuhriltu: string;
-    };
+    sundaySchool: ProgramField[];
+    morning: ProgramField[];
+    evening: ProgramField[];
   };
-  // Added Mid-week programs
   midWeek?: {
     nilai: {
       title: string;

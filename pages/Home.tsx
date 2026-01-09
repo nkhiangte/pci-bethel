@@ -1,581 +1,402 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getConstants } from '../constants';
+// FIX: Removed invalid and incorrect import that caused module errors. getConstants is imported from ../constants below.
+import { getConstants as getChurchConstants } from '../constants';
 import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
-import Card from '../components/Card';
-import { WeeklyDuty, Staff } from '../types';
+import { WeeklyDuty, Staff, ProgramField } from '../types';
 import { db } from '../services/firebase';
-import { Loader, Calendar, Clock, User, Users, Music, BookOpen, ChevronRight, Mic, Edit, Moon, Sun, UserCheck, Home as HomeIcon } from 'lucide-react';
+import { 
+  Users, BookOpen, UserCheck, Home as HomeIcon, 
+  ChevronRight, Shield, Sun, Moon, Clock, 
+  Mic, Settings, Music, UserCircle, CalendarDays,
+  ListChecks, Radio, ClipboardList
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-// Custom Male Icon (Mars)
-const MaleIcon = ({ size = 24, className = "" }: { size?: number | string, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="10" cy="14" r="5" />
-    <path d="M20 4v6" />
-    <path d="M20 4h-6" />
-    <path d="M14.5 9.5 20 4" />
-  </svg>
-);
-
-// Custom Female Icon (Venus)
-const FemaleIcon = ({ size = 24, className = "" }: { size?: number | string, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="10" r="5" />
-    <path d="M12 15v6" />
-    <path d="M9 19h6" />
-  </svg>
-);
-
-const StatsSpinner = () => {
+const LargeStatsSphere = () => {
   const [rotation, setRotation] = useState(0);
   
   const stats = [
-    { label: "Kohhran Pum", value: "2,094", icon: Users, sub: "Total Members" },
-    { label: "Dan Zawhkim", value: "1,475", icon: UserCheck, sub: "Full Communicant" },
-    { label: "Chhungkua", value: "440", icon: HomeIcon, sub: "Families" },
-    { label: "Mipa", value: "1,032", icon: MaleIcon, sub: "Males" },
-    { label: "Hmeichhia", value: "1,071", icon: FemaleIcon, sub: "Females" },
-    { label: "Sunday School", value: "1,773", icon: BookOpen, sub: "Zirtu & Zirtirtu" },
+    { label: "Kohhran Pum", value: "2,094", icon: Users },
+    { label: "Dan Zawhkim", value: "1,475", icon: UserCheck },
+    { label: "Chhungkua", value: "440", icon: HomeIcon },
+    { label: "Sunday School", value: "1,773", icon: BookOpen },
   ];
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setRotation(prev => prev + 180);
-    }, 4000);
+    const timer = setInterval(() => setRotation(prev => prev + 180), 4000);
     return () => clearInterval(timer);
   }, []);
 
   const step = rotation / 180;
-  
-  // Calculate indices for front and back faces based on the current step
   const frontIndex = (step % 2 === 0) ? step % stats.length : (step + 1) % stats.length;
   const backIndex = (step % 2 !== 0) ? step % stats.length : (step + 1) % stats.length;
-
-  const frontStat = stats[frontIndex];
-  const backStat = stats[backIndex];
 
   const Face = ({ stat }: { stat: any }) => {
       const Icon = stat.icon;
       return (
-        <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center text-center p-8 bg-gradient-to-br from-church-600 to-church-800 rounded-2xl shadow-lg text-white" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
-           <Icon className="absolute -bottom-6 -right-6 w-40 h-40 text-white opacity-10 rotate-12 transition-transform duration-700 transform hover:rotate-45" />
-           <div className="relative z-10 w-full">
-              <div className="inline-flex p-3 bg-white/20 rounded-full mb-4 backdrop-blur-md shadow-inner">
-                 <Icon size={32} className="text-white" />
-              </div>
-              <h3 className="text-5xl font-bold mb-2 tracking-tight drop-shadow-sm">{stat.value}</h3>
-              <p className="text-xl font-bold text-church-100 uppercase tracking-wide">{stat.label}</p>
-              <p className="text-xs text-church-200 mt-1 font-medium bg-black/10 inline-block px-2 py-0.5 rounded-full">{stat.sub}</p>
+        <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center text-center bg-gradient-to-br from-church-800 to-church-950 rounded-full shadow-2xl text-white overflow-hidden border-4 border-white/20" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+           <div className="relative z-10 flex flex-col items-center p-4">
+              <Icon size={32} className="text-church-300 mb-3 drop-shadow-md" />
+              <span className="text-3xl font-black leading-none mb-1 tracking-tighter">{stat.value}</span>
+              <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-70 leading-none">{stat.label}</span>
            </div>
         </div>
       );
   };
 
   return (
-    <div className="h-full min-h-[250px] relative" style={{ perspective: '1000px' }}>
-       <div 
-         className="w-full h-full relative transition-transform duration-1000 ease-in-out"
-         style={{ transform: `rotateY(${rotation}deg)`, transformStyle: 'preserve-3d' }}
-       >
-          {/* Front Face (0deg) */}
-          <div style={{ transform: 'rotateY(0deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }} className="absolute inset-0">
-             <Face stat={frontStat} />
-          </div>
-          
-          {/* Back Face (180deg) */}
-          <div style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }} className="absolute inset-0">
-             <Face stat={backStat} />
-          </div>
-       </div>
-       
-       {/* Indicators (Optional, purely decorative as rotation is automatic) */}
-       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
-          {stats.map((_, idx) => (
-            <div
-              key={idx} 
-              className={`h-1.5 rounded-full transition-all duration-300 ${idx === (step % stats.length) ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`}
-            />
-          ))}
+    <div className="w-40 h-40 md:w-48 md:h-48 relative shrink-0" style={{ perspective: '1200px' }}>
+       <div className="w-full h-full relative transition-transform duration-1000 ease-in-out" style={{ transform: `rotateY(${rotation}deg)`, transformStyle: 'preserve-3d' }}>
+          <div style={{ transform: 'rotateY(0deg)', backfaceVisibility: 'hidden' }} className="absolute inset-0"><Face stat={stats[frontIndex]} /></div>
+          <div style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }} className="absolute inset-0"><Face stat={stats[backIndex]} /></div>
        </div>
     </div>
   );
 };
 
 export const Home: React.FC = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const { isAdmin } = useAuth();
-  const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay();
-  const { weeklyDuty: staticWeeklyDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
+  const { verse, loading: verseLoading } = useVerseOfTheDay();
+  const { weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getChurchConstants(language);
 
-  const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticWeeklyDuty);
-  const [loadingDuty, setLoadingDuty] = useState(true);
+  const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticDuty);
   const [churchPastors, setChurchPastors] = useState<Staff[]>(staticPastors);
-  const [loadingPastors, setLoadingPastors] = useState(true);
   const [churchElders, setChurchElders] = useState<Staff[]>(staticElders);
-  const [loadingElders, setLoadingElders] = useState(true);
-
-  // Fetch Pastors
-  const fetchPastors = useCallback(async () => {
-    setLoadingPastors(true);
-    if (!db || !db.collection) {
-      setChurchPastors(staticPastors);
-      setLoadingPastors(false);
-      return;
-    }
-    try {
-      const snapshot = await db.collection('pastors').orderBy('order', 'asc').orderBy('name', 'asc').get();
-      if (!snapshot.empty) {
-        const fetchedData = snapshot.docs.map((doc: any) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Staff[];
-        
-        const uniquePastors = fetchedData.filter((pastor, index, self) =>
-          index === self.findIndex((t) => (
-            t.name === pastor.name
-          ))
-        );
-
-        setChurchPastors(uniquePastors);
-      } else {
-        setChurchPastors(staticPastors);
-      }
-    } catch (error: any) {
-      if (error.code === 'unavailable' || error.message?.includes('offline')) {
-        console.warn("Offline mode: Using static pastors data");
-      } else {
-        console.error("Error fetching pastors:", error);
-      }
-      setChurchPastors(staticPastors);
-    }
-    setLoadingPastors(false);
-  }, [staticPastors]);
-
-  // Fetch Elders
-  const fetchElders = useCallback(async () => {
-    setLoadingElders(true);
-    if (!db || !db.collection) {
-      setChurchElders(staticElders);
-      setLoadingElders(false);
-      return;
-    }
-    try {
-      const snapshot = await db.collection('elders').orderBy('order', 'asc').orderBy('name', 'asc').get();
-      if (!snapshot.empty) {
-        const fetchedData = snapshot.docs.map((doc: any) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Staff[];
-        setChurchElders(fetchedData);
-      } else {
-        setChurchElders(staticElders);
-      }
-    } catch (error: any) {
-      if (error.code === 'unavailable' || error.message?.includes('offline')) {
-        console.warn("Offline mode: Using static elders data");
-      } else {
-        console.error("Error fetching elders:", error);
-      }
-      setChurchElders(staticElders);
-    }
-    setLoadingElders(false);
-  }, [staticElders]);
-
-  // Fetch Weekly Duty
-  const fetchWeeklyDuty = useCallback(async () => {
-      setLoadingDuty(true);
-      if (!db?.doc) {
-          setWeeklyDuty(staticWeeklyDuty);
-          setLoadingDuty(false);
-          return;
-      }
-      try {
-          // Using a timeout promise to prevent hanging indefinitely in some edge cases
-          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
-          const docRef = db.collection('weeklyDuties').doc('current');
-          const docSnap: any = await Promise.race([docRef.get(), timeoutPromise]);
-          
-          if (docSnap.exists) {
-              const data = docSnap.data() as WeeklyDuty;
-              // Handle potential structure mismatch from old data
-              if (!data.servicePrograms || typeof data.servicePrograms.sundaySchool === 'string') {
-                  data.servicePrograms = {
-                      sundaySchool: { tantu: '', zirlai: typeof data.servicePrograms?.sundaySchool === 'string' ? data.servicePrograms.sundaySchool : '' },
-                      morning: { tantu: '', thuhriltu: typeof data.servicePrograms?.morning === 'string' ? data.servicePrograms.morning : '' },
-                      evening: { tantu: '', thuhriltu: typeof data.servicePrograms?.evening === 'string' ? data.servicePrograms.evening : '' }
-                  };
-              }
-              setWeeklyDuty(data);
-          } else {
-              setWeeklyDuty(staticWeeklyDuty);
-          }
-      } catch (error: any) {
-          if (error.code === 'unavailable' || error.message?.includes('offline') || error.message === 'Timeout') {
-             console.warn("Offline mode or timeout: Using static weekly duty data");
-          } else {
-             console.error("Error fetching duty:", error);
-          }
-          setWeeklyDuty(staticWeeklyDuty);
-      }
-      setLoadingDuty(false);
-  }, [staticWeeklyDuty]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      fetchPastors();
-      fetchElders();
-      fetchWeeklyDuty();
-  }, [fetchPastors, fetchElders, fetchWeeklyDuty]);
+    const init = async () => {
+        setLoading(true);
+        if (db?.collection) {
+            try {
+                const [pSnap, eSnap, dSnap] = await Promise.all([
+                    db.collection('pastors').orderBy('order', 'asc').get(),
+                    db.collection('elders').orderBy('order', 'asc').get(),
+                    db.collection('weeklyDuties').doc('current').get()
+                ]);
+                if (!pSnap.empty) setChurchPastors(pSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+                if (!eSnap.empty) setChurchElders(eSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+                if (dSnap.exists) {
+                    const data = dSnap.data() as WeeklyDuty;
+                    const sanitizedDuty = {
+                        ...data,
+                        servicePrograms: {
+                            sundaySchool: Array.isArray(data.servicePrograms?.sundaySchool) ? data.servicePrograms.sundaySchool : [],
+                            morning: Array.isArray(data.servicePrograms?.morning) ? data.servicePrograms.morning : [],
+                            evening: Array.isArray(data.servicePrograms?.evening) ? data.servicePrograms.evening : []
+                        }
+                    };
+                    setWeeklyDuty(sanitizedDuty);
+                }
+            } catch (e) { console.error(e); }
+        }
+        setLoading(false);
+    };
+    init();
+  }, [staticPastors, staticElders, staticDuty]);
 
-  const renderVerseContent = () => {
-    if (verseLoading) {
-      return (
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+  const ProgramRows = ({ fields }: { fields?: ProgramField[] }) => {
+    if (!Array.isArray(fields) || fields.length === 0) return <p className="text-slate-400 italic text-[11px] mt-2">TBD</p>;
+    return (
+        <div className="space-y-3 mt-4">
+            {fields.map((f) => (
+                <div key={f.id} className="border-l border-church-200 pl-3">
+                    <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">{f.label}</p>
+                    <p className="font-bold text-slate-800 text-sm leading-tight">{f.value || '-'}</p>
+                </div>
+            ))}
         </div>
-      );
-    }
-    if (verseError) {
-      return <p className="text-red-500 text-center text-sm">{verseError}</p>;
-    }
-    if (verse) {
-      const verseParts = verse.match(/(.*) - ([\w\s]+ \d+:\d+.*)/);
-      if (verseParts) {
-        return (
-          <>
-            <p className="text-lg md:text-xl italic text-gray-700 font-serif">"{verseParts[1]}"</p>
-            <p className="mt-2 text-md font-bold text-church-800">{verseParts[2]}</p>
-          </>
-        );
-      }
-      return <p className="text-lg md:text-xl italic text-gray-700 font-serif">"{verse}"</p>;
-    }
-    return null;
+    );
   };
 
   return (
-    <div className="space-y-12 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div className="bg-slate-50 min-h-screen text-slate-900 pb-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-24">
         
-        {/* Top Section: Verse & Stats */}
-        <section className="mt-8">
-           {/* Changed grid-cols from lg:grid-cols-3 to md:grid-cols-3 to show side-by-side on tablet */}
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Verse of the Day - Span 2 cols */}
-              <div className="md:col-span-2 bg-white p-8 md:p-12 rounded-2xl shadow-lg border border-church-100 text-center relative flex flex-col justify-center min-h-[250px]">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-church-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider shadow-md">
-                      {t.home.verseOfTheDay}
-                  </div>
-                  {renderVerseContent()}
-              </div>
-
-              {/* Stats Spinner - Span 1 col */}
-              <div className="md:col-span-1 h-full">
-                 <StatsSpinner />
-              </div>
-           </div>
-        </section>
-
-        {/* Weekly Duties */}
-        <section>
-            <div className="flex flex-col md:flex-row items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-3xl font-serif font-bold text-church-900">{t.nav.duties}</h2>
-                    {isAdmin && (
-                        <Link to="/admin/duties" className="text-slate-400 hover:text-church-600 transition" title="Edit Duties">
-                            <Edit size={20} />
-                        </Link>
+        {/* Top Row: Verse & Stats */}
+        <div className="bg-white px-10 py-12 rounded-[2rem] shadow-xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden relative group">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-church-600"></div>
+            
+            <div className="relative z-10 flex-grow text-center md:text-left">
+                <div className="inline-flex items-center space-x-3 mb-8 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                    <BookOpen size={18} className="text-church-600" />
+                    <span className="font-black uppercase tracking-[0.2em] text-[10px] text-slate-500">Vawiin Chang Thlan</span>
+                </div>
+                <div>
+                    {verseLoading ? (
+                        <div className="animate-pulse space-y-4">
+                            <div className="h-6 bg-slate-100 rounded w-full"></div>
+                            <div className="h-6 bg-slate-100 rounded w-4/5"></div>
+                            <div className="h-4 bg-slate-100 rounded w-1/3 mt-6"></div>
+                        </div>
+                    ) : (
+                        <div className="max-w-2xl">
+                            <p className="text-xl md:text-2xl font-serif italic text-slate-800 leading-relaxed">
+                                "{verse?.split(' - ')[0]}"
+                            </p>
+                            <p className="text-xs font-black text-church-600 uppercase tracking-[0.3em] mt-6 flex items-center gap-3">
+                                <span className="h-px w-8 bg-church-200"></span>
+                                {verse?.split(' - ')[1]}
+                            </p>
+                        </div>
                     )}
                 </div>
-                {weeklyDuty.weekRange && <span className="bg-church-100 text-church-800 px-4 py-1 rounded-full font-medium text-sm">{weeklyDuty.weekRange}</span>}
             </div>
-            
-            {loadingDuty ? (
-                <div className="py-12 flex justify-center"><Loader className="animate-spin text-church-500" /></div>
-            ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="bg-white border-l-4 border-church-500">
-                        <div className="p-6">
-                            <div className="flex items-center mb-3 text-church-600">
-                                <User size={20} className="mr-2" />
-                                <h3 className="font-bold uppercase text-xs tracking-wider">Hruaitu & Ṭantu</h3>
-                            </div>
-                            <div className="space-y-3 text-sm">
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Zai Hruaitu</span>
-                                    <span className="font-medium text-slate-800">{weeklyDuty.zaiHruaitu || 'TBD'}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Hla Hriltu</span>
-                                    <span className="font-medium text-slate-800">{weeklyDuty.hlaHriltu || 'TBD'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
 
-                    <Card className="bg-white border-l-4 border-blue-500">
-                        <div className="p-6">
-                            <div className="flex items-center mb-3 text-blue-600">
-                                <Music size={20} className="mr-2" />
-                                <h3 className="font-bold uppercase text-xs tracking-wider">Music & Sound</h3>
-                            </div>
-                            <div className="space-y-3 text-sm">
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Keyboard</span>
-                                    <span className="font-medium text-slate-800">{weeklyDuty.pianoTumtu || 'TBD'}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Light & Sound</span>
-                                    <span className="font-medium text-slate-800">{weeklyDuty.lightAndSoundDuty || 'TBD'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
+            <div className="relative z-10 shrink-0 flex flex-col items-center">
+                <LargeStatsSphere />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-6">Kohhran Statistics</span>
+            </div>
+        </div>
 
-                    <Card className="bg-white border-l-4 border-green-500">
-                        <div className="p-6">
-                            <div className="flex items-center mb-3 text-green-600">
-                                <User size={20} className="mr-2" />
-                                <h3 className="font-bold uppercase text-xs tracking-wider">Thawhlawm & Ushers</h3>
-                            </div>
-                            <div className="space-y-3 text-sm">
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Thawhlawm Chhiar</span>
-                                    <p className="font-medium text-slate-800">{weeklyDuty.thawhlawmChiartute?.join(', ') || 'TBD'}</p>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Ushers</span>
-                                    <p className="font-medium text-slate-800">{weeklyDuty.ushers?.join(', ') || 'TBD'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="bg-white border-l-4 border-purple-500">
-                        <div className="p-6">
-                            <div className="flex items-center mb-3 text-purple-600">
-                                <BookOpen size={20} className="mr-2" />
-                                <h3 className="font-bold uppercase text-xs tracking-wider">Others</h3>
-                            </div>
-                            <div className="space-y-3 text-sm">
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Pangpar Khawitu</span>
-                                    <span className="font-medium text-slate-800">{weeklyDuty.pangparKhawitu || 'TBD'}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-slate-400 uppercase">Buhfaitham Hralh</span>
-                                    <p className="font-medium text-slate-800">{weeklyDuty.buhfaithamHralhtute?.join(', ') || 'TBD'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
+        {/* SECTION: Weekly Schedule */}
+        <div className="space-y-10">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
+                <div>
+                    <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.4em] mb-3">Tunkar Hun Ruatna</h2>
+                    <h3 className="text-4xl font-serif font-black text-slate-900 tracking-tight">Weekly Church Program</h3>
                 </div>
-            )}
-        </section>
-
-        {/* Service Times (Inkhawm Hun) */}
-        <section>
-            <div className="text-center mb-10 relative">
-                <h2 className="text-3xl font-serif font-bold text-church-900 inline-block">{t.home.serviceTimes}</h2>
-                {isAdmin && (
-                    <Link to="/admin/duties" className="absolute ml-3 text-slate-400 hover:text-church-600 transition inline-block" title="Edit Service Times">
-                        <Edit size={20} />
-                    </Link>
+                {weeklyDuty.weekRange && (
+                    <div className="bg-church-900 text-white px-6 py-3 rounded-full shadow-lg text-sm font-black tracking-widest flex items-center gap-3">
+                        <CalendarDays size={18} className="text-church-400" />
+                        {weeklyDuty.weekRange.toUpperCase()}
+                    </div>
                 )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="text-center hover:shadow-xl transition-shadow duration-300">
-                    <div className="p-6 bg-church-800 text-white rounded-t-lg">
-                        <Calendar className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.sundaySchool || t.home.sundaySchool}</h4>
-                    </div>
-                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
-                            {weeklyDuty.servicePrograms?.sundaySchool?.tantu && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.sundaySchool.tantu}</span>
-                                </p>
-                            )}
-                            {weeklyDuty.servicePrograms?.sundaySchool?.zirlai && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Zirlai / Topic</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.sundaySchool.zirlai}</span>
-                                </p>
-                            )}
-                            {(!weeklyDuty.servicePrograms?.sundaySchool?.tantu && !weeklyDuty.servicePrograms?.sundaySchool?.zirlai) && (
-                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
-                            )}
-                        </div>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
-                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}
-                        </div>
-                    </div>
-                </Card>
-                <Card className="text-center hover:shadow-xl transition-shadow duration-300 transform md:-translate-y-4 border-church-200 border-2">
-                    <div className="p-6 bg-church-900 text-white rounded-t-lg">
-                        <Clock className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.morning || 'Chawhnu Inkhawm'}</h4>
-                    </div>
-                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
-                            {weeklyDuty.servicePrograms?.morning?.thuhriltu && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Thuhriltu</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.morning.thuhriltu}</span>
-                                </p>
-                            )}
-                            {weeklyDuty.servicePrograms?.morning?.tantu && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.morning.tantu}</span>
-                                </p>
-                            )}
-                            {(!weeklyDuty.servicePrograms?.morning?.thuhriltu && !weeklyDuty.servicePrograms?.morning?.tantu) && (
-                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
-                            )}
-                        </div>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
-                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.morning || '01:30 PM'}
-                        </div>
-                    </div>
-                </Card>
-                <Card className="text-center hover:shadow-xl transition-shadow duration-300">
-                    <div className="p-6 bg-church-800 text-white rounded-t-lg">
-                        <Mic className="mx-auto mb-2 opacity-80" />
-                        <h4 className="font-bold text-xl">{weeklyDuty.serviceTitles?.evening || t.home.eveningService}</h4>
-                    </div>
-                    <div className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                        <div className="space-y-2 mb-3 text-left w-full pl-4 border-l-2 border-church-100">
-                            {weeklyDuty.servicePrograms?.evening?.thuhriltu && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Thuhriltu</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.evening.thuhriltu}</span>
-                                </p>
-                            )}
-                            {weeklyDuty.servicePrograms?.evening?.tantu && (
-                                <p className="text-md text-slate-800">
-                                    <span className="text-xs font-bold text-slate-400 uppercase block">Ṭantu</span>
-                                    <span className="font-bold">{weeklyDuty.servicePrograms.evening.tantu}</span>
-                                </p>
-                            )}
-                            {(!weeklyDuty.servicePrograms?.evening?.thuhriltu && !weeklyDuty.servicePrograms?.evening?.tantu) && (
-                                <p className="text-slate-400 italic text-center w-full -ml-4">Details coming soon...</p>
-                            )}
-                        </div>
-                        <div className="inline-flex items-center bg-church-50 text-church-700 px-3 py-1 rounded-full text-sm font-medium mt-auto">
-                            <Clock size={14} className="mr-1"/> {weeklyDuty.serviceTimes?.evening || '07:00 PM'}
-                        </div>
-                    </div>
-                </Card>
-            </div>
-        </section>
 
-        {/* Mid-Week Programs */}
-        {weeklyDuty.midWeek && (
-            <section className="mb-12">
-                <div className="text-center mb-8 relative">
-                    <h2 className="text-2xl font-serif font-bold text-slate-800 inline-block">Mid-Week Services</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-0.5 bg-slate-200 border border-slate-200 rounded-[2rem] overflow-hidden shadow-2xl">
+                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><BookOpen size={16}/></div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Morning</span>
+                    </div>
+                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.sundaySchool || 'Sunday School'}</h4>
+                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}</p>
+                    <ProgramRows fields={weeklyDuty.servicePrograms?.sundaySchool} />
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                    {/* Nilai Zan */}
-                    <Card className="border border-slate-200 bg-white">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-church-100 p-2 rounded-lg text-church-600"><Sun size={24}/></div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-800">{weeklyDuty.midWeek.nilai.title || 'Nilai Zan Inkhawm'}</h3>
-                                        <span className="text-sm text-slate-500">{weeklyDuty.midWeek.nilai.time || '07:00 PM'}</span>
+                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Sun size={16}/></div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Afternoon</span>
+                    </div>
+                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.morning || 'Chawhnu Inkhawm'}</h4>
+                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.morning || '01:30 PM'}</p>
+                    <ProgramRows fields={weeklyDuty.servicePrograms?.morning} />
+                </div>
+                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Moon size={16}/></div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Night</span>
+                    </div>
+                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.evening || 'Zan Inkhawm'}</h4>
+                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.evening || '07:00 PM'}</p>
+                    <ProgramRows fields={weeklyDuty.servicePrograms?.evening} />
+                </div>
+                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Mic size={16}/></div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wednesday Night</span>
+                    </div>
+                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">Nilai Inkhawm</h4>
+                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> 07:00 PM</p>
+                    <div className="space-y-3 mt-4">
+                        <div className="border-l border-church-200 pl-3">
+                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Hruaitu</p>
+                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.nilai.hruaitu || '-'}</p>
+                        </div>
+                        <div className="border-l border-church-200 pl-3">
+                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Thupui Hawngtu</p>
+                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.nilai.thuhriltu || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Shield size={16}/></div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saturday Night</span>
+                    </div>
+                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">Ṭawngṭai Inkhawm</h4>
+                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> 07:00 PM</p>
+                    <div className="space-y-3 mt-4">
+                        <div className="border-l border-church-200 pl-3">
+                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Hruaitu</p>
+                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.inrinni.hruaitu || '-'}</p>
+                        </div>
+                        <div className="border-l border-church-200 pl-3">
+                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Ṭantu</p>
+                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.inrinni.tantu || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* SECTION: Service Personnel (Unified & Compact Assignment Table) */}
+        <div className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
+                <div>
+                    <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.4em] mb-3">Tunkar Rawngbawltute</h2>
+                    <h3 className="text-4xl font-serif font-black text-slate-900 tracking-tight">Duty Personnel</h3>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* COMBINED: Offering Counters & Ushers at the same elevation - High Density View */}
+                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
+                    <div className="bg-church-900 text-white p-6 flex items-center gap-3">
+                        <ClipboardList size={22} className="text-church-400" />
+                        <h4 className="text-sm font-black uppercase tracking-[0.2em]">Monthly Church Service Assignments</h4>
+                    </div>
+                    
+                    <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
+                        {/* Column 1: Thawhlawm Chhiartute */}
+                        <div className="md:col-span-4 space-y-4">
+                            <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
+                                <Users size={16} className="text-church-600" />
+                                <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Offering Counters</h5>
+                            </div>
+                            <div className="divide-y divide-slate-50">
+                                {weeklyDuty.thawhlawmChiartute?.map((name, i) => (
+                                    <div key={i} className="flex items-center gap-3 py-1.5 group">
+                                        <div className="w-1 h-1 rounded-full bg-church-300 group-hover:bg-church-600 transition-colors"></div>
+                                        <span className="text-sm font-bold text-slate-700">{name}</span>
                                     </div>
+                                ))}
+                                {(!weeklyDuty.thawhlawmChiartute || weeklyDuty.thawhlawmChiartute.length === 0) && (
+                                    <p className="text-slate-400 italic text-xs py-2">Updating...</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Column 2: Ushers (Two names per row, No Row Gaps) */}
+                        <div className="md:col-span-8 space-y-4">
+                            <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
+                                <UserCircle size={16} className="text-church-600" />
+                                <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Ushers (Male & Female)</h5>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
+                                {weeklyDuty.ushers?.map((name, i) => (
+                                    <div key={i} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 group hover:bg-slate-50 transition-colors px-1">
+                                        <span className="text-[9px] font-black text-church-300 group-hover:text-church-600">#</span>
+                                        <span className="text-[12px] font-bold text-slate-600 truncate">{name}</span>
+                                    </div>
+                                ))}
+                                {(!weeklyDuty.ushers || weeklyDuty.ushers.length === 0) && (
+                                    <p className="text-slate-400 italic text-xs col-span-2 py-4 text-center">Updating...</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Specific Group: Worship & Technical (Compact Sidebar) */}
+                <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
+                    <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
+                        <Radio size={22} className="text-church-700" />
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Music & Technical</h4>
+                    </div>
+                    <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-1 gap-y-6">
+                            <div className="group">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zai Hruaitu</label>
+                                <p className="text-sm font-black text-slate-800 group-hover:text-church-700 transition-colors">{weeklyDuty.zaiHruaitu || '-'}</p>
+                                <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Piano</label>
+                                    <p className="text-sm font-black text-slate-800">{weeklyDuty.pianoTumtu || '-'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hla Hriltu</label>
+                                    <p className="text-sm font-black text-slate-800">{weeklyDuty.hlaHriltu || '-'}</p>
                                 </div>
                             </div>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between"><span className="text-slate-500">Hruaitu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.hruaitu || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Ṭantu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.tantu || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Thupui:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.thupui || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Hawngtu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.nilai.thuhriltu || 'TBD'}</span></div>
+                            <div className="group">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Light & Sound</label>
+                                <p className="text-sm font-black text-slate-800">{weeklyDuty.lightAndSoundDuty || '-'}</p>
+                                <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
+                                    <Music size={10} className="text-church-400"/> Biak In Pangpar
+                                </label>
+                                <p className="text-sm font-bold text-slate-700 bg-church-50/50 p-2 rounded-lg border border-church-100 text-center">{weeklyDuty.pangparKhawitu || '-'}</p>
                             </div>
                         </div>
-                    </Card>
-
-                    {/* Inrinni Zan */}
-                    <Card className="border border-slate-200 bg-white">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600"><Moon size={24}/></div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-800">{weeklyDuty.midWeek.inrinni.title || 'Inrinni Zan Inkhawm'}</h3>
-                                        <span className="text-sm text-slate-500">{weeklyDuty.midWeek.inrinni.time || '07:00 PM'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between"><span className="text-slate-500">Hruaitu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.hruaitu || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Ṭantu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.tantu || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Thupui:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.thupui || 'TBD'}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-500">Thuhriltu:</span> <span className="font-medium text-slate-800">{weeklyDuty.midWeek.inrinni.thuhriltu || 'TBD'}</span></div>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            </section>
-        )}
-
-        {/* Pastor Section */}
-        {churchPastors.length > 0 && (
-            <section className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-8">
-                <div className="md:w-1/3">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-lg bg-slate-200">
-                        <img src={churchPastors[0].imageUrl} alt={churchPastors[0].name} className="w-full h-full object-cover" />
                     </div>
                 </div>
-                <div className="md:w-2/3 text-center md:text-left">
-                    <h2 className="text-3xl font-serif font-bold text-church-900 mb-2">Bialtu Pastor</h2>
-                    <h3 className="text-xl text-slate-700 font-medium mb-4">{churchPastors[0].name}</h3>
-                    <p className="text-slate-600 leading-relaxed text-lg italic mb-6">
-                        "{churchPastors[0].description}"
-                    </p>
-                    <Link to="/about" className="inline-flex items-center text-church-600 font-bold hover:text-church-800">
-                        View All Leaders <ChevronRight size={20} />
-                    </Link>
-                </div>
-            </section>
-        )}
-
-        {/* Elders Section */}
-        <section>
-            <div className="text-center mb-10">
-                <h2 className="text-3xl font-serif font-bold text-church-900 mb-2">{t.home.kohhranElders}</h2>
-                <div className="h-1 w-20 bg-church-500 mx-auto rounded-full"></div>
             </div>
-            
-            {loadingElders ? (
-                <div className="py-12 flex justify-center"><Loader className="animate-spin text-church-500" /></div>
-            ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        </div>
+
+        {/* Leadership Section */}
+        <div className="space-y-20">
+            <div className="text-center">
+                <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.5em] mb-4">Kohhran Hruaitute</h2>
+                <h3 className="text-4xl md:text-5xl font-serif font-black text-slate-900 tracking-tight">Spiritual Shepherds</h3>
+                <div className="h-1 w-24 bg-church-600 mx-auto mt-8 rounded-full"></div>
+            </div>
+
+            {/* Bialtu Pastor Section */}
+            {churchPastors.length > 0 && (
+                <div className="max-w-5xl mx-auto mb-32">
+                    <div className="bg-white rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl flex flex-col md:flex-row group ring-1 ring-slate-100">
+                        <div className="md:w-2/5 aspect-[4/5] md:aspect-auto bg-slate-100 relative">
+                            <img 
+                                src={churchPastors[0].imageUrl} 
+                                alt={churchPastors[0].name} 
+                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                                style={{ objectPosition: `${churchPastors[0].imagePositionX ?? 50}% ${churchPastors[0].imagePositionY ?? 0}%` }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-tr from-church-900/20 to-transparent pointer-events-none"></div>
+                        </div>
+                        <div className="md:w-3/5 p-12 md:p-20 flex flex-col justify-center">
+                            <span className="text-church-600 font-black text-[10px] uppercase tracking-[0.4em] mb-6 block">Bialtu Pastor</span>
+                            <h2 className="text-4xl md:text-6xl font-serif font-black mb-8 text-slate-900 leading-tight">{churchPastors[0].name}</h2>
+                            <p className="text-slate-500 text-lg md:text-xl font-serif italic mb-12 leading-relaxed opacity-80">
+                                "{churchPastors[0].description}"
+                            </p>
+                            <Link to="/about" className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-church-700 hover:text-church-900 transition-all group/link">
+                                View Full Profile <ChevronRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* All Elders Grid */}
+            <div className="space-y-16">
+                <div className="flex items-center gap-10 px-4">
+                    <div className="flex items-center gap-4">
+                        <Shield size={28} className="text-church-600" />
+                        <h4 className="text-2xl font-serif font-black text-slate-800 tracking-tight">Kohhran Upate</h4>
+                    </div>
+                    <div className="h-px bg-slate-200 flex-grow"></div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 md:gap-12">
                     {churchElders.map((elder) => (
-                        <Card key={elder.id} className="text-center p-6 hover:shadow-xl transition-all duration-300 border border-slate-100">
-                            <div className="h-40 w-40 mx-auto rounded-full overflow-hidden mb-4 bg-slate-200 shadow-md ring-4 ring-slate-50">
+                        <div key={elder.id} className="text-center group">
+                            <div className="aspect-square rounded-[3rem] overflow-hidden mb-6 bg-slate-50 ring-4 ring-white shadow-lg relative">
                                 <img 
                                     src={elder.imageUrl} 
                                     alt={elder.name} 
-                                    className="w-full h-full object-cover" 
+                                    className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
                                 />
+                                <div className="absolute inset-0 bg-church-900/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                             </div>
-                            <h3 className="font-bold text-slate-800 text-base mb-1">{elder.name}</h3>
-                            <p className="text-church-600 text-xs font-bold uppercase tracking-wider">{elder.role}</p>
-                            {elder.period && <p className="text-slate-400 text-xs mt-1">Ordained: {elder.period}</p>}
-                        </Card>
+                            <h3 className="font-black text-slate-900 text-lg leading-tight mb-2 group-hover:text-church-700 transition-colors">{elder.name}</h3>
+                            <p className="text-[10px] text-church-600 font-black uppercase tracking-[0.2em]">{elder.role || 'Upa'}</p>
+                            {elder.period && <p className="text-[9px] text-slate-400 mt-4 font-black bg-slate-100 inline-block px-4 py-1.5 rounded-full uppercase tracking-widest">Ord. {elder.period}</p>}
+                        </div>
                     ))}
                 </div>
-            )}
-        </section>
-
+            </div>
+        </div>
       </div>
     </div>
   );

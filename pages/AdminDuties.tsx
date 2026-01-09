@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../services/firebase';
-import { WeeklyDuty } from '../types';
+import { WeeklyDuty, ProgramField } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getConstants } from '../constants';
-import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays, Mic, BookOpen } from 'lucide-react';
+// FIX: Added 'Users' to the lucide-react import list
+import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays, Mic, BookOpen, Plus, Trash2, Users } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -18,7 +19,7 @@ const AdminDuties: React.FC = () => {
     const fetchDuties = useCallback(async () => {
         setLoading(true);
         if (!db?.doc) {
-            setDuties(staticDuty);
+            setDuties(staticDuty as any);
             setLoading(false);
             return;
         }
@@ -27,22 +28,34 @@ const AdminDuties: React.FC = () => {
             const docRef = db.collection('weeklyDuties').doc('current');
             const docSnap = await docRef.get();
             if (docSnap.exists) {
-                const data = docSnap.data() as WeeklyDuty;
-                // Ensure new structure exists if migrating from old data
-                if (!data.servicePrograms || typeof data.servicePrograms.sundaySchool === 'string') {
-                    data.servicePrograms = {
-                        sundaySchool: { tantu: '', zirlai: typeof data.servicePrograms?.sundaySchool === 'string' ? data.servicePrograms.sundaySchool : '' },
-                        morning: { tantu: '', thuhriltu: typeof data.servicePrograms?.morning === 'string' ? data.servicePrograms.morning : '' },
-                        evening: { tantu: '', thuhriltu: typeof data.servicePrograms?.evening === 'string' ? data.servicePrograms.evening : '' }
-                    };
+                const data = docSnap.data() as any;
+                
+                // MIGRATION LOGIC: Convert old object format to new array format
+                const newServicePrograms: any = {
+                    sundaySchool: Array.isArray(data.servicePrograms?.sundaySchool) ? data.servicePrograms.sundaySchool : [],
+                    morning: Array.isArray(data.servicePrograms?.morning) ? data.servicePrograms.morning : [],
+                    evening: Array.isArray(data.servicePrograms?.evening) ? data.servicePrograms.evening : []
+                };
+
+                // If it was an object, map standard fields
+                if (data.servicePrograms && !Array.isArray(data.servicePrograms.sundaySchool)) {
+                    if (data.servicePrograms.sundaySchool?.tantu) newServicePrograms.sundaySchool.push({ id: 'legacy-1', label: 'Ṭantu', value: data.servicePrograms.sundaySchool.tantu });
+                    if (data.servicePrograms.sundaySchool?.zirlai) newServicePrograms.sundaySchool.push({ id: 'legacy-2', label: 'Zirlai / Topic', value: data.servicePrograms.sundaySchool.zirlai });
+                    
+                    if (data.servicePrograms.morning?.thuhriltu) newServicePrograms.morning.push({ id: 'legacy-1', label: 'Thuhriltu', value: data.servicePrograms.morning.thuhriltu });
+                    if (data.servicePrograms.morning?.tantu) newServicePrograms.morning.push({ id: 'legacy-2', label: 'Ṭantu', value: data.servicePrograms.morning.tantu });
+
+                    if (data.servicePrograms.evening?.thuhriltu) newServicePrograms.evening.push({ id: 'legacy-1', label: 'Thuhriltu', value: data.servicePrograms.evening.thuhriltu });
+                    if (data.servicePrograms.evening?.tantu) newServicePrograms.evening.push({ id: 'legacy-2', label: 'Ṭantu', value: data.servicePrograms.evening.tantu });
                 }
-                setDuties(data);
+
+                setDuties({ ...data, servicePrograms: newServicePrograms });
             } else {
-                setDuties(staticDuty);
+                setDuties(staticDuty as any);
             }
         } catch (error) {
             console.error("Error fetching duties:", error);
-            setDuties(staticDuty); 
+            setDuties(staticDuty as any); 
         }
         setLoading(false);
     }, [staticDuty]);
@@ -66,12 +79,12 @@ const AdminDuties: React.FC = () => {
         setIsSaving(false);
     };
 
-    const handleListChange = (field: keyof WeeklyDuty, value: string) => {
-        setDuties(prev => ({ ...prev, [field]: value.split('\n') }));
-    };
-
     const handleFieldChange = (field: keyof WeeklyDuty, value: string) => {
         setDuties(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleListChange = (field: keyof WeeklyDuty, value: string) => {
+        setDuties(prev => ({ ...prev, [field]: value.split('\n') }));
     };
 
     const handleServiceTimeChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
@@ -94,24 +107,37 @@ const AdminDuties: React.FC = () => {
         }));
     };
 
-    const handleServiceProgramDetailChange = (
-        timeType: 'sundaySchool' | 'morning' | 'evening', 
-        field: 'tantu' | 'zirlai' | 'thuhriltu', 
-        value: string
-    ) => {
+    // New Dynamic Program Handlers
+    const addProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening') => {
+        const newField: ProgramField = { id: Date.now().toString(), label: '', value: '' };
         setDuties(prev => ({
             ...prev,
             servicePrograms: {
-                ...(prev.servicePrograms || { 
-                    sundaySchool: { tantu: '', zirlai: '' }, 
-                    morning: { tantu: '', thuhriltu: '' }, 
-                    evening: { tantu: '', thuhriltu: '' } 
-                }),
-                [timeType]: {
-                    ...prev.servicePrograms?.[timeType],
-                    [field]: value
-                }
-            } as any
+                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
+                [serviceType]: [...(prev.servicePrograms?.[serviceType] || []), newField]
+            }
+        }));
+    };
+
+    const removeProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening', fieldId: string) => {
+        setDuties(prev => ({
+            ...prev,
+            servicePrograms: {
+                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
+                [serviceType]: (prev.servicePrograms?.[serviceType] || []).filter(f => f.id !== fieldId)
+            }
+        }));
+    };
+
+    const updateProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening', fieldId: string, key: 'label' | 'value', value: string) => {
+        setDuties(prev => ({
+            ...prev,
+            servicePrograms: {
+                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
+                [serviceType]: (prev.servicePrograms?.[serviceType] || []).map(f => 
+                    f.id === fieldId ? { ...f, [key]: value } : f
+                )
+            }
         }));
     };
 
@@ -129,206 +155,130 @@ const AdminDuties: React.FC = () => {
     };
 
     if (!currentUser) return <Navigate to="/login" replace />;
-    if (!isAdmin) return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-            <div className="text-center">
-                <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-slate-700">Access Denied</h2>
-                <p className="text-slate-500">You do not have administrative privileges.</p>
-                <Link to="/" className="text-church-600 hover:underline mt-4 block">Return Home</Link>
+    if (!isAdmin) return <div className="p-20 text-center">Access Denied</div>;
+
+    const ServiceConfigBox = ({ type, title, icon: Icon }: { type: 'sundaySchool' | 'morning' | 'evening', title: string, icon: any }) => (
+        <div className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 className="font-black text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-3">
+                <Icon size={20} className="text-church-600"/> {title}
+            </h4>
+            
+            <div className="space-y-3 mb-6">
+                <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Display Title</label>
+                    <input 
+                        className="w-full border border-slate-200 p-3 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white transition" 
+                        value={duties.serviceTitles?.[type] || ''} 
+                        onChange={e => handleServiceTitleChange(type, e.target.value)} 
+                        placeholder="e.g. Sunday School"
+                    />
+                </div>
+                <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Time</label>
+                    <input 
+                        className="w-full border border-slate-200 p-3 rounded-xl text-sm bg-slate-50 focus:bg-white transition" 
+                        value={duties.serviceTimes?.[type] || ''} 
+                        onChange={e => handleServiceTimeChange(type, e.target.value)} 
+                        placeholder="e.g. 10:00 AM"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Program Fields</label>
+                    <button onClick={() => addProgramField(type)} className="text-church-600 hover:text-church-800 flex items-center text-[10px] font-black uppercase tracking-tighter bg-church-50 px-2 py-1 rounded">
+                        <Plus size={12} className="mr-1"/> Add Field
+                    </button>
+                </div>
+                
+                <div className="space-y-3">
+                    {(duties.servicePrograms?.[type] || []).map((field) => (
+                        <div key={field.id} className="flex gap-2 items-start group">
+                            <div className="flex-1 space-y-1">
+                                <input 
+                                    className="w-full border-none bg-slate-100 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 focus:ring-1 focus:ring-church-200" 
+                                    value={field.label} 
+                                    onChange={e => updateProgramField(type, field.id, 'label', e.target.value)} 
+                                    placeholder="LABEL (e.g. ṬANTU)"
+                                />
+                                <input 
+                                    className="w-full border border-slate-200 p-2 rounded-lg text-sm font-bold text-slate-800 focus:ring-1 focus:ring-church-300" 
+                                    value={field.value} 
+                                    onChange={e => updateProgramField(type, field.id, 'value', e.target.value)} 
+                                    placeholder="Value"
+                                />
+                            </div>
+                            <button onClick={() => removeProgramField(type, field.id)} className="p-2 text-slate-300 hover:text-red-500 mt-6 transition-colors">
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    ))}
+                    {(duties.servicePrograms?.[type] || []).length === 0 && (
+                        <p className="text-[10px] text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">No program details added yet.</p>
+                    )}
+                </div>
             </div>
         </div>
     );
 
     return (
         <div className="py-12 bg-slate-50 min-h-screen">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Manage Weekly Duties</h1>
-                    <p className="max-w-2xl mx-auto text-slate-600">Update the list of members on duty for various roles and adjust service times. Changes will reflect on the homepage.</p>
+            <div className="max-w-6xl mx-auto px-6">
+                <div className="mb-12">
+                    <h1 className="text-4xl font-serif font-black text-slate-900 mb-2">Manage Weekly Duties</h1>
+                    <p className="text-slate-500 font-medium">Configure program details and service times for the congregation.</p>
                 </div>
 
-                {loading ? <div className="text-center py-20"><Loader className="animate-spin h-10 w-10 mx-auto text-church-500" /></div>
+                {loading ? <div className="text-center py-24"><Loader className="animate-spin h-12 w-12 mx-auto text-church-600" /></div>
                 : (
-                    <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-100 space-y-8">
-                        
-                        {/* Service Times Section */}
-                        <div className="bg-church-50 p-6 rounded-lg border border-church-100">
-                            <h3 className="text-lg font-bold text-church-800 mb-4 flex items-center">
-                                <Clock size={20} className="mr-2"/> Inkhawm Hun (Service Times & Programs)
-                            </h3>
-                            <div className="grid md:grid-cols-3 gap-6">
-                                {/* Sunday School */}
-                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
-                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><BookOpen size={16}/> Sunday School</h4>
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTitles?.sundaySchool || 'Sunday School'} 
-                                        onChange={e => handleServiceTitleChange('sundaySchool', e.target.value)} 
-                                        placeholder="Title"
-                                    />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTimes?.sundaySchool || ''} 
-                                        onChange={e => handleServiceTimeChange('sundaySchool', e.target.value)} 
-                                        placeholder="Time"
-                                    />
-                                    <div className="pt-2 border-t border-slate-100 mt-2">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                            value={duties.servicePrograms?.sundaySchool?.tantu || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('sundaySchool', 'tantu', e.target.value)} 
-                                            placeholder="Tantu Hming"
-                                        />
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Zirlai / Topic</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
-                                            value={duties.servicePrograms?.sundaySchool?.zirlai || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('sundaySchool', 'zirlai', e.target.value)} 
-                                            placeholder="Zirlai"
-                                        />
+                    <div className="space-y-12">
+                        {/* Sunday Services Section */}
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            <ServiceConfigBox type="sundaySchool" title="Sunday School" icon={BookOpen} />
+                            <ServiceConfigBox type="morning" title="Chawhnu Inkhawm" icon={Clock} />
+                            <ServiceConfigBox type="evening" title="Zan Inkhawm" icon={Mic} />
+                        </div>
+
+                        {/* Other Personnel and Ranges */}
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm grid md:grid-cols-2 gap-12">
+                            <div className="space-y-6">
+                                <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs border-b pb-4 flex items-center gap-2"><ClipboardList size={18} className="text-church-600"/> General Settings</h3>
+                                <div className="grid gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Week Range</label>
+                                        <input className="w-full border border-slate-200 p-3 rounded-xl text-sm font-bold" value={duties.weekRange || ''} onChange={e => handleFieldChange('weekRange', e.target.value)} placeholder="e.g. 05 - 11 Jan, 2026" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Zai Hruaitu</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.zaiHruaitu || ''} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} /></div>
+                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Hla Hriltu</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.hlaHriltu || ''} onChange={e => handleFieldChange('hlaHriltu', e.target.value)} /></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Piano</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.pianoTumtu || ''} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} /></div>
+                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Sound</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.lightAndSoundDuty || ''} onChange={e => handleFieldChange('lightAndSoundDuty', e.target.value)} /></div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Morning (Chawhnu) */}
-                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
-                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><Clock size={16}/> Chawhnu Inkhawm</h4>
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTitles?.morning || 'Chawhnu Inkhawm'} 
-                                        onChange={e => handleServiceTitleChange('morning', e.target.value)} 
-                                        placeholder="Title"
-                                    />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTimes?.morning || ''} 
-                                        onChange={e => handleServiceTimeChange('morning', e.target.value)} 
-                                        placeholder="Time"
-                                    />
-                                    <div className="pt-2 border-t border-slate-100 mt-2">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Thuhriltu</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                            value={duties.servicePrograms?.morning?.thuhriltu || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('morning', 'thuhriltu', e.target.value)} 
-                                            placeholder="Thuhriltu Hming"
-                                        />
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
-                                            value={duties.servicePrograms?.morning?.tantu || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('morning', 'tantu', e.target.value)} 
-                                            placeholder="Tantu Hming"
-                                        />
+                            <div className="space-y-6">
+                                <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs border-b pb-4 flex items-center gap-2"><Users size={18} className="text-church-600"/> Team Rosters</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Thawhlawm Chhiartute (One per line)</label>
+                                        <textarea className="w-full border border-slate-200 p-3 rounded-xl text-xs h-24" value={duties.thawhlawmChiartute?.join('\n') || ''} onChange={e => handleListChange('thawhlawmChiartute', e.target.value)} />
                                     </div>
-                                </div>
-
-                                {/* Evening (Zan) */}
-                                <div className="space-y-2 bg-white p-4 rounded-lg border border-slate-200">
-                                    <h4 className="font-bold text-slate-700 border-b pb-2 mb-2 flex items-center gap-2"><Mic size={16}/> Zan Inkhawm</h4>
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTitles?.evening || 'Zan Inkhawm'} 
-                                        onChange={e => handleServiceTitleChange('evening', e.target.value)} 
-                                        placeholder="Title"
-                                    />
-                                    <input 
-                                        className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                        value={duties.serviceTimes?.evening || ''} 
-                                        onChange={e => handleServiceTimeChange('evening', e.target.value)} 
-                                        placeholder="Time"
-                                    />
-                                    <div className="pt-2 border-t border-slate-100 mt-2">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Thuhriltu</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm mb-2" 
-                                            value={duties.servicePrograms?.evening?.thuhriltu || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('evening', 'thuhriltu', e.target.value)} 
-                                            placeholder="Thuhriltu Hming"
-                                        />
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Ṭantu</label>
-                                        <input 
-                                            className="w-full border border-slate-300 p-2 rounded text-sm" 
-                                            value={duties.servicePrograms?.evening?.tantu || ''} 
-                                            onChange={e => handleServiceProgramDetailChange('evening', 'tantu', e.target.value)} 
-                                            placeholder="Tantu Hming"
-                                        />
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Ushers (One per line)</label>
+                                        <textarea className="w-full border border-slate-200 p-3 rounded-xl text-xs h-24" value={duties.ushers?.join('\n') || ''} onChange={e => handleListChange('ushers', e.target.value)} />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* New Mid-Week Program Section */}
-                        <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-                                <CalendarDays size={20} className="mr-2"/> Mid-Week Programs
-                            </h3>
-                            <div className="grid md:grid-cols-2 gap-8">
-                                {/* Nilai Zan */}
-                                <div className="space-y-3">
-                                    <h4 className="font-bold text-church-600 border-b pb-1">Nilai Zan (Wednesday)</h4>
-                                    <input className="w-full border p-2 rounded" placeholder="Title (e.g. Nilai Zan Inkhawm)" value={duties.midWeek?.nilai?.title || ''} onChange={e => handleMidWeekChange('nilai', 'title', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Time (e.g. 07:00 PM)" value={duties.midWeek?.nilai?.time || ''} onChange={e => handleMidWeekChange('nilai', 'time', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Hruaitu" value={duties.midWeek?.nilai?.hruaitu || ''} onChange={e => handleMidWeekChange('nilai', 'hruaitu', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Ṭantu" value={duties.midWeek?.nilai?.tantu || ''} onChange={e => handleMidWeekChange('nilai', 'tantu', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Thupui (Topic)" value={duties.midWeek?.nilai?.thupui || ''} onChange={e => handleMidWeekChange('nilai', 'thupui', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Thuhriltu / Hawngtu" value={duties.midWeek?.nilai?.thuhriltu || ''} onChange={e => handleMidWeekChange('nilai', 'thuhriltu', e.target.value)} />
-                                </div>
-                                {/* Inrinni Zan */}
-                                <div className="space-y-3">
-                                    <h4 className="font-bold text-church-600 border-b pb-1">Inrinni Zan (Saturday)</h4>
-                                    <input className="w-full border p-2 rounded" placeholder="Title (e.g. Inrinni Zan Inkhawm)" value={duties.midWeek?.inrinni?.title || ''} onChange={e => handleMidWeekChange('inrinni', 'title', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Time (e.g. 07:00 PM)" value={duties.midWeek?.inrinni?.time || ''} onChange={e => handleMidWeekChange('inrinni', 'time', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Hruaitu" value={duties.midWeek?.inrinni?.hruaitu || ''} onChange={e => handleMidWeekChange('inrinni', 'hruaitu', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Ṭantu" value={duties.midWeek?.inrinni?.tantu || ''} onChange={e => handleMidWeekChange('inrinni', 'tantu', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Thupui (Topic)" value={duties.midWeek?.inrinni?.thupui || ''} onChange={e => handleMidWeekChange('inrinni', 'thupui', e.target.value)} />
-                                    <input className="w-full border p-2 rounded" placeholder="Thuhriltu / Hawngtu" value={duties.midWeek?.inrinni?.thuhriltu || ''} onChange={e => handleMidWeekChange('inrinni', 'thuhriltu', e.target.value)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Month (e.g., January)</label>
-                                <input className="w-full border p-2 rounded-lg" value={duties.month || ''} onChange={e => handleFieldChange('month', e.target.value)} />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Week Range (e.g., 05 - 11 January, 2026)</label>
-                                <input className="w-full border p-2 rounded-lg" value={duties.weekRange || ''} onChange={e => handleFieldChange('weekRange', e.target.value)} />
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Thawhlawm Chiartute (One per line)</label>
-                                <textarea className="w-full border p-2 rounded-lg h-32" value={duties.thawhlawmChiartute?.join('\n') || ''} onChange={e => handleListChange('thawhlawmChiartute', e.target.value)} />
-                            </div>
-                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Buhfaitham Hralhtute (One per line)</label>
-                                <textarea className="w-full border p-2 rounded-lg h-32" value={duties.buhfaithamHralhtute?.join('\n') || ''} onChange={e => handleListChange('buhfaithamHralhtute', e.target.value)} />
-                            </div>
-                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Ushers (One per line)</label>
-                                <textarea className="w-full border p-2 rounded-lg h-32" value={duties.ushers?.join('\n') || ''} onChange={e => handleListChange('ushers', e.target.value)} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800 border-t pt-6">Kohhran Hun Ruatna (Sunday)</h3>
-                            <div className="grid md:grid-cols-2 gap-6 mt-4">
-                                <div><label className="block text-sm font-bold mb-1">Zai Hruaitu</label><input className="w-full border p-2 rounded-lg" value={duties.zaiHruaitu || ''} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} /></div>
-                                <div><label className="block text-sm font-bold mb-1">Piano Tumtu</label><input className="w-full border p-2 rounded-lg" value={duties.pianoTumtu || ''} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} /></div>
-                                <div><label className="block text-sm font-bold mb-1">Hla Hriltu</label><input className="w-full border p-2 rounded-lg" value={duties.hlaHriltu || ''} onChange={e => handleFieldChange('hlaHriltu', e.target.value)} /></div>
-                                <div><label className="block text-sm font-bold mb-1">Light & Sound Duty</label><input className="w-full border p-2 rounded-lg" value={duties.lightAndSoundDuty || ''} onChange={e => handleFieldChange('lightAndSoundDuty', e.target.value)} /></div>
-                                <div className="md:col-span-2"><label className="block text-sm font-bold mb-1">Pangpar Khawitu</label><input className="w-full border p-2 rounded-lg" value={duties.pangparKhawitu || ''} onChange={e => handleFieldChange('pangparKhawitu', e.target.value)} /></div>
-                            </div>
-                        </div>
-                        
-                        <div className="flex justify-end pt-6 border-t">
-                            <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-6 py-3 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition disabled:opacity-50">
+                        <div className="flex justify-end pt-8">
+                            <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-4 px-10 py-5 bg-church-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-church-700 shadow-2xl transition disabled:opacity-50">
                                 {isSaving ? <Loader className="animate-spin" size={20}/> : <Save size={20} />}
-                                {isSaving ? 'Saving...' : 'Save Changes'}
+                                {isSaving ? 'Updating...' : 'Publish Changes'}
                             </button>
                         </div>
                     </div>
