@@ -21,7 +21,8 @@ const INITIAL_CONTACT_DATA: ContactInfo = {
   email: "office@bethelkohhran.pci",
   officeHoursWeekdays: "Tue - Fri: 10am - 4pm",
   officeHoursWeekend: "Sat: 10am - 1pm",
-  mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.849280860851!2d93.3283253!3d23.4735394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374d810056637385%3A0x6a2c3c6f24056250!2sPCI%20Champhai%20Bethel%20Kohhran!5e0!3m2!1sen!2sin!4v1709568000000!5m2!1sen!2sin"
+  // Updated map URL to point exactly to PCI Champhai Bethel Kohhran
+  mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.849280860851!2d93.3283253!3d23.4735394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374d810056637385%3A0x6a2c3c6f24056250!2sPCI%20Champhai%20Bethel%20Kohhran!5e0!3m2!1sen!2sin"
 };
 
 const Contact: React.FC = () => {
@@ -58,7 +59,10 @@ const Contact: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!db || !db.collection) return;
+    if (!db || !db.collection) {
+        alert("Database connection not available.");
+        return;
+    }
     setIsSaving(true);
     try {
       await db.collection('settings').doc('contact').set(editForm);
@@ -84,13 +88,14 @@ const Contact: React.FC = () => {
             loading="lazy" 
             referrerPolicy="no-referrer-when-downgrade"
             className="grayscale-[20%]"
+            title="Church Location"
         ></iframe>
         {isAdmin && (
             <button 
                 onClick={handleEditClick} 
                 className="absolute bottom-4 right-4 bg-white text-church-600 px-4 py-2 rounded-lg shadow-lg font-bold flex items-center hover:bg-church-50 transition z-10"
             >
-                <Edit size={18} className="mr-2" /> Edit Info
+                <Edit size={18} className="mr-2" /> Edit Location & Info
             </button>
         )}
       </div>

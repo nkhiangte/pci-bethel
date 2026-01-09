@@ -33,6 +33,28 @@ const ICON_MAP: Record<string, React.ElementType> = {
   'Handshake': Handshake
 };
 
+// Colors for icons
+const ICON_COLORS: Record<string, string> = {
+  'BookOpen': 'text-blue-600 bg-blue-50',
+  'DollarSign': 'text-emerald-600 bg-emerald-50',
+  'Globe': 'text-indigo-600 bg-indigo-50',
+  'Home': 'text-orange-600 bg-orange-50',
+  'Users': 'text-violet-600 bg-violet-50',
+  'Coffee': 'text-amber-600 bg-amber-50',
+  'Heart': 'text-rose-600 bg-rose-50',
+  'Music': 'text-pink-600 bg-pink-50',
+  'Smile': 'text-yellow-600 bg-yellow-50',
+  'Library': 'text-cyan-600 bg-cyan-50',
+  'Book': 'text-blue-600 bg-blue-50',
+  'Box': 'text-slate-600 bg-slate-50',
+  'Newspaper': 'text-gray-600 bg-gray-50',
+  'FileText': 'text-teal-600 bg-teal-50',
+  'UserPlus': 'text-green-600 bg-green-50',
+  'Clock': 'text-fuchsia-600 bg-fuchsia-50',
+  'ClipboardCheck': 'text-lime-600 bg-lime-50',
+  'Handshake': 'text-sky-600 bg-sky-50'
+};
+
 // Full Data with Members (Fallback and Initial Seed)
 const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
    {
@@ -756,12 +778,13 @@ const Departments: React.FC = () => {
                {filteredCommittees.map((c, index) => {
                  const Icon = ICON_MAP[c.icon] || Users;
                  const isExpanded = expandedCommitteeId === c.id;
+                 const colorClass = ICON_COLORS[c.icon] || 'text-church-600 bg-church-50';
                  
                  return (
                    <div key={c.id} className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'shadow-lg ring-1 ring-church-200 border-church-300' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
                      <div onClick={() => toggleExpand(c.id)} className="p-6 flex items-center justify-between cursor-pointer bg-white relative">
                         <div className="flex items-center">
-                            <div className={`p-3 rounded-lg mr-4 transition-colors shadow-sm ${isExpanded ? 'bg-church-100 text-church-700' : 'bg-slate-50 text-slate-400'}`}><Icon size={24} /></div>
+                            <div className={`p-3 rounded-lg mr-4 transition-colors shadow-sm ${colorClass}`}><Icon size={24} /></div>
                             <div>
                                 <h3 className={`text-base font-bold transition-colors ${isExpanded ? 'text-church-900' : 'text-slate-800'}`}>{c.name}</h3>
                                 {c.description && (
