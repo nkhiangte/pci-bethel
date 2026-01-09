@@ -29,6 +29,18 @@ export interface Sermon {
   videoUrl?: string;
 }
 
+export interface Article {
+  id: string;
+  title: string;
+  author: string;
+  date: string;
+  category: 'Article' | 'Sermon';
+  content: string;
+  imageUrl?: string;
+  videoUrl?: string; // Optional YouTube link
+  views?: number;
+}
+
 export interface ProgramDetails {
   hruaitu?: string; // Conductor/Leader
   tantu?: string; // Reader

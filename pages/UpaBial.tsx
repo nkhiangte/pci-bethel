@@ -173,9 +173,21 @@ const UpaBial: React.FC = () => {
   return (
     <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Kohhran Upa Bialte</h1>
           <p className="max-w-2xl mx-auto text-slate-600">Pastoral Care Districts and Leaders</p>
+        </div>
+
+        {/* Map Embed */}
+        <div className="mb-12 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+             <iframe 
+               src="https://www.google.com/maps/d/embed?mid=1Xns6BCmnqrgImcTeDiWKwYGyRqS_zJo" 
+               width="100%" 
+               height="480" 
+               style={{ border: 0 }}
+               title="Upa Bial Map"
+               loading="lazy"
+             ></iframe>
         </div>
 
         {isAdmin && (

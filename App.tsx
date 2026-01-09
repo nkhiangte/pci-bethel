@@ -30,6 +30,7 @@ import Records from './pages/Records';
 import Archives from './pages/Archives'; // FIX: Changed from named import to default import
 import InkhawmChanvo from './pages/InkhawmChanvo';
 import UpaBial from './pages/UpaBial'; // Added UpaBial
+import Articles from './pages/Articles'; // Added Articles
 
 const App: React.FC = () => {
   return (
@@ -52,7 +53,8 @@ const App: React.FC = () => {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/upa-bial" element={<UpaBial />} /> {/* Added Route */}
+                <Route path="/upa-bial" element={<UpaBial />} />
+                <Route path="/articles" element={<Articles />} /> {/* Added Route */}
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
@@ -68,9 +70,9 @@ const App: React.FC = () => {
                 <Route path="/gallery/*" element={<Gallery />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/ministries" element={<AdminMinistries />} />
-                <Route path="/admin/duties" element={<AdminDuties />} /> {/* Add new route */}
+                <Route path="/admin/duties" element={<AdminDuties />} /> 
                 <Route path="/statistics" element={<Statistics />} />
-                <Route path="/records" element={<Records />} /> {/* Add new route */}
+                <Route path="/records" element={<Records />} /> 
                 <Route path="/archives" element={<Archives />} />
                 <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
               </Routes>

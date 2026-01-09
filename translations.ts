@@ -5,12 +5,13 @@ export const translations = {
   en: {
     nav: {
       home: 'Home',
-      upaBial: 'Upa Bial', // Added
+      upaBial: 'Upa Bial',
       about: 'About Us',
       worship: 'Worship',
       fellowships: 'Fellowships',
       events: 'Events',
       announcements: 'Announcements',
+      articles: 'Articles & Sermons',
       departments: 'Committees',
       sundaySchool: 'Sunday School',
       members: 'Members',
@@ -101,6 +102,18 @@ export const translations = {
     },
     announcements: {
       title: 'Announcements',
+    },
+    articles: {
+        title: 'Articles & Sermons',
+        subtitle: 'Read spiritually uplifting articles and sermon transcripts.',
+        readMore: 'Read More',
+        writtenBy: 'Written by',
+        publishedOn: 'Published on',
+        category: {
+            all: 'All',
+            article: 'Articles',
+            sermon: 'Sermons'
+        }
     },
     departments: {
       title: 'Committees',
@@ -196,12 +209,13 @@ export const translations = {
   mizo: {
     nav: {
       home: 'Phekpui',
-      upaBial: 'Upa Bial', // Added
+      upaBial: 'Upa Bial',
       about: 'Kan Chanchin',
       worship: 'Inkhawm & Rawngbawlna',
       fellowships: 'Fellowship',
       events: 'Program',
       announcements: 'Hriattirna',
+      articles: 'Articles & Sermons', // Changed from 'Thu Ziak & Thusawi'
       departments: 'Committee',
       sundaySchool: 'Sunday School',
       members: 'Member Pual',
@@ -292,6 +306,18 @@ export const translations = {
     },
     announcements: {
       title: 'Hriattirna',
+    },
+    articles: {
+        title: 'Articles & Sermons', // Changed from 'Thu Ziak & Thusawi'
+        subtitle: 'Thlarau lam thu ziak leh thusawi ropui tak tak chhiar tur a awm e.',
+        readMore: 'Chhiar Zawm Rawh',
+        writtenBy: 'Ziaktu/Sawitu',
+        publishedOn: 'Dah ni',
+        category: {
+            all: 'Zawng Zawng',
+            article: 'Thu Ziak',
+            sermon: 'Thusawi'
+        }
     },
     departments: {
       title: 'Committee Te',
