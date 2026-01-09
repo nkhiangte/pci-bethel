@@ -41,14 +41,61 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
-        /* Prevent text inflation adjustments */
         -webkit-text-size-adjust: 100%;
       }
       
-      /* Ensure all elements inherit sharpening */
       *, *::before, *::after {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* 3D Rotation Animations */
+      @keyframes rotateY-slow {
+        from { transform: perspective(1000px) rotateY(0deg); }
+        to { transform: perspective(1000px) rotateY(360deg); }
+      }
+
+      @keyframes shine-sweep {
+        0% { transform: translateX(-150%) skewX(-25deg); }
+        50% { transform: translateX(150%) skewX(-25deg); }
+        100% { transform: translateX(150%) skewX(-25deg); }
+      }
+
+      .animate-rotate-y-slow {
+        animation: rotateY-slow 12s linear infinite;
+      }
+
+      .animate-shine {
+        animation: shine-sweep 4s ease-in-out infinite;
+      }
+
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+
+      .preserve-3d {
+        transform-style: preserve-3d;
+      }
+
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+
+      /* Real 3D thickness using shadow layers */
+      .token-3d {
+        box-shadow: 
+          0 1px 0 #ccc,
+          0 2px 0 #c9c9c9,
+          0 3px 0 #bbb,
+          0 4px 0 #b9b9b9,
+          0 5px 0 #aaa,
+          0 6px 1px rgba(0,0,0,.1),
+          0 0 5px rgba(0,0,0,.1),
+          0 1px 3px rgba(0,0,0,.3),
+          0 3px 5px rgba(0,0,0,.2),
+          0 5px 10px rgba(0,0,0,.25),
+          0 10px 10px rgba(0,0,0,.2),
+          0 20px 20px rgba(0,0,0,.15);
       }
     </style>
     <script>

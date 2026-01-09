@@ -33,26 +33,26 @@ const ICON_MAP: Record<string, React.ElementType> = {
   'Handshake': Handshake
 };
 
-// Colors for icons - Using stronger 100/700 shades for better visibility
+// Realistic metallic and glass colors
 const ICON_COLORS: Record<string, string> = {
-  'BookOpen': 'text-blue-700 bg-blue-100',
-  'DollarSign': 'text-emerald-700 bg-emerald-100',
-  'Globe': 'text-indigo-700 bg-indigo-100',
-  'Home': 'text-orange-700 bg-orange-100',
-  'Users': 'text-violet-700 bg-violet-100',
-  'Coffee': 'text-amber-700 bg-amber-100',
-  'Heart': 'text-rose-700 bg-rose-100',
-  'Music': 'text-pink-700 bg-pink-100',
-  'Smile': 'text-yellow-700 bg-yellow-100',
-  'Library': 'text-cyan-700 bg-cyan-100',
-  'Book': 'text-blue-700 bg-blue-100',
-  'Box': 'text-slate-700 bg-slate-200',
-  'Newspaper': 'text-gray-700 bg-gray-200',
-  'FileText': 'text-teal-700 bg-teal-100',
-  'UserPlus': 'text-green-700 bg-green-100',
-  'Clock': 'text-fuchsia-700 bg-fuchsia-100',
-  'ClipboardCheck': 'text-lime-700 bg-lime-100',
-  'Handshake': 'text-sky-700 bg-sky-100'
+  'BookOpen': 'from-blue-600 to-blue-800 text-white border-blue-400',
+  'DollarSign': 'from-emerald-600 to-emerald-800 text-white border-emerald-400',
+  'Globe': 'from-indigo-600 to-indigo-800 text-white border-indigo-400',
+  'Home': 'from-orange-600 to-orange-800 text-white border-orange-400',
+  'Users': 'from-violet-600 to-violet-800 text-white border-violet-400',
+  'Coffee': 'from-amber-600 to-amber-800 text-white border-amber-400',
+  'Heart': 'from-rose-600 to-rose-800 text-white border-rose-400',
+  'Music': 'from-pink-600 to-pink-800 text-white border-pink-400',
+  'Smile': 'from-yellow-500 to-yellow-700 text-white border-yellow-300',
+  'Library': 'from-cyan-600 to-cyan-800 text-white border-cyan-400',
+  'Book': 'from-blue-600 to-blue-800 text-white border-blue-400',
+  'Box': 'from-slate-600 to-slate-800 text-white border-slate-400',
+  'Newspaper': 'from-gray-600 to-gray-800 text-white border-gray-400',
+  'FileText': 'from-teal-600 to-teal-800 text-white border-teal-400',
+  'UserPlus': 'from-green-600 to-green-800 text-white border-green-400',
+  'Clock': 'from-fuchsia-600 to-fuchsia-800 text-white border-fuchsia-400',
+  'ClipboardCheck': 'from-lime-600 to-lime-800 text-white border-lime-400',
+  'Handshake': 'from-sky-600 to-sky-800 text-white border-sky-400'
 };
 
 // Full Data with Members (Fallback and Initial Seed)
@@ -778,18 +778,31 @@ const Departments: React.FC = () => {
                {filteredCommittees.map((c, index) => {
                  const Icon = ICON_MAP[c.icon] || Users;
                  const isExpanded = expandedCommitteeId === c.id;
-                 // Use updated color map or a robust fallback
-                 const colorClass = ICON_COLORS[c.icon] || 'text-church-700 bg-church-100';
+                 const colorClass = ICON_COLORS[c.icon] || 'from-church-600 to-church-800 text-white border-church-400';
                  
                  return (
                    <div key={c.id} className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'shadow-lg ring-1 ring-church-200 border-church-300' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
                      <div onClick={() => toggleExpand(c.id)} className="p-6 flex items-center justify-between cursor-pointer bg-white relative">
                         <div className="flex items-center">
-                            <div className={`p-3 rounded-lg mr-4 transition-colors shadow-sm ${colorClass}`}><Icon size={24} /></div>
+                            {/* 3D Realistic Rotating Medallion Container */}
+                            <div className="perspective-1000 mr-5">
+                                <div className={`relative w-14 h-14 rounded-full bg-gradient-to-br border-2 token-3d animate-rotate-y-slow preserve-3d flex items-center justify-center overflow-hidden ${colorClass}`}>
+                                    {/* Gloss Shine Layer */}
+                                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine pointer-events-none z-10"></div>
+                                    
+                                    {/* Floating Icon */}
+                                    <div className="relative z-20 backface-hidden" style={{ transform: 'translateZ(20px)' }}>
+                                        <Icon size={26} className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" strokeWidth={2.5} />
+                                    </div>
+
+                                    {/* Medallion Rim Decoration */}
+                                    <div className="absolute inset-0.5 rounded-full border border-white/20 z-0"></div>
+                                </div>
+                            </div>
                             <div>
                                 <h3 className={`text-base font-bold transition-colors ${isExpanded ? 'text-church-900' : 'text-slate-800'}`}>{c.name}</h3>
                                 {c.description && (
-                                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{c.description}</p> // Show description preview
+                                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{c.description}</p>
                                 )}
                             </div>
                         </div>
@@ -824,7 +837,7 @@ const Departments: React.FC = () => {
 
                      {isExpanded && (
                          <div className="border-t border-slate-100 bg-slate-50/70 p-6 animate-in slide-in-from-top-2 duration-200">
-                            {c.description && ( // Display full description when expanded
+                            {c.description && (
                                 <div className="mb-6 pb-4 border-b border-slate-100">
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.common.description}</h4>
                                     <p className="text-sm text-slate-700">{c.description}</p>
