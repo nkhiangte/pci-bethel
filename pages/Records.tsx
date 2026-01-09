@@ -55,7 +55,7 @@ const formatDateCell = (value: any): string => {
 
 
 const Records: React.FC = () => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { isAdmin } = useAuth();
     const [activeTab, setActiveTab] = useState<RecordType>('baptism');
     const [records, setRecords] = useState<ChurchRecord[]>([]);
@@ -89,7 +89,6 @@ const Records: React.FC = () => {
 
         try {
             // Attempt 1: Optimized Query (Filter + Sort)
-            // This requires a composite index in Firestore.
             const snapshot = await db.collection('records')
                                      .where('type', '==', activeTab)
                                      .orderBy(sortField, 'desc')
@@ -103,45 +102,37 @@ const Records: React.FC = () => {
             }
         } catch (error: any) {
             console.error("Error fetching records (primary query):", error);
-            
-            // Check for Index Error
             const errorMessage = error.message || '';
             const isIndexError = error.code === 'failed-precondition' || errorMessage.includes('index');
 
             if (isIndexError) {
-                 // 1. Extract Index URL
                  const match = errorMessage.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
                  if (match) {
                      setMissingIndexUrl(match[0]);
                  } else {
-                     // Fallback URL if extraction fails but it's clearly an index error
                      setMissingIndexUrl("https://console.firebase.google.com/project/_/firestore/indexes");
                  }
 
-                 // 2. Fallback Query: Fetch WITHOUT sorting from DB, sort client-side
                  try {
-                     console.log("Attempting fallback query (client-side sort)...");
                      const fallbackSnapshot = await db.collection('records')
                                               .where('type', '==', activeTab)
                                               .get();
                     
                      if (!fallbackSnapshot.empty) {
                          const data = fallbackSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ChurchRecord[];
-                         // Client-side sort
                          data.sort((a: any, b: any) => {
                              const dateA = a[sortField] || '';
                              const dateB = b[sortField] || '';
                              if (activeTab === 'inkhawmpui') {
                                  return Number(dateB) - Number(dateA);
                              }
-                             return dateA > dateB ? -1 : 1; // Descending
+                             return dateA > dateB ? -1 : 1;
                          });
                          setRecords(data);
                      } else {
                          setRecords([]);
                      }
                  } catch (fallbackError) {
-                     console.error("Error in fallback query:", fallbackError);
                      setRecords([]);
                  }
 
@@ -149,7 +140,6 @@ const Records: React.FC = () => {
                 setIsOfflineMode(true);
                 setRecords([]);
             } else {
-                // Other errors
                 setRecords([]);
             }
         }
@@ -219,7 +209,6 @@ const Records: React.FC = () => {
         const headers = TEMPLATE_HEADERS[activeTab];
         const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
         
-        // Prepare data with proper headers and formatted dates
         const exportData = searchedRecords.map(rec => {
             const row: any = {};
             headers.forEach(header => {
@@ -268,7 +257,7 @@ const Records: React.FC = () => {
             body: tableBody,
             startY: 35,
             theme: 'grid',
-            headStyles: { fillColor: [134, 120, 79] }, // church-800 color approximately
+            headStyles: { fillColor: [134, 120, 79] }, 
             styles: { fontSize: 8 }
         });
 
@@ -320,14 +309,14 @@ const Records: React.FC = () => {
 
                         if (dateFields.includes(header) && value) {
                             let formattedDate: string | null = null;
-                            if (typeof value === 'number' && value > 1) { // Excel date serial number
+                            if (typeof value === 'number' && value > 1) { 
                                 const date = XLSX.SSF.parse_date_code(value);
                                 if (date) {
                                     formattedDate = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
                                 }
-                            } else if (value instanceof Date) { // JS Date Object
+                            } else if (value instanceof Date) { 
                                 formattedDate = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-                            } else if (typeof value === 'string') { // Date String
+                            } else if (typeof value === 'string') { 
                                 const parsedDate = new Date(value);
                                 if (!isNaN(parsedDate.getTime())) {
                                     const year = parsedDate.getFullYear();
@@ -346,7 +335,6 @@ const Records: React.FC = () => {
 
                 setImportData(processedData);
             } catch (err) {
-                console.error("Error parsing file:", err);
                 setImportError("Failed to parse the file. Please ensure it's a valid XLSX or CSV.");
             }
         };
@@ -407,11 +395,23 @@ const Records: React.FC = () => {
     });
 
     return (
-        <div className="py-12 bg-slate-50 min-h-screen">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h1 className="text-4xl font-serif font-bold text-church-900 mb-4 text-center">{t.records.title}</h1>
-                <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">{t.records.subtitle}</p>
-                
+        <div className="bg-slate-50 min-h-screen">
+            {/* Immersive Big Header Section */}
+            <div className="bg-church-900 py-16 mb-12 text-center text-white relative overflow-hidden shadow-inner">
+                {/* Decorative Watermark Icon */}
+                <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none transform -rotate-12 scale-150">
+                    <BookUser size={400} />
+                </div>
+                <div className="relative z-10 max-w-7xl mx-auto px-4">
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold mb-4 tracking-tight drop-shadow-md">{t.records.title}</h1>
+                    <p className="text-lg md:text-xl text-church-100 max-w-2xl mx-auto font-medium tracking-wide">
+                        {t.records.subtitle}
+                    </p>
+                    <div className="h-1.5 w-32 bg-church-500 mx-auto mt-8 rounded-full shadow-sm"></div>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2 mb-8 flex flex-wrap gap-2 justify-center">
                     {tabs.map((tab) => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id as RecordType)} className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${ activeTab === tab.id ? 'bg-church-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>
@@ -427,7 +427,6 @@ const Records: React.FC = () => {
                     </div>
                 )}
 
-                {/* Database Index Warning for Admins */}
                 {isAdmin && missingIndexUrl && (
                     <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center">
@@ -437,8 +436,7 @@ const Records: React.FC = () => {
                             <div>
                                 <h3 className="font-bold text-sm">Database Index Required</h3>
                                 <p className="text-xs mt-1 max-w-xl">
-                                    To sort and filter <strong>{tabs.find(t => t.id === activeTab)?.label}</strong> records efficiently, Firestore requires a composite index. 
-                                    Please click the button to create it automatically. 
+                                    To sort and filter records efficiently, Firestore requires a composite index. 
                                     <span className="font-bold text-yellow-900 block mt-1">Your data is currently visible using a fallback method.</span>
                                 </p>
                             </div>
@@ -462,7 +460,6 @@ const Records: React.FC = () => {
                                  <p className="text-xs text-slate-500">Tools for importing, exporting, and managing bulk records.</p>
                              </div>
                              <div className="flex items-center gap-2 flex-wrap justify-center">
-                                 {/* Export Buttons */}
                                  <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-md border border-slate-200 mr-2">
                                      <button onClick={handleExportExcel} disabled={records.length === 0} className="flex items-center gap-1.5 text-xs font-bold text-green-700 hover:bg-white hover:shadow-sm px-3 py-1.5 rounded-md transition disabled:opacity-50" title="Export current list to Excel">
                                          <FileSpreadsheet size={14}/> Export Excel
@@ -489,15 +486,15 @@ const Records: React.FC = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search by name, minister, etc..."
-                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-church-500"
+                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-church-500 shadow-sm outline-none transition-all"
                         />
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
+                <div className="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
                     {isAdmin && !isOfflineMode && (
-                        <div className="flex justify-end mb-4">
-                            <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm">
+                        <div className="p-4 bg-white border-b border-slate-100 flex justify-end">
+                            <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition">
                                 <Plus size={18} className="mr-2" /> {t.records.add}
                             </button>
                         </div>
@@ -509,25 +506,38 @@ const Records: React.FC = () => {
                                 {missingIndexUrl && records.length === 0 ? "Waiting for database index creation..." : (searchTerm ? `No records found for "${searchTerm}".` : t.records.empty)}
                             </p>
                         ) : (
-                            <table className="w-full text-sm text-left text-slate-500">
-                                <thead className="text-xs text-slate-700 uppercase bg-slate-50">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-b-4 border-church-600">
                                     <tr>
-                                        {TEMPLATE_HEADERS[activeTab].map(header => <th key={header} className="px-6 py-3">{t.records.theads[header as keyof typeof t.records.theads] || header}</th>)}
-                                        {isAdmin && !isOfflineMode && <th className="px-6 py-3">Actions</th>}
+                                        {TEMPLATE_HEADERS[activeTab].map(header => {
+                                            let label = t.records.theads[header as keyof typeof t.records.theads] || header;
+                                            // Conditional overrides for the Minister column based on the active record type
+                                            if (header === 'minister' && language === 'mizo') {
+                                                if (activeTab === 'wedding') label = 'Inneihtir tu';
+                                                if (activeTab === 'baptism') label = 'Baptistu';
+                                            }
+                                            
+                                            return (
+                                                <th key={header} className="px-6 py-6 text-base md:text-xl font-black uppercase tracking-wider whitespace-nowrap">
+                                                    {label}
+                                                </th>
+                                            );
+                                        })}
+                                        {isAdmin && !isOfflineMode && <th className="px-6 py-6 text-base md:text-xl font-black uppercase tracking-wider">Actions</th>}
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-slate-100">
                                     {searchedRecords.map(rec => (
-                                        <tr key={rec.id} className="bg-white border-b hover:bg-slate-50">
+                                        <tr key={rec.id} className="bg-white hover:bg-slate-50 transition-colors">
                                             {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                <td key={header} className="px-6 py-4 font-medium text-slate-900">
+                                                <td key={header} className="px-6 py-5 font-normal text-slate-600">
                                                     {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
                                                 </td>
                                             ))}
                                             {isAdmin && !isOfflineMode && (
-                                                <td className="px-6 py-4 flex space-x-2">
-                                                    <button onClick={() => handleEdit(rec)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16} /></button>
-                                                    <button onClick={() => handleDelete(rec.id!)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash size={16} /></button>
+                                                <td className="px-6 py-5 flex space-x-2">
+                                                    <button onClick={() => handleEdit(rec)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition"><Edit size={16} /></button>
+                                                    <button onClick={() => handleDelete(rec.id!)} className="p-1.5 text-red-600 hover:bg-red-100 rounded transition"><Trash size={16} /></button>
                                                 </td>
                                             )}
                                         </tr>
@@ -538,13 +548,12 @@ const Records: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Add/Edit Modal */}
                 {isEditModalOpen && editingRecord && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                         <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full">
-                            <div className="p-6 border-b flex justify-between items-center">
-                                <h3 className="text-lg font-bold">{editingRecord.id ? 'Edit' : 'Add'} {tabs.find(t=>t.id === activeTab)?.label} Record</h3>
-                                <button onClick={() => setIsEditModalOpen(false)}><X/></button>
+                            <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
+                                <h3 className="text-lg font-bold text-church-900">{editingRecord.id ? 'Edit' : 'Add'} {tabs.find(t=>t.id === activeTab)?.label} Record</h3>
+                                <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                             </div>
                             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                                 {TEMPLATE_HEADERS[activeTab].map(field => (
@@ -552,7 +561,7 @@ const Records: React.FC = () => {
                                         <label className="capitalize block text-sm font-medium text-slate-600 mb-1">{field.replace(/([A-Z])/g, ' $1')}</label>
                                         <input 
                                            type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'}
-                                           className="w-full border p-2 rounded" 
+                                           className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
                                            placeholder={`Enter ${field}`}
                                            value={(editingRecord as any)[field] || ''} 
                                            onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} 
@@ -560,9 +569,9 @@ const Records: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            <div className="p-4 bg-slate-50 flex justify-end space-x-2">
-                                <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button onClick={handleSave} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">
+                            <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
+                                <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
+                                <button onClick={handleSave} className="px-5 py-2 bg-church-600 text-white rounded-lg flex items-center shadow-md hover:bg-church-700 transition">
                                     {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
                                 </button>
                             </div>
@@ -571,11 +580,11 @@ const Records: React.FC = () => {
                 )}
                  {/* Import Modal */}
                 {isImportModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                         <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full">
-                            <div className="p-6 border-b flex justify-between items-center">
-                                <h3 className="text-lg font-bold flex items-center gap-2"><FileSpreadsheet size={20}/> Import Preview</h3>
-                                <button onClick={() => setIsImportModalOpen(false)}><X/></button>
+                            <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
+                                <h3 className="text-lg font-bold flex items-center gap-2 text-church-900"><FileSpreadsheet size={20}/> Import Preview</h3>
+                                <button onClick={() => setIsImportModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                             </div>
                             <div className="p-6 max-h-[70vh] overflow-y-auto">
                                 <p className="text-sm text-slate-600 mb-2">File: <span className="font-medium">{importFileName}</span></p>
@@ -588,27 +597,27 @@ const Records: React.FC = () => {
                                         <p className="text-sm text-green-700 bg-green-50 p-3 rounded mb-4">
                                             Successfully parsed <span className="font-bold">{importData.length}</span> records. Please review the preview below before uploading.
                                         </p>
-                                        <div className="overflow-x-auto border rounded-lg">
+                                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
                                             <table className="w-full text-xs">
                                                 <thead className="bg-slate-50">
-                                                    <tr>{Object.keys(importData[0]).map(h => <th key={h} className="p-2 text-left font-medium">{h}</th>)}</tr>
+                                                    <tr>{Object.keys(importData[0]).map(h => <th key={h} className="p-2 text-left font-medium border-b">{h}</th>)}</tr>
                                                 </thead>
                                                 <tbody>
                                                     {importData.slice(0, 5).map((row, idx) => (
-                                                        <tr key={idx} className="border-b last:border-0">
+                                                        <tr key={idx} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
                                                             {Object.values(row).map((val: any, i) => <td key={i} className="p-2 whitespace-nowrap">{String(val)}</td>)}
                                                         </tr>
                                                     ))}
                                                 </tbody>
                                             </table>
-                                            {importData.length > 5 && <p className="text-center text-xs text-slate-500 bg-slate-50 p-2">...and {importData.length - 5} more rows.</p>}
+                                            {importData.length > 5 && <p className="text-center text-xs text-slate-500 bg-slate-50 p-2 border-t">...and {importData.length - 5} more rows.</p>}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="p-4 bg-slate-50 flex justify-end space-x-2">
-                                <button onClick={() => setIsImportModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
-                                <button onClick={handleConfirmImport} disabled={!!importError || !importData || loading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center disabled:opacity-50">
+                            <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
+                                <button onClick={() => setIsImportModalOpen(false)} className="px-5 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
+                                <button onClick={handleConfirmImport} disabled={!!importError || !importData || loading} className="px-5 py-2 bg-church-600 text-white rounded-lg flex items-center shadow-md hover:bg-church-700 transition disabled:opacity-50">
                                     {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} 
                                     Confirm & Upload {importData?.length || ''} Records
                                 </button>
