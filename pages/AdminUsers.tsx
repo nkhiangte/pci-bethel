@@ -3,7 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { UserProfile } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader, Shield, ShieldOff, Search, User, Mail, ShieldCheck } from 'lucide-react';
+import { Loader, Shield, ShieldOff, Search, User, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
+
+const MOCK_USERS: UserProfile[] = [
+    { uid: 'mock1', email: 'admin@bethel.pci', displayName: 'Lalhruaitluanga (Admin)', role: 'admin', isAdmin: true, createdAt: new Date().toISOString() },
+    { uid: 'mock2', email: 'member@bethel.pci', displayName: 'Vanlalruata', role: 'member', createdAt: new Date().toISOString() },
+    { uid: 'mock3', email: 'finance@bethel.pci', displayName: 'K. Lalduhawma', role: 'member', createdAt: new Date().toISOString() },
+];
 
 const AdminUsers: React.FC = () => {
   const { currentUser, isAdmin } = useAuth();
@@ -11,6 +17,7 @@ const AdminUsers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [isUsingMock, setIsUsingMock] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -19,39 +26,55 @@ const AdminUsers: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     if (!db || !db.collection) {
+        setUsers(MOCK_USERS);
+        setIsUsingMock(true);
         setLoading(false);
         return;
     }
     try {
         const snapshot = await db.collection('users').get();
-        const fetchedUsers = snapshot.docs.map((doc: any) => ({ 
-            uid: doc.id, // Ensure UID is set from doc ID
-            ...doc.data() 
-        })) as UserProfile[];
-        setUsers(fetchedUsers);
+        if (!snapshot.empty) {
+            const fetchedUsers = snapshot.docs.map((doc: any) => ({ 
+                uid: doc.id, 
+                ...doc.data() 
+            })) as UserProfile[];
+            setUsers(fetchedUsers);
+            setIsUsingMock(false);
+        } else {
+            // Fallback to mock data if DB is empty (common in dev)
+            console.log("No users found in DB, using mock data.");
+            setUsers(MOCK_USERS);
+            setIsUsingMock(true);
+        }
     } catch (error) {
         console.error("Error fetching users:", error);
+        setUsers(MOCK_USERS);
+        setIsUsingMock(true);
     }
     setLoading(false);
   };
 
   const handleRoleChange = async (userId: string, currentRole: string) => {
-      if (!db || !db.collection) return;
-      
       const newRole = currentRole === 'admin' ? 'member' : 'admin';
       const isMakingAdmin = newRole === 'admin';
       
       if (!window.confirm(`Are you sure you want to ${isMakingAdmin ? 'promote' : 'demote'} this user?`)) return;
 
+      if (isUsingMock) {
+          // Simulate update in mock mode
+          setUsers(prev => prev.map(u => u.uid === userId ? { ...u, role: newRole, isAdmin: isMakingAdmin } : u));
+          return;
+      }
+
+      if (!db || !db.collection) return;
+
       setUpdatingId(userId);
       try {
-          // Update both 'role' and 'isAdmin' fields for compatibility with existing AuthContext logic
           await db.collection('users').doc(userId).update({
               role: newRole,
               isAdmin: isMakingAdmin
           });
           
-          // Optimistic update
           setUsers(prev => prev.map(u => u.uid === userId ? { ...u, role: newRole, isAdmin: isMakingAdmin } : u));
       } catch (error) {
           console.error("Error updating role:", error);
@@ -72,6 +95,13 @@ const AdminUsers: React.FC = () => {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <h1 className="text-3xl font-serif font-bold text-church-900 mb-2">User Management</h1>
               <p className="text-slate-600 mb-8">Manage registered members and assign administrative privileges.</p>
+
+              {isUsingMock && (
+                  <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center text-sm">
+                      <AlertTriangle className="w-5 h-5 mr-2" />
+                      Showing sample data because the database is unreachable or empty.
+                  </div>
+              )}
 
               <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                   <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
