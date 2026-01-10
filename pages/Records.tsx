@@ -8,7 +8,7 @@ import {
   BookUser, Baby, Cross, Users, Plus, Edit, Trash, X, Save, 
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
   Search, ExternalLink, FileText, ChevronLeft, Droplet, 
-  Heart, Church, ArrowRight
+  Heart, Church, ArrowRight, CheckCircle2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -35,9 +35,11 @@ const formatDateCell = (value: any): string => {
   if (!value && value !== 0) return '';
   if (typeof value === 'number' && value > 1) {
     const date = new Date((value - 25569) * 86400 * 1000);
+    // FIX: Fixed property name from getUTFullYear to getUTCFullYear
     if (isNaN(date.getTime()) || date.getUTCFullYear() < 1800 || date.getUTCFullYear() > 2100) return String(value);
     const day = String(date.getUTCDate()).padStart(2, '0');
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    // FIX: Changed getUTFullYear() to getUTCFullYear() to fix property existence error.
     return `${day}/${month}/${date.getUTCFullYear()}`;
   }
   if (typeof value === 'string') {
@@ -233,28 +235,87 @@ const Records: React.FC = () => {
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
+        
+        setLoading(true);
+        setImportError(null);
         setImportFileName(file.name);
+        
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = e.target?.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]) as any[];
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' }) as any[];
+                
+                if (json.length === 0) {
+                    setImportError("The selected file appears to be empty.");
+                    setLoading(false);
+                    return;
+                }
+
+                // Header Mapping Logic
+                const templateFields = TEMPLATE_HEADERS[activeTab];
+                // Build a map of potential header names (English and Mizo) to our technical keys
+                const headerMap: Record<string, string> = {};
+                templateFields.forEach(field => {
+                    headerMap[field.toLowerCase()] = field;
+                    // Add English translation
+                    const enHeader = (t.records.theads as any)[field] || '';
+                    if (enHeader) headerMap[enHeader.toLowerCase()] = field;
+                });
+                
+                // Mizo specific mapping fallback
+                const mizoHeads: Record<string, string[]> = {
+                    name: ['hming'],
+                    dateOfBirth: ['pian ni', 'birthday'],
+                    baptismDate: ['baptis ni', 'baptisma ni'],
+                    parents: ['nu leh pa', 'chhungte'],
+                    minister: ['inneihtir tu', 'baptistu', 'minister']
+                };
+
+                Object.entries(mizoHeads).forEach(([key, variations]) => {
+                    variations.forEach(v => headerMap[v.toLowerCase()] = key);
+                });
+
                 const processedData = json.map(row => {
                     const newRow: { [key: string]: any } = {};
-                    const templateHeaders = TEMPLATE_HEADERS[activeTab];
-                    templateHeaders.forEach(header => {
-                        let value = (row as any)[header] || '';
-                        newRow[header] = value.toString();
+                    const rowKeys = Object.keys(row);
+                    
+                    templateFields.forEach(targetField => {
+                        // Find which key in the row matches our targetField via map
+                        const sourceKey = rowKeys.find(rk => {
+                            const normalizedRK = rk.trim().toLowerCase();
+                            return headerMap[normalizedRK] === targetField || normalizedRK === targetField.toLowerCase();
+                        });
+
+                        let value = sourceKey ? row[sourceKey] : '';
+                        
+                        // Handle Date formats from Excel
+                        if (targetField.toLowerCase().includes('date') && typeof value === 'number') {
+                            const dateObj = new Date((value - 25569) * 86400 * 1000);
+                            if (!isNaN(dateObj.getTime())) {
+                                value = dateObj.toISOString().split('T')[0];
+                            }
+                        }
+                        
+                        newRow[targetField] = value.toString();
                     });
                     return newRow;
-                });
-                setImportData(processedData);
-                setIsImportModalOpen(true);
+                }).filter(row => Object.values(row).some(v => v !== '')); // Skip empty rows
+
+                if (processedData.length === 0) {
+                    setImportError("Could not match any columns. Please ensure your Excel headers match the record fields.");
+                } else {
+                    setImportData(processedData);
+                    setIsImportModalOpen(true);
+                }
             } catch (err) {
                 console.error("Import error", err);
+                setImportError("Failed to read Excel file. Please ensure it is a valid .xlsx or .csv file.");
             }
+            setLoading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         };
         reader.readAsBinaryString(file);
     };
@@ -263,17 +324,25 @@ const Records: React.FC = () => {
         if (!db?.batch || !importData) return;
         setLoading(true);
         try {
-            const batch = db.batch();
             const recordsRef = db.collection('records');
-            importData.forEach(row => {
-                const newDocRef = recordsRef.doc();
-                batch.set(newDocRef, { ...row, type: activeTab });
-            });
-            await batch.commit();
+            // Firestore batches have a limit of 500 operations
+            const chunkSize = 450;
+            for (let i = 0; i < importData.length; i += chunkSize) {
+                const chunk = importData.slice(i, i + chunkSize);
+                const batch = db.batch();
+                chunk.forEach(row => {
+                    const newDocRef = recordsRef.doc();
+                    batch.set(newDocRef, { ...row, type: activeTab });
+                });
+                await batch.commit();
+            }
             setIsImportModalOpen(false);
+            setImportData(null);
             fetchRecords();
+            alert(`Successfully imported ${importData.length} records!`);
         } catch (error) {
             console.error("Upload failed", error);
+            alert("Failed to upload some records. Please check your internet connection.");
         }
         setLoading(false);
     };
@@ -326,14 +395,12 @@ const Records: React.FC = () => {
     if (viewMode === 'selection') {
         return (
             <div className="bg-[#0f0a1a] min-h-screen text-white pb-24">
-                {/* Header matching screenshot */}
                 <div className="max-w-4xl mx-auto px-6 pt-12 mb-8">
                     <p className="text-purple-600 font-bold tracking-widest text-xs mb-3 uppercase">CHAMPHAI BETHEL KOHHRAN</p>
                     <h1 className="text-4xl md:text-5xl font-serif font-black mb-2 tracking-tight">Record hrang hrangte</h1>
                     <p className="text-slate-400 text-sm md:text-base font-medium">Zawnna awlsam zawk nan leh hriatpuina atan.</p>
                 </div>
 
-                {/* Search Bar matching screenshot */}
                 <div className="max-w-4xl mx-auto px-6 mb-12">
                     <div className="relative group">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-purple-600 group-focus-within:text-purple-400 transition-colors" size={20} />
@@ -345,7 +412,6 @@ const Records: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Selection Grid matching screenshot */}
                 <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {categoryCards.map((card) => (
                         <button 
@@ -355,12 +421,9 @@ const Records: React.FC = () => {
                         >
                             <img src={card.img} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
-                            
-                            {/* Floating Purple Icon Badge */}
                             <div className="absolute top-6 right-6 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform">
                                 <card.icon size={22} className="text-white fill-current" />
                             </div>
-
                             <div className="absolute bottom-8 left-8 text-left">
                                 <h3 className="text-2xl font-serif font-black text-white leading-tight mb-2">{card.title}</h3>
                                 <p className="text-slate-300 text-sm font-medium">{card.sub}</p>
@@ -374,7 +437,6 @@ const Records: React.FC = () => {
 
     return (
         <div className="bg-slate-50 min-h-screen">
-            {/* Details View Header */}
             <div className="bg-church-900 py-12 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none transform -rotate-12 scale-150">
                     <BookUser size={300} />
@@ -426,6 +488,13 @@ const Records: React.FC = () => {
                     </div>
                 </div>
 
+                {importError && (
+                    <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 flex items-center shadow-sm">
+                        <AlertTriangle className="mr-3" size={20} />
+                        <span className="text-sm font-medium">{importError}</span>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         {loading ? (
@@ -467,31 +536,92 @@ const Records: React.FC = () => {
                 </div>
             </div>
 
+            {/* Import Confirmation Modal */}
+            {isImportModalOpen && importData && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-8 border-b bg-church-50 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-church-600 text-white rounded-2xl shadow-lg">
+                                    <FileUp size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-serif font-black text-church-900 leading-tight">Confirm Import</h3>
+                                    <p className="text-slate-500 text-sm font-medium">{importFileName} • {importData.length} records found</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsImportModalOpen(false)} className="p-2 hover:bg-white rounded-full transition text-slate-400 hover:text-slate-600"><X size={24}/></button>
+                        </div>
+                        
+                        <div className="p-8 overflow-y-auto bg-slate-50 flex-1">
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-[0.1em]">
+                                        <tr>
+                                            {TEMPLATE_HEADERS[activeTab].map(header => (
+                                                <th key={header} className="px-4 py-3">{t.records.theads[header as keyof typeof t.records.theads] || header}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {importData.slice(0, 15).map((row, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                {TEMPLATE_HEADERS[activeTab].map(header => (
+                                                    <td key={header} className="px-4 py-3 text-slate-600 font-medium">{row[header] || '-'}</td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {importData.length > 15 && (
+                                    <div className="p-4 bg-slate-50 text-center text-slate-500 text-xs font-bold uppercase tracking-widest border-t">
+                                        And {importData.length - 15} more records...
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-8 border-t bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <p className="text-slate-500 text-xs max-w-md text-center sm:text-left">
+                                <AlertTriangle className="inline mr-1 text-orange-400" size={14} />
+                                Please verify the data above before proceeding. This will add new entries to the <strong>{activeTab}</strong> register.
+                            </p>
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <button onClick={() => setIsImportModalOpen(false)} className="flex-1 sm:flex-none px-6 py-3 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition">Cancel</button>
+                                <button onClick={handleConfirmImport} disabled={loading} className="flex-1 sm:flex-none px-8 py-3 bg-church-600 text-white font-bold rounded-xl shadow-lg shadow-church-200 hover:bg-church-700 flex items-center justify-center transition disabled:opacity-50">
+                                    {loading ? <Loader className="animate-spin mr-2" size={18}/> : <CheckCircle2 className="mr-2" size={18} />} Import All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Existing Edit Modal */}
             {isEditModalOpen && editingRecord && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-2xl">
-                            <h3 className="text-xl font-bold text-church-900">{editingRecord.id ? 'Edit' : 'Add'} Record</h3>
-                            <button onClick={() => setIsEditModalOpen(false)}><X size={20}/></button>
+                            <h3 className="text-xl font-serif font-black text-church-900">{editingRecord.id ? 'Edit' : 'Add'} Record</h3>
+                            <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-white rounded-full transition text-slate-400"><X size={20}/></button>
                         </div>
                         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                             {TEMPLATE_HEADERS[activeTab].map(field => (
                                 <div key={field}>
-                                    <label className="capitalize block text-sm font-bold text-slate-600 mb-1">{field.replace(/([A-Z])/g, ' $1')}</label>
+                                    <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || field.replace(/([A-Z])/g, ' $1')}</label>
                                     <input 
                                        type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'}
-                                       className="w-full border border-slate-300 p-2.5 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" 
+                                       className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
                                        value={(editingRecord as any)[field] || ''} 
                                        onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} 
                                     />
                                 </div>
                             ))}
                         </div>
-                        <div className="p-6 bg-slate-50 flex justify-end space-x-2 rounded-b-2xl">
+                        <div className="p-6 bg-slate-50 flex justify-end space-x-3">
                             <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl">Cancel</button>
-                            <button onClick={handleSave} className="px-5 py-2.5 bg-church-600 text-white rounded-xl flex items-center shadow-lg font-bold hover:bg-church-700 transition">
-                                {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
+                            <button onClick={handleSave} className="px-8 py-2.5 bg-church-600 text-white rounded-xl flex items-center shadow-lg font-bold hover:bg-church-700 transition">
+                                {loading ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Save size={16} className="mr-2" />} Save
                             </button>
                         </div>
                     </div>
