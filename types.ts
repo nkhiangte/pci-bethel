@@ -14,7 +14,8 @@ export interface Announcement {
   date: string;
   category: 'General' | 'Funeral' | 'Youth' | 'Emergency';
   content: string;
-  imageUrl?: string;
+  imageUrl?: string; // Legacy field
+  imageUrls?: string[]; // New field for multiple images
 }
 
 export interface Sermon {

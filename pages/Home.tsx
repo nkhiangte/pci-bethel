@@ -188,38 +188,47 @@ export const Home: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {latestNews.map((news) => (
-                        <Link to="/announcements" key={news.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                            <div className="h-52 w-full overflow-hidden bg-slate-100 relative">
-                                {news.imageUrl ? (
-                                    <img src={news.imageUrl} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
-                                        <Bell size={40} className="text-church-200" />
+                    {latestNews.map((news) => {
+                        const coverImage = news.imageUrls?.[0] || news.imageUrl;
+                        
+                        return (
+                            <Link to="/announcements" key={news.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                <div className="h-52 w-full overflow-hidden bg-slate-100 relative">
+                                    {coverImage ? (
+                                        <img src={coverImage} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
+                                            <Bell size={40} className="text-church-200" />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-4 left-4">
+                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                                            news.category === 'Emergency' ? 'bg-red-600 text-white' : 'bg-white/90 text-slate-700 backdrop-blur-sm'
+                                        }`}>
+                                            {news.category}
+                                        </span>
                                     </div>
-                                )}
-                                <div className="absolute top-4 left-4">
-                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                                        news.category === 'Emergency' ? 'bg-red-600 text-white' : 'bg-white/90 text-slate-700 backdrop-blur-sm'
-                                    }`}>
-                                        {news.category}
-                                    </span>
+                                    {news.imageUrls && news.imageUrls.length > 1 && (
+                                        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-md">
+                                            +{news.imageUrls.length - 1} More
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="p-8 flex flex-col flex-grow">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{news.date}</span>
-                                <h4 className="text-xl font-bold text-slate-900 leading-tight mb-4 group-hover:text-church-700 transition-colors line-clamp-2">
-                                    {news.title}
-                                </h4>
-                                <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed flex-grow">
-                                    {news.content}
-                                </p>
-                                <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-[10px] font-black text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Read More <ChevronRight size={14} className="ml-1" />
+                                <div className="p-8 flex flex-col flex-grow">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{news.date}</span>
+                                    <h4 className="text-xl font-bold text-slate-900 leading-tight mb-4 group-hover:text-church-700 transition-colors line-clamp-2">
+                                        {news.title}
+                                    </h4>
+                                    <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed flex-grow">
+                                        {news.content}
+                                    </p>
+                                    <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-[10px] font-black text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Read More <ChevronRight size={14} className="ml-1" />
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
         )}

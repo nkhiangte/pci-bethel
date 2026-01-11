@@ -60,47 +60,64 @@ const Announcements: React.FC = () => {
       date: new Date().toISOString().split('T')[0],
       category: 'General',
       content: '',
-      imageUrl: ''
+      imageUrls: []
     });
     setIsEditing(true);
   };
 
   const handleEditClick = (item: Announcement) => {
-    setEditForm({ ...item });
+    setEditForm({ 
+      ...item, 
+      imageUrls: item.imageUrls || (item.imageUrl ? [item.imageUrl] : []) 
+    });
     setIsEditing(true);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      const newUrls: string[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('image', file);
 
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: 'POST',
+          body: formData,
+        });
 
-      const result = await response.json();
-      if (result.success) {
-        setEditForm(prev => ({ ...prev, imageUrl: result.data.url }));
-      } else {
-        alert("Image upload failed: " + (result.error?.message || "Unknown error"));
+        const result = await response.json();
+        if (result.success) {
+          newUrls.push(result.data.url);
+        } else {
+          console.error("Image upload failed for a file:", result.error?.message);
+        }
       }
+
+      setEditForm(prev => ({ 
+        ...prev, 
+        imageUrls: [...(prev.imageUrls || []), ...newUrls] 
+      }));
+      
     } catch (error) {
       console.error("Upload error:", error);
       alert("Error connecting to image server.");
     } finally {
       setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const removeImage = () => {
-    setEditForm(prev => ({ ...prev, imageUrl: '' }));
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const removeImageAt = (index: number) => {
+    setEditForm(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls?.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSave = async () => {
@@ -154,41 +171,49 @@ const Announcements: React.FC = () => {
            <div className="flex justify-center py-12"><Loader className="animate-spin text-church-500" /></div>
         ) : (
             <div className="relative border-l-2 border-slate-200 ml-3 space-y-12">
-            {announcements.map((item) => (
-                <div key={item.id} className="relative pl-8 group">
-                <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${
-                    item.category === 'Emergency' ? 'bg-red-500' : 'bg-church-500'
-                }`}></div>
+            {announcements.map((item) => {
+                const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
                 
-                {isAdmin && (
-                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 z-10 bg-white/50 p-1 rounded-lg backdrop-blur-sm">
-                        <button onClick={() => handleEditClick(item)} className="p-1.5 text-blue-600 bg-blue-50 rounded hover:bg-blue-100"><Edit size={16} /></button>
-                        <button onClick={() => setShowDeleteConfirm(item.id)} className="p-1.5 text-red-600 bg-red-50 rounded hover:bg-red-100"><Trash size={16} /></button>
-                    </div>
-                )}
-
-                <div className="mb-1 text-sm text-slate-500 font-medium">{item.date}</div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">{item.title}</h2>
-                <div className="flex items-center mb-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
-                        item.category === 'Emergency' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                    {item.category}
-                    </span>
-                </div>
-
-                <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
-                    {item.imageUrl && (
-                        <div className="w-full h-56 overflow-hidden bg-slate-200 border-b border-slate-100">
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                return (
+                    <div key={item.id} className="relative pl-8 group">
+                    <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${
+                        item.category === 'Emergency' ? 'bg-red-500' : 'bg-church-500'
+                    }`}></div>
+                    
+                    {isAdmin && (
+                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 z-10 bg-white/50 p-1 rounded-lg backdrop-blur-sm">
+                            <button onClick={() => handleEditClick(item)} className="p-1.5 text-blue-600 bg-blue-50 rounded hover:bg-blue-100"><Edit size={16} /></button>
+                            <button onClick={() => setShowDeleteConfirm(item.id)} className="p-1.5 text-red-600 bg-red-50 rounded hover:bg-red-100"><Trash size={16} /></button>
                         </div>
                     )}
-                    <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
-                        {item.content}
+
+                    <div className="mb-1 text-sm text-slate-500 font-medium">{item.date}</div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">{item.title}</h2>
+                    <div className="flex items-center mb-4">
+                        <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
+                            item.category === 'Emergency' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                        {item.category}
+                        </span>
                     </div>
-                </div>
-                </div>
-            ))}
+
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
+                        {displayImages.length > 0 && (
+                            <div className={`grid gap-2 p-2 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                {displayImages.map((url, idx) => (
+                                    <div key={idx} className={`relative overflow-hidden bg-slate-200 rounded-lg ${displayImages.length === 1 ? 'h-64' : 'h-40'}`}>
+                                        <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
+                            {item.content}
+                        </div>
+                    </div>
+                    </div>
+                );
+            })}
             </div>
         )}
       </div>
@@ -196,7 +221,7 @@ const Announcements: React.FC = () => {
       {/* Edit Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-50">
                     <h3 className="text-xl font-bold text-church-900">
                         {editForm.id ? 'Edit Announcement' : 'New Announcement'}
@@ -238,46 +263,51 @@ const Announcements: React.FC = () => {
                         </div>
                     </div>
                     
-                    {/* Image Upload Section */}
+                    {/* Multiple Image Upload Section */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-700">Announcement Picture</label>
-                        <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center">
-                            {editForm.imageUrl ? (
-                                <div className="relative group rounded-lg overflow-hidden h-40 bg-slate-100">
-                                    <img src={editForm.imageUrl} alt="Preview" className="w-full h-full object-contain" />
+                        <label className="block text-sm font-bold text-slate-700">Pictures (Multiple allowed)</label>
+                        
+                        <div className="grid grid-cols-3 gap-3 mb-3">
+                            {editForm.imageUrls?.map((url, index) => (
+                                <div key={index} className="relative group rounded-lg overflow-hidden h-24 bg-slate-100 border border-slate-200">
+                                    <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                        <button onClick={removeImage} className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg">
-                                            <Trash2 size={20} />
+                                        <button onClick={() => removeImageAt(index)} className="p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg">
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="py-4">
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef}
-                                        onChange={handleImageUpload} 
-                                        className="hidden" 
-                                        accept="image/*"
-                                    />
-                                    {uploadingImage ? (
-                                        <div className="flex flex-col items-center py-4">
-                                            <Loader className="animate-spin text-church-500 mb-2" size={24} />
-                                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Uploading to ImgBB...</p>
-                                        </div>
-                                    ) : (
-                                        <button 
-                                            type="button"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="inline-flex flex-col items-center text-slate-400 hover:text-church-600 transition"
-                                        >
-                                            <Upload size={32} className="mb-2" />
-                                            <span className="text-sm font-medium">Click to upload photo</span>
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                            ))}
+                            
+                            <button 
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingImage}
+                                className="h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-300 transition bg-slate-50"
+                            >
+                                {uploadingImage ? (
+                                    <Loader className="animate-spin" size={20} />
+                                ) : (
+                                    <>
+                                        <Upload size={20} className="mb-1" />
+                                        <span className="text-[10px] font-bold uppercase">Add Photo</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
+
+                        <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleImageUpload} 
+                            className="hidden" 
+                            accept="image/*"
+                            multiple
+                        />
+                        
+                        {uploadingImage && (
+                            <p className="text-[10px] text-church-600 font-bold uppercase tracking-widest animate-pulse">Uploading to ImgBB...</p>
+                        )}
                     </div>
 
                     <div>
