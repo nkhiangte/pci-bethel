@@ -176,11 +176,13 @@ export interface DeathRecord {
   id?: string;
   type: 'death';
   name: string;
+  fatherName: string;
   dateOfDeath: string;
-  age: number;
-  familyContact?: string;
+  causeOfDeath: string;
+  minister: string;
 }
 
+// FIX: Added missing InkhawmpuiRecord interface
 export interface InkhawmpuiRecord {
   id?: string;
   type: 'inkhawmpui';
@@ -188,7 +190,7 @@ export interface InkhawmpuiRecord {
   year: number;
   theme: string;
   location: string;
-  speakers: string; // comma-separated
+  speakers: string;
 }
 
 export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord;
@@ -272,10 +274,14 @@ export interface KTPGroup {
   members: KTPMember[];
 }
 
+export interface KTPMemberWithRole extends KTPMember {
+  role?: string;
+}
+
 export interface KTPSubCommittee {
   id: string;
   name: string;
-  members: KTPMember[];
+  members: KTPMemberWithRole[];
 }
 
 export interface KTPHruaitute {

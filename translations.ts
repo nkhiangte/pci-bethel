@@ -151,7 +151,7 @@ export const translations = {
         dateOfBirth: 'Date of Birth',
         baptismDate: 'Baptism Date',
         parents: 'Parents',
-        minister: 'Minister',
+        minister: 'Minister / Officiated By',
         groomName: "Groom's Name",
         brideName: "Bride's Name",
         weddingDate: 'Wedding Date',
@@ -162,7 +162,9 @@ export const translations = {
         year: 'Year',
         theme: 'Theme',
         location: 'Location',
-        speakers: 'Key Speakers'
+        speakers: 'Key Speakers',
+        fatherName: "Father's Name",
+        causeOfDeath: "Cause of Death"
       }
     },
     archives: {
@@ -355,7 +357,7 @@ export const translations = {
         dateOfBirth: 'Pian Ni',
         baptismDate: 'Baptis Chan Ni',
         parents: 'Nu leh Pa',
-        minister: 'Inneihtir tu / Baptistu',
+        minister: 'Vuitu / Baptistu / Inneihtir tu',
         groomName: "Mopa Hming",
         brideName: "Monu Hming",
         weddingDate: 'Inneih Ni',
@@ -366,7 +368,9 @@ export const translations = {
         year: 'Kum',
         theme: 'Thupui',
         location: 'A Hmun',
-        speakers: 'Thusawitu Pawimawh'
+        speakers: 'Thusawitu Pawimawh',
+        fatherName: "Pa Hming",
+        causeOfDeath: "Thih Chhan"
       }
     },
     archives: {
@@ -390,6 +394,7 @@ export const translations = {
       contactUs: 'Biak Pawh Dan',
       rightsReserved: 'Dikna zawng zawng hauh a ni.',
     },
+    // FIX: Removed duplicate 'auth' property in 'mizo' section
     auth: {
       loginTitle: 'Member Login',
       loginSubtitle: 'Kohhran member te leh hruaitu te tan',
