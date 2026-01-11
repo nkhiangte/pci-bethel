@@ -16,6 +16,7 @@ export interface Announcement {
   content: string;
   imageUrl?: string; // Legacy field
   imageUrls?: string[]; // New field for multiple images
+  imageCaptions?: string[]; // New field for per-image captions
 }
 
 export interface Sermon {

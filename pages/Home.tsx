@@ -197,6 +197,7 @@ export const Home: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {latestNews.map((news) => {
                         const coverImage = news.imageUrls?.[0] || news.imageUrl;
+                        const firstCaption = news.imageCaptions?.[0];
                         
                         return (
                             <Link to="/announcements" key={news.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -219,25 +220,32 @@ export const Home: React.FC = () => {
                                         Read More <ChevronRight size={14} className="ml-1" />
                                     </div>
                                 </div>
-                                <div 
-                                    className="h-52 w-full overflow-hidden bg-slate-100 relative cursor-zoom-in"
-                                    onClick={(e) => coverImage && openPreview(e, coverImage)}
-                                >
-                                    {coverImage ? (
-                                        <img src={coverImage} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
-                                            <Bell size={40} className="text-church-200" />
-                                        </div>
-                                    )}
-                                    {coverImage && (
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <ZoomIn className="text-white drop-shadow-md" size={32} />
-                                        </div>
-                                    )}
-                                    {news.imageUrls && news.imageUrls.length > 1 && (
-                                        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-md">
-                                            +{news.imageUrls.length - 1} More
+                                <div className="flex flex-col">
+                                    <div 
+                                        className={`h-52 w-full overflow-hidden bg-slate-100 relative cursor-zoom-in ${!firstCaption ? 'rounded-b-[2.5rem]' : ''}`}
+                                        onClick={(e) => coverImage && openPreview(e, coverImage)}
+                                    >
+                                        {coverImage ? (
+                                            <img src={coverImage} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
+                                                <Bell size={40} className="text-church-200" />
+                                            </div>
+                                        )}
+                                        {coverImage && (
+                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <ZoomIn className="text-white drop-shadow-md" size={32} />
+                                            </div>
+                                        )}
+                                        {news.imageUrls && news.imageUrls.length > 1 && (
+                                            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-md">
+                                                +{news.imageUrls.length - 1} More
+                                            </div>
+                                        )}
+                                    </div>
+                                    {firstCaption && (
+                                        <div className="px-8 py-3 bg-slate-50/50 border-t border-slate-100 rounded-b-[2.5rem]">
+                                            <p className="text-[10px] font-bold text-slate-500 italic leading-snug line-clamp-1">{firstCaption}</p>
                                         </div>
                                     )}
                                 </div>

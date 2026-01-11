@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
-import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn } from 'lucide-react';
+import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type } from 'lucide-react';
 
 // Replace this with your actual ImgBB API key from https://api.imgbb.com/
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
@@ -61,7 +61,8 @@ const Announcements: React.FC = () => {
       date: new Date().toISOString().split('T')[0],
       category: 'General',
       content: '',
-      imageUrls: []
+      imageUrls: [],
+      imageCaptions: []
     });
     setIsEditing(true);
   };
@@ -69,7 +70,8 @@ const Announcements: React.FC = () => {
   const handleEditClick = (item: Announcement) => {
     setEditForm({ 
       ...item, 
-      imageUrls: item.imageUrls || (item.imageUrl ? [item.imageUrl] : []) 
+      imageUrls: item.imageUrls || (item.imageUrl ? [item.imageUrl] : []),
+      imageCaptions: item.imageCaptions || []
     });
     setIsEditing(true);
   };
@@ -81,6 +83,7 @@ const Announcements: React.FC = () => {
     setUploadingImage(true);
     try {
       const newUrls: string[] = [];
+      const newCaps: string[] = [];
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -95,6 +98,7 @@ const Announcements: React.FC = () => {
         const result = await response.json();
         if (result.success) {
           newUrls.push(result.data.url);
+          newCaps.push(''); // Initial empty caption
         } else {
           console.error("Image upload failed for a file:", result.error?.message);
         }
@@ -102,7 +106,8 @@ const Announcements: React.FC = () => {
 
       setEditForm(prev => ({ 
         ...prev, 
-        imageUrls: [...(prev.imageUrls || []), ...newUrls] 
+        imageUrls: [...(prev.imageUrls || []), ...newUrls],
+        imageCaptions: [...(prev.imageCaptions || []), ...newCaps]
       }));
       
     } catch (error) {
@@ -114,10 +119,19 @@ const Announcements: React.FC = () => {
     }
   };
 
+  const updateCaption = (index: number, text: string) => {
+    const newCaptions = [...(editForm.imageCaptions || [])];
+    // Fill gaps if needed
+    while (newCaptions.length <= index) newCaptions.push('');
+    newCaptions[index] = text;
+    setEditForm({ ...editForm, imageCaptions: newCaptions });
+  };
+
   const removeImageAt = (index: number) => {
     setEditForm(prev => ({
       ...prev,
-      imageUrls: prev.imageUrls?.filter((_, i) => i !== index)
+      imageUrls: prev.imageUrls?.filter((_, i) => i !== index),
+      imageCaptions: prev.imageCaptions?.filter((_, i) => i !== index)
     }));
   };
 
@@ -174,6 +188,7 @@ const Announcements: React.FC = () => {
             <div className="relative border-l-2 border-slate-200 ml-3 space-y-12">
             {announcements.map((item) => {
                 const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
+                const displayCaptions = item.imageCaptions || [];
                 
                 return (
                     <div key={item.id} className="relative pl-8 group">
@@ -203,17 +218,25 @@ const Announcements: React.FC = () => {
                             {item.content}
                         </div>
                         {displayImages.length > 0 && (
-                            <div className={`grid gap-2 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            <div className={`grid gap-3 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 {displayImages.map((url, idx) => (
-                                    <div 
-                                        key={idx} 
-                                        onClick={() => setPreviewImage(url)}
-                                        className={`relative overflow-hidden bg-slate-200 rounded-lg cursor-zoom-in group/img ${displayImages.length === 1 ? 'h-72' : 'h-48'}`}
-                                    >
-                                        <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                            <ZoomIn className="text-white drop-shadow-md" size={32} />
+                                    <div key={idx} className="flex flex-col">
+                                        <div 
+                                            onClick={() => setPreviewImage(url)}
+                                            className={`relative overflow-hidden bg-slate-200 rounded-t-lg cursor-zoom-in group/img ${displayImages.length === 1 ? 'h-72' : 'h-48'} ${!displayCaptions[idx] ? 'rounded-b-lg' : ''}`}
+                                        >
+                                            <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
+                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                <ZoomIn className="text-white drop-shadow-md" size={32} />
+                                            </div>
                                         </div>
+                                        {displayCaptions[idx] && (
+                                            <div className="bg-white/80 border-x border-b border-slate-200 p-2.5 rounded-b-lg backdrop-blur-sm">
+                                                <p className="text-[11px] font-medium text-slate-600 italic leading-snug">
+                                                    {displayCaptions[idx]}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -249,7 +272,7 @@ const Announcements: React.FC = () => {
       {/* Edit Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-50">
                     <h3 className="text-xl font-bold text-church-900">
                         {editForm.id ? 'Edit Announcement' : 'New Announcement'}
@@ -291,18 +314,32 @@ const Announcements: React.FC = () => {
                         </div>
                     </div>
                     
-                    {/* Multiple Image Upload Section */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-700">Pictures (Multiple allowed)</label>
+                    {/* Multiple Image Upload Section with Captions */}
+                    <div className="space-y-3">
+                        <label className="block text-sm font-bold text-slate-700">Pictures & Captions</label>
                         
-                        <div className="grid grid-cols-3 gap-3 mb-3">
+                        <div className="grid grid-cols-1 gap-4 mb-3">
                             {editForm.imageUrls?.map((url, index) => (
-                                <div key={index} className="relative group rounded-lg overflow-hidden h-24 bg-slate-100 border border-slate-200">
-                                    <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                        <button onClick={() => removeImageAt(index)} className="p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg">
-                                            <Trash2 size={16} />
+                                <div key={index} className="flex gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-slate-200">
+                                        <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                        <button 
+                                            onClick={() => removeImageAt(index)} 
+                                            className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg"
+                                        >
+                                            <Trash2 size={12} />
                                         </button>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            <Type size={12} /> Caption for photo {index + 1}
+                                        </div>
+                                        <textarea 
+                                            className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-church-400 outline-none resize-none h-14"
+                                            placeholder="E.g. Group photo of the sub-committee..."
+                                            value={editForm.imageCaptions?.[index] || ''}
+                                            onChange={(e) => updateCaption(index, e.target.value)}
+                                        />
                                     </div>
                                 </div>
                             ))}
@@ -311,14 +348,14 @@ const Announcements: React.FC = () => {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploadingImage}
-                                className="h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-300 transition bg-slate-50"
+                                className="h-20 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-300 transition bg-slate-50"
                             >
                                 {uploadingImage ? (
-                                    <Loader className="animate-spin" size={20} />
+                                    <Loader className="animate-spin" size={24} />
                                 ) : (
                                     <>
-                                        <Upload size={20} className="mb-1" />
-                                        <span className="text-[10px] font-bold uppercase">Add Photo</span>
+                                        <Upload size={24} className="mb-1" />
+                                        <span className="text-xs font-black uppercase tracking-widest">Add More Photos</span>
                                     </>
                                 )}
                             </button>
