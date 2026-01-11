@@ -8,7 +8,7 @@ import { Announcement } from '../types';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
 
 // Replace this with your actual ImgBB API key from https://api.imgbb.com/
-const IMGBB_API_KEY = '704f05256515b6d191147a4699569772'; 
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
 
 const Announcements: React.FC = () => {
   const { language, t } = useLanguage();
