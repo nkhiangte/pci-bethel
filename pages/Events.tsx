@@ -55,6 +55,25 @@ const normalizeTitle = (title: string) => {
     return title.toLowerCase().replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
 };
 
+// Helper to convert "07:00 PM" string to minutes for correct sorting
+const timeToMinutes = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return 0;
+    
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const modifier = match[3].toUpperCase();
+
+    if (hours === 12) {
+        hours = modifier === 'AM' ? 0 : 12;
+    } else if (modifier === 'PM') {
+        hours += 12;
+    }
+    
+    return hours * 60 + minutes;
+};
+
 const Events: React.FC = () => {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
@@ -212,7 +231,9 @@ const Events: React.FC = () => {
     finalEvents.sort((a, b) => {
         const dateDiff = a.date.localeCompare(b.date);
         if (dateDiff !== 0) return dateDiff;
-        return a.time.localeCompare(b.time);
+        
+        // Correct time sorting:
+        return timeToMinutes(a.time) - timeToMinutes(b.time);
     });
 
     setDisplayEvents(finalEvents);
