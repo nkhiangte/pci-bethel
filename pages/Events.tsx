@@ -1,32 +1,33 @@
 
-import React, { useState, useEffect } from 'react';
-import { getConstants } from '../constants';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, User, BookOpen } from 'lucide-react';
-import { Event } from '../types';
+import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, User, BookOpen, Archive } from 'lucide-react';
+import { Event, WeeklyDuty, ArchiveEntry } from '../types';
 
-// Helper to get next occurrence of a day (0=Sun, 1=Mon, ..., 6=Sat)
-const getNextDayOfWeek = (dayOfWeek: number) => {
+// Helper to get specific dates for the current week (Monday to Sunday)
+const getDatesForWeek = () => {
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const resultDate = new Date(now.getTime());
-  const currentDay = now.getDay();
+  const day = now.getDay(); // 0 (Sun) to 6 (Sat)
   
-  // Calculate days to add. If today is Wednesday (3) and we want next Tuesday (2), it's (2 - 3 + 7) % 7 = 6 days away.
-  // If today is Wednesday (3) and we want next Thursday (4), it's (4 - 3 + 7) % 7 = 1 day away.
-  let daysToAdd = (dayOfWeek - currentDay + 7) % 7;
-  // If the calculated day is today, show next week's unless we explicitly want today. For an events page, showing the next 7 days is usually better.
-  // Let's adjust to show the upcoming week starting from today.
+  // Calculate difference to get to this week's Monday
+  // If today is Sunday (0), we go back 6 days. If Monday (1), 0 days. If Tuesday (2), 1 day.
+  const diffToMonday = day === 0 ? -6 : 1 - day;
   
-  const todayDate = new Date();
-  todayDate.setDate(todayDate.getDate() + (dayOfWeek - todayDate.getDay() + 7) % 7);
-  return todayDate;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d);
+  }
+  return dates; // [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
 };
 
-
-// Format date for Input field (YYYY-MM-DD)
 const formatDateForInput = (date: Date) => {
     return date.toISOString().split('T')[0];
 };
@@ -40,39 +41,131 @@ const Events: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Event>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [language, t]);
+  // Archive past week logic
+  const checkAndArchivePreviousWeek = useCallback(async () => {
+    if (!isAdmin || !db?.collection) return;
 
-  const fetchEvents = async () => {
+    const weekDates = getDatesForWeek();
+    const currentMonday = weekDates[0];
+    
+    // Previous week range
+    const prevMonday = new Date(currentMonday);
+    prevMonday.setDate(currentMonday.getDate() - 7);
+    const prevSunday = new Date(currentMonday);
+    prevSunday.setDate(currentMonday.getDate() - 1);
+    
+    const rangeStr = `${formatDateForInput(prevMonday)} to ${formatDateForInput(prevSunday)}`;
+    const archiveTitle = `Weekly Program: ${rangeStr}`;
+
+    try {
+      // Check if already archived
+      const existing = await db.collection('archives')
+        .where('category', '==', 'Rawngbawltu te')
+        .where('title', '==', archiveTitle)
+        .get();
+
+      if (existing.empty) {
+        setIsArchiving(true);
+        console.log("Archiving previous week...");
+
+        // 1. Fetch Duty Personnel (Current)
+        const dutySnap = await db.collection('weeklyDuties').doc('current').get();
+        const duties = dutySnap.exists ? (dutySnap.data() as WeeklyDuty) : null;
+
+        // 2. Fetch Events for that range
+        const eventsSnap = await db.collection('events')
+          .where('date', '>=', formatDateForInput(prevMonday))
+          .where('date', '<=', formatDateForInput(prevSunday))
+          .get();
+        
+        const prevEvents = eventsSnap.docs.map((doc: any) => doc.data() as Event);
+
+        // 3. Format Description
+        let description = `--- DUTY PERSONNEL ---\n`;
+        if (duties) {
+          description += `Week: ${duties.weekRange}\n`;
+          description += `Zai Hruaitu: ${duties.zaiHruaitu}\n`;
+          description += `Piano: ${duties.pianoTumtu}\n`;
+          description += `Hla Hriltu: ${duties.hlaHriltu}\n`;
+          description += `Offering Counters: ${duties.thawhlawmChiartute?.join(', ')}\n`;
+          description += `Ushers: ${duties.ushers?.join(', ')}\n\n`;
+        }
+
+        description += `--- SERVICE PROGRAMS ---\n`;
+        prevEvents.forEach(ev => {
+          description += `[${ev.date}] ${ev.title}\n`;
+          if (ev.program) {
+            if (ev.program.hruaitu) description += `  Hruaitu: ${ev.program.hruaitu}\n`;
+            if (ev.program.thuhriltu) description += `  Thuhriltu: ${ev.program.thuhriltu}\n`;
+            if (ev.program.tantu) description += `  Ṭantu: ${ev.program.tantu}\n`;
+          }
+          description += `\n`;
+        });
+
+        // 4. Save to Archives
+        const archiveEntry: Omit<ArchiveEntry, 'id'> = {
+          title: archiveTitle,
+          date: formatDateForInput(new Date()),
+          category: 'Rawngbawltu te',
+          subCategory: 'Executive Body', // Default subcat
+          description: description,
+          link: ''
+        };
+
+        await db.collection('archives').add(archiveEntry);
+        console.log("Archived successfully.");
+      }
+    } catch (e) {
+      console.error("Archival failed:", e);
+    } finally {
+      setIsArchiving(false);
+    }
+  }, [isAdmin]);
+
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     
-    // 1. Generate Virtual Events from recurring templates in translations
+    // Generate dates for current week: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    const weekDates = getDatesForWeek();
+    
+    const virtualEvents: Event[] = [];
     const basePrograms = t.home.weeklyProgram;
-    const virtualEvents: Event[] = basePrograms
-      .map(progTemplate => {
-        const nextDate = getNextDayOfWeek(progTemplate.dayOfWeek);
-        const dateStr = formatDateForInput(nextDate);
-        return {
-          id: `virtual_${progTemplate.day.toLowerCase()}_${dateStr}`,
-          title: progTemplate.name,
-          date: dateStr,
-          time: progTemplate.time,
-          location: 'Biak In', // Default location
-          description: '',
-          type: 'Service',
-          isRecurringTemplate: false, // This is an instance, not a template
-          dayOfWeek: progTemplate.dayOfWeek,
-          program: {} // Default empty program
-        };
-      });
 
-    // 2. Fetch Real Events from Firestore
+    // We want Monday (1) to Sunday (0)
+    const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+    
+    dayOrder.forEach(dayIndex => {
+        const dateForDay = weekDates.find(d => d.getDay() === dayIndex);
+        if (!dateForDay) return;
+
+        const dateStr = formatDateForInput(dateForDay);
+        const dailyTemplates = basePrograms.filter(p => p.dayOfWeek === dayIndex);
+        
+        dailyTemplates.forEach((template, tIdx) => {
+            virtualEvents.push({
+                id: `virtual_${template.name}_${dateStr}_${tIdx}`,
+                title: template.name,
+                date: dateStr,
+                time: template.time,
+                location: 'Biak In',
+                description: '',
+                type: 'Service',
+                isRecurringTemplate: false,
+                dayOfWeek: dayIndex,
+                program: {}
+            });
+        });
+    });
+
     let realEvents: Event[] = [];
     try {
       if (db && db.collection) {
-        const snapshot = await db.collection('events').get();
+        const snapshot = await db.collection('events')
+            .where('date', '>=', formatDateForInput(weekDates[0]))
+            .where('date', '<=', formatDateForInput(weekDates[6]))
+            .get();
         if (!snapshot.empty) {
             realEvents = snapshot.docs.map((doc: any) => ({
                 id: doc.id,
@@ -84,36 +177,57 @@ const Events: React.FC = () => {
       console.error("Error fetching events:", e);
     }
     
-    // 3. Merge virtual and real events
-    const mergedEventsMap = new Map<string, Event>();
+    const mergedEventsMap = new Map<string, Event[]>();
 
-    // First, add all virtual events
+    // Seed map with empty arrays for each date in the week
+    weekDates.forEach(d => mergedEventsMap.set(formatDateForInput(d), []));
+
+    // Group virtual events
     virtualEvents.forEach(event => {
-        const key = `${event.date}`; // Use date as key to allow override
-        mergedEventsMap.set(key, event);
+        const list = mergedEventsMap.get(event.date) || [];
+        list.push(event);
+        mergedEventsMap.set(event.date, list);
     });
     
-    // Then, process real events, overriding virtual ones or adding new ones
+    // Merge real events, replacing or adding
     realEvents.forEach(event => {
         const key = event.date;
+        let list = mergedEventsMap.get(key) || [];
+        
         if (event.isCancelled) {
-            // If a real event is a cancellation, remove the virtual one for that date
-            if (mergedEventsMap.has(key)) {
-                mergedEventsMap.delete(key);
-            }
+            // Remove virtual events for this title on this date if cancelled
+            list = list.filter(item => item.title !== event.title);
         } else {
-            // Add or override with the real event data
-            mergedEventsMap.set(key, event);
+            // If it matches a virtual event by title, replace it
+            const existingIdx = list.findIndex(item => item.title === event.title);
+            if (existingIdx !== -1) {
+                list[existingIdx] = event;
+            } else {
+                list.push(event);
+            }
         }
+        mergedEventsMap.set(key, list);
     });
 
+    // Flatten and sort by date then time
+    const finalEvents = Array.from(mergedEventsMap.values()).flat();
+    // Simple sort - dayOrder already handles dates, but real events might be unsorted
+    finalEvents.sort((a, b) => {
+        const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        return a.time.localeCompare(b.time);
+    });
 
-    const finalEvents = Array.from(mergedEventsMap.values());
-    finalEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     setDisplayEvents(finalEvents);
-    
     setLoading(false);
-  };
+
+    // After loading current, try to archive previous
+    checkAndArchivePreviousWeek();
+  }, [t.home.weeklyProgram, checkAndArchivePreviousWeek]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleEditClick = (event: Event) => {
     setEditForm({ 
@@ -242,16 +356,28 @@ const Events: React.FC = () => {
   return (
     <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-serif font-bold text-church-900">{t.events.title}</h1>
-            {isAdmin && (
-                <button 
-                    onClick={handleAddNew}
-                    className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
-                >
-                    <Plus size={18} className="mr-2" /> Add Program
-                </button>
-            )}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 className="text-4xl font-serif font-bold text-church-900">{t.events.title}</h1>
+                <p className="text-slate-500 mt-1 text-sm font-medium uppercase tracking-widest">
+                    {formatDateForInput(getDatesForWeek()[0])} — {formatDateForInput(getDatesForWeek()[6])}
+                </p>
+            </div>
+            <div className="flex gap-2">
+                {isAdmin && isArchiving && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-church-500 bg-church-50 px-3 py-2 rounded-lg border border-church-100">
+                        <Archive size={14} className="animate-pulse" /> Archiving Previous Week...
+                    </div>
+                )}
+                {isAdmin && (
+                    <button 
+                        onClick={handleAddNew}
+                        className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
+                    >
+                        <Plus size={18} className="mr-2" /> Add Program
+                    </button>
+                )}
+            </div>
         </div>
 
         {loading && <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>}

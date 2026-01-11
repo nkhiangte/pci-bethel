@@ -1,16 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-// FIX: Removed invalid and incorrect import that caused module errors. getConstants is imported from ../constants below.
 import { getConstants as getChurchConstants } from '../constants';
 import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import { WeeklyDuty, Staff, ProgramField } from '../types';
 import { db } from '../services/firebase';
 import { 
   Users, BookOpen, UserCheck, Home as HomeIcon, 
-  ChevronRight, Shield, Sun, Moon, Clock, 
-  Mic, Settings, Music, UserCircle, CalendarDays,
-  ListChecks, Radio, ClipboardList
+  ChevronRight, Shield, Clock, 
+  Music, UserCircle, CalendarDays,
+  Radio, ClipboardList, Edit, Save, X, Loader
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -68,6 +67,11 @@ export const Home: React.FC = () => {
   const [churchElders, setChurchElders] = useState<Staff[]>(staticElders);
   const [loading, setLoading] = useState(true);
 
+  // Edit Duties Modal State
+  const [isEditingDuties, setIsEditingDuties] = useState(false);
+  const [editDutyForm, setEditDutyForm] = useState<Partial<WeeklyDuty>>({});
+  const [isSavingDuties, setIsSavingDuties] = useState(false);
+
   useEffect(() => {
     const init = async () => {
         setLoading(true);
@@ -99,18 +103,27 @@ export const Home: React.FC = () => {
     init();
   }, [staticPastors, staticElders, staticDuty]);
 
-  const ProgramRows = ({ fields }: { fields?: ProgramField[] }) => {
-    if (!Array.isArray(fields) || fields.length === 0) return <p className="text-slate-400 italic text-[11px] mt-2">TBD</p>;
-    return (
-        <div className="space-y-3 mt-4">
-            {fields.map((f) => (
-                <div key={f.id} className="border-l border-church-200 pl-3">
-                    <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">{f.label}</p>
-                    <p className="font-bold text-slate-800 text-sm leading-tight">{f.value || '-'}</p>
-                </div>
-            ))}
-        </div>
-    );
+  const handleOpenEditDuties = () => {
+    setEditDutyForm({ ...weeklyDuty });
+    setIsEditingDuties(true);
+  };
+
+  const handleSaveDuties = async () => {
+    if (!db?.doc) return;
+    setIsSavingDuties(true);
+    try {
+      await db.collection('weeklyDuties').doc('current').set(editDutyForm, { merge: true });
+      setWeeklyDuty(editDutyForm as WeeklyDuty);
+      setIsEditingDuties(false);
+    } catch (error) {
+      console.error("Error saving duties:", error);
+      alert("Failed to save changes.");
+    }
+    setIsSavingDuties(false);
+  };
+
+  const handleListChange = (field: keyof WeeklyDuty, value: string) => {
+    setEditDutyForm(prev => ({ ...prev, [field]: value.split('\n').map(s => s.trim()).filter(s => s !== '') }));
   };
 
   return (
@@ -153,94 +166,28 @@ export const Home: React.FC = () => {
             </div>
         </div>
 
-        {/* SECTION: Weekly Schedule */}
-        <div className="space-y-10">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
-                <div>
-                    <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.4em] mb-3">Tunkar Hun Ruatna</h2>
-                    <h3 className="text-4xl font-serif font-black text-slate-900 tracking-tight">Weekly Church Program</h3>
-                </div>
-                {weeklyDuty.weekRange && (
-                    <div className="bg-church-900 text-white px-6 py-3 rounded-full shadow-lg text-sm font-black tracking-widest flex items-center gap-3">
-                        <CalendarDays size={18} className="text-church-400" />
-                        {weeklyDuty.weekRange.toUpperCase()}
-                    </div>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-0.5 bg-slate-200 border border-slate-200 rounded-[2rem] overflow-hidden shadow-2xl">
-                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><BookOpen size={16}/></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Morning</span>
-                    </div>
-                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.sundaySchool || 'Sunday School'}</h4>
-                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM'}</p>
-                    <ProgramRows fields={weeklyDuty.servicePrograms?.sundaySchool} />
-                </div>
-                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Sun size={16}/></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Afternoon</span>
-                    </div>
-                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.morning || 'Chawhnu Inkhawm'}</h4>
-                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.morning || '01:30 PM'}</p>
-                    <ProgramRows fields={weeklyDuty.servicePrograms?.morning} />
-                </div>
-                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Moon size={16}/></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sunday Night</span>
-                    </div>
-                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">{weeklyDuty.serviceTitles?.evening || 'Zan Inkhawm'}</h4>
-                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> {weeklyDuty.serviceTimes?.evening || '07:00 PM'}</p>
-                    <ProgramRows fields={weeklyDuty.servicePrograms?.evening} />
-                </div>
-                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Mic size={16}/></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wednesday Night</span>
-                    </div>
-                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">Nilai Inkhawm</h4>
-                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> 07:00 PM</p>
-                    <div className="space-y-3 mt-4">
-                        <div className="border-l border-church-200 pl-3">
-                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Hruaitu</p>
-                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.nilai.hruaitu || '-'}</p>
-                        </div>
-                        <div className="border-l border-church-200 pl-3">
-                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Thupui Hawngtu</p>
-                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.nilai.thuhriltu || '-'}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white p-8 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg"><Shield size={16}/></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saturday Night</span>
-                    </div>
-                    <h4 className="font-serif font-black text-church-900 text-xl mb-1">Ṭawngṭai Inkhawm</h4>
-                    <p className="text-slate-500 font-bold text-xs flex items-center gap-1.5"><Clock size={12}/> 07:00 PM</p>
-                    <div className="space-y-3 mt-4">
-                        <div className="border-l border-church-200 pl-3">
-                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Hruaitu</p>
-                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.inrinni.hruaitu || '-'}</p>
-                        </div>
-                        <div className="border-l border-church-200 pl-3">
-                            <p className="text-[10px] uppercase font-bold text-church-600 mb-0.5 tracking-wider">Ṭantu</p>
-                            <p className="font-bold text-slate-800 text-sm">{weeklyDuty.midWeek?.inrinni.tantu || '-'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {/* SECTION: Service Personnel (Unified & Compact Assignment Table) */}
-        <div className="space-y-12">
+        <div className="space-y-12 relative group/section">
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
                 <div>
                     <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.4em] mb-3">Tunkar Rawngbawltute</h2>
                     <h3 className="text-4xl font-serif font-black text-slate-900 tracking-tight">Duty Personnel</h3>
+                </div>
+                <div className="flex items-center gap-4">
+                  {isAdmin && (
+                    <button 
+                      onClick={handleOpenEditDuties}
+                      className="bg-white border border-church-200 text-church-600 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-church-50 transition shadow-sm"
+                    >
+                      <Edit size={14} /> Edit Duty
+                    </button>
+                  )}
+                  {weeklyDuty.weekRange && (
+                      <div className="bg-church-900 text-white px-6 py-3 rounded-full shadow-lg text-sm font-black tracking-widest flex items-center gap-3">
+                          <CalendarDays size={18} className="text-church-400" />
+                          {weeklyDuty.weekRange.toUpperCase()}
+                      </div>
+                  )}
                 </div>
             </div>
 
@@ -398,6 +345,121 @@ export const Home: React.FC = () => {
             </div>
         </div>
       </div>
+
+      {/* EDIT DUTIES MODAL */}
+      {isEditingDuties && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-slate-100 bg-church-50 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-church-600 text-white rounded-2xl shadow-lg">
+                  <ClipboardList size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-serif font-black text-slate-900">Update Service Assignments</h3>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Direct Edit Mode</p>
+                </div>
+              </div>
+              <button onClick={() => setIsEditingDuties(false)} className="p-2 hover:bg-white rounded-full transition text-slate-400 hover:text-slate-600">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-8 overflow-y-auto space-y-10">
+              {/* Row 1: Dates & Core Personnel */}
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] block">Current Week Range</label>
+                  <div className="relative">
+                    <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 font-bold text-slate-800 focus:ring-2 focus:ring-church-500 outline-none transition"
+                      value={editDutyForm.weekRange || ''}
+                      onChange={e => setEditDutyForm({...editDutyForm, weekRange: e.target.value})}
+                      placeholder="e.g. 05 - 11 January, 2026"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] block">Zai Hruaitu</label>
+                  <div className="relative">
+                    <Music className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 font-bold text-slate-800 focus:ring-2 focus:ring-church-500 outline-none transition"
+                      value={editDutyForm.zaiHruaitu || ''}
+                      onChange={e => setEditDutyForm({...editDutyForm, zaiHruaitu: e.target.value})}
+                      placeholder="Names of song leaders"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Tech Group */}
+              <div className="grid md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Piano Tumtu</label>
+                  <input className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm font-medium" value={editDutyForm.pianoTumtu || ''} onChange={e => setEditDutyForm({...editDutyForm, pianoTumtu: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hla Hriltu</label>
+                  <input className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm font-medium" value={editDutyForm.hlaHriltu || ''} onChange={e => setEditDutyForm({...editDutyForm, hlaHriltu: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Light & Sound</label>
+                  <input className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm font-medium" value={editDutyForm.lightAndSoundDuty || ''} onChange={e => setEditDutyForm({...editDutyForm, lightAndSoundDuty: e.target.value})} />
+                </div>
+                <div className="md:col-span-3 space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Biak In Pangpar Khawitu</label>
+                  <input className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm font-medium" value={editDutyForm.pangparKhawitu || ''} onChange={e => setEditDutyForm({...editDutyForm, pangparKhawitu: e.target.value})} />
+                </div>
+              </div>
+
+              {/* Row 3: Lists */}
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <Users size={14}/> Offering Counters (One per line)
+                  </label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 h-48 font-medium text-sm focus:ring-2 focus:ring-church-500 outline-none transition"
+                    value={editDutyForm.thawhlawmChiartute?.join('\n') || ''}
+                    onChange={e => handleListChange('thawhlawmChiartute', e.target.value)}
+                    placeholder="Pu Lal..."
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <UserCircle size={14}/> Ushers List (One per line)
+                  </label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 h-48 font-medium text-sm focus:ring-2 focus:ring-church-500 outline-none transition"
+                    value={editDutyForm.ushers?.join('\n') || ''}
+                    onChange={e => handleListChange('ushers', e.target.value)}
+                    placeholder="Nl. Lal..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border-t border-slate-100 bg-slate-50 flex justify-end gap-4">
+              <button 
+                onClick={() => setIsEditingDuties(false)}
+                className="px-8 py-3 rounded-xl font-bold text-slate-600 hover:bg-white transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveDuties}
+                disabled={isSavingDuties}
+                className="px-10 py-3 bg-church-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-xl shadow-church-200 hover:bg-church-700 transition flex items-center gap-3 disabled:opacity-50"
+              >
+                {isSavingDuties ? <Loader className="animate-spin" size={18} /> : <Save size={18} />}
+                {isSavingDuties ? 'Saving...' : 'Save Assignments'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
