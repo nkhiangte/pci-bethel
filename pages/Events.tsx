@@ -353,14 +353,42 @@ const Events: React.FC = () => {
                     <button onClick={() => setIsEditing(false)}><X size={20}/></button>
                 </div>
                 <div className="p-6 space-y-4 overflow-y-auto">
-                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Title</label><input className="w-full border p-2 rounded" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} /></div>
-                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Date</label><input type="date" className="w-full border p-2 rounded" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})} /></div>
-                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Hruaitu</label><input className="w-full border p-2 rounded" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} /></div>
-                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Thuhriltu</label><input className="w-full border p-2 rounded" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} /></div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder="Service Name" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                            <input type="date" className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Time</label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})} placeholder="e.g. 07:00 PM" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Hruaitu</label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder="Conductor name" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Thuhriltu</label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Preacher name" />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Thupui (Topic)</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder="Sermon or lesson topic" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Ṭantu (Reader)</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder="Name of person reading" />
+                    </div>
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl border-t">
-                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded font-bold">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-church-600 text-white rounded font-bold">Save</button>
+                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition">Cancel</button>
+                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition shadow-sm">Save Changes</button>
                 </div>
             </div>
         </div>
