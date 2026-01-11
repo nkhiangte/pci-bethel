@@ -9,7 +9,7 @@ import {
   Users, BookOpen, UserCheck, Home as HomeIcon, 
   ChevronRight, Shield, Clock, 
   Music, UserCircle, CalendarDays,
-  Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight
+  Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight, ZoomIn
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,6 +67,7 @@ export const Home: React.FC = () => {
   const [churchElders, setChurchElders] = useState<Staff[]>(staticElders);
   const [latestNews, setLatestNews] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Edit Duties Modal State
   const [isEditingDuties, setIsEditingDuties] = useState(false);
@@ -132,6 +133,12 @@ export const Home: React.FC = () => {
 
   const handleListChange = (field: keyof WeeklyDuty, value: string) => {
     setEditDutyForm(prev => ({ ...prev, [field]: value.split('\n').map(s => s.trim()).filter(s => s !== '') }));
+  };
+
+  const openPreview = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPreviewImage(url);
   };
 
   return (
@@ -212,12 +219,20 @@ export const Home: React.FC = () => {
                                         Read More <ChevronRight size={14} className="ml-1" />
                                     </div>
                                 </div>
-                                <div className="h-52 w-full overflow-hidden bg-slate-100 relative">
+                                <div 
+                                    className="h-52 w-full overflow-hidden bg-slate-100 relative cursor-zoom-in"
+                                    onClick={(e) => coverImage && openPreview(e, coverImage)}
+                                >
                                     {coverImage ? (
                                         <img src={coverImage} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
                                             <Bell size={40} className="text-church-200" />
+                                        </div>
+                                    )}
+                                    {coverImage && (
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <ZoomIn className="text-white drop-shadow-md" size={32} />
                                         </div>
                                     )}
                                     {news.imageUrls && news.imageUrls.length > 1 && (
@@ -229,6 +244,26 @@ export const Home: React.FC = () => {
                             </Link>
                         );
                     })}
+                </div>
+            </div>
+        )}
+
+        {/* Lightbox for Full Size Preview */}
+        {previewImage && (
+            <div 
+                className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300"
+                onClick={() => setPreviewImage(null)}
+            >
+                <button className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 bg-white/10 rounded-full hover:bg-white/20">
+                    <X size={32} />
+                </button>
+                <div className="relative max-w-5xl max-h-[90vh] w-full flex items-center justify-center">
+                    <img 
+                        src={previewImage} 
+                        alt="Full size preview" 
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
+                        onClick={(e) => e.stopPropagation()} 
+                    />
                 </div>
             </div>
         )}

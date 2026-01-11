@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
-import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn } from 'lucide-react';
 
 // Replace this with your actual ImgBB API key from https://api.imgbb.com/
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
@@ -21,6 +21,7 @@ const Announcements: React.FC = () => {
   const [editForm, setEditForm] = useState<Partial<Announcement>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -204,8 +205,15 @@ const Announcements: React.FC = () => {
                         {displayImages.length > 0 && (
                             <div className={`grid gap-2 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 {displayImages.map((url, idx) => (
-                                    <div key={idx} className={`relative overflow-hidden bg-slate-200 rounded-lg ${displayImages.length === 1 ? 'h-72' : 'h-48'}`}>
-                                        <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                    <div 
+                                        key={idx} 
+                                        onClick={() => setPreviewImage(url)}
+                                        className={`relative overflow-hidden bg-slate-200 rounded-lg cursor-zoom-in group/img ${displayImages.length === 1 ? 'h-72' : 'h-48'}`}
+                                    >
+                                        <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                            <ZoomIn className="text-white drop-shadow-md" size={32} />
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -217,6 +225,26 @@ const Announcements: React.FC = () => {
             </div>
         )}
       </div>
+
+      {/* Lightbox for Full Size Preview */}
+      {previewImage && (
+        <div 
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setPreviewImage(null)}
+        >
+            <button className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 bg-white/10 rounded-full hover:bg-white/20">
+                <X size={32} />
+            </button>
+            <div className="relative max-w-5xl max-h-[90vh] w-full flex items-center justify-center">
+                <img 
+                    src={previewImage} 
+                    alt="Full size preview" 
+                    className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
+                    onClick={(e) => e.stopPropagation()} 
+                />
+            </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditing && (
