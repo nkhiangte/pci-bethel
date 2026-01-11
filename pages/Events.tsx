@@ -7,13 +7,29 @@ import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Lo
 import { Event, WeeklyDuty, ArchiveEntry } from '../types';
 
 // Helper to get specific dates for the current week (Monday to Sunday)
+// Transition logic: Every Sunday at 7:30 PM, switch to the next week's program.
 const getDatesForWeek = () => {
   const now = new Date();
   const day = now.getDay(); // 0 (Sun) to 6 (Sat)
+  const hour = now.getHours();
+  const minute = now.getMinutes();
   
-  // Calculate difference to get to this week's Monday
-  // If today is Sunday (0), we go back 6 days. If Monday (1), 0 days. If Tuesday (2), 1 day.
-  const diffToMonday = day === 0 ? -6 : 1 - day;
+  // Logic to determine if we are looking at "This Week" or "Next Week"
+  // If it's Sunday (0) and past 7:30 PM (19:30), we look forward to the next week's Monday
+  let diffToMonday;
+  
+  if (day === 0) { // Sunday
+    if (hour > 19 || (hour === 19 && minute >= 30)) {
+      // It's Sunday evening, show NEXT week starting tomorrow
+      diffToMonday = 1; 
+    } else {
+      // It's Sunday before 7:30 PM, show the current week that started last Monday
+      diffToMonday = -6;
+    }
+  } else {
+    // Normal weekdays (Mon-Sat), always show the current week starting from this past Monday
+    diffToMonday = 1 - day;
+  }
   
   const monday = new Date(now);
   monday.setDate(now.getDate() + diffToMonday);
@@ -47,17 +63,18 @@ const Events: React.FC = () => {
   const checkAndArchivePreviousWeek = useCallback(async () => {
     if (!isAdmin || !db?.collection) return;
 
+    // Based on the new Monday, calculate the week that just ended
     const weekDates = getDatesForWeek();
     const currentMonday = weekDates[0];
     
-    // Previous week range
+    // The "Previous Week" relative to whatever week we are currently displaying
     const prevMonday = new Date(currentMonday);
     prevMonday.setDate(currentMonday.getDate() - 7);
     const prevSunday = new Date(currentMonday);
     prevSunday.setDate(currentMonday.getDate() - 1);
     
     const rangeStr = `${formatDateForInput(prevMonday)} to ${formatDateForInput(prevSunday)}`;
-    const archiveTitle = `Weekly Program: ${rangeStr}`;
+    const archiveTitle = `Weekly Program Archive: ${rangeStr}`;
 
     try {
       // Check if already archived
@@ -68,13 +85,13 @@ const Events: React.FC = () => {
 
       if (existing.empty) {
         setIsArchiving(true);
-        console.log("Archiving previous week...");
+        console.log("Beginning archival process for completed week...");
 
-        // 1. Fetch Duty Personnel (Current)
+        // 1. Fetch Duty Personnel (at transition, current in DB is usually still the one to archive)
         const dutySnap = await db.collection('weeklyDuties').doc('current').get();
         const duties = dutySnap.exists ? (dutySnap.data() as WeeklyDuty) : null;
 
-        // 2. Fetch Events for that range
+        // 2. Fetch Events for that specific range
         const eventsSnap = await db.collection('events')
           .where('date', '>=', formatDateForInput(prevMonday))
           .where('date', '<=', formatDateForInput(prevSunday))
@@ -82,43 +99,50 @@ const Events: React.FC = () => {
         
         const prevEvents = eventsSnap.docs.map((doc: any) => doc.data() as Event);
 
-        // 3. Format Description
-        let description = `--- DUTY PERSONNEL ---\n`;
+        // 3. Format detailed archival description
+        let description = `--- WEEKLY DUTY ROSTER ---\n`;
         if (duties) {
-          description += `Week: ${duties.weekRange}\n`;
+          description += `Assigned Dates: ${duties.weekRange}\n`;
           description += `Zai Hruaitu: ${duties.zaiHruaitu}\n`;
           description += `Piano: ${duties.pianoTumtu}\n`;
           description += `Hla Hriltu: ${duties.hlaHriltu}\n`;
           description += `Offering Counters: ${duties.thawhlawmChiartute?.join(', ')}\n`;
-          description += `Ushers: ${duties.ushers?.join(', ')}\n\n`;
+          description += `Ushers: ${duties.ushers?.join(', ')}\n`;
+          description += `Light & Sound: ${duties.lightAndSoundDuty}\n`;
+          description += `Pangpar: ${duties.pangparKhawitu}\n\n`;
         }
 
-        description += `--- SERVICE PROGRAMS ---\n`;
-        prevEvents.forEach(ev => {
-          description += `[${ev.date}] ${ev.title}\n`;
-          if (ev.program) {
-            if (ev.program.hruaitu) description += `  Hruaitu: ${ev.program.hruaitu}\n`;
-            if (ev.program.thuhriltu) description += `  Thuhriltu: ${ev.program.thuhriltu}\n`;
-            if (ev.program.tantu) description += `  Ṭantu: ${ev.program.tantu}\n`;
-          }
-          description += `\n`;
-        });
+        description += `--- SERVICE & PROGRAM RECORDS ---\n`;
+        if (prevEvents.length === 0) {
+          description += "No specific program overrides were recorded for this week.\n";
+        } else {
+          prevEvents.forEach(ev => {
+            description += `[${ev.date}] ${ev.title}\n`;
+            if (ev.program) {
+              if (ev.program.hruaitu) description += `  Hruaitu: ${ev.program.hruaitu}\n`;
+              if (ev.program.thuhriltu) description += `  Thuhriltu: ${ev.program.thuhriltu}\n`;
+              if (ev.program.tantu) description += `  Ṭantu: ${ev.program.tantu}\n`;
+              if (ev.program.thupui) description += `  Thupui: ${ev.program.thupui}\n`;
+            }
+            description += `\n`;
+          });
+        }
 
-        // 4. Save to Archives
+        // 4. Save to Archives collection
         const archiveEntry: Omit<ArchiveEntry, 'id'> = {
           title: archiveTitle,
           date: formatDateForInput(new Date()),
           category: 'Rawngbawltu te',
-          subCategory: 'Executive Body', // Default subcat
+          subCategory: 'Executive Body',
           description: description,
           link: ''
         };
 
         await db.collection('archives').add(archiveEntry);
-        console.log("Archived successfully.");
+        console.log("Successfully archived the past week.");
       }
     } catch (e) {
-      console.error("Archival failed:", e);
+      console.error("Auto-archival encountered an error:", e);
     } finally {
       setIsArchiving(false);
     }
@@ -127,13 +151,14 @@ const Events: React.FC = () => {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     
-    // Generate dates for current week: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    // Get dates for current display week (Monday to Sunday)
+    // Note: This helper now returns Mon-Sun based on whether it's Sunday night.
     const weekDates = getDatesForWeek();
     
     const virtualEvents: Event[] = [];
     const basePrograms = t.home.weeklyProgram;
 
-    // We want Monday (1) to Sunday (0)
+    // Ordered sequence: Monday (1) to Sunday (0)
     const dayOrder = [1, 2, 3, 4, 5, 6, 0];
     
     dayOrder.forEach(dayIndex => {
@@ -162,6 +187,7 @@ const Events: React.FC = () => {
     let realEvents: Event[] = [];
     try {
       if (db && db.collection) {
+        // Query only for the 7 dates in our current calculated range
         const snapshot = await db.collection('events')
             .where('date', '>=', formatDateForInput(weekDates[0]))
             .where('date', '<=', formatDateForInput(weekDates[6]))
@@ -174,7 +200,7 @@ const Events: React.FC = () => {
         }
       }
     } catch (e) {
-      console.error("Error fetching events:", e);
+      console.error("Error fetching events from DB:", e);
     }
     
     const mergedEventsMap = new Map<string, Event[]>();
@@ -189,16 +215,16 @@ const Events: React.FC = () => {
         mergedEventsMap.set(event.date, list);
     });
     
-    // Merge real events, replacing or adding
+    // Merge real events, replacing matching templates or adding unique entries
     realEvents.forEach(event => {
         const key = event.date;
         let list = mergedEventsMap.get(key) || [];
         
         if (event.isCancelled) {
-            // Remove virtual events for this title on this date if cancelled
+            // Remove virtual events matching this title on this date
             list = list.filter(item => item.title !== event.title);
         } else {
-            // If it matches a virtual event by title, replace it
+            // Replace matching template or append new event
             const existingIdx = list.findIndex(item => item.title === event.title);
             if (existingIdx !== -1) {
                 list[existingIdx] = event;
@@ -209,9 +235,8 @@ const Events: React.FC = () => {
         mergedEventsMap.set(key, list);
     });
 
-    // Flatten and sort by date then time
+    // Flatten and finalize sorting
     const finalEvents = Array.from(mergedEventsMap.values()).flat();
-    // Simple sort - dayOrder already handles dates, but real events might be unsorted
     finalEvents.sort((a, b) => {
         const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
         if (dateDiff !== 0) return dateDiff;
@@ -221,7 +246,7 @@ const Events: React.FC = () => {
     setDisplayEvents(finalEvents);
     setLoading(false);
 
-    // After loading current, try to archive previous
+    // Call archival check after load
     checkAndArchivePreviousWeek();
   }, [t.home.weeklyProgram, checkAndArchivePreviousWeek]);
 
@@ -277,7 +302,7 @@ const Events: React.FC = () => {
 
   const handleSave = async () => {
     if (!db || !db.collection) {
-        alert("Database not available.");
+        alert("Database connection is required to save.");
         return;
     }
     
@@ -305,7 +330,7 @@ const Events: React.FC = () => {
       fetchEvents();
     } catch (error) {
       console.error("Error saving event:", error);
-      alert("Failed to save event.");
+      alert("Failed to save event data.");
     }
     setLoading(false);
   };
@@ -326,7 +351,7 @@ const Events: React.FC = () => {
                 setShowDeleteConfirm(null);
                 fetchEvents();
             } catch (error) {
-                console.error("Error cancelling virtual event:", error);
+                console.error("Error creating cancellation record:", error);
             }
         }
         return;
@@ -337,7 +362,7 @@ const Events: React.FC = () => {
       setShowDeleteConfirm(null);
       fetchEvents();
     } catch (error) {
-      console.error("Error deleting:", error);
+      console.error("Error deleting event:", error);
     }
   };
 
@@ -353,14 +378,21 @@ const Events: React.FC = () => {
       </div>
   ) : null;
 
+  const weekDates = getDatesForWeek();
+
   return (
     <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <h1 className="text-4xl font-serif font-bold text-church-900">{t.events.title}</h1>
-                <p className="text-slate-500 mt-1 text-sm font-medium uppercase tracking-widest">
-                    {formatDateForInput(getDatesForWeek()[0])} — {formatDateForInput(getDatesForWeek()[6])}
+                <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-4xl font-serif font-bold text-church-900">{t.events.title}</h1>
+                    {(new Date().getDay() === 0 && (new Date().getHours() > 19 || (new Date().getHours() === 19 && new Date().getMinutes() >= 30))) && (
+                        <span className="bg-church-100 text-church-700 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">Next Week</span>
+                    )}
+                </div>
+                <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
+                    {formatDateForInput(weekDates[0])} — {formatDateForInput(weekDates[6])}
                 </p>
             </div>
             <div className="flex gap-2">
@@ -372,7 +404,7 @@ const Events: React.FC = () => {
                 {isAdmin && (
                     <button 
                         onClick={handleAddNew}
-                        className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
+                        className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm font-bold"
                     >
                         <Plus size={18} className="mr-2" /> Add Program
                     </button>
@@ -519,8 +551,8 @@ const Events: React.FC = () => {
                     </div>
                 </div>
                 <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50 rounded-b-xl">
-                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
-                    <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center transition shadow-sm">
+                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition font-bold">Cancel</button>
+                    <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center transition shadow-sm font-bold">
                         {loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} Save Changes
                     </button>
                 </div>
@@ -534,8 +566,8 @@ const Events: React.FC = () => {
                   <div className="flex items-center text-red-600 mb-4"><AlertCircle className="w-6 h-6 mr-2" /><h3 className="text-lg font-bold">Confirm Delete</h3></div>
                   <p className="text-slate-600 mb-6">{showDeleteConfirm.startsWith('virtual_') ? "This will remove this specific occurrence from the schedule." : "Are you sure? This cannot be undone."}</p>
                   <div className="flex justify-end space-x-3">
-                      <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>
-                      <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-sm">Delete Event</button>
+                      <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition font-bold">Cancel</button>
+                      <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-sm font-bold">Delete Event</button>
                   </div>
               </div>
           </div>
