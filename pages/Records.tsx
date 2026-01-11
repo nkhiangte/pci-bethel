@@ -20,7 +20,7 @@ type ViewMode = 'selection' | 'details';
 const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
     wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
-    death: ['name', 'familyMember', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
+    death: ['name', 'fatherName', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
     inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
 };
 
@@ -150,7 +150,7 @@ const Records: React.FC = () => {
         switch(activeTab) {
             case 'baptism': setEditingRecord({ type: 'baptism', name: '', dateOfBirth: '', baptismDate: '', parents: '', minister: '' }); break;
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
-            case 'death': setEditingRecord({ type: 'death', name: '', familyMember: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
+            case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
             case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', location: '', speakers: '' }); break;
         }
         setIsEditModalOpen(true);
@@ -266,7 +266,7 @@ const Records: React.FC = () => {
                 // Mizo specific mapping fallback
                 const mizoHeads: Record<string, string[]> = {
                     name: ['hming'],
-                    familyMember: ['chhungte hming', 'pa hming', 'family', 'relative', 'parent'],
+                    fatherName: ['chhungte hming', 'pa hming', 'family', 'relative', 'parent', 'familymember'],
                     age: ['kum', 'age'],
                     dateOfBirth: ['pian ni', 'birthday'],
                     baptismDate: ['baptis ni', 'baptisma ni'],
@@ -357,7 +357,7 @@ const Records: React.FC = () => {
         switch (rec.type) {
             case 'baptism': return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
             case 'wedding': return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
-            case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).familyMember?.toLowerCase().includes(term));
+            case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).fatherName?.toLowerCase().includes(term));
             case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
             default: return false;
         }

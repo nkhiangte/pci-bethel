@@ -163,7 +163,7 @@ export const translations = {
         theme: 'Theme',
         location: 'Location',
         speakers: 'Key Speakers',
-        familyMember: "Family Member / Parent",
+        fatherName: "Family Member / Parent",
         causeOfDeath: "Cause of Death"
       }
     },
@@ -369,7 +369,7 @@ export const translations = {
         theme: 'Thupui',
         location: 'A Hmun',
         speakers: 'Thusawitu Pawimawh',
-        familyMember: "Chhungte Hming",
+        fatherName: "Chhungte Hming",
         causeOfDeath: "Thih Chhan"
       }
     },
