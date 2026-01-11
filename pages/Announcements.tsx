@@ -198,18 +198,18 @@ const Announcements: React.FC = () => {
                     </div>
 
                     <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
+                            {item.content}
+                        </div>
                         {displayImages.length > 0 && (
-                            <div className={`grid gap-2 p-2 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            <div className={`grid gap-2 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 {displayImages.map((url, idx) => (
-                                    <div key={idx} className={`relative overflow-hidden bg-slate-200 rounded-lg ${displayImages.length === 1 ? 'h-64' : 'h-40'}`}>
+                                    <div key={idx} className={`relative overflow-hidden bg-slate-200 rounded-lg ${displayImages.length === 1 ? 'h-72' : 'h-48'}`}>
                                         <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 ))}
                             </div>
                         )}
-                        <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
-                            {item.content}
-                        </div>
                     </div>
                     </div>
                 );
@@ -331,7 +331,7 @@ const Announcements: React.FC = () => {
       {/* Delete Confirm */}
       {showDeleteConfirm && (
          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="bg-white rounded-xl p-6 max-sm w-full shadow-2xl">
                 <div className="flex items-center text-red-600 mb-4">
                     <AlertCircle className="mr-2" size={24} />
                     <h3 className="text-lg font-bold">Delete Announcement?</h3>
