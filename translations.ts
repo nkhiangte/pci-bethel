@@ -163,7 +163,7 @@ export const translations = {
         theme: 'Theme',
         location: 'Location',
         speakers: 'Key Speakers',
-        fatherName: "Father's Name",
+        familyMember: "Family Member / Parent",
         causeOfDeath: "Cause of Death"
       }
     },
@@ -369,7 +369,7 @@ export const translations = {
         theme: 'Thupui',
         location: 'A Hmun',
         speakers: 'Thusawitu Pawimawh',
-        fatherName: "Pa Hming",
+        familyMember: "Chhungte Hming",
         causeOfDeath: "Thih Chhan"
       }
     },
@@ -394,7 +394,6 @@ export const translations = {
       contactUs: 'Biak Pawh Dan',
       rightsReserved: 'Dikna zawng zawng hauh a ni.',
     },
-    // FIX: Removed duplicate 'auth' property in 'mizo' section
     auth: {
       loginTitle: 'Member Login',
       loginSubtitle: 'Kohhran member te leh hruaitu te tan',

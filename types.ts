@@ -176,7 +176,8 @@ export interface DeathRecord {
   id?: string;
   type: 'death';
   name: string;
-  fatherName: string;
+  familyMember: string; // Renamed from fatherName
+  age: string | number; // Re-added
   dateOfDeath: string;
   causeOfDeath: string;
   minister: string;

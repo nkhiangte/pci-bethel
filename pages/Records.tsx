@@ -20,7 +20,7 @@ type ViewMode = 'selection' | 'details';
 const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
     wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
-    death: ['name', 'fatherName', 'dateOfDeath', 'causeOfDeath', 'minister'],
+    death: ['name', 'familyMember', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
     inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
 };
 
@@ -35,11 +35,9 @@ const formatDateCell = (value: any): string => {
   if (!value && value !== 0) return '';
   if (typeof value === 'number' && value > 1) {
     const date = new Date((value - 25569) * 86400 * 1000);
-    // FIX: Fixed property name from getUTFullYear to getUTCFullYear
     if (isNaN(date.getTime()) || date.getUTCFullYear() < 1800 || date.getUTCFullYear() > 2100) return String(value);
     const day = String(date.getUTCDate()).padStart(2, '0');
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    // FIX: Changed getUTFullYear() to getUTCFullYear() to fix property existence error.
     return `${day}/${month}/${date.getUTCFullYear()}`;
   }
   if (typeof value === 'string') {
@@ -152,7 +150,7 @@ const Records: React.FC = () => {
         switch(activeTab) {
             case 'baptism': setEditingRecord({ type: 'baptism', name: '', dateOfBirth: '', baptismDate: '', parents: '', minister: '' }); break;
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
-            case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
+            case 'death': setEditingRecord({ type: 'death', name: '', familyMember: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
             case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', location: '', speakers: '' }); break;
         }
         setIsEditModalOpen(true);
@@ -268,7 +266,8 @@ const Records: React.FC = () => {
                 // Mizo specific mapping fallback
                 const mizoHeads: Record<string, string[]> = {
                     name: ['hming'],
-                    fatherName: ['pa hming', 'father'],
+                    familyMember: ['chhungte hming', 'pa hming', 'family', 'relative', 'parent'],
+                    age: ['kum', 'age'],
                     dateOfBirth: ['pian ni', 'birthday'],
                     baptismDate: ['baptis ni', 'baptisma ni'],
                     parents: ['nu leh pa', 'chhungte'],
@@ -358,7 +357,7 @@ const Records: React.FC = () => {
         switch (rec.type) {
             case 'baptism': return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
             case 'wedding': return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
-            case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).fatherName?.toLowerCase().includes(term));
+            case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).familyMember?.toLowerCase().includes(term));
             case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
             default: return false;
         }
