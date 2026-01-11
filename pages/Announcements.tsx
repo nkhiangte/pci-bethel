@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
-import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube } from 'lucide-react';
+import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle } from 'lucide-react';
 
 // Replace this with your actual ImgBB API key from https://api.imgbb.com/
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
@@ -30,6 +30,7 @@ const Announcements: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const [newVideoUrl, setNewVideoUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const Announcements: React.FC = () => {
       content: '',
       imageUrls: [],
       imageCaptions: [],
-      videoUrl: ''
+      videoUrls: []
     });
     setIsEditing(true);
   };
@@ -81,7 +82,7 @@ const Announcements: React.FC = () => {
       ...item, 
       imageUrls: item.imageUrls || (item.imageUrl ? [item.imageUrl] : []),
       imageCaptions: item.imageCaptions || [],
-      videoUrl: item.videoUrl || ''
+      videoUrls: item.videoUrls || (item.videoUrl ? [item.videoUrl] : [])
     });
     setIsEditing(true);
   };
@@ -131,7 +132,6 @@ const Announcements: React.FC = () => {
 
   const updateCaption = (index: number, text: string) => {
     const newCaptions = [...(editForm.imageCaptions || [])];
-    // Fill gaps if needed
     while (newCaptions.length <= index) newCaptions.push('');
     newCaptions[index] = text;
     setEditForm({ ...editForm, imageCaptions: newCaptions });
@@ -143,6 +143,27 @@ const Announcements: React.FC = () => {
       imageUrls: prev.imageUrls?.filter((_, i) => i !== index),
       imageCaptions: prev.imageCaptions?.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl.trim()) return;
+    const vidId = getYouTubeId(newVideoUrl);
+    if (!vidId) {
+        alert("Please enter a valid YouTube link.");
+        return;
+    }
+    setEditForm(prev => ({
+        ...prev,
+        videoUrls: [...(prev.videoUrls || []), newVideoUrl.trim()]
+    }));
+    setNewVideoUrl('');
+  };
+
+  const removeVideoAt = (index: number) => {
+      setEditForm(prev => ({
+          ...prev,
+          videoUrls: prev.videoUrls?.filter((_, i) => i !== index)
+      }));
   };
 
   const handleSave = async () => {
@@ -199,7 +220,7 @@ const Announcements: React.FC = () => {
             {announcements.map((item) => {
                 const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
                 const displayCaptions = item.imageCaptions || [];
-                const youtubeId = getYouTubeId(item.videoUrl);
+                const displayVideos = item.videoUrls || (item.videoUrl ? [item.videoUrl] : []);
                 
                 return (
                     <div key={item.id} className="relative pl-8 group">
@@ -229,34 +250,41 @@ const Announcements: React.FC = () => {
                             {item.content}
                         </div>
 
-                        {/* Video Display (Always bottom) */}
-                        {youtubeId && (
-                            <div className="px-4 pb-4">
-                                <div 
-                                    className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 cursor-pointer group/vid"
-                                    onClick={() => setPlayingVideoId(youtubeId)}
-                                >
-                                    <img 
-                                        src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`} 
-                                        alt="Video Preview" 
-                                        className="w-full h-full object-cover opacity-80 group-hover/vid:scale-105 transition-transform duration-700"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${youtubeId}/0.jpg`;
-                                        }}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/vid:bg-black/40 transition-colors">
-                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover/vid:scale-110 transition-transform">
-                                            <Play className="text-church-600 fill-current ml-1" size={28} />
+                        {/* Multiple Videos Display */}
+                        {displayVideos.length > 0 && (
+                            <div className={`grid gap-3 px-4 pb-4 ${displayVideos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                {displayVideos.map((url, vIdx) => {
+                                    const vidId = getYouTubeId(url);
+                                    if (!vidId) return null;
+                                    return (
+                                        <div 
+                                            key={vIdx}
+                                            className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 cursor-pointer group/vid shadow-sm"
+                                            onClick={() => setPlayingVideoId(vidId)}
+                                        >
+                                            <img 
+                                                src={`https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`} 
+                                                alt="Video Preview" 
+                                                className="w-full h-full object-cover opacity-80 group-hover/vid:scale-105 transition-transform duration-700"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${vidId}/0.jpg`;
+                                                }}
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/vid:bg-black/40 transition-colors">
+                                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover/vid:scale-110 transition-transform">
+                                                    <Play className="text-church-600 fill-current ml-0.5" size={24} />
+                                                </div>
+                                            </div>
+                                            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white font-bold uppercase tracking-wider">
+                                                <Youtube size={12} className="text-red-500" /> Watch
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-bold">
-                                        <Youtube size={16} className="text-red-500" /> Watch Video
-                                    </div>
-                                </div>
+                                    );
+                                })}
                             </div>
                         )}
 
-                        {/* Image Grid Display (Always bottom) */}
+                        {/* Image Grid Display */}
                         {displayImages.length > 0 && (
                             <div className={`grid gap-3 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 {displayImages.map((url, idx) => (
@@ -377,16 +405,41 @@ const Announcements: React.FC = () => {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
-                           <Youtube size={16} className="text-red-500" /> YouTube Video Link (Optional)
+                    {/* Multiple Video Support Section */}
+                    <div className="space-y-3 p-4 bg-red-50/50 rounded-xl border border-red-100">
+                        <label className="block text-sm font-bold text-red-900 flex items-center gap-2">
+                           <Youtube size={18} className="text-red-500" /> YouTube Videos
                         </label>
-                        <input 
-                            className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-church-500 transition" 
-                            value={editForm.videoUrl || ''} 
-                            onChange={e => setEditForm({...editForm, videoUrl: e.target.value})}
-                            placeholder="https://www.youtube.com/watch?v=..."
-                        />
+                        
+                        <div className="space-y-2">
+                            {editForm.videoUrls?.map((url, idx) => (
+                                <div key={idx} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-red-100 shadow-sm">
+                                    <div className="w-10 h-7 shrink-0 bg-slate-900 rounded overflow-hidden">
+                                        <img src={`https://img.youtube.com/vi/${getYouTubeId(url)}/0.jpg`} className="w-full h-full object-cover" alt="Thumb" />
+                                    </div>
+                                    <span className="flex-1 text-[11px] font-mono text-slate-500 truncate">{url}</span>
+                                    <button onClick={() => removeVideoAt(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded">
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-2">
+                            <input 
+                                className="flex-1 border border-red-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-red-400" 
+                                value={newVideoUrl} 
+                                onChange={e => setNewVideoUrl(e.target.value)}
+                                placeholder="Paste YouTube link here..."
+                                onKeyPress={e => e.key === 'Enter' && handleAddVideo()}
+                            />
+                            <button 
+                                onClick={handleAddVideo}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs font-bold transition shadow-sm flex items-center gap-2"
+                            >
+                                <PlusCircle size={16} /> Add Link
+                            </button>
+                        </div>
                     </div>
                     
                     {/* Multiple Image Upload Section with Captions */}
@@ -411,7 +464,7 @@ const Announcements: React.FC = () => {
                                         </div>
                                         <textarea 
                                             className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-church-400 outline-none resize-none h-14"
-                                            placeholder="E.g. Group photo of the sub-committee..."
+                                            placeholder="E.g. Group photo..."
                                             value={editForm.imageCaptions?.[index] || ''}
                                             onChange={(e) => updateCaption(index, e.target.value)}
                                         />

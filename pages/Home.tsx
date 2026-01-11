@@ -210,9 +210,10 @@ export const Home: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {latestNews.map((news) => {
-                        const youtubeId = getYouTubeId(news.videoUrl);
+                        const youtubeId = getYouTubeId(news.videoUrls?.[0] || news.videoUrl);
                         const coverImage = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : (news.imageUrls?.[0] || news.imageUrl);
                         const firstCaption = news.imageCaptions?.[0];
+                        const totalVideos = (news.videoUrls?.length || 0) + (news.videoUrl ? 1 : 0);
                         
                         return (
                             <Link to="/announcements" key={news.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -265,7 +266,7 @@ export const Home: React.FC = () => {
                                         </div>
                                         {youtubeId && (
                                             <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1.5">
-                                                <Youtube size={14} className="text-red-500" /> Video
+                                                <Youtube size={14} className="text-red-500" /> {totalVideos > 1 ? `${totalVideos} Videos` : 'Video'}
                                             </div>
                                         )}
                                         {news.imageUrls && news.imageUrls.length > 1 && !youtubeId && (
@@ -330,7 +331,7 @@ export const Home: React.FC = () => {
             </div>
         )}
 
-        {/* SECTION: Service Personnel (Unified & Compact Assignment Table) */}
+        {/* SECTION: Service Personnel */}
         <div className="space-y-12 relative group/section">
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
                 <div>
@@ -356,7 +357,6 @@ export const Home: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* COMBINED: Offering Counters & Ushers at the same elevation - High Density View */}
                 <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                     <div className="bg-church-900 text-white p-6 flex items-center gap-3">
                         <ClipboardList size={22} className="text-church-400" />
@@ -364,7 +364,6 @@ export const Home: React.FC = () => {
                     </div>
                     
                     <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
-                        {/* Column 1: Thawhlawm Chhiartute */}
                         <div className="md:col-span-4 space-y-4">
                             <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
                                 <Users size={16} className="text-church-600" />
@@ -377,13 +376,9 @@ export const Home: React.FC = () => {
                                         <span className="text-sm font-bold text-slate-700">{name}</span>
                                     </div>
                                 ))}
-                                {(!weeklyDuty.thawhlawmChiartute || weeklyDuty.thawhlawmChiartute.length === 0) && (
-                                    <p className="text-slate-400 italic text-xs py-2">Updating...</p>
-                                )}
                             </div>
                         </div>
 
-                        {/* Column 2: Ushers (Two names per row, No Row Gaps) */}
                         <div className="md:col-span-8 space-y-4">
                             <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
                                 <UserCircle size={16} className="text-church-600" />
@@ -396,15 +391,11 @@ export const Home: React.FC = () => {
                                         <span className="text-[12px] font-bold text-slate-600 truncate">{name}</span>
                                     </div>
                                 ))}
-                                {(!weeklyDuty.ushers || weeklyDuty.ushers.length === 0) && (
-                                    <p className="text-slate-400 italic text-xs col-span-2 py-4 text-center">Updating...</p>
-                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Specific Group: Worship & Technical (Compact Sidebar) */}
                 <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                     <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
                         <Radio size={22} className="text-church-700" />
@@ -444,7 +435,7 @@ export const Home: React.FC = () => {
             </div>
         </div>
 
-        {/* Leadership Section */}
+        {/* Shepherds Section */}
         <div className="space-y-20">
             <div className="text-center">
                 <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.5em] mb-4">Kohhran Hruaitute</h2>
@@ -452,7 +443,6 @@ export const Home: React.FC = () => {
                 <div className="h-1 w-24 bg-church-600 mx-auto mt-8 rounded-full"></div>
             </div>
 
-            {/* Bialtu Pastor Section */}
             {churchPastors.length > 0 && (
                 <div className="max-w-5xl mx-auto mb-32">
                     <div className="bg-white rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl flex flex-col md:flex-row group ring-1 ring-slate-100">
@@ -479,7 +469,6 @@ export const Home: React.FC = () => {
                 </div>
             )}
 
-            {/* All Elders Grid */}
             <div className="space-y-16">
                 <div className="flex items-center gap-10 px-4">
                     <div className="flex items-center gap-4">
@@ -530,7 +519,6 @@ export const Home: React.FC = () => {
             </div>
 
             <div className="p-8 overflow-y-auto space-y-10">
-              {/* Row 1: Dates & Core Personnel */}
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] block">Current Week Range</label>
@@ -558,7 +546,6 @@ export const Home: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 2: Tech Group */}
               <div className="grid md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Piano Tumtu</label>
@@ -578,7 +565,6 @@ export const Home: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 3: Lists */}
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-church-600 uppercase tracking-[0.2em] flex items-center gap-2">
