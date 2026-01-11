@@ -48,11 +48,11 @@ export const translations = {
       heroTagline: 'A House of Prayer for All Nations',
       weeklyProgram: [
         { day: 'Monday', time: '07:00 PM', name: 'Youth Fellowship (KTP)', dayOfWeek: 1 },
-        { day: 'Tuesday', time: '07:00 PM', name: "Women's Fellowship", dayOfWeek: 2 },
-        { day: 'Wednesday', time: '07:00 PM', name: 'Mid-week Service', dayOfWeek: 3 },
-        { day: 'Thursday', time: '07:00 PM', name: "Men's Fellowship", dayOfWeek: 4 },
+        { day: 'Tuesday', time: '07:00 PM', name: "Women's Fellowship (KH)", dayOfWeek: 2 },
+        { day: 'Wednesday', time: '07:00 PM', name: 'Mid-week Service (Nilai Zan)', dayOfWeek: 3 },
+        { day: 'Thursday', time: '07:00 PM', name: "Men's Fellowship (KPP)", dayOfWeek: 4 },
         { day: 'Friday', time: '04:00 PM', name: 'Fasting Prayer', dayOfWeek: 5 },
-        { day: 'Saturday', time: '07:00 PM', name: 'Prayer Meeting', dayOfWeek: 6 },
+        { day: 'Saturday', time: '07:00 PM', name: 'Prayer Meeting (Ṭawngṭai)', dayOfWeek: 6 },
         { day: 'Sunday', time: '10:00 AM', name: 'Sunday School', dayOfWeek: 0 },
         { day: 'Sunday', time: '01:30 PM', name: 'Afternoon Service', dayOfWeek: 0 },
         { day: 'Sunday', time: '07:00 PM', name: 'Evening Service', dayOfWeek: 0 },
@@ -217,7 +217,7 @@ export const translations = {
       fellowships: 'Fellowship',
       events: 'Program',
       announcements: 'Hriattirna',
-      articles: 'Articles & Sermons', // Changed from 'Thu Ziak & Thusawi'
+      articles: 'Articles & Sermons',
       departments: 'Committee',
       sundaySchool: 'Sunday School',
       members: 'Member Pual',
@@ -253,10 +253,10 @@ export const translations = {
       locationText: 'Veng lai Community Hall bulah kan awm.',
       heroTagline: 'Hnam tin tan ṭawngṭaina in',
       weeklyProgram: [
-        { day: 'Thawhṭanni', time: '07:00 PM', name: 'Kristian Ṭhalai Pawl', dayOfWeek: 1 },
-        { day: 'Thawhlehni', time: '07:00 PM', name: 'Kohhran Hmeichhia', dayOfWeek: 2 },
+        { day: 'Thawhṭanni', time: '07:00 PM', name: 'Kristian Ṭhalai Pawl (KTP)', dayOfWeek: 1 },
+        { day: 'Thawhlehni', time: '07:00 PM', name: 'Kohhran Hmeichhia (KH)', dayOfWeek: 2 },
         { day: 'Nilaini', time: '07:00 PM', name: 'Nilai Zan Inkhawm', dayOfWeek: 3 },
-        { day: 'Ningani', time: '07:00 PM', name: 'Kohhran Pavalai Pawl', dayOfWeek: 4 },
+        { day: 'Ningani', time: '07:00 PM', name: 'Kohhran Pavalai Pawl (KPP)', dayOfWeek: 4 },
         { day: 'Zirtawpni', time: '04:00 PM', name: 'Chawnghei Ṭawngṭai', dayOfWeek: 5 },
         { day: 'Inrinni', time: '07:00 PM', name: 'Ṭawngṭai Inkhawm', dayOfWeek: 6 },
         { day: 'Pathianni', time: '10:00 AM', name: 'Sunday School', dayOfWeek: 0 },
@@ -310,7 +310,7 @@ export const translations = {
       title: 'Hriattirna',
     },
     articles: {
-        title: 'Articles & Sermons', // Changed from 'Thu Ziak & Thusawi'
+        title: 'Articles & Sermons',
         subtitle: 'Thlarau lam thu ziak leh thusawi ropui tak tak chhiar tur a awm e.',
         readMore: 'Chhiar Zawm Rawh',
         writtenBy: 'Ziaktu/Sawitu',
