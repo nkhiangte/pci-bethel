@@ -17,6 +17,7 @@ export interface Announcement {
   imageUrl?: string; // Legacy field
   imageUrls?: string[]; // New field for multiple images
   imageCaptions?: string[]; // New field for per-image captions
+  videoUrl?: string; // New field for YouTube integration
 }
 
 export interface Sermon {

@@ -5,10 +5,17 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
-import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type } from 'lucide-react';
+import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube } from 'lucide-react';
 
 // Replace this with your actual ImgBB API key from https://api.imgbb.com/
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
+
+const getYouTubeId = (url: string | undefined) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
 
 const Announcements: React.FC = () => {
   const { language, t } = useLanguage();
@@ -22,6 +29,7 @@ const Announcements: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,7 +70,8 @@ const Announcements: React.FC = () => {
       category: 'General',
       content: '',
       imageUrls: [],
-      imageCaptions: []
+      imageCaptions: [],
+      videoUrl: ''
     });
     setIsEditing(true);
   };
@@ -71,7 +80,8 @@ const Announcements: React.FC = () => {
     setEditForm({ 
       ...item, 
       imageUrls: item.imageUrls || (item.imageUrl ? [item.imageUrl] : []),
-      imageCaptions: item.imageCaptions || []
+      imageCaptions: item.imageCaptions || [],
+      videoUrl: item.videoUrl || ''
     });
     setIsEditing(true);
   };
@@ -189,6 +199,7 @@ const Announcements: React.FC = () => {
             {announcements.map((item) => {
                 const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
                 const displayCaptions = item.imageCaptions || [];
+                const youtubeId = getYouTubeId(item.videoUrl);
                 
                 return (
                     <div key={item.id} className="relative pl-8 group">
@@ -217,6 +228,35 @@ const Announcements: React.FC = () => {
                         <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
                             {item.content}
                         </div>
+
+                        {/* Video Display (Always bottom) */}
+                        {youtubeId && (
+                            <div className="px-4 pb-4">
+                                <div 
+                                    className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 cursor-pointer group/vid"
+                                    onClick={() => setPlayingVideoId(youtubeId)}
+                                >
+                                    <img 
+                                        src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`} 
+                                        alt="Video Preview" 
+                                        className="w-full h-full object-cover opacity-80 group-hover/vid:scale-105 transition-transform duration-700"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${youtubeId}/0.jpg`;
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/vid:bg-black/40 transition-colors">
+                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover/vid:scale-110 transition-transform">
+                                            <Play className="text-church-600 fill-current ml-1" size={28} />
+                                        </div>
+                                    </div>
+                                    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-bold">
+                                        <Youtube size={16} className="text-red-500" /> Watch Video
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Image Grid Display (Always bottom) */}
                         {displayImages.length > 0 && (
                             <div className={`grid gap-3 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 {displayImages.map((url, idx) => (
@@ -269,6 +309,29 @@ const Announcements: React.FC = () => {
         </div>
       )}
 
+      {/* Video Modal */}
+      {playingVideoId && (
+        <div 
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-300"
+            onClick={() => setPlayingVideoId(null)}
+        >
+            <button className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-3 bg-white/10 rounded-full hover:bg-white/20">
+                <X size={28} />
+            </button>
+            <div className="w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 bg-black">
+                <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src={`https://www.youtube.com/embed/${playingVideoId}?autoplay=1`} 
+                    title="YouTube Video" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowFullScreen
+                ></iframe>
+            </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -312,6 +375,18 @@ const Announcements: React.FC = () => {
                                 <option value="Emergency">Emergency</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                           <Youtube size={16} className="text-red-500" /> YouTube Video Link (Optional)
+                        </label>
+                        <input 
+                            className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-church-500 transition" 
+                            value={editForm.videoUrl || ''} 
+                            onChange={e => setEditForm({...editForm, videoUrl: e.target.value})}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                        />
                     </div>
                     
                     {/* Multiple Image Upload Section with Captions */}
