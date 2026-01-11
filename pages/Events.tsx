@@ -329,6 +329,10 @@ const Events: React.FC = () => {
         <div className="space-y-6">
           {!loading && displayEvents.map((event) => {
             const dateObj = parseLocalDate(event.date);
+            // Replace Thuhriltu with Thupui Hawngtu for Nilai Zan services
+            const isNilaiZan = normalizeTitle(event.title).includes('nilai');
+            const speakerLabel = isNilaiZan ? "Thupui Hawngtu" : "Thuhriltu";
+
             return (
               <div key={event.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row relative group hover:shadow-md transition">
                 {isAdmin && (
@@ -351,7 +355,7 @@ const Events: React.FC = () => {
                       <div className="bg-slate-50 p-5 rounded-lg my-4 space-y-1 border border-slate-100 shadow-inner">
                           <ProgramItem label="Hruaitu" value={event.program.hruaitu} />
                           <ProgramItem label="Ṭantu" value={event.program.tantu} />
-                          <ProgramItem label="Thuhriltu" value={event.program.thuhriltu} />
+                          <ProgramItem label={speakerLabel} value={event.program.thuhriltu} />
                           <ProgramItem label="Thupui" value={event.program.thupui} />
                       </div>
                   )}
@@ -394,8 +398,10 @@ const Events: React.FC = () => {
                             <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder="Conductor name" />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Thuhriltu</label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Preacher name" />
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                {normalizeTitle(editForm.title || '').includes('nilai') ? "Thupui Hawngtu" : "Thuhriltu"}
+                            </label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Preacher or Speaker name" />
                         </div>
                     </div>
                     <div>
@@ -417,7 +423,7 @@ const Events: React.FC = () => {
 
       {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl p-6 max-w-sm w-full">
+              <div className="bg-white rounded-xl p-6 max-sm w-full">
                   <h3 className="text-lg font-bold text-red-600 mb-4">Confirm Delete</h3>
                   <p className="text-slate-600 mb-6">Remove this occurrence from the schedule?</p>
                   <div className="flex justify-end space-x-3">

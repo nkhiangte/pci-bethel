@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants as getChurchConstants } from '../constants';
 import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
-import { WeeklyDuty, Staff, ProgramField } from '../types';
+import { WeeklyDuty, Staff, ProgramField, Announcement } from '../types';
 import { db } from '../services/firebase';
 import { 
   Users, BookOpen, UserCheck, Home as HomeIcon, 
   ChevronRight, Shield, Clock, 
   Music, UserCircle, CalendarDays,
-  Radio, ClipboardList, Edit, Save, X, Loader
+  Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -57,7 +57,7 @@ const LargeStatsSphere = () => {
 };
 
 export const Home: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
   const { verse, loading: verseLoading } = useVerseOfTheDay();
   const { weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getChurchConstants(language);
@@ -65,6 +65,7 @@ export const Home: React.FC = () => {
   const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticDuty);
   const [churchPastors, setChurchPastors] = useState<Staff[]>(staticPastors);
   const [churchElders, setChurchElders] = useState<Staff[]>(staticElders);
+  const [latestNews, setLatestNews] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit Duties Modal State
@@ -77,13 +78,20 @@ export const Home: React.FC = () => {
         setLoading(true);
         if (db?.collection) {
             try {
-                const [pSnap, eSnap, dSnap] = await Promise.all([
+                const [pSnap, eSnap, dSnap, nSnap] = await Promise.all([
                     db.collection('pastors').orderBy('order', 'asc').get(),
                     db.collection('elders').orderBy('order', 'asc').get(),
-                    db.collection('weeklyDuties').doc('current').get()
+                    db.collection('weeklyDuties').doc('current').get(),
+                    db.collection('announcements').orderBy('date', 'desc').limit(3).get()
                 ]);
+                
                 if (!pSnap.empty) setChurchPastors(pSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
                 if (!eSnap.empty) setChurchElders(eSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+                
+                if (nSnap && !nSnap.empty) {
+                    setLatestNews(nSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+                }
+
                 if (dSnap.exists) {
                     const data = dSnap.data() as WeeklyDuty;
                     const sanitizedDuty = {
@@ -165,6 +173,56 @@ export const Home: React.FC = () => {
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-6">Kohhran Statistics</span>
             </div>
         </div>
+
+        {/* SECTION: Latest News / Announcements */}
+        {latestNews.length > 0 && (
+            <div className="space-y-10">
+                <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-200 pb-8">
+                    <div>
+                        <h2 className="text-xs font-black text-orange-600 uppercase tracking-[0.4em] mb-3">{t.home.latestNews}</h2>
+                        <h3 className="text-4xl font-serif font-black text-slate-900 tracking-tight">{t.home.newsTitle}</h3>
+                    </div>
+                    <Link to="/announcements" className="flex items-center gap-2 text-church-600 font-black uppercase text-[10px] tracking-widest hover:translate-x-1 transition-transform bg-white px-5 py-2.5 rounded-full border border-slate-200 shadow-sm">
+                        {t.home.viewAll} <ArrowUpRight size={14} />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {latestNews.map((news) => (
+                        <Link to="/announcements" key={news.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div className="h-52 w-full overflow-hidden bg-slate-100 relative">
+                                {news.imageUrl ? (
+                                    <img src={news.imageUrl} alt={news.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-church-100 to-church-50 flex items-center justify-center">
+                                        <Bell size={40} className="text-church-200" />
+                                    </div>
+                                )}
+                                <div className="absolute top-4 left-4">
+                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                                        news.category === 'Emergency' ? 'bg-red-600 text-white' : 'bg-white/90 text-slate-700 backdrop-blur-sm'
+                                    }`}>
+                                        {news.category}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="p-8 flex flex-col flex-grow">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{news.date}</span>
+                                <h4 className="text-xl font-bold text-slate-900 leading-tight mb-4 group-hover:text-church-700 transition-colors line-clamp-2">
+                                    {news.title}
+                                </h4>
+                                <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed flex-grow">
+                                    {news.content}
+                                </p>
+                                <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-[10px] font-black text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Read More <ChevronRight size={14} className="ml-1" />
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        )}
 
         {/* SECTION: Service Personnel (Unified & Compact Assignment Table) */}
         <div className="space-y-12 relative group/section">
