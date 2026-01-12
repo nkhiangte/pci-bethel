@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw } from 'lucide-react';
+import { db } from '../services/firebase';
+import firebase from 'firebase/compat/app';
 
 const AdminDashboard: React.FC = () => {
   const { isAdmin, currentUser } = useAuth();
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   if (!currentUser) return <Navigate to="/login" replace />;
   if (!isAdmin) return (
@@ -30,6 +33,45 @@ const AdminDashboard: React.FC = () => {
       { title: 'Approve Forms', icon: CheckCircle, link: '#', color: 'bg-teal-500', desc: 'Review membership and prayer requests. (Coming Soon)' },
   ];
 
+  const handleMigrateWeeklyPrograms = async () => {
+    if (!db || !db.collection || !window.confirm("This will move all entries titled 'Weekly Program...' from 'Executive Body' to the new 'Weekly Program' folder. Proceed?")) return;
+    
+    setMaintenanceLoading(true);
+    try {
+        const snapshot = await db.collection('archives')
+            .where('category', '==', 'Rawngbawltu te')
+            .where('subCategory', '==', 'Executive Body')
+            .get();
+            
+        const batch = db.batch();
+        let count = 0;
+        
+        snapshot.docs.forEach((doc: any) => {
+            const data = doc.data();
+            // Check if it looks like a weekly program
+            if (data.title && (data.title.toLowerCase().includes('weekly program') || data.description?.includes('WEEKLY DUTY'))) {
+                const ref = db.collection('archives').doc(doc.id);
+                batch.update(ref, {
+                    category: 'Weekly Program',
+                    subCategory: firebase.firestore.FieldValue.delete()
+                });
+                count++;
+            }
+        });
+        
+        if (count > 0) {
+            await batch.commit();
+            alert(`Success! Moved ${count} records to the Weekly Program folder.`);
+        } else {
+            alert("No matching 'Weekly Program' records found in Executive Body.");
+        }
+    } catch (e: any) {
+        console.error(e);
+        alert("Migration failed: " + e.message);
+    }
+    setMaintenanceLoading(false);
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,15 +94,40 @@ const AdminDashboard: React.FC = () => {
                 ))}
             </div>
 
-            {/* Quick Upload Mockup */}
-            <div className="mt-12 bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
-                    <Upload className="mr-2 text-church-500" /> Quick File Upload
-                </h3>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:bg-slate-50 transition cursor-pointer">
-                    <FileText className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                    <p className="font-medium text-slate-600">Drag and drop weekly bulletin PDF here</p>
-                    <p className="text-xs text-slate-400 mt-1">or click to browse files</p>
+            <div className="grid md:grid-cols-2 gap-8 mt-12">
+                {/* Quick Upload */}
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                        <Upload className="mr-2 text-church-500" /> Quick File Upload
+                    </h3>
+                    <div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:bg-slate-50 transition cursor-pointer">
+                        <FileText className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+                        <p className="font-medium text-slate-600">Drag and drop weekly bulletin PDF here</p>
+                        <p className="text-xs text-slate-400 mt-1">or click to browse files</p>
+                    </div>
+                </div>
+
+                {/* System Maintenance */}
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                        <Settings className="mr-2 text-slate-500" /> System Maintenance
+                    </h3>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <div>
+                                <h4 className="font-bold text-slate-700 text-sm">Migrate Archive Data</h4>
+                                <p className="text-xs text-slate-500 mt-1">Move Weekly Programs from Exec. Body to new folder.</p>
+                            </div>
+                            <button 
+                                onClick={handleMigrateWeeklyPrograms} 
+                                disabled={maintenanceLoading}
+                                className="flex items-center px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700 disabled:opacity-50 transition"
+                            >
+                                <RefreshCw size={14} className={`mr-2 ${maintenanceLoading ? 'animate-spin' : ''}`} />
+                                {maintenanceLoading ? 'Moving...' : 'Migrate'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
