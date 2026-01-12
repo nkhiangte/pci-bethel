@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Users, MapPin, User, ChevronDown, ChevronUp, Database, Loader, Plus, Edit, Trash, X, Save, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { Users, MapPin, ChevronDown, ChevronUp, Database, Loader, Plus, Edit, Trash, X, Save, Upload, Trash2, Globe, LocateFixed } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
+const BASE_MAP_URL = 'https://www.google.com/maps/d/embed?mid=1Xns6BCmnqrgImcTeDiWKwYGyRqS_zJo';
 
 interface UpaBialData {
   id: string; // e.g., 'bial-1'
@@ -13,6 +14,10 @@ interface UpaBialData {
   leader: string;
   members: string[];
   imageUrl?: string;
+  // New fields for Map Linking
+  mapLat?: string;
+  mapLng?: string;
+  mapZoom?: string;
 }
 
 // Hardcoded map to ensure images show up even if not present in the database fetch
@@ -137,6 +142,7 @@ const UpaBial: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [currentMapUrl, setCurrentMapUrl] = useState(BASE_MAP_URL);
 
   // Edit State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -144,6 +150,7 @@ const UpaBial: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const fetchBials = async () => {
     setLoading(true);
@@ -206,7 +213,10 @@ const UpaBial: React.FC = () => {
         leader: '',
         areaDescription: '',
         members: [],
-        imageUrl: ''
+        imageUrl: '',
+        mapLat: '',
+        mapLng: '',
+        mapZoom: '18'
     });
     setIsEditModalOpen(true);
   };
@@ -295,128 +305,193 @@ const UpaBial: React.FC = () => {
   };
 
   const toggleExpand = (id: string) => {
-    setExpandedId(prev => prev === id ? null : id);
+    if (expandedId === id) {
+        // Collapsing
+        setExpandedId(null);
+        setCurrentMapUrl(BASE_MAP_URL);
+    } else {
+        // Expanding
+        setExpandedId(id);
+        const selectedBial = bials.find(b => b.id === id);
+        
+        // Update map URL if coordinates exist
+        if (selectedBial && selectedBial.mapLat && selectedBial.mapLng) {
+            const zoom = selectedBial.mapZoom || '18';
+            setCurrentMapUrl(`${BASE_MAP_URL}&ll=${selectedBial.mapLat},${selectedBial.mapLng}&z=${zoom}`);
+            
+            // Only scroll on mobile, on desktop the map is sticky
+            if (window.innerWidth < 1024 && mapContainerRef.current) {
+                mapContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            setCurrentMapUrl(BASE_MAP_URL);
+        }
+    }
+  };
+
+  const handleLocateOnMap = (e: React.MouseEvent, bial: UpaBialData) => {
+      e.stopPropagation();
+      setExpandedId(bial.id);
+      if (bial.mapLat && bial.mapLng) {
+          const zoom = bial.mapZoom || '18';
+          setCurrentMapUrl(`${BASE_MAP_URL}&ll=${bial.mapLat},${bial.mapLng}&z=${zoom}`);
+      } else {
+          setCurrentMapUrl(BASE_MAP_URL);
+          alert("Coordinates not set for this Bial yet.");
+      }
+      
+      // Scroll map into view on mobile
+      if (window.innerWidth < 1024 && mapContainerRef.current) {
+          mapContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
   };
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen">
+    <div className="bg-slate-50 min-h-screen pb-12">
+      <div className="bg-church-900 text-white py-12 mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl font-serif font-bold mb-4">Kohhran Upa Bialte</h1>
+            <p className="max-w-2xl mx-auto text-church-200">Pastoral Care Districts and Leaders</p>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Kohhran Upa Bialte</h1>
-          <p className="max-w-2xl mx-auto text-slate-600">Pastoral Care Districts and Leaders</p>
-        </div>
-
-        {/* Map Embed */}
-        <div className="mb-12 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-             <iframe 
-               src="https://www.google.com/maps/d/embed?mid=1Xns6BCmnqrgImcTeDiWKwYGyRqS_zJo" 
-               width="100%" 
-               height="480" 
-               style={{ border: 0 }}
-               title="Upa Bial Map"
-               loading="lazy"
-             ></iframe>
-        </div>
-
-        {isAdmin && (
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              onClick={handleAddNew}
-              className="inline-flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition"
-            >
-              <Plus size={16} className="mr-2" /> Add New Bial
-            </button>
-            <button 
-              onClick={handleSeedData} 
-              disabled={isSeeding}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm disabled:opacity-50 text-sm"
-            >
-              {isSeeding ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Database size={16} className="mr-2" />}
-              Seed/Reset List
-            </button>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bials.map((bial) => {
-              const isExpanded = expandedId === bial.id;
-              // Fallback to local image mapping if database image is missing or not provided
-              const displayImage = bial.imageUrl || BIAL_IMAGES[bial.number];
-              
-              return (
-                <div key={bial.id} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'shadow-lg border-church-300 ring-1 ring-church-200 col-span-1 md:col-span-2 lg:col-span-3' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
-                  <button 
-                    onClick={() => toggleExpand(bial.id)}
-                    className="w-full text-left p-4 flex justify-between items-center group"
-                  >
-                    <div className="flex items-center gap-4">
-                      {displayImage ? (
-                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-church-100 shadow-sm shrink-0">
-                          <img 
-                            src={displayImage} 
-                            alt={`Upa Bial ${bial.number}`} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-14 h-14 rounded-full bg-church-50 text-church-600 flex items-center justify-center font-bold text-lg shadow-sm border border-church-100 shrink-0">
-                          {bial.number}
-                        </div>
-                      )}
-                      
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-church-700 transition-colors">BIAL - {bial.number}</h3>
-                        <p className="text-sm text-church-600 font-medium">{bial.leader}</p>
-                      </div>
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+            
+            {/* List Column */}
+            <div className="w-full lg:w-1/3 order-2 lg:order-1">
+                {isAdmin && (
+                    <div className="flex flex-wrap justify-center gap-4 mb-6">
+                        <button 
+                        onClick={handleAddNew}
+                        className="inline-flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition text-sm font-bold"
+                        >
+                        <Plus size={16} className="mr-2" /> New Bial
+                        </button>
+                        <button 
+                        onClick={handleSeedData} 
+                        disabled={isSeeding}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm disabled:opacity-50 text-sm font-bold"
+                        >
+                        {isSeeding ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Database size={16} className="mr-2" />}
+                        Seed
+                        </button>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {isAdmin && (
-                            <div className="flex gap-2 mr-2">
-                                <span onClick={(e) => handleEdit(e, bial)} className="p-1.5 text-slate-400 hover:text-church-600 hover:bg-slate-100 rounded-full transition"><Edit size={16} /></span>
-                                <span onClick={(e) => handleDelete(e, bial.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-full transition"><Trash size={16} /></span>
+                )}
+
+                {loading ? (
+                    <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
+                ) : (
+                    <div className="space-y-4">
+                        {bials.map((bial) => {
+                        const isExpanded = expandedId === bial.id;
+                        const displayImage = bial.imageUrl || BIAL_IMAGES[bial.number];
+                        
+                        return (
+                            <div key={bial.id} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'shadow-lg border-church-500 ring-1 ring-church-200' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
+                                <button 
+                                    onClick={() => toggleExpand(bial.id)}
+                                    className="w-full text-left p-4 flex justify-between items-center group relative overflow-hidden"
+                                >
+                                    {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1 bg-church-500"></div>}
+                                    <div className="flex items-center gap-4 pl-2">
+                                    {displayImage ? (
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-100 shadow-sm shrink-0">
+                                        <img 
+                                            src={displayImage} 
+                                            alt={`Upa Bial ${bial.number}`} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                        </div>
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-church-50 text-church-600 flex items-center justify-center font-bold text-lg shadow-sm border border-church-100 shrink-0">
+                                        {bial.number}
+                                        </div>
+                                    )}
+                                    
+                                    <div>
+                                        <h3 className={`font-bold text-lg transition-colors ${isExpanded ? 'text-church-700' : 'text-slate-800'}`}>BIAL - {bial.number}</h3>
+                                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{bial.leader}</p>
+                                    </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        {/* Quick Map Action */}
+                                        <div 
+                                            role="button"
+                                            onClick={(e) => handleLocateOnMap(e, bial)}
+                                            className={`p-2 rounded-full transition ${isExpanded ? 'text-church-600 bg-church-50' : 'text-slate-300 hover:text-church-500 hover:bg-slate-50'}`}
+                                            title="Show on Map"
+                                        >
+                                            <LocateFixed size={20} />
+                                        </div>
+
+                                        {isAdmin && (
+                                            <div className="flex gap-1 mr-1">
+                                                <span onClick={(e) => handleEdit(e, bial)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-full transition"><Edit size={16} /></span>
+                                                <span onClick={(e) => handleDelete(e, bial.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-full transition"><Trash size={16} /></span>
+                                            </div>
+                                        )}
+                                        <div className="text-slate-300">
+                                            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {isExpanded && (
+                                    <div className="px-6 pb-6 pt-2 border-t border-slate-100 animate-in slide-in-from-top-2 duration-200 bg-slate-50/30 rounded-b-xl">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                                                    <MapPin size={12} className="mr-1" /> Huam Chhung (Area)
+                                                </h4>
+                                                <p className="text-slate-700 text-sm leading-relaxed bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    {bial.areaDescription}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                                                    <Users size={12} className="mr-1" /> Bialtu Dangte
+                                                </h4>
+                                                <ul className="space-y-1">
+                                                    {bial.members.map((member, idx) => (
+                                                    <li key={idx} className="flex items-center text-xs font-bold text-slate-600 bg-white px-3 py-2 rounded border border-slate-200">
+                                                        <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-[10px] mr-2">{idx + 1}</span>
+                                                        {member}
+                                                    </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                        <div className="text-slate-400">
-                        {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                        </div>
+                        );
+                        })}
                     </div>
-                  </button>
+                )}
+            </div>
 
-                  {isExpanded && (
-                    <div className="px-6 pb-6 pt-0 border-t border-slate-100 animate-in slide-in-from-top-2 duration-200 bg-slate-50/50 rounded-b-xl">
-                      <div className="mt-4 grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
-                            <MapPin size={14} className="mr-1" /> Huam Chhung (Area)
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-sm">
-                            {bial.areaDescription}
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
-                            <Users size={14} className="mr-1" /> Bialtu Dangte (Assistants)
-                          </h4>
-                          <ul className="space-y-2">
-                            {bial.members.map((member, idx) => (
-                              <li key={idx} className="flex items-center text-sm text-slate-700 bg-white p-2 rounded border border-slate-200 shadow-sm">
-                                <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs mr-3 font-bold">{idx + 1}</span>
-                                {member}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
+            {/* Map Column (Sticky on Desktop) */}
+            <div className="w-full lg:w-2/3 order-1 lg:order-2 h-[500px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
+                <div ref={mapContainerRef} className="w-full h-full bg-white rounded-2xl shadow-xl border-4 border-white overflow-hidden relative group">
+                    <iframe 
+                        src={currentMapUrl} 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }}
+                        title="Upa Bial Map"
+                        loading="lazy"
+                        className="transition-opacity duration-500 w-full h-full"
+                    ></iframe>
+                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-bold text-slate-700 shadow-md pointer-events-none border border-slate-200 z-10 flex items-center gap-2">
+                        <Globe size={14} className="text-church-600" />
+                        {expandedId ? `Viewing Bial ${bials.find(b => b.id === expandedId)?.number}` : 'Interactive Map'}
                     </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
+            </div>
+
+        </div>
       </div>
 
       {/* Edit Modal */}
@@ -457,6 +532,30 @@ const UpaBial: React.FC = () => {
                             onChange={e => setEditingBial({...editingBial, areaDescription: e.target.value})} 
                             placeholder="Describe the area..."
                         />
+                    </div>
+
+                    {/* Map Linking Section */}
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center">
+                            <Globe size={16} className="mr-1"/> Map Coordinates
+                        </label>
+                        <p className="text-xs text-blue-600 mb-3">
+                            Enter the Latitude and Longitude to focus the map when this card is expanded.
+                        </p>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Latitude</label>
+                                <input className="w-full border p-2 rounded text-sm" value={editingBial.mapLat || ''} onChange={e => setEditingBial({...editingBial, mapLat: e.target.value})} placeholder="e.g. 23.4758" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Longitude</label>
+                                <input className="w-full border p-2 rounded text-sm" value={editingBial.mapLng || ''} onChange={e => setEditingBial({...editingBial, mapLng: e.target.value})} placeholder="e.g. 93.3294" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Zoom</label>
+                                <input type="number" className="w-full border p-2 rounded text-sm" value={editingBial.mapZoom || '18'} onChange={e => setEditingBial({...editingBial, mapZoom: e.target.value})} placeholder="18" />
+                            </div>
+                        </div>
                     </div>
 
                     <div>

@@ -322,6 +322,7 @@ const Home: React.FC = () => {
       <section className="bg-gradient-to-b from-transparent to-slate-50/50 rounded-[3rem] py-8">
          <div className="text-center mb-10 relative">
             <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.puipate}</h2>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Click for individual biography</p>
             <div className="h-1 w-20 bg-church-500 mx-auto mt-3 rounded-full"></div>
          </div>
          
