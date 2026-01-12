@@ -94,6 +94,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    
+    // Added missionaries collection
+    match /missionaries/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
 
     // Unified collection for all record types: baptism, wedding, death, inkhawmpui
     match /records/{docId} {

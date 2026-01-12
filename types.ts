@@ -103,12 +103,18 @@ export interface Staff {
   imageScale?: number; // 1.0+
 }
 
+export interface ServiceHistory {
+    field: string;
+    period: string;
+}
+
 export interface Missionary {
   id: string;
   name: string;
-  field: string; // Mission Field (e.g., Arunachal, Nepal)
+  field: string; // Mission Field (e.g., Arunachal, Nepal) - kept for backward compat/summary
   imageUrl: string;
-  period?: string; // e.g. 2010 - Present
+  period?: string; // e.g. 2010 - Present - kept for backward compat/summary
+  serviceHistory?: ServiceHistory[]; // New: List of multiple fields/years
   bio: string; // Full biography
   order?: number;
 }

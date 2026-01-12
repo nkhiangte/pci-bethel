@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Missionary } from '../types';
+import { Missionary, ServiceHistory } from '../types';
 import { 
   Globe, MapPin, Loader, Plus, Edit, Trash, X, Save, 
-  ChevronRight, BookOpen, Upload, User, Image as ImageIcon
+  ChevronRight, BookOpen, Upload, User, Image as ImageIcon, Calendar, Trash2
 } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
@@ -62,14 +62,16 @@ const Missionaries: React.FC = () => {
         field: '',
         period: '',
         bio: '',
-        imageUrl: ''
+        imageUrl: '',
+        serviceHistory: []
     });
     setIsEditModalOpen(true);
   };
 
   const handleEdit = (e: React.MouseEvent, m: Missionary) => {
     e.stopPropagation();
-    setEditingMissionary({ ...m });
+    // Ensure serviceHistory is initialized if it doesn't exist
+    setEditingMissionary({ ...m, serviceHistory: m.serviceHistory || [] });
     setIsEditModalOpen(true);
   };
 
@@ -87,17 +89,45 @@ const Missionaries: React.FC = () => {
     }
   };
 
+  const handleAddService = () => {
+      const currentHistory = editingMissionary.serviceHistory || [];
+      setEditingMissionary({
+          ...editingMissionary,
+          serviceHistory: [...currentHistory, { field: '', period: '' }]
+      });
+  };
+
+  const handleServiceChange = (index: number, key: keyof ServiceHistory, value: string) => {
+      const currentHistory = [...(editingMissionary.serviceHistory || [])];
+      currentHistory[index] = { ...currentHistory[index], [key]: value };
+      setEditingMissionary({ ...editingMissionary, serviceHistory: currentHistory });
+  };
+
+  const handleRemoveService = (index: number) => {
+      const currentHistory = [...(editingMissionary.serviceHistory || [])];
+      currentHistory.splice(index, 1);
+      setEditingMissionary({ ...editingMissionary, serviceHistory: currentHistory });
+  };
+
   const handleSave = async () => {
     if (!db?.collection) return;
     
-    if (!editingMissionary.name || !editingMissionary.field) {
-        alert("Name and Field are required.");
+    if (!editingMissionary.name) {
+        alert("Name is required.");
         return;
     }
 
     setIsSaving(true);
     try {
         const { id, ...data } = editingMissionary;
+        
+        // Auto-update legacy field/period with the last entry in history for consistency
+        if (data.serviceHistory && data.serviceHistory.length > 0) {
+            const latest = data.serviceHistory[data.serviceHistory.length - 1];
+            data.field = latest.field;
+            data.period = latest.period;
+        }
+
         if (id) {
             await db.collection('missionaries').doc(id).set(data, { merge: true });
         } else {
@@ -107,7 +137,7 @@ const Missionaries: React.FC = () => {
         fetchMissionaries();
     } catch (error) {
         console.error("Error saving:", error);
-        alert("Failed to save.");
+        alert("Failed to save. Please try again.");
     }
     setIsSaving(false);
   };
@@ -181,8 +211,10 @@ const Missionaries: React.FC = () => {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                 <div className="absolute bottom-4 left-4 right-4 text-white">
                                     <h3 className="text-xl font-bold font-serif leading-tight mb-1">{m.name}</h3>
-                                    <div className="flex items-center text-sm font-medium text-church-200">
-                                        <MapPin size={14} className="mr-1" /> {m.field}
+                                    <div className="flex flex-col gap-1 text-sm font-medium text-church-200">
+                                        <div className="flex items-center">
+                                            <MapPin size={14} className="mr-1" /> {m.field || 'Multiple Fields'}
+                                        </div>
                                     </div>
                                 </div>
                                 {isAdmin && (
@@ -194,8 +226,25 @@ const Missionaries: React.FC = () => {
                             </div>
                             <div className="p-6 flex flex-col flex-grow">
                                 <div className="mb-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Service Period</p>
-                                    <p className="text-slate-800 font-medium">{m.period || 'Current'}</p>
+                                    {m.serviceHistory && m.serviceHistory.length > 0 ? (
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Service History</p>
+                                            {m.serviceHistory.slice(0, 2).map((h, i) => (
+                                                <div key={i} className="flex justify-between text-xs text-slate-700">
+                                                    <span className="font-semibold">{h.field}</span>
+                                                    <span className="text-slate-500">{h.period}</span>
+                                                </div>
+                                            ))}
+                                            {m.serviceHistory.length > 2 && (
+                                                <p className="text-xs text-church-600 italic">+{m.serviceHistory.length - 2} more</p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Service Period</p>
+                                            <p className="text-slate-800 font-medium">{m.period || 'Current'}</p>
+                                        </>
+                                    )}
                                 </div>
                                 <p className="text-slate-600 text-sm line-clamp-3 mb-6 flex-grow">{m.bio}</p>
                                 <div className="pt-4 border-t border-slate-100 flex justify-between items-center mt-auto">
@@ -231,15 +280,38 @@ const Missionaries: React.FC = () => {
                             <span className="inline-block px-3 py-1 bg-church-600 rounded-full text-xs font-bold uppercase tracking-widest mb-3">Missionary</span>
                             <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight mb-2">{selectedMissionary.name}</h2>
                             <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-slate-300">
-                                <span className="flex items-center"><MapPin size={18} className="mr-2 text-church-400"/> {selectedMissionary.field}</span>
-                                <span className="w-1 h-1 bg-slate-500 rounded-full hidden md:block"></span>
-                                <span>{selectedMissionary.period || 'Serving'}</span>
+                                {selectedMissionary.serviceHistory && selectedMissionary.serviceHistory.length > 0 ? (
+                                    <span>Served in {selectedMissionary.serviceHistory.length} fields</span>
+                                ) : (
+                                    <>
+                                        <span className="flex items-center"><MapPin size={18} className="mr-2 text-church-400"/> {selectedMissionary.field}</span>
+                                        <span className="w-1 h-1 bg-slate-500 rounded-full hidden md:block"></span>
+                                        <span>{selectedMissionary.period || 'Serving'}</span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
                     
                     <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
                         <div className="max-w-3xl mx-auto">
+                            {/* Service History Table */}
+                            {selectedMissionary.serviceHistory && selectedMissionary.serviceHistory.length > 0 && (
+                                <div className="mb-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center">
+                                        <MapPin size={14} className="mr-2"/> Service History
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {selectedMissionary.serviceHistory.map((h, i) => (
+                                            <div key={i} className="flex justify-between items-center border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                                                <span className="font-serif font-bold text-slate-800">{h.field}</span>
+                                                <span className="text-sm text-church-600 font-medium bg-church-50 px-2 py-1 rounded">{h.period}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="h-px bg-slate-200 flex-1"></div>
                                 <BookOpen size={20} className="text-church-600" />
@@ -269,15 +341,43 @@ const Missionaries: React.FC = () => {
                             <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.name || ''} onChange={e => setEditingMissionary({...editingMissionary, name: e.target.value})} placeholder="Full Name" />
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Mission Field</label>
-                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.field || ''} onChange={e => setEditingMissionary({...editingMissionary, field: e.target.value})} placeholder="e.g. Arunachal" />
+                        {/* Multiple Mission Fields Section */}
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center">
+                                <Globe size={16} className="mr-2"/> Mission Fields & Tenure
+                            </label>
+                            
+                            <div className="space-y-3 mb-3">
+                                {(editingMissionary.serviceHistory || []).map((history, index) => (
+                                    <div key={index} className="flex gap-2 items-start">
+                                        <input 
+                                            className="flex-1 border p-2 rounded-lg text-sm" 
+                                            placeholder="Field (e.g. Nepal)" 
+                                            value={history.field} 
+                                            onChange={e => handleServiceChange(index, 'field', e.target.value)}
+                                        />
+                                        <input 
+                                            className="flex-1 border p-2 rounded-lg text-sm" 
+                                            placeholder="Period (e.g. 2010-2015)" 
+                                            value={history.period} 
+                                            onChange={e => handleServiceChange(index, 'period', e.target.value)}
+                                        />
+                                        <button 
+                                            onClick={() => handleRemoveService(index)}
+                                            className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Period (Years)</label>
-                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.period || ''} onChange={e => setEditingMissionary({...editingMissionary, period: e.target.value})} placeholder="e.g. 2010 - 2015" />
-                            </div>
+                            
+                            <button 
+                                onClick={handleAddService}
+                                className="text-xs font-bold text-church-600 flex items-center hover:underline"
+                            >
+                                <Plus size={14} className="mr-1"/> Add Another Field
+                            </button>
                         </div>
 
                         <div>
