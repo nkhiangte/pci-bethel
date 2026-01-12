@@ -117,6 +117,10 @@ export interface Missionary {
   serviceHistory?: ServiceHistory[]; // New: List of multiple fields/years
   bio: string; // Full biography
   order?: number;
+  // Image adjustments
+  imagePositionX?: number; // 0-100%
+  imagePositionY?: number; // 0-100%
+  imageScale?: number; // 1.0+
 }
 
 export interface CommitteeMember {

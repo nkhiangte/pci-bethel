@@ -5,7 +5,8 @@ import { db } from '../services/firebase';
 import { Missionary, ServiceHistory } from '../types';
 import { 
   Globe, MapPin, Loader, Plus, Edit, Trash, X, Save, 
-  ChevronRight, BookOpen, Upload, User, Image as ImageIcon, Calendar, Trash2
+  ChevronRight, BookOpen, Upload, User, Image as ImageIcon, Calendar, Trash2,
+  Move, ZoomIn
 } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
@@ -63,7 +64,10 @@ const Missionaries: React.FC = () => {
         period: '',
         bio: '',
         imageUrl: '',
-        serviceHistory: []
+        serviceHistory: [],
+        imagePositionX: 50,
+        imagePositionY: 0,
+        imageScale: 1
     });
     setIsEditModalOpen(true);
   };
@@ -71,7 +75,13 @@ const Missionaries: React.FC = () => {
   const handleEdit = (e: React.MouseEvent, m: Missionary) => {
     e.stopPropagation();
     // Ensure serviceHistory is initialized if it doesn't exist
-    setEditingMissionary({ ...m, serviceHistory: m.serviceHistory || [] });
+    setEditingMissionary({ 
+        ...m, 
+        serviceHistory: m.serviceHistory || [],
+        imagePositionX: m.imagePositionX ?? 50,
+        imagePositionY: m.imagePositionY ?? 0,
+        imageScale: m.imageScale ?? 1
+    });
     setIsEditModalOpen(true);
   };
 
@@ -202,7 +212,12 @@ const Missionaries: React.FC = () => {
                         >
                             <div className="relative h-64 bg-slate-200 overflow-hidden">
                                 {m.imageUrl ? (
-                                    <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                    <img 
+                                        src={m.imageUrl} 
+                                        alt={m.name} 
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                        style={{ objectPosition: `${m.imagePositionX ?? 50}% ${m.imagePositionY ?? 0}%` }}
+                                    />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-church-50 text-church-300">
                                         <User size={64} />
@@ -269,9 +284,17 @@ const Missionaries: React.FC = () => {
         {selectedMissionary && (
             <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedMissionary(null)}>
                 <div className="bg-white rounded-[2rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-                    <div className="relative h-48 md:h-64 shrink-0 bg-slate-900">
+                    <div className="relative h-48 md:h-64 shrink-0 bg-slate-900 overflow-hidden">
                         {selectedMissionary.imageUrl && (
-                            <img src={selectedMissionary.imageUrl} alt={selectedMissionary.name} className="w-full h-full object-cover opacity-60" />
+                            <img 
+                                src={selectedMissionary.imageUrl} 
+                                alt={selectedMissionary.name} 
+                                className="w-full h-full object-cover opacity-60" 
+                                style={{ 
+                                    objectPosition: `${selectedMissionary.imagePositionX ?? 50}% ${selectedMissionary.imagePositionY ?? 0}%`,
+                                    transform: `scale(${selectedMissionary.imageScale ?? 1})`
+                                }}
+                            />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                         <button onClick={() => setSelectedMissionary(null)} className="absolute top-6 right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition"><X size={24}/></button>
@@ -393,8 +416,50 @@ const Missionaries: React.FC = () => {
                         </div>
 
                         {editingMissionary.imageUrl && (
-                            <div className="h-40 w-full bg-slate-100 rounded-lg overflow-hidden border">
-                                <img src={editingMissionary.imageUrl} alt="Preview" className="w-full h-full object-contain" />
+                            <div className="space-y-4 border border-slate-200 p-4 rounded-xl bg-slate-50">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center"><Move size={14} className="mr-1"/> Image Adjustment</label>
+                                
+                                <div className="h-64 w-full bg-slate-200 rounded-lg overflow-hidden border shadow-inner relative">
+                                     <img 
+                                        src={editingMissionary.imageUrl} 
+                                        alt="Preview" 
+                                        className="w-full h-full object-cover transition-all duration-200"
+                                        style={{
+                                            objectPosition: `${editingMissionary.imagePositionX ?? 50}% ${editingMissionary.imagePositionY ?? 0}%`,
+                                            transform: `scale(${editingMissionary.imageScale ?? 1})`
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 mb-1 block">Pos X ({editingMissionary.imagePositionX ?? 50}%)</label>
+                                        <input 
+                                            type="range" min="0" max="100" 
+                                            value={editingMissionary.imagePositionX ?? 50} 
+                                            onChange={e => setEditingMissionary({...editingMissionary, imagePositionX: Number(e.target.value)})}
+                                            className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-church-600"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 mb-1 block">Pos Y ({editingMissionary.imagePositionY ?? 0}%)</label>
+                                        <input 
+                                            type="range" min="0" max="100" 
+                                            value={editingMissionary.imagePositionY ?? 0} 
+                                            onChange={e => setEditingMissionary({...editingMissionary, imagePositionY: Number(e.target.value)})}
+                                            className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-church-600"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 mb-1 block flex items-center"><ZoomIn size={10} className="mr-1"/> Zoom ({editingMissionary.imageScale ?? 1}x)</label>
+                                        <input 
+                                            type="range" min="1" max="3" step="0.1"
+                                            value={editingMissionary.imageScale ?? 1} 
+                                            onChange={e => setEditingMissionary({...editingMissionary, imageScale: Number(e.target.value)})}
+                                            className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-church-600"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         )}
 
