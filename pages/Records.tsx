@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
+import { useSearchParams } from 'react-router-dom';
 import { 
   BookUser, Baby, Cross, Users, Plus, Edit, Trash, X, Save, 
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
@@ -56,9 +57,15 @@ const formatDateCell = (value: any): string => {
 const Records: React.FC = () => {
     const { t, language } = useLanguage();
     const { isAdmin } = useAuth();
-    const [viewMode, setViewMode] = useState<ViewMode>('selection');
+    
+    // URL Params Integration
+    const [searchParams, setSearchParams] = useSearchParams();
+    const typeParam = searchParams.get('type') as RecordType | null;
+    
+    const activeTab = typeParam || 'baptism';
+    const viewMode: ViewMode = typeParam ? 'details' : 'selection';
+
     const [displayMode, setDisplayMode] = useState<DisplayMode>('table');
-    const [activeTab, setActiveTab] = useState<RecordType>('baptism');
     const [records, setRecords] = useState<ChurchRecord[]>([]);
     const [loading, setLoading] = useState(false);
     const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -149,10 +156,13 @@ const Records: React.FC = () => {
     }, [fetchRecords]);
 
     const handleSelectCategory = (type: RecordType) => {
-        setActiveTab(type);
-        setViewMode('details');
+        setSearchParams({ type });
         setSearchTerm('');
         setDisplayMode('table');
+    };
+
+    const handleBack = () => {
+        setSearchParams({});
     };
 
     const handleAddNew = () => {
@@ -469,7 +479,7 @@ const Records: React.FC = () => {
             <div className="bg-church-900 py-12 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none transform -rotate-12 scale-150"><BookUser size={300} /></div>
                 <div className="relative z-10 max-w-7xl mx-auto px-6">
-                    <button onClick={() => setViewMode('selection')} className="flex items-center text-church-200 hover:text-white mb-4 transition font-bold"><ChevronLeft size={20} /> Back to Records</button>
+                    <button onClick={handleBack} className="flex items-center text-church-200 hover:text-white mb-4 transition font-bold"><ChevronLeft size={20} /> Back to Records</button>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                         <h1 className="text-4xl font-serif font-black">{t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Register</h1>
                         

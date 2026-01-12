@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Missionary, ServiceHistory } from '../types';
@@ -16,10 +17,14 @@ const Missionaries: React.FC = () => {
   const [missionaries, setMissionaries] = useState<Missionary[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Modal State
+  // URL Params for Modal Navigation
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedId = searchParams.get('id');
+  const [selectedMissionary, setSelectedMissionary] = useState<Missionary | null>(null);
+
+  // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedMissionary, setSelectedMissionary] = useState<Missionary | null>(null); // For Viewing
-  const [editingMissionary, setEditingMissionary] = useState<Partial<Missionary>>({}); // For Editing
+  const [editingMissionary, setEditingMissionary] = useState<Partial<Missionary>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   
@@ -57,6 +62,24 @@ const Missionaries: React.FC = () => {
     fetchMissionaries();
   }, [fetchMissionaries]);
 
+  // Sync selected missionary with URL param
+  useEffect(() => {
+      if (selectedId && missionaries.length > 0) {
+          const m = missionaries.find(item => item.id === selectedId);
+          if (m) setSelectedMissionary(m);
+      } else {
+          setSelectedMissionary(null);
+      }
+  }, [selectedId, missionaries]);
+
+  const openModal = (m: Missionary) => {
+      setSearchParams({ id: m.id });
+  };
+
+  const closeModal = () => {
+      setSearchParams({});
+  };
+
   const handleAddNew = () => {
     setEditingMissionary({
         name: '',
@@ -74,7 +97,6 @@ const Missionaries: React.FC = () => {
 
   const handleEdit = (e: React.MouseEvent, m: Missionary) => {
     e.stopPropagation();
-    // Ensure serviceHistory is initialized if it doesn't exist
     setEditingMissionary({ 
         ...m, 
         serviceHistory: m.serviceHistory || [],
@@ -92,8 +114,7 @@ const Missionaries: React.FC = () => {
     try {
         await db.collection('missionaries').doc(id).delete();
         fetchMissionaries();
-        // If viewing the deleted one, close modal
-        if (selectedMissionary?.id === id) setSelectedMissionary(null);
+        if (selectedId === id) closeModal();
     } catch (error) {
         console.error("Error deleting:", error);
     }
@@ -131,7 +152,6 @@ const Missionaries: React.FC = () => {
     try {
         const { id, ...data } = editingMissionary;
         
-        // Auto-update legacy field/period with the last entry in history for consistency
         if (data.serviceHistory && data.serviceHistory.length > 0) {
             const latest = data.serviceHistory[data.serviceHistory.length - 1];
             data.field = latest.field;
@@ -207,7 +227,7 @@ const Missionaries: React.FC = () => {
                     {missionaries.map((m) => (
                         <div 
                             key={m.id} 
-                            onClick={() => setSelectedMissionary(m)}
+                            onClick={() => openModal(m)}
                             className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
                         >
                             <div className="relative h-64 bg-slate-200 overflow-hidden">
@@ -282,7 +302,7 @@ const Missionaries: React.FC = () => {
 
         {/* View Modal (Biography Theater) */}
         {selectedMissionary && (
-            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedMissionary(null)}>
+            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={closeModal}>
                 <div className="bg-white rounded-[2rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
                     <div className="relative h-48 md:h-64 shrink-0 bg-slate-900 overflow-hidden">
                         {selectedMissionary.imageUrl && (
@@ -297,7 +317,7 @@ const Missionaries: React.FC = () => {
                             />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                        <button onClick={() => setSelectedMissionary(null)} className="absolute top-6 right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition"><X size={24}/></button>
+                        <button onClick={closeModal} className="absolute top-6 right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition"><X size={24}/></button>
                         
                         <div className="absolute bottom-0 left-0 w-full p-8 md:p-10 text-white">
                             <span className="inline-block px-3 py-1 bg-church-600 rounded-full text-xs font-bold uppercase tracking-widest mb-3">Missionary</span>

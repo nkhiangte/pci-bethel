@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Archive, FileText, Image as ImageIcon, Video, History, 
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
@@ -58,9 +59,11 @@ const Archives: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Navigation State
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
+  // Navigation State via URL Params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = searchParams.get('category');
+  const selectedSubCategory = searchParams.get('sub');
+
   const [subCategories, setSubCategories] = useState<string[]>(DEFAULT_RAWNGBAWLTU_SUBCATEGORIES);
 
   // Edit/Add Modal State
@@ -142,21 +145,22 @@ const Archives: React.FC = () => {
   }, [fetchArchives]);
 
   const handleCategorySelect = (id: string) => {
-      setSelectedCategory(id);
-      setSelectedSubCategory(null);
+      setSearchParams({ category: id });
       setSearchTerm('');
   };
 
   const handleSubCategorySelect = (sub: string) => {
-      setSelectedSubCategory(sub);
-      setSearchTerm('');
+      if (selectedCategory) {
+        setSearchParams({ category: selectedCategory, sub });
+        setSearchTerm('');
+      }
   };
 
   const handleBack = () => {
       if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
-          setSelectedSubCategory(null);
+          setSearchParams({ category: selectedCategory });
       } else {
-          setSelectedCategory(null);
+          setSearchParams({});
       }
       setArchives([]);
   };
