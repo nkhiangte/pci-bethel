@@ -110,6 +110,8 @@ export interface Staff {
   probationTenure?: string;
   previousBial?: string; // Legacy field
   previousBials?: ServiceHistory[]; // New field for multiple entries
+  qualification?: string;
+  phoneNumber?: string; // New field for contact
 }
 
 export interface Missionary {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Staff } from '../types';
-import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle } from 'lucide-react';
+import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone } from 'lucide-react';
 
 interface StaffEditModalProps {
   staff: Partial<Staff>;
@@ -122,7 +122,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Ordination</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Ordination Year</label>
                     <input
                     className="w-full border border-slate-300 rounded p-2.5"
                     value={formData.period || ''}
@@ -131,13 +131,37 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     />
                 </div>
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Qualification</label>
+                    <input
+                    className="w-full border border-slate-300 rounded p-2.5"
+                    value={formData.qualification || ''}
+                    onChange={e => setFormData({ ...formData, qualification: e.target.value })}
+                    placeholder="e.g. B.A, B.D"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                    <input
+                    className="w-full border border-slate-300 rounded p-2.5"
+                    value={formData.probationTenure || ''}
+                    onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
+                    placeholder="e.g. 2005 - 2007"
+                    />
+                </div>
+            </div>
+
             <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">
+                    <Phone size={14} /> Phone Number (Optional)
+                </label>
                 <input
                 className="w-full border border-slate-300 rounded p-2.5"
-                value={formData.probationTenure || ''}
-                onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
-                placeholder="e.g. 2005 - 2007"
+                value={formData.phoneNumber || ''}
+                onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+                placeholder="e.g., 9862012345"
                 />
             </div>
             
@@ -187,17 +211,6 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 >
                     <PlusCircle size={14}/> Add Previous Bial
                 </button>
-                
-                {/* Legacy input for backward compatibility or simple entry */}
-                <div className="mt-4 pt-4 border-t border-slate-200">
-                    <label className="block text-xs font-bold text-slate-400 mb-1">Single Entry (Legacy)</label>
-                    <input
-                        className="w-full border border-slate-300 rounded p-2 text-sm text-slate-500"
-                        value={formData.previousBial || ''}
-                        onChange={e => setFormData({ ...formData, previousBial: e.target.value })}
-                        placeholder="Previous Bial (Legacy string field)"
-                    />
-                </div>
             </div>
 
             <div>

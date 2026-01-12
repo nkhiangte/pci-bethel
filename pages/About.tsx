@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
 import { Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, History, Target, ShieldCheck, Plus, Edit, Trash, BookOpen, Quote, Calendar, X, Users, ChevronRight } from 'lucide-react';
+import { Loader, History, Target, ShieldCheck, Plus, Edit, Trash, BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, MessageCircle } from 'lucide-react';
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
@@ -47,9 +47,18 @@ const About: React.FC = () => {
         db.collection('elders').orderBy('order', 'asc').get()
       ]);
 
-      setPastors(pSnap.empty ? staticPastors : pSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
-      setProPastors(ppSnap.empty ? staticProPastors : ppSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
-      setElders(eSnap.empty ? staticElders : eSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
+      const getUniqueData = (snap: any) => {
+          if (snap.empty) return null;
+          const data = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+          // Deduplicate by name, keeping first occurrence
+          return data.filter((item: any, index: number, self: any[]) =>
+            index === self.findIndex((t) => t.name === item.name)
+          );
+      };
+
+      setPastors(getUniqueData(pSnap) || staticPastors);
+      setProPastors(getUniqueData(ppSnap) || staticProPastors);
+      setElders(getUniqueData(eSnap) || staticElders);
     } catch (error) {
       console.error("Error fetching leaders:", error);
       setPastors(staticPastors);
@@ -282,8 +291,8 @@ const About: React.FC = () => {
         <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
                 
-                {/* Header Profile Area - REDUCED HEIGHT */}
-                <div className="relative h-48 md:h-56 shrink-0 bg-church-900 text-white flex items-end">
+                {/* Header Profile Area */}
+                <div className="relative min-h-[14rem] md:min-h-[16rem] shrink-0 bg-church-900 text-white flex items-end overflow-hidden">
                     <img 
                         src={selectedLeader.imageUrl} 
                         className="absolute inset-0 w-full h-full object-cover opacity-40" 
@@ -310,21 +319,62 @@ const About: React.FC = () => {
                             />
                         </div>
                         <div className="text-center md:text-left flex-1">
-                            <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full mb-3 shadow-lg">
-                                {selectedLeader.role}
-                            </span>
-                            {/* Reduced Text Size */}
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
+                                <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full shadow-lg">
+                                    {selectedLeader.role}
+                                </span>
+                                {selectedLeader.qualification && (
+                                    <span className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                                        {selectedLeader.qualification}
+                                    </span>
+                                )}
+                            </div>
+                            
                             <h2 className="text-2xl md:text-4xl font-serif font-black mb-2 leading-tight">
                                 {selectedLeader.name}
                             </h2>
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-church-200 opacity-90">
-                                {selectedLeader.period && (
-                                    <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                                        <Calendar size={14} /> Ordination: {selectedLeader.period}
+                            
+                            <div className="flex flex-col gap-1 text-sm text-church-200 opacity-90 mt-2">
+                                {/* Ordination & Probation Row */}
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                                     {selectedLeader.period && (
+                                        <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-xs">
+                                            <Calendar size={14} /> Ordination: {selectedLeader.period}
+                                        </div>
+                                    )}
+                                    {selectedLeader.probationTenure && (
+                                        <>
+                                            <div className="hidden md:block w-1 h-1 rounded-full bg-church-400"></div>
+                                            <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-xs">
+                                                Probation: {selectedLeader.probationTenure}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Previous Bials Row (if exists) */}
+                                {selectedLeader.previousBials && selectedLeader.previousBials.length > 0 && (
+                                     <div className="text-xs mt-1 leading-relaxed">
+                                        <span className="font-bold uppercase tracking-widest text-church-400 mr-2">Previous Bials:</span>
+                                        {selectedLeader.previousBials.map((b, i) => (
+                                            <span key={i} className="inline-block mr-2">
+                                                {b.field} <span className="opacity-70">({b.period})</span>{i < selectedLeader.previousBials!.length - 1 ? ',' : ''}
+                                            </span>
+                                        ))}
+                                     </div>
+                                )}
+
+                                {/* Contact Buttons */}
+                                {selectedLeader.phoneNumber && (
+                                    <div className="flex gap-2 justify-center md:justify-start mt-3">
+                                        <a href={`tel:${selectedLeader.phoneNumber}`} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
+                                            <Phone size={12} /> Call
+                                        </a>
+                                        <a href={`https://wa.me/${selectedLeader.phoneNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
+                                            <MessageCircle size={12} /> WhatsApp
+                                        </a>
                                     </div>
                                 )}
-                                <div className="hidden md:block w-1 h-1 rounded-full bg-church-400"></div>
-                                <div className="font-bold text-white uppercase tracking-widest text-xs">Champhai Bethel Kohhran</div>
                             </div>
                         </div>
                     </div>
