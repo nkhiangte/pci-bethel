@@ -9,7 +9,7 @@ import {
   Archive, FileText, Image as ImageIcon, Video, History, 
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
   ExternalLink, Play, Loader, Save, Folder, ArrowLeft,
-  ChevronRight, Settings, Upload, Trash2, Cross, UserCheck
+  ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar
 } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
@@ -22,10 +22,12 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   'Minute': FileClock,
   'Rawngbawltu te': Users,
   'Pastors': UserCheck,
-  'Upa kal ta te': Cross
+  'Upa kal ta te': Cross,
+  'Weekly Program': Calendar
 };
 
 const ARCHIVE_SECTIONS = [
+    { id: 'Weekly Program', label: 'Weekly Program', icon: Calendar, color: 'bg-indigo-600', description: 'Past weekly schedules and duty rosters.' },
     { id: 'Pastors', label: 'Pastors', icon: UserCheck, color: 'bg-cyan-600', description: 'Records of our spiritual shepherds.' },
     { id: 'Upa kal ta te', label: 'Upa kal ta te', icon: Cross, color: 'bg-slate-600', description: 'Kohhran hruaitu min kalsan tawhte.' },
     { id: 'Rawngbawltu te', label: 'Rawngbawltu te', icon: Users, color: 'bg-church-600', description: 'Records of past leaders and committees.' },
@@ -248,7 +250,7 @@ const Archives: React.FC = () => {
   );
 
   // Determine layout based on category
-  const isListView = selectedCategory === 'Pastors' || selectedCategory === 'Upa kal ta te';
+  const isListView = selectedCategory === 'Pastors' || selectedCategory === 'Upa kal ta te' || selectedCategory === 'Weekly Program';
 
   return (
     <div className="bg-slate-50 min-h-screen py-12">
@@ -359,7 +361,7 @@ const Archives: React.FC = () => {
                             {filteredArchives.map(entry => {
                                 const Icon = CATEGORY_ICONS[entry.category] || Archive;
                                 const isOfficeBearer = entry.category === 'Rawngbawltu te';
-                                const showFullDescription = isOfficeBearer || ['Pastors', 'Upa kal ta te'].includes(entry.category);
+                                const showFullDescription = isOfficeBearer || ['Pastors', 'Upa kal ta te', 'Weekly Program'].includes(entry.category);
                                 const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
 
                                 return (

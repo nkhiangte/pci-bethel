@@ -232,7 +232,7 @@ export interface ArchiveEntry {
   id: string;
   title: string;
   date: string;
-  category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute' | 'Rawngbawltu te' | 'Pastors' | 'Upa kal ta te';
+  category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute' | 'Rawngbawltu te' | 'Pastors' | 'Upa kal ta te' | 'Weekly Program';
   subCategory?: string; // New field for sub-categories under Rawngbawltu te
   description: string;
   link?: string; // Optional URL to the file

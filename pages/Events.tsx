@@ -101,7 +101,7 @@ const Events: React.FC = () => {
 
     try {
       const existing = await db.collection('archives')
-        .where('category', '==', 'Rawngbawltu te')
+        .where('category', '==', 'Weekly Program')
         .where('title', '==', archiveTitle)
         .get();
 
@@ -138,8 +138,7 @@ const Events: React.FC = () => {
         await db.collection('archives').add({
           title: archiveTitle,
           date: formatDateForInput(new Date()),
-          category: 'Rawngbawltu te',
-          subCategory: 'Executive Body',
+          category: 'Weekly Program',
           description: description,
           link: ''
         });
