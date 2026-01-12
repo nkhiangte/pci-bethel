@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
@@ -9,7 +9,8 @@ import {
   Archive, FileText, Image as ImageIcon, Video, History, 
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
   ExternalLink, Play, Loader, Save, Folder, ArrowLeft,
-  ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar
+  ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar,
+  BarChart3, LayoutList, TrendingUp, PieChart
 } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
@@ -67,6 +68,9 @@ const Archives: React.FC = () => {
   const selectedSubCategory = searchParams.get('sub');
 
   const [subCategories, setSubCategories] = useState<string[]>(DEFAULT_RAWNGBAWLTU_SUBCATEGORIES);
+  
+  // View Mode: List or Analytics
+  const [viewMode, setViewMode] = useState<'list' | 'analytics'>('list');
 
   // Edit/Add Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -79,6 +83,11 @@ const Archives: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset view mode when category changes
+  useEffect(() => {
+      setViewMode('list');
+  }, [selectedCategory, selectedSubCategory]);
 
   // Fetch Metadata (Subcategories)
   useEffect(() => {
@@ -249,6 +258,51 @@ const Archives: React.FC = () => {
     item.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- ANALYTICS LOGIC ---
+  const analyticsData = useMemo(() => {
+      if (archives.length === 0) return null;
+
+      const stats = {
+          total: archives.length,
+          byYear: {} as Record<string, number>,
+          avgTenure: 0,
+          currentYearCount: 0
+      };
+
+      let tenureSum = 0;
+      let tenureCount = 0;
+      const currentYear = new Date().getFullYear().toString();
+
+      archives.forEach(entry => {
+          // Yearly Trends
+          const year = entry.date.split('-')[0];
+          stats.byYear[year] = (stats.byYear[year] || 0) + 1;
+          if (year === currentYear) stats.currentYearCount++;
+
+          // Tenure Calculation for Pastors/Elders
+          if (entry.tenureYears) {
+              const matches = entry.tenureYears.match(/(\d{4})\s*-\s*(\d{4})/);
+              if (matches) {
+                  const start = parseInt(matches[1]);
+                  const end = parseInt(matches[2]);
+                  if (!isNaN(start) && !isNaN(end)) {
+                      tenureSum += (end - start);
+                      tenureCount++;
+                  }
+              }
+          }
+      });
+
+      stats.avgTenure = tenureCount > 0 ? parseFloat((tenureSum / tenureCount).toFixed(1)) : 0;
+
+      // Convert byYear to sorted array
+      const sortedYears = Object.entries(stats.byYear)
+          .map(([year, count]) => ({ year, count }))
+          .sort((a, b) => a.year.localeCompare(b.year));
+
+      return { ...stats, sortedYears };
+  }, [archives]);
+
   // Determine layout based on category
   const isListView = selectedCategory === 'Pastors' || selectedCategory === 'Upa kal ta te' || selectedCategory === 'Weekly Program';
 
@@ -307,21 +361,41 @@ const Archives: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex gap-4 w-full md:w-auto">
-                        {/* Only show search if we are viewing records */}
+                    <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-end md:items-center">
+                        {/* Only show controls if we are viewing records */}
                         {!(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && (
-                            <div className="relative flex-grow md:flex-grow-0">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search..." 
-                                    className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
+                            <>
+                                <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                    <button 
+                                        onClick={() => setViewMode('list')}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-bold transition ${viewMode === 'list' ? 'bg-white text-church-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        <LayoutList size={16} /> List
+                                    </button>
+                                    <button 
+                                        onClick={() => setViewMode('analytics')}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-bold transition ${viewMode === 'analytics' ? 'bg-white text-church-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        <BarChart3 size={16} /> Analytics
+                                    </button>
+                                </div>
+
+                                {viewMode === 'list' && (
+                                    <div className="relative flex-grow md:flex-grow-0 w-full md:w-auto">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search..." 
+                                            className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
-                        {isAdmin && (
+                        
+                        {isAdmin && viewMode === 'list' && (
                             <div className="flex gap-2">
                                 <button 
                                     onClick={handleAddNew}
@@ -353,9 +427,66 @@ const Archives: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    /* Actual List of Cards */
+                    /* Content View: Analytics or List */
                     loading ? (
                         <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
+                    ) : viewMode === 'analytics' ? (
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
+                            {/* Analytics Dashboard */}
+                            {analyticsData ? (
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><LayoutList size={24}/></div>
+                                            <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.total}</h3>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Total Records</p>
+                                        </div>
+                                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                            <div className="p-3 bg-green-50 text-green-600 rounded-full mb-3"><TrendingUp size={24}/></div>
+                                            <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.currentYearCount}</h3>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Added in {new Date().getFullYear()}</p>
+                                        </div>
+                                        {analyticsData.avgTenure > 0 && (
+                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                                <div className="p-3 bg-purple-50 text-purple-600 rounded-full mb-3"><FileClock size={24}/></div>
+                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.avgTenure} <span className="text-base text-slate-500 font-medium">yrs</span></h3>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Avg. Tenure</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Charts Section */}
+                                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-8 flex items-center">
+                                            <BarChart3 size={20} className="mr-2 text-church-600" /> Yearly Distribution
+                                        </h3>
+                                        <div className="h-64 flex items-end gap-2 sm:gap-4 justify-center">
+                                            {analyticsData.sortedYears.map((d, i) => {
+                                                const max = Math.max(...analyticsData.sortedYears.map(y => y.count));
+                                                const height = (d.count / max) * 100;
+                                                return (
+                                                    <div key={i} className="flex-1 flex flex-col items-center group max-w-[60px]">
+                                                        <div className="relative w-full flex justify-center h-full items-end">
+                                                            <div 
+                                                                className="bg-church-200 group-hover:bg-church-500 transition-all duration-500 rounded-t-lg w-full relative min-h-[4px]" 
+                                                                style={{ height: `${height}%` }}
+                                                            >
+                                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                                                    {d.count} entries
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-400 mt-3 -rotate-45 sm:rotate-0 origin-top-left sm:origin-center">{d.year}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-20 text-slate-400">Not enough data for analytics.</div>
+                            )}
+                        </div>
                     ) : filteredArchives.length > 0 ? (
                         <div className={isListView ? "space-y-6" : "grid md:grid-cols-2 lg:grid-cols-3 gap-6"}>
                             {filteredArchives.map(entry => {

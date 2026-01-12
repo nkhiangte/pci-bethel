@@ -296,28 +296,6 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Service Times Grid */}
-      <section>
-        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center"><Clock size={20} className="mr-2 text-church-500"/> Service Times</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-                { title: 'Sunday School', time: weeklyDuty.serviceTimes?.sundaySchool || '10:00 AM', icon: Users },
-                { title: 'Chawhnu Inkhawm', time: weeklyDuty.serviceTimes?.morning || '01:30 PM', icon: Calendar },
-                { title: 'Zan Inkhawm', time: weeklyDuty.serviceTimes?.evening || '07:00 PM', icon: Music },
-            ].map((s, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center">
-                    <div className="p-3 bg-slate-50 text-church-600 rounded-lg mr-4">
-                        <s.icon size={24} />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{s.title}</p>
-                        <p className="text-xl font-black text-slate-800">{s.time}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-      </section>
-
       {/* LEADERS SECTION */}
       <section className="bg-gradient-to-b from-transparent to-slate-50/50 rounded-[3rem] py-8">
          <div className="text-center mb-10 relative">
