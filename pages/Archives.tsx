@@ -338,7 +338,8 @@ export const Archives: React.FC = () => {
             imageUrls: [],
             birthDate: '',
             ordinationDate: '',
-            deathDate: ''
+            deathDate: '',
+            tenureYears: ''
         });
         setIsModalOpen(true);
     };
@@ -936,10 +937,12 @@ export const Archives: React.FC = () => {
                                                                         </div>
                                                                     </div>
                                                                     
-                                                                    {entry.category === 'Upa kal ta te' && (
+                                                                    {/* Display special date fields for Pastors and Upa kal ta te */}
+                                                                    {(entry.category === 'Upa kal ta te' || entry.category === 'Pastors') && (
                                                                         <div className="mt-3 mb-3 space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">
                                                                             {entry.birthDate && <div><span className="font-bold text-slate-700">Pian Ni:</span> {entry.birthDate}</div>}
                                                                             {entry.ordinationDate && <div><span className="font-bold text-slate-700">Nemngheh Ni:</span> {entry.ordinationDate}</div>}
+                                                                            {entry.category === 'Pastors' && entry.tenureYears && <div><span className="font-bold text-slate-700">Tenure:</span> {entry.tenureYears}</div>}
                                                                             {entry.deathDate && <div><span className="font-bold text-slate-700">Thih Ni:</span> {entry.deathDate}</div>}
                                                                         </div>
                                                                     )}
@@ -1066,9 +1069,9 @@ export const Archives: React.FC = () => {
                                 </div>
                             )}
 
-                            {editingEntry.category === 'Upa kal ta te' && (
+                            {(editingEntry.category === 'Upa kal ta te' || editingEntry.category === 'Pastors') && (
                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                    <div className="grid grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Pian Ni (DOB)</label>
                                             <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.birthDate || ''} onChange={e => setEditingEntry({...editingEntry, birthDate: e.target.value})} placeholder="DD/MM/YYYY" />
@@ -1077,6 +1080,12 @@ export const Archives: React.FC = () => {
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Nemngheh Ni</label>
                                             <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.ordinationDate || ''} onChange={e => setEditingEntry({...editingEntry, ordinationDate: e.target.value})} placeholder="DD/MM/YYYY" />
                                         </div>
+                                        {editingEntry.category === 'Pastors' && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Tenure (Years)</label>
+                                                <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.tenureYears || ''} onChange={e => setEditingEntry({...editingEntry, tenureYears: e.target.value})} placeholder="e.g., 2010 - 2015" />
+                                            </div>
+                                        )}
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Thih Ni (DOD)</label>
                                             <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.deathDate || ''} onChange={e => setEditingEntry({...editingEntry, deathDate: e.target.value})} placeholder="DD/MM/YYYY" />

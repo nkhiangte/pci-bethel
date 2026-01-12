@@ -211,10 +211,11 @@ export interface ArchiveEntry {
   description: string;
   link?: string; // Optional URL to the file
   imageUrls?: string[]; // Optional multiple images for profiles
-  // Specific fields for Upa kal ta te
+  // Specific fields for Leaders (Pastors & Upa kal ta te)
   birthDate?: string;
   ordinationDate?: string;
   deathDate?: string;
+  tenureYears?: string; // e.g., "2010 - 2015"
 }
 
 export interface ProgramField {
