@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants as getChurchConstants } from '../constants';
 import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
@@ -9,10 +9,12 @@ import {
   Users, BookOpen, UserCheck, Home as HomeIcon, 
   ChevronRight, Shield, Clock, 
   Music, UserCircle, CalendarDays,
-  Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight, ZoomIn, Play, Youtube
+  Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight, ZoomIn, Play, Youtube,
+  Quote, ShieldCheck, BookOpen as BiographyIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import StaffEditModal from '../components/StaffEditModal';
 
 const getYouTubeId = (url: string | undefined) => {
     if (!url) return null;
@@ -77,48 +79,59 @@ export const Home: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
+  // Biography Modal State
+  const [selectedLeader, setSelectedLeader] = useState<Staff | null>(null);
+  
+  // Admin Staff Editing State
+  const [isEditingStaff, setIsEditingStaff] = useState(false);
+  const [editingStaffData, setEditingStaffData] = useState<Partial<Staff>>({});
+  const [targetStaffCollection, setTargetStaffCollection] = useState<'pastors' | 'elders' | 'proPastors'>('pastors');
+  const [isSavingStaff, setIsSavingStaff] = useState(false);
+  const [staffDeleteConfirm, setStaffDeleteConfirm] = useState<string | null>(null);
+
   // Edit Duties Modal State
   const [isEditingDuties, setIsEditingDuties] = useState(false);
   const [editDutyForm, setEditDutyForm] = useState<Partial<WeeklyDuty>>({});
   const [isSavingDuties, setIsSavingDuties] = useState(false);
 
-  useEffect(() => {
-    const init = async () => {
-        setLoading(true);
-        if (db?.collection) {
-            try {
-                const [pSnap, eSnap, dSnap, nSnap] = await Promise.all([
-                    db.collection('pastors').orderBy('order', 'asc').get(),
-                    db.collection('elders').orderBy('order', 'asc').get(),
-                    db.collection('weeklyDuties').doc('current').get(),
-                    db.collection('announcements').orderBy('date', 'desc').limit(3).get()
-                ]);
-                
-                if (!pSnap.empty) setChurchPastors(pSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
-                if (!eSnap.empty) setChurchElders(eSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
-                
-                if (nSnap && !nSnap.empty) {
-                    setLatestNews(nSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
-                }
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    if (db?.collection) {
+        try {
+            const [pSnap, eSnap, dSnap, nSnap] = await Promise.all([
+                db.collection('pastors').orderBy('order', 'asc').get(),
+                db.collection('elders').orderBy('order', 'asc').get(),
+                db.collection('weeklyDuties').doc('current').get(),
+                db.collection('announcements').orderBy('date', 'desc').limit(3).get()
+            ]);
+            
+            if (!pSnap.empty) setChurchPastors(pSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+            if (!eSnap.empty) setChurchElders(eSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+            
+            if (nSnap && !nSnap.empty) {
+                setLatestNews(nSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})));
+            }
 
-                if (dSnap.exists) {
-                    const data = dSnap.data() as WeeklyDuty;
-                    const sanitizedDuty = {
-                        ...data,
-                        servicePrograms: {
-                            sundaySchool: Array.isArray(data.servicePrograms?.sundaySchool) ? data.servicePrograms.sundaySchool : [],
-                            morning: Array.isArray(data.servicePrograms?.morning) ? data.servicePrograms.morning : [],
-                            evening: Array.isArray(data.servicePrograms?.evening) ? data.servicePrograms.evening : []
-                        }
-                    };
-                    setWeeklyDuty(sanitizedDuty);
-                }
-            } catch (e) { console.error(e); }
-        }
-        setLoading(false);
-    };
-    init();
-  }, [staticPastors, staticElders, staticDuty]);
+            if (dSnap.exists) {
+                const data = dSnap.data() as WeeklyDuty;
+                const sanitizedDuty = {
+                    ...data,
+                    servicePrograms: {
+                        sundaySchool: Array.isArray(data.servicePrograms?.sundaySchool) ? data.servicePrograms.sundaySchool : [],
+                        morning: Array.isArray(data.servicePrograms?.morning) ? data.servicePrograms.morning : [],
+                        evening: Array.isArray(data.servicePrograms?.evening) ? data.servicePrograms.evening : []
+                    }
+                };
+                setWeeklyDuty(sanitizedDuty);
+            }
+        } catch (e) { console.error(e); }
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleOpenEditDuties = () => {
     setEditDutyForm({ ...weeklyDuty });
@@ -139,6 +152,37 @@ export const Home: React.FC = () => {
     setIsSavingDuties(false);
   };
 
+  const handleSaveStaff = async (staff: Staff, collectionName: 'pastors' | 'elders' | 'proPastors') => {
+    setIsSavingStaff(true);
+    try {
+        if (staff.id) {
+            await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
+        }
+        setIsEditingStaff(false);
+        fetchData(); // Refresh
+        if (selectedLeader?.id === staff.id) setSelectedLeader(staff);
+    } catch (error) {
+        console.error(`Error saving ${collectionName}:`, error);
+        alert(`Failed to save. Please try again.`);
+    }
+    setIsSavingStaff(false);
+  };
+
+  const handleDeleteStaff = async (id: string, collectionName: 'pastors' | 'elders' | 'proPastors') => {
+    setIsSavingStaff(true);
+    try {
+        await db.collection(collectionName).doc(id).delete();
+        setStaffDeleteConfirm(null);
+        setIsEditingStaff(false);
+        fetchData();
+        if (selectedLeader?.id === id) setSelectedLeader(null);
+    } catch (error) {
+        console.error(`Error deleting ${collectionName}:`, error);
+        alert("Failed to delete.");
+    }
+    setIsSavingStaff(false);
+  };
+
   const handleListChange = (field: keyof WeeklyDuty, value: string) => {
     setEditDutyForm(prev => ({ ...prev, [field]: value.split('\n').map(s => s.trim()).filter(s => s !== '') }));
   };
@@ -153,6 +197,13 @@ export const Home: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     setPlayingVideoId(vid);
+  };
+
+  const handleEditStaffClick = (e: React.MouseEvent, staff: Staff, collection: 'pastors' | 'elders' | 'proPastors') => {
+    e.stopPropagation();
+    setEditingStaffData(staff);
+    setTargetStaffCollection(collection);
+    setIsEditingStaff(true);
   };
 
   return (
@@ -435,7 +486,7 @@ export const Home: React.FC = () => {
             </div>
         </div>
 
-        {/* Shepherds Section */}
+        {/* Leadership Section */}
         <div className="space-y-20">
             <div className="text-center">
                 <h2 className="text-xs font-black text-church-600 uppercase tracking-[0.5em] mb-4">Kohhran Hruaitute</h2>
@@ -443,10 +494,14 @@ export const Home: React.FC = () => {
                 <div className="h-1 w-24 bg-church-600 mx-auto mt-8 rounded-full"></div>
             </div>
 
+            {/* Bialtu Pastor Section */}
             {churchPastors.length > 0 && (
                 <div className="max-w-5xl mx-auto mb-32">
-                    <div className="bg-white rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl flex flex-col md:flex-row group ring-1 ring-slate-100">
-                        <div className="md:w-2/5 aspect-[4/5] md:aspect-auto bg-slate-100 relative">
+                    <button 
+                        onClick={() => setSelectedLeader(churchPastors[0])}
+                        className="w-full text-left bg-white rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl flex flex-col md:flex-row group ring-1 ring-slate-100 transition-all hover:ring-church-200 hover:shadow-church-200/20"
+                    >
+                        <div className="md:w-2/5 aspect-[4/5] md:aspect-auto bg-slate-100 relative overflow-hidden">
                             <img 
                                 src={churchPastors[0].imageUrl} 
                                 alt={churchPastors[0].name} 
@@ -455,20 +510,29 @@ export const Home: React.FC = () => {
                             />
                             <div className="absolute inset-0 bg-gradient-to-tr from-church-900/20 to-transparent pointer-events-none"></div>
                         </div>
-                        <div className="md:w-3/5 p-12 md:p-20 flex flex-col justify-center">
+                        <div className="md:w-3/5 p-12 md:p-20 flex flex-col justify-center relative">
+                            {isAdmin && (
+                                <div
+                                    onClick={(e) => handleEditStaffClick(e, churchPastors[0], 'pastors')}
+                                    className="absolute top-8 right-8 p-3 bg-white shadow-xl rounded-full text-church-600 hover:bg-church-50 transition border border-slate-100 z-10 cursor-pointer"
+                                >
+                                    <Edit size={20} />
+                                </div>
+                            )}
                             <span className="text-church-600 font-black text-[10px] uppercase tracking-[0.4em] mb-6 block">Bialtu Pastor</span>
-                            <h2 className="text-4xl md:text-6xl font-serif font-black mb-8 text-slate-900 leading-tight">{churchPastors[0].name}</h2>
+                            <h2 className="text-4xl md:text-6xl font-serif font-black mb-8 text-slate-900 leading-tight group-hover:text-church-700 transition-colors">{churchPastors[0].name}</h2>
                             <p className="text-slate-500 text-lg md:text-xl font-serif italic mb-12 leading-relaxed opacity-80">
                                 "{churchPastors[0].description}"
                             </p>
-                            <Link to="/about" className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-church-700 hover:text-church-900 transition-all group/link">
-                                View Full Profile <ChevronRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
-                            </Link>
+                            <div className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-church-700 group-hover:text-church-900 transition-all">
+                                View Full Profile <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            </div>
                         </div>
-                    </div>
+                    </button>
                 </div>
             )}
 
+            {/* All Elders Grid */}
             <div className="space-y-16">
                 <div className="flex items-center gap-10 px-4">
                     <div className="flex items-center gap-4">
@@ -480,24 +544,191 @@ export const Home: React.FC = () => {
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 md:gap-12">
                     {churchElders.map((elder) => (
-                        <div key={elder.id} className="text-center group">
-                            <div className="aspect-square rounded-[3rem] overflow-hidden mb-6 bg-slate-50 ring-4 ring-white shadow-lg relative">
+                        <button 
+                            key={elder.id} 
+                            onClick={() => setSelectedLeader(elder)}
+                            className="text-center group block w-full relative"
+                        >
+                            <div className="aspect-square rounded-[3rem] overflow-hidden mb-6 bg-slate-50 ring-4 ring-white shadow-lg relative transition-all duration-500 group-hover:shadow-church-200/50 group-hover:-translate-y-2">
                                 <img 
                                     src={elder.imageUrl} 
                                     alt={elder.name} 
                                     className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
                                 />
                                 <div className="absolute inset-0 bg-church-900/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                                {isAdmin && (
+                                    <div 
+                                        onClick={(e) => handleEditStaffClick(e, elder, 'elders')}
+                                        className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-md shadow-lg rounded-full text-church-600 opacity-0 group-hover:opacity-100 transition-all z-10 cursor-pointer"
+                                    >
+                                        <Edit size={16} />
+                                    </div>
+                                )}
                             </div>
                             <h3 className="font-black text-slate-900 text-lg leading-tight mb-2 group-hover:text-church-700 transition-colors">{elder.name}</h3>
                             <p className="text-[10px] text-church-600 font-black uppercase tracking-[0.2em]">{elder.role || 'Upa'}</p>
                             {elder.period && <p className="text-[9px] text-slate-400 mt-4 font-black bg-slate-100 inline-block px-4 py-1.5 rounded-full uppercase tracking-widest">Ord. {elder.period}</p>}
-                        </div>
+                        </button>
                     ))}
                 </div>
             </div>
         </div>
       </div>
+
+      {/* BIOGRAPHY THEATER MODAL */}
+      {selectedLeader && (
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                
+                {/* Header Profile Area */}
+                <div className="relative h-64 md:h-80 shrink-0 bg-church-900 text-white flex items-end">
+                    <img 
+                        src={selectedLeader.imageUrl} 
+                        className="absolute inset-0 w-full h-full object-cover opacity-40" 
+                        alt="Profile BG"
+                        style={{ objectPosition: `${selectedLeader.imagePositionX ?? 50}% ${selectedLeader.imagePositionY ?? 0}%` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-church-900 via-church-900/60 to-transparent"></div>
+                    
+                    <button 
+                        onClick={() => setSelectedLeader(null)}
+                        className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full transition text-white border border-white/20"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center md:items-end gap-8 w-full">
+                        <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white shrink-0">
+                            <img 
+                                src={selectedLeader.imageUrl} 
+                                alt={selectedLeader.name} 
+                                className="w-full h-full object-cover" 
+                                style={{ objectPosition: `${selectedLeader.imagePositionX ?? 50}% ${selectedLeader.imagePositionY ?? 0}%` }}
+                            />
+                        </div>
+                        <div className="text-center md:text-left flex-1">
+                            <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full mb-3 shadow-lg">
+                                {selectedLeader.role}
+                            </span>
+                            <h2 className="text-3xl md:text-5xl font-serif font-black mb-2 leading-tight">
+                                {selectedLeader.name}
+                            </h2>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-church-200 opacity-90">
+                                {selectedLeader.period && (
+                                    <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                                        <CalendarDays size={14} /> Ordination: {selectedLeader.period}
+                                    </div>
+                                )}
+                                <div className="hidden md:block w-1 h-1 rounded-full bg-church-400"></div>
+                                <div className="font-bold text-white uppercase tracking-widest text-xs">Champhai Bethel Kohhran</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
+                    <div className="grid lg:grid-cols-12 gap-12">
+                        {/* Bio Text */}
+                        <div className="lg:col-span-8">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="h-px bg-slate-100 flex-1"></div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Biography & Testimonial</h3>
+                                <div className="h-px bg-slate-100 flex-1"></div>
+                            </div>
+                            
+                            {selectedLeader.biography ? (
+                                <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {selectedLeader.biography}
+                                </article>
+                            ) : (
+                                <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                    <BiographyIcon size={40} className="mx-auto text-slate-300 mb-4" />
+                                    <p className="text-slate-500 italic">Detailed biography not yet added.</p>
+                                    {isAdmin && <p className="text-church-600 text-sm mt-2 font-bold">Use the edit button to add details.</p>}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sidebar Info */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden">
+                                <Quote size={48} className="absolute -top-4 -left-4 text-church-100" />
+                                <h4 className="text-xs font-black text-church-600 uppercase tracking-widest mb-4 relative z-10">Short Mission</h4>
+                                <p className="text-slate-600 italic font-serif leading-relaxed relative z-10">
+                                    "{selectedLeader.description}"
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Leadership Record</h4>
+                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-church-50 rounded-xl flex items-center justify-center text-church-600 shadow-inner">
+                                        <ShieldCheck size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Current Role</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedLeader.role}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-inner">
+                                        <Users size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Affiliation</p>
+                                        <p className="text-sm font-bold text-slate-800 line-clamp-1">Champhai Bethel Kohhran</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {isAdmin && (
+                                <button 
+                                    onClick={(e) => {
+                                        setEditingStaffData(selectedLeader);
+                                        setTargetStaffCollection(
+                                            churchPastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 'elders'
+                                        );
+                                        setIsEditingStaff(true);
+                                    }}
+                                    className="w-full py-4 bg-church-50 text-church-700 font-black uppercase text-[10px] tracking-widest rounded-2xl border border-church-100 hover:bg-church-100 transition shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <Edit size={14} /> Edit Profile Data
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Footer Controls */}
+                <div className="p-8 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        © PCI Champhai Bethel Kohhran Archives
+                    </p>
+                    <button 
+                        onClick={() => setSelectedLeader(null)}
+                        className="px-10 py-3 bg-slate-900 text-white rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition shadow-lg"
+                    >
+                        Close Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* STAFF EDIT MODAL */}
+      {isEditingStaff && (
+          <StaffEditModal
+            staff={editingStaffData}
+            onClose={() => setIsEditingStaff(false)}
+            onSave={handleSaveStaff}
+            onDelete={handleDeleteStaff}
+            isLoading={isSavingStaff}
+            showDeleteConfirm={staffDeleteConfirm}
+            setShowDeleteConfirm={setStaffDeleteConfirm}
+            collectionName={targetStaffCollection}
+          />
+      )}
 
       {/* EDIT DUTIES MODAL */}
       {isEditingDuties && (

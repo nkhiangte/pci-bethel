@@ -94,7 +94,8 @@ export interface Staff {
   role: string;
   period?: string; // For past pastors
   imageUrl: string;
-  description?: string; // Added optional description for leaders/elders
+  description?: string; // Short bio/caption
+  biography?: string; // Full biography text
   order?: number; // New field for custom sorting
   // Image adjustments
   imagePositionX?: number; // 0-100%
