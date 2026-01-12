@@ -70,11 +70,11 @@ try {
   auth = firebase.auth();
   storage = firebase.storage();
   
-  // FIX: Force Long Polling and explicitly disable AutoDetect to prevent "cannot be used together" error.
-  // This addresses connectivity issues in restricted network environments.
+  // Reverted forced long-polling which was causing 10s timeouts in some environments.
+  // Using standard auto-detection.
   db.settings({
-    experimentalForceLongPolling: true,
-    experimentalAutoDetectLongPolling: false
+    ignoreUndefinedProperties: true,
+    merge: true
   });
 
   // Enable offline persistence
@@ -86,7 +86,7 @@ try {
       }
   });
   
-  console.log("Firebase initialized with Long Polling enabled");
+  console.log("Firebase initialized");
 
 } catch (error) {
   console.error("FIREBASE INITIALIZATION ERROR:", error);

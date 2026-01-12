@@ -44,12 +44,21 @@ const Chatbot: React.FC = () => {
         
         // Prepare context from constants
         const constants = getConstants('en'); // Use English constants for the system prompt base
+        
+        // Context Builders
         const scheduleStr = constants.weeklyDuty.weekRange 
             ? `Current Week: ${constants.weeklyDuty.weekRange}` 
-            : '';
+            : 'Check "Weekly Duties" section for latest updates.';
         
         const programsStr = JSON.stringify(constants.weeklyDuty.serviceTimes);
-        const leadersStr = constants.pastors.map(p => p.name + " (" + p.role + ")").join(", ");
+        
+        const pastorsStr = constants.pastors.map(p => `${p.name} (${p.role})`).join(", ");
+        
+        const eldersStr = constants.elders.map(e => e.name).join(", ");
+        
+        const ministriesStr = constants.ministries.map(m => `${m.name} (${m.acronym || ''}) - Leader: ${m.leader}`).join("; ");
+        
+        const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\n");
 
         const systemPrompt = `
           You are a helpful and polite AI assistant for the "Mizoram Synod (PCI) Champhai Bethel Kohhran" website.
@@ -57,12 +66,21 @@ const Chatbot: React.FC = () => {
           CONTEXT:
           - Church Name: Mizoram Synod (Presbyterian Church of India) Champhai Bethel Kohhran.
           - Location: Bethel Veng, Champhai, Mizoram.
-          - Current Week Info: ${scheduleStr}
           - Service Times: ${programsStr}
-          - Key Leaders: ${leadersStr}
+          - Current Week Info: ${scheduleStr}
+          
+          LEADERSHIP:
+          - Pastors: ${pastorsStr}
+          - Elders (Upa): ${eldersStr}
+          
+          MINISTRIES & FELLOWSHIPS:
+          - ${ministriesStr}
+          
+          LATEST ANNOUNCEMENTS (Summary):
+          ${announcementsStr}
           
           GUIDELINES:
-          - Answer questions about church timings, leaders, and general Christian faith queries.
+          - Answer questions about church timings, leaders, ministries, and general Christian faith queries.
           - If asked about specific dynamic data (like who is Usher today) that is not in your context, politely say you don't have that real-time info but suggest checking the "Weekly Duties" section.
           - Be respectful and use a tone appropriate for a church setting.
           - You can understand and reply in both English and Mizo. If the user speaks Mizo, reply in Mizo.

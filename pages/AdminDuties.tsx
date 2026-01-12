@@ -26,7 +26,18 @@ const AdminDuties: React.FC = () => {
 
         try {
             const docRef = db.collection('weeklyDuties').doc('current');
-            const docSnap = await docRef.get();
+            
+            // Add a timeout to fallback to static data if Firestore is slow/offline
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Fetch timeout')), 5000)
+            );
+            
+            // Try to fetch from server/cache
+            const docSnap: any = await Promise.race([
+                docRef.get(),
+                timeoutPromise
+            ]);
+
             if (docSnap.exists) {
                 const data = docSnap.data() as any;
                 
@@ -53,8 +64,8 @@ const AdminDuties: React.FC = () => {
             } else {
                 setDuties(staticDuty as any);
             }
-        } catch (error) {
-            console.error("Error fetching duties:", error);
+        } catch (error: any) {
+            console.warn("Using static duties due to fetch error:", error.message || error);
             setDuties(staticDuty as any); 
         }
         setLoading(false);
