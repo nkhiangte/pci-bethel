@@ -581,7 +581,7 @@ export const Home: React.FC = () => {
             <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
                 
                 {/* Header Profile Area */}
-                <div className="relative h-64 md:h-80 shrink-0 bg-church-900 text-white flex items-end">
+                <div className="relative h-48 md:h-64 shrink-0 bg-church-900 text-white flex items-end">
                     <img 
                         src={selectedLeader.imageUrl} 
                         className="absolute inset-0 w-full h-full object-cover opacity-40" 
@@ -597,8 +597,8 @@ export const Home: React.FC = () => {
                         <X size={24} />
                     </button>
 
-                    <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center md:items-end gap-8 w-full">
-                        <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white shrink-0">
+                    <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center md:items-end gap-6 w-full">
+                        <div className="w-24 h-24 md:w-36 md:h-36 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white shrink-0">
                             <img 
                                 src={selectedLeader.imageUrl} 
                                 alt={selectedLeader.name} 
@@ -610,7 +610,7 @@ export const Home: React.FC = () => {
                             <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full mb-3 shadow-lg">
                                 {selectedLeader.role}
                             </span>
-                            <h2 className="text-3xl md:text-5xl font-serif font-black mb-2 leading-tight">
+                            <h2 className="text-2xl md:text-4xl font-serif font-black mb-2 leading-tight">
                                 {selectedLeader.name}
                             </h2>
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-church-200 opacity-90">
