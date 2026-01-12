@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft, DollarSign, Globe, Home, Heart, Coffee, Smile, Library, Mic, Mic2, GraduationCap, Book, BookOpen, Music, Settings, UserCheck, Cross } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft, DollarSign, Globe, Home, Heart, Coffee, Smile, Library, Mic, Mic2, GraduationCap, Book, BookOpen, Music, Settings, UserCheck, Cross, Upload, Trash2, ZoomIn, Calendar } from 'lucide-react';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -130,8 +132,9 @@ export const Archives: React.FC = () => {
     const [activeSSDepartment, setActiveSSDepartment] = useState<string | null>(null);
     const [missingIndexUrl, setMissingIndexUrl] = useState<string | null>(null);
     
-    // Video Playback State
+    // Video Playback & Image Preview
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     
     // Search State
     const [ssSearchTerm, setSsSearchTerm] = useState('');
@@ -149,6 +152,10 @@ export const Archives: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState<Partial<ArchiveEntry>>({});
     const [isSaving, setIsSaving] = useState(false);
+    
+    // Image Upload State
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Fetch SubCategories from Metadata
     useEffect(() => {
@@ -327,13 +334,20 @@ export const Archives: React.FC = () => {
             category: (selectedCategory as any) || 'Document', // Default to current category
             subCategory: selectedSubCategory || '',
             description: '',
-            link: ''
+            link: '',
+            imageUrls: [],
+            birthDate: '',
+            ordinationDate: '',
+            deathDate: ''
         });
         setIsModalOpen(true);
     };
 
     const handleEdit = (entry: ArchiveEntry) => {
-        setEditingEntry(entry);
+        setEditingEntry({
+            ...entry,
+            imageUrls: entry.imageUrls || []
+        });
         setIsModalOpen(true);
     };
 
@@ -388,6 +402,53 @@ export const Archives: React.FC = () => {
             alert("Failed to save archive entry.");
         }
         setIsSaving(false);
+    };
+
+    // ImgBB Upload Handler
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setUploadingImage(true);
+        try {
+            const newUrls: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    newUrls.push(result.data.url);
+                } else {
+                    console.error("Image upload failed:", result.error?.message);
+                }
+            }
+
+            setEditingEntry(prev => ({
+                ...prev,
+                imageUrls: [...(prev.imageUrls || []), ...newUrls]
+            }));
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Error uploading images.");
+        } finally {
+            setUploadingImage(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const removeImage = (index: number) => {
+        setEditingEntry(prev => ({
+            ...prev,
+            imageUrls: prev.imageUrls?.filter((_, i) => i !== index)
+        }));
     };
 
     // Generic Seed Function for simple categories
@@ -874,7 +935,35 @@ export const Archives: React.FC = () => {
                                                                             {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
                                                                         </div>
                                                                     </div>
+                                                                    
+                                                                    {entry.category === 'Upa kal ta te' && (
+                                                                        <div className="mt-3 mb-3 space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">
+                                                                            {entry.birthDate && <div><span className="font-bold text-slate-700">Pian Ni:</span> {entry.birthDate}</div>}
+                                                                            {entry.ordinationDate && <div><span className="font-bold text-slate-700">Nemngheh Ni:</span> {entry.ordinationDate}</div>}
+                                                                            {entry.deathDate && <div><span className="font-bold text-slate-700">Thih Ni:</span> {entry.deathDate}</div>}
+                                                                        </div>
+                                                                    )}
+
                                                                     <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap ${isOfficeBearer ? '' : 'line-clamp-3'}`}>{entry.description}</div>
+                                                                    
+                                                                    {/* IMAGE GALLERY DISPLAY */}
+                                                                    {entry.imageUrls && entry.imageUrls.length > 0 && (
+                                                                        <div className={`grid gap-2 mb-4 ${entry.imageUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                                                            {entry.imageUrls.slice(0, 4).map((url, i) => (
+                                                                                <div 
+                                                                                    key={i} 
+                                                                                    className="relative overflow-hidden rounded-lg bg-slate-100 aspect-square cursor-pointer hover:opacity-90"
+                                                                                    onClick={() => setPreviewImage(url)}
+                                                                                >
+                                                                                    <img src={url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                                                                                    {i === 3 && entry.imageUrls!.length > 4 && (
+                                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold">+{entry.imageUrls!.length - 4}</div>
+                                                                                    )}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+
                                                                     {entry.link && (<a href={entry.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto">View Resource <ExternalLink size={14} className="ml-1" /></a>)}
                                                                 </>
                                                             )}
@@ -906,6 +995,14 @@ export const Archives: React.FC = () => {
                 </div>
             )}
 
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in" onClick={() => setPreviewImage(null)}>
+                    <button className="absolute top-4 right-4 text-white bg-white/20 hover:bg-white/40 p-2 rounded-full transition"><X size={32}/></button>
+                    <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" onClick={e => e.stopPropagation()}/>
+                </div>
+            )}
+
             {/* Manage Departments Modal */}
             {isManageDeptsOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -933,24 +1030,24 @@ export const Archives: React.FC = () => {
             {/* Add/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
                             <h3 className="text-xl font-bold text-church-900">{editingEntry.id ? 'Edit Archive' : 'Add New Archive'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
                         </div>
-                        <div className="p-6 space-y-4 overflow-y-auto">
+                        <div className="p-6 space-y-6 overflow-y-auto">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Title (Name or Year)</label>
-                                <input className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.title || ''} onChange={e => setEditingEntry({...editingEntry, title: e.target.value})} placeholder="e.g., Rev. Zosangliana or 2023" />
+                                <input className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 outline-none transition" value={editingEntry.title || ''} onChange={e => setEditingEntry({...editingEntry, title: e.target.value})} placeholder="e.g., Rev. Zosangliana or 2023" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
-                                    <input type="date" className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.date || ''} onChange={e => setEditingEntry({...editingEntry, date: e.target.value})} />
+                                    <input type="date" className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 outline-none transition" value={editingEntry.date || ''} onChange={e => setEditingEntry({...editingEntry, date: e.target.value})} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                                    <select className="w-full border border-slate-300 rounded p-2.5 bg-white" value={editingEntry.category} onChange={e => setEditingEntry({...editingEntry, category: e.target.value as any})}>
+                                    <select className="w-full border border-slate-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-church-500 outline-none transition" value={editingEntry.category} onChange={e => setEditingEntry({...editingEntry, category: e.target.value as any})}>
                                         {Object.keys(CATEGORY_ICONS).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
                                 </div>
@@ -961,20 +1058,80 @@ export const Archives: React.FC = () => {
                                     {editingEntry.subCategory?.startsWith('SS Zirtirtute') ? (
                                         <input className="w-full border border-slate-300 rounded p-2.5 bg-slate-100 text-slate-600 cursor-not-allowed" value={editingEntry.subCategory} readOnly />
                                     ) : (
-                                        <select className="w-full border border-slate-300 rounded p-2.5 bg-white" value={editingEntry.subCategory || ''} onChange={e => setEditingEntry({...editingEntry, subCategory: e.target.value})}>
+                                        <select className="w-full border border-slate-300 rounded-lg p-3 bg-white" value={editingEntry.subCategory || ''} onChange={e => setEditingEntry({...editingEntry, subCategory: e.target.value})}>
                                             <option value="" disabled>Select Sub-Category</option>
                                             {subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                                         </select>
                                     )}
                                 </div>
                             )}
+
+                            {editingEntry.category === 'Upa kal ta te' && (
+                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Pian Ni (DOB)</label>
+                                            <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.birthDate || ''} onChange={e => setEditingEntry({...editingEntry, birthDate: e.target.value})} placeholder="DD/MM/YYYY" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Nemngheh Ni</label>
+                                            <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.ordinationDate || ''} onChange={e => setEditingEntry({...editingEntry, ordinationDate: e.target.value})} placeholder="DD/MM/YYYY" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Thih Ni (DOD)</label>
+                                            <input type="text" className="w-full border border-slate-300 rounded p-2 text-sm" value={editingEntry.deathDate || ''} onChange={e => setEditingEntry({...editingEntry, deathDate: e.target.value})} placeholder="DD/MM/YYYY" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Link (Image URL / Video)</label>
-                                <input className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.link || ''} onChange={e => setEditingEntry({...editingEntry, link: e.target.value})} placeholder="https://..." />
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Link (Video / PDF / External)</label>
+                                <input className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 outline-none transition" value={editingEntry.link || ''} onChange={e => setEditingEntry({...editingEntry, link: e.target.value})} placeholder="https://..." />
                             </div>
+                            
+                            {/* Image Upload Section */}
+                            <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                                    <Image size={16} /> Photo Gallery
+                                </label>
+                                
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    {editingEntry.imageUrls?.map((url, index) => (
+                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-white border border-slate-200">
+                                            <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
+                                            <button 
+                                                onClick={() => removeImage(index)} 
+                                                className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-700"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button 
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingImage}
+                                        className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-400 transition bg-white"
+                                    >
+                                        {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                                        <span className="text-[10px] font-bold uppercase mt-1">Upload</span>
+                                    </button>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef}
+                                    onChange={handleImageUpload} 
+                                    className="hidden" 
+                                    accept="image/*"
+                                    multiple
+                                />
+                                {uploadingImage && <p className="text-xs text-church-600 animate-pulse text-center">Uploading to ImgBB...</p>}
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Description / Biography</label>
-                                <textarea className="w-full border border-slate-300 rounded p-2.5 h-32" value={editingEntry.description || ''} onChange={e => setEditingEntry({...editingEntry, description: e.target.value})} placeholder="Details about this record..." />
+                                <textarea className="w-full border border-slate-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-church-500 outline-none transition resize-none" value={editingEntry.description || ''} onChange={e => setEditingEntry({...editingEntry, description: e.target.value})} placeholder="Details about this record..." />
                             </div>
                         </div>
                         <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50 rounded-b-xl">

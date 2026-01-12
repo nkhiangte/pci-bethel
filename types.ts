@@ -206,10 +206,15 @@ export interface ArchiveEntry {
   id: string;
   title: string;
   date: string;
-  category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute' | 'Rawngbawltu te' | 'Pastors' | 'Deceased Elders';
+  category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute' | 'Rawngbawltu te' | 'Pastors' | 'Upa kal ta te';
   subCategory?: string; // New field for sub-categories under Rawngbawltu te
   description: string;
   link?: string; // Optional URL to the file
+  imageUrls?: string[]; // Optional multiple images for profiles
+  // Specific fields for Upa kal ta te
+  birthDate?: string;
+  ordinationDate?: string;
+  deathDate?: string;
 }
 
 export interface ProgramField {
