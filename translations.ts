@@ -25,6 +25,7 @@ export const translations = {
       statistics: 'Statistics',
       duties: 'Weekly Duties',
       chanvo: 'Service Roster',
+      missionaries: 'Missionaries',
     },
     home: {
       newHere: 'New Here?',
@@ -230,6 +231,7 @@ export const translations = {
       statistics: 'Statistics',
       duties: 'Tunkar Hun Ruatna',
       chanvo: 'Inkhawm Chanvo',
+      missionaries: 'Missionary',
     },
     home: {
       newHere: 'I vawi khatna em ni?',

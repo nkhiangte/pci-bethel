@@ -1,0 +1,320 @@
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../services/firebase';
+import { Missionary } from '../types';
+import { 
+  Globe, MapPin, Loader, Plus, Edit, Trash, X, Save, 
+  ChevronRight, BookOpen, Upload, User, Image as ImageIcon
+} from 'lucide-react';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
+
+const Missionaries: React.FC = () => {
+  const { isAdmin } = useAuth();
+  const [missionaries, setMissionaries] = useState<Missionary[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedMissionary, setSelectedMissionary] = useState<Missionary | null>(null); // For Viewing
+  const [editingMissionary, setEditingMissionary] = useState<Partial<Missionary>>({}); // For Editing
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchMissionaries = useCallback(async () => {
+    setLoading(true);
+    if (!db || !db.collection) {
+        setMissionaries([]);
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection('missionaries').get();
+        if (!snapshot.empty) {
+            const data = snapshot.docs.map((doc: any) => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Missionary[];
+            // Sort by name for now
+            data.sort((a, b) => a.name.localeCompare(b.name));
+            setMissionaries(data);
+        } else {
+            setMissionaries([]);
+        }
+    } catch (error) {
+        console.error("Error fetching missionaries:", error);
+        setMissionaries([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMissionaries();
+  }, [fetchMissionaries]);
+
+  const handleAddNew = () => {
+    setEditingMissionary({
+        name: '',
+        field: '',
+        period: '',
+        bio: '',
+        imageUrl: ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEdit = (e: React.MouseEvent, m: Missionary) => {
+    e.stopPropagation();
+    setEditingMissionary({ ...m });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!db?.doc || !window.confirm("Are you sure you want to delete this missionary record?")) return;
+    
+    try {
+        await db.collection('missionaries').doc(id).delete();
+        fetchMissionaries();
+        // If viewing the deleted one, close modal
+        if (selectedMissionary?.id === id) setSelectedMissionary(null);
+    } catch (error) {
+        console.error("Error deleting:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!db?.collection) return;
+    
+    if (!editingMissionary.name || !editingMissionary.field) {
+        alert("Name and Field are required.");
+        return;
+    }
+
+    setIsSaving(true);
+    try {
+        const { id, ...data } = editingMissionary;
+        if (id) {
+            await db.collection('missionaries').doc(id).set(data, { merge: true });
+        } else {
+            await db.collection('missionaries').add(data);
+        }
+        setIsEditModalOpen(false);
+        fetchMissionaries();
+    } catch (error) {
+        console.error("Error saving:", error);
+        alert("Failed to save.");
+    }
+    setIsSaving(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST', body: formData,
+        });
+        const result = await response.json();
+        if (result.success) {
+            setEditingMissionary(prev => ({ ...prev, imageUrl: result.data.url }));
+        } else {
+            alert("Image upload failed.");
+        }
+    } catch (error) {
+        alert("Error connecting to image server.");
+    } finally {
+        setUploadingImage(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="bg-slate-50 min-h-screen py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+                <div className="flex justify-center mb-4">
+                    <div className="p-4 bg-church-50 rounded-full text-church-600">
+                        <Globe size={40} />
+                    </div>
+                </div>
+                <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Kan Missionary Te</h1>
+                <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+                    "Go into all the world and preach the gospel to all creation." - Mark 16:15
+                </p>
+                {isAdmin && (
+                    <button 
+                        onClick={handleAddNew}
+                        className="mt-8 inline-flex items-center px-6 py-3 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-lg transition transform hover:-translate-y-1 font-bold text-sm"
+                    >
+                        <Plus size={18} className="mr-2" /> Add Missionary
+                    </button>
+                )}
+            </div>
+
+            {loading ? (
+                <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
+            ) : missionaries.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {missionaries.map((m) => (
+                        <div 
+                            key={m.id} 
+                            onClick={() => setSelectedMissionary(m)}
+                            className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
+                        >
+                            <div className="relative h-64 bg-slate-200 overflow-hidden">
+                                {m.imageUrl ? (
+                                    <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-church-50 text-church-300">
+                                        <User size={64} />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                <div className="absolute bottom-4 left-4 right-4 text-white">
+                                    <h3 className="text-xl font-bold font-serif leading-tight mb-1">{m.name}</h3>
+                                    <div className="flex items-center text-sm font-medium text-church-200">
+                                        <MapPin size={14} className="mr-1" /> {m.field}
+                                    </div>
+                                </div>
+                                {isAdmin && (
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={(e) => handleEdit(e, m)} className="p-2 bg-white/90 text-church-600 rounded-full hover:bg-white"><Edit size={16} /></button>
+                                        <button onClick={(e) => handleDelete(e, m.id)} className="p-2 bg-white/90 text-red-600 rounded-full hover:bg-white"><Trash size={16} /></button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-6 flex flex-col flex-grow">
+                                <div className="mb-4">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Service Period</p>
+                                    <p className="text-slate-800 font-medium">{m.period || 'Current'}</p>
+                                </div>
+                                <p className="text-slate-600 text-sm line-clamp-3 mb-6 flex-grow">{m.bio}</p>
+                                <div className="pt-4 border-t border-slate-100 flex justify-between items-center mt-auto">
+                                    <span className="text-church-600 text-xs font-black uppercase tracking-widest flex items-center group-hover:underline">
+                                        Read Biography <ChevronRight size={14} className="ml-1" />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <Globe size={48} className="mx-auto text-slate-300 mb-4" />
+                    <h3 className="text-lg font-bold text-slate-700">No Missionaries Found</h3>
+                    <p className="text-slate-500">Records will appear here once added.</p>
+                </div>
+            )}
+        </div>
+
+        {/* View Modal (Biography Theater) */}
+        {selectedMissionary && (
+            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedMissionary(null)}>
+                <div className="bg-white rounded-[2rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+                    <div className="relative h-48 md:h-64 shrink-0 bg-slate-900">
+                        {selectedMissionary.imageUrl && (
+                            <img src={selectedMissionary.imageUrl} alt={selectedMissionary.name} className="w-full h-full object-cover opacity-60" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                        <button onClick={() => setSelectedMissionary(null)} className="absolute top-6 right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition"><X size={24}/></button>
+                        
+                        <div className="absolute bottom-0 left-0 w-full p-8 md:p-10 text-white">
+                            <span className="inline-block px-3 py-1 bg-church-600 rounded-full text-xs font-bold uppercase tracking-widest mb-3">Missionary</span>
+                            <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight mb-2">{selectedMissionary.name}</h2>
+                            <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-slate-300">
+                                <span className="flex items-center"><MapPin size={18} className="mr-2 text-church-400"/> {selectedMissionary.field}</span>
+                                <span className="w-1 h-1 bg-slate-500 rounded-full hidden md:block"></span>
+                                <span>{selectedMissionary.period || 'Serving'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
+                        <div className="max-w-3xl mx-auto">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="h-px bg-slate-200 flex-1"></div>
+                                <BookOpen size={20} className="text-church-600" />
+                                <div className="h-px bg-slate-200 flex-1"></div>
+                            </div>
+                            <div className="prose prose-lg prose-slate max-w-none font-serif leading-relaxed text-slate-700 whitespace-pre-wrap first-letter:text-5xl first-letter:font-bold first-letter:text-church-900 first-letter:mr-1 first-letter:float-left">
+                                {selectedMissionary.bio || "Biography details not available."}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                    <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                        <h3 className="text-xl font-bold text-slate-800">{editingMissionary.id ? 'Edit Record' : 'Add Missionary'}</h3>
+                        <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                    </div>
+                    
+                    <div className="p-6 space-y-5 overflow-y-auto bg-white">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
+                            <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.name || ''} onChange={e => setEditingMissionary({...editingMissionary, name: e.target.value})} placeholder="Full Name" />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Mission Field</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.field || ''} onChange={e => setEditingMissionary({...editingMissionary, field: e.target.value})} placeholder="e.g. Arunachal" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Period (Years)</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.period || ''} onChange={e => setEditingMissionary({...editingMissionary, period: e.target.value})} placeholder="e.g. 2010 - 2015" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Photo URL</label>
+                            <div className="flex gap-2">
+                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.imageUrl || ''} onChange={e => setEditingMissionary({...editingMissionary, imageUrl: e.target.value})} placeholder="https://..." />
+                                <button onClick={() => fileInputRef.current?.click()} disabled={uploadingImage} className="px-4 bg-slate-100 border rounded-lg text-slate-600 hover:bg-slate-200">
+                                    {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                                </button>
+                            </div>
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+                            <p className="text-xs text-slate-400 mt-1">Upload an image or paste a direct link.</p>
+                        </div>
+
+                        {editingMissionary.imageUrl && (
+                            <div className="h-40 w-full bg-slate-100 rounded-lg overflow-hidden border">
+                                <img src={editingMissionary.imageUrl} alt="Preview" className="w-full h-full object-contain" />
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Biography</label>
+                            <textarea className="w-full border p-3 rounded-lg h-48 font-serif text-sm leading-relaxed" value={editingMissionary.bio || ''} onChange={e => setEditingMissionary({...editingMissionary, bio: e.target.value})} placeholder="Write the missionary's biography here..." />
+                        </div>
+                    </div>
+
+                    <div className="p-6 bg-slate-50 border-t flex justify-end space-x-3 rounded-b-2xl">
+                        <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-white">Cancel</button>
+                        <button onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 bg-church-600 text-white rounded-xl font-bold hover:bg-church-700 flex items-center shadow-lg shadow-church-200">
+                            {isSaving ? <Loader className="animate-spin mr-2" size={18}/> : <Save className="mr-2" size={18} />} Save Record
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+    </div>
+  );
+};
+
+export default Missionaries;

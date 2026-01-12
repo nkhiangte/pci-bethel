@@ -103,6 +103,16 @@ export interface Staff {
   imageScale?: number; // 1.0+
 }
 
+export interface Missionary {
+  id: string;
+  name: string;
+  field: string; // Mission Field (e.g., Arunachal, Nepal)
+  imageUrl: string;
+  period?: string; // e.g. 2010 - Present
+  bio: string; // Full biography
+  order?: number;
+}
+
 export interface CommitteeMember {
   id?: string;
   name: string;

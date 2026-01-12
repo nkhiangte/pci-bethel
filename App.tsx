@@ -32,6 +32,7 @@ import Archives from './pages/Archives'; // FIX: Changed from named import to de
 import InkhawmChanvo from './pages/InkhawmChanvo';
 import UpaBial from './pages/UpaBial'; // Added UpaBial
 import Articles from './pages/Articles'; // Added Articles
+import Missionaries from './pages/Missionaries'; // Added Missionaries
 
 const App: React.FC = () => {
   return (
@@ -55,7 +56,8 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/upa-bial" element={<UpaBial />} />
-                <Route path="/articles" element={<Articles />} /> {/* Added Route */}
+                <Route path="/missionaries" element={<Missionaries />} /> {/* Added Route */}
+                <Route path="/articles" element={<Articles />} /> 
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
@@ -72,7 +74,7 @@ const App: React.FC = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/ministries" element={<AdminMinistries />} />
                 <Route path="/admin/duties" element={<AdminDuties />} /> 
-                <Route path="/admin/users" element={<AdminUsers />} /> {/* Added AdminUsers Route */}
+                <Route path="/admin/users" element={<AdminUsers />} /> 
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> 
                 <Route path="/archives" element={<Archives />} />
