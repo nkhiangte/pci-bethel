@@ -10,7 +10,7 @@ import {
   ChevronRight, Shield, Clock, 
   Music, UserCircle, CalendarDays,
   Radio, ClipboardList, Edit, Save, X, Loader, Bell, ArrowUpRight, ZoomIn, Play, Youtube,
-  Quote, ShieldCheck, BookOpen as BiographyIcon
+  Quote, ShieldCheck, BookOpen as BiographyIcon, MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -521,6 +521,31 @@ export const Home: React.FC = () => {
                             )}
                             <span className="text-church-600 font-black text-[10px] uppercase tracking-[0.4em] mb-6 block">Bialtu Pastor</span>
                             <h2 className="text-4xl md:text-6xl font-serif font-black mb-8 text-slate-900 leading-tight group-hover:text-church-700 transition-colors">{churchPastors[0].name}</h2>
+                            
+                            {/* Added Section for Probation/Previous Bial */}
+                            {(churchPastors[0].probationTenure || churchPastors[0].previousBial) && (
+                                <div className="flex flex-wrap gap-4 mb-8">
+                                    {churchPastors[0].probationTenure && (
+                                        <div className="inline-flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100 shadow-sm">
+                                            <div className="p-1.5 bg-white rounded-full text-slate-400"><Clock size={14} /></div>
+                                            <div>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider leading-none">Probation</p>
+                                                <p className="text-sm font-bold text-slate-700 leading-none mt-1">{churchPastors[0].probationTenure}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {churchPastors[0].previousBial && (
+                                        <div className="inline-flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100 shadow-sm">
+                                            <div className="p-1.5 bg-white rounded-full text-slate-400"><MapPin size={14} /></div>
+                                            <div>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider leading-none">Previous Bial</p>
+                                                <p className="text-sm font-bold text-slate-700 leading-none mt-1">{churchPastors[0].previousBial}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <p className="text-slate-500 text-lg md:text-xl font-serif italic mb-12 leading-relaxed opacity-80">
                                 "{churchPastors[0].description}"
                             </p>
@@ -592,7 +617,7 @@ export const Home: React.FC = () => {
                     
                     <button 
                         onClick={() => setSelectedLeader(null)}
-                        className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full transition text-white border border-white/20"
+                        className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full transition text-white border border-white/20 z-20"
                     >
                         <X size={24} />
                     </button>
@@ -646,8 +671,15 @@ export const Home: React.FC = () => {
                             ) : (
                                 <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                                     <BiographyIcon size={40} className="mx-auto text-slate-300 mb-4" />
-                                    <p className="text-slate-500 italic">Detailed biography not yet added.</p>
-                                    {isAdmin && <p className="text-church-600 text-sm mt-2 font-bold">Use the edit button to add details.</p>}
+                                    <p className="text-slate-500 italic">Detailed biography not yet added to Firebase.</p>
+                                    {isAdmin && <p className="text-church-600 text-sm mt-2 font-bold underline cursor-pointer" onClick={() => {
+                                        setEditingStaffData(selectedLeader);
+                                        setTargetStaffCollection(
+                                            churchPastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 
+                                            churchElders.some(e => e.id === selectedLeader.id) ? 'elders' : 'proPastors'
+                                        );
+                                        setIsEditingStaff(true);
+                                    }}>Click here to add biography</p>}
                                 </div>
                             )}
                         </div>
@@ -656,7 +688,7 @@ export const Home: React.FC = () => {
                         <div className="lg:col-span-4 space-y-8">
                             <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden">
                                 <Quote size={48} className="absolute -top-4 -left-4 text-church-100" />
-                                <h4 className="text-xs font-black text-church-600 uppercase tracking-widest mb-4 relative z-10">Short Mission</h4>
+                                <h4 className="text-xs font-black text-church-600 uppercase tracking-widest mb-4 relative z-10">Mission / Quote</h4>
                                 <p className="text-slate-600 italic font-serif leading-relaxed relative z-10">
                                     "{selectedLeader.description}"
                                 </p>
@@ -682,20 +714,45 @@ export const Home: React.FC = () => {
                                         <p className="text-sm font-bold text-slate-800 line-clamp-1">Champhai Bethel Kohhran</p>
                                     </div>
                                 </div>
+
+                                {selectedLeader.probationTenure && (
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600 shadow-inner">
+                                            <Clock size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Probation Tenure</p>
+                                            <p className="text-sm font-bold text-slate-800">{selectedLeader.probationTenure}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedLeader.previousBial && (
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 shadow-inner">
+                                            <MapPin size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Previous Bial</p>
+                                            <p className="text-sm font-bold text-slate-800">{selectedLeader.previousBial}</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {isAdmin && (
                                 <button 
-                                    onClick={(e) => {
+                                    onClick={() => {
                                         setEditingStaffData(selectedLeader);
                                         setTargetStaffCollection(
-                                            churchPastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 'elders'
+                                            churchPastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 
+                                            churchElders.some(e => e.id === selectedLeader.id) ? 'elders' : 'proPastors'
                                         );
                                         setIsEditingStaff(true);
                                     }}
                                     className="w-full py-4 bg-church-50 text-church-700 font-black uppercase text-[10px] tracking-widest rounded-2xl border border-church-100 hover:bg-church-100 transition shadow-sm flex items-center justify-center gap-2"
                                 >
-                                    <Edit size={14} /> Edit Profile Data
+                                    <Edit size={14} /> Edit Firebase Record
                                 </button>
                             )}
                         </div>

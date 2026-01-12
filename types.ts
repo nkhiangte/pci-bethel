@@ -101,6 +101,9 @@ export interface Staff {
   imagePositionX?: number; // 0-100%
   imagePositionY?: number; // 0-100%
   imageScale?: number; // 1.0+
+  // New pastoral fields
+  probationTenure?: string;
+  previousBial?: string;
 }
 
 export interface ServiceHistory {

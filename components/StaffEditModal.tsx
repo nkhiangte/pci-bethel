@@ -131,6 +131,26 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     />
                 </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                    <input
+                    className="w-full border border-slate-300 rounded p-2.5"
+                    value={formData.probationTenure || ''}
+                    onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
+                    placeholder="e.g. 2005 - 2007"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Previous Bial</label>
+                    <input
+                    className="w-full border border-slate-300 rounded p-2.5"
+                    value={formData.previousBial || ''}
+                    onChange={e => setFormData({ ...formData, previousBial: e.target.value })}
+                    placeholder="e.g. Lunglei Chanmari"
+                    />
+                </div>
+            </div>
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
                 <input
