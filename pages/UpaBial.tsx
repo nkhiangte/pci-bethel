@@ -1,8 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Users, MapPin, User, ChevronDown, ChevronUp, Database, Loader } from 'lucide-react';
+import { Users, MapPin, User, ChevronDown, ChevronUp, Database, Loader, Plus, Edit, Trash, X, Save, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
 interface UpaBialData {
   id: string; // e.g., 'bial-1'
@@ -136,31 +138,41 @@ const UpaBial: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
 
-  useEffect(() => {
-    const fetchBials = async () => {
-      setLoading(true);
-      if (!db || !db.collection) {
-        setBials(INITIAL_BIAL_DATA);
-        setLoading(false);
-        return;
-      }
+  // Edit State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBial, setEditingBial] = useState<Partial<UpaBialData>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-      try {
-        const snapshot = await db.collection('upaBials').get();
-        if (!snapshot.empty) {
-          const fetchedData = snapshot.docs.map(doc => doc.data() as UpaBialData);
-          fetchedData.sort((a, b) => a.number - b.number);
-          setBials(fetchedData);
-        } else {
-          setBials(INITIAL_BIAL_DATA);
-        }
-      } catch (error) {
-        console.error("Error fetching Upa Bial data:", error);
-        setBials(INITIAL_BIAL_DATA);
-      }
+  const fetchBials = async () => {
+    setLoading(true);
+    if (!db || !db.collection) {
+      setBials(INITIAL_BIAL_DATA);
       setLoading(false);
-    };
+      return;
+    }
 
+    try {
+      const snapshot = await db.collection('upaBials').get();
+      if (!snapshot.empty) {
+        const fetchedData = snapshot.docs.map((doc: any) => ({
+            id: doc.id,
+            ...doc.data()
+        })) as UpaBialData[];
+        fetchedData.sort((a, b) => a.number - b.number);
+        setBials(fetchedData);
+      } else {
+        setBials(INITIAL_BIAL_DATA);
+      }
+    } catch (error) {
+      console.error("Error fetching Upa Bial data:", error);
+      setBials(INITIAL_BIAL_DATA);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchBials();
   }, []);
 
@@ -171,9 +183,8 @@ const UpaBial: React.FC = () => {
       const batch = db.batch();
       const ref = db.collection('upaBials');
       
-      // Delete existing to avoid duplicates if ID strategy changes (though here we use fixed IDs)
       const snapshot = await ref.get();
-      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      snapshot.docs.forEach((doc: any) => batch.delete(doc.ref));
 
       INITIAL_BIAL_DATA.forEach(item => {
         const doc = ref.doc(item.id);
@@ -181,12 +192,106 @@ const UpaBial: React.FC = () => {
       });
       await batch.commit();
       alert("Data seeded successfully!");
-      setBials(INITIAL_BIAL_DATA);
+      fetchBials();
     } catch (e) {
       console.error("Error seeding:", e);
       alert("Failed to seed data.");
     }
     setIsSeeding(false);
+  };
+
+  const handleAddNew = () => {
+    setEditingBial({
+        number: (bials.length > 0 ? Math.max(...bials.map(b => b.number)) + 1 : 1),
+        leader: '',
+        areaDescription: '',
+        members: [],
+        imageUrl: ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEdit = (e: React.MouseEvent, bial: UpaBialData) => {
+    e.stopPropagation();
+    setEditingBial({ ...bial });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!db?.doc || !window.confirm("Delete this Bial record?")) return;
+    try {
+        await db.collection('upaBials').doc(id).delete();
+        fetchBials();
+    } catch (error) {
+        console.error("Error deleting:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!db?.collection) return;
+    setIsSaving(true);
+    try {
+        const { id, ...data } = editingBial;
+        // Clean members array (remove empty strings)
+        data.members = (data.members || []).filter(m => m.trim() !== '');
+
+        if (id) {
+            await db.collection('upaBials').doc(id).set(data, { merge: true });
+        } else {
+            await db.collection('upaBials').add(data);
+        }
+        setIsEditModalOpen(false);
+        fetchBials();
+    } catch (error) {
+        console.error("Error saving:", error);
+        alert("Failed to save.");
+    }
+    setIsSaving(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST', body: formData,
+        });
+        const result = await response.json();
+        if (result.success) {
+            setEditingBial(prev => ({ ...prev, imageUrl: result.data.url }));
+        } else {
+            alert("Image upload failed.");
+        }
+    } catch (error) {
+        alert("Error connecting to image server.");
+    } finally {
+        setUploadingImage(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAddMember = () => {
+      setEditingBial(prev => ({
+          ...prev,
+          members: [...(prev.members || []), '']
+      }));
+  };
+
+  const handleMemberChange = (index: number, value: string) => {
+      const newMembers = [...(editingBial.members || [])];
+      newMembers[index] = value;
+      setEditingBial(prev => ({ ...prev, members: newMembers }));
+  };
+
+  const handleRemoveMember = (index: number) => {
+      const newMembers = [...(editingBial.members || [])];
+      newMembers.splice(index, 1);
+      setEditingBial(prev => ({ ...prev, members: newMembers }));
   };
 
   const toggleExpand = (id: string) => {
@@ -214,7 +319,13 @@ const UpaBial: React.FC = () => {
         </div>
 
         {isAdmin && (
-          <div className="text-center mb-8">
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <button 
+              onClick={handleAddNew}
+              className="inline-flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition"
+            >
+              <Plus size={16} className="mr-2" /> Add New Bial
+            </button>
             <button 
               onClick={handleSeedData} 
               disabled={isSeeding}
@@ -232,14 +343,14 @@ const UpaBial: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {bials.map((bial) => {
               const isExpanded = expandedId === bial.id;
-              // Fallback to local image mapping if database image is missing
+              // Fallback to local image mapping if database image is missing or not provided
               const displayImage = bial.imageUrl || BIAL_IMAGES[bial.number];
               
               return (
                 <div key={bial.id} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'shadow-lg border-church-300 ring-1 ring-church-200 col-span-1 md:col-span-2 lg:col-span-3' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
                   <button 
                     onClick={() => toggleExpand(bial.id)}
-                    className="w-full text-left p-4 flex justify-between items-center"
+                    className="w-full text-left p-4 flex justify-between items-center group"
                   >
                     <div className="flex items-center gap-4">
                       {displayImage ? (
@@ -257,12 +368,20 @@ const UpaBial: React.FC = () => {
                       )}
                       
                       <div>
-                        <h3 className="font-bold text-lg text-slate-800">BIAL - {bial.number}</h3>
+                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-church-700 transition-colors">BIAL - {bial.number}</h3>
                         <p className="text-sm text-church-600 font-medium">{bial.leader}</p>
                       </div>
                     </div>
-                    <div className="text-slate-400">
-                      {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                    <div className="flex items-center gap-3">
+                        {isAdmin && (
+                            <div className="flex gap-2 mr-2">
+                                <span onClick={(e) => handleEdit(e, bial)} className="p-1.5 text-slate-400 hover:text-church-600 hover:bg-slate-100 rounded-full transition"><Edit size={16} /></span>
+                                <span onClick={(e) => handleDelete(e, bial.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-full transition"><Trash size={16} /></span>
+                            </div>
+                        )}
+                        <div className="text-slate-400">
+                        {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                        </div>
                     </div>
                   </button>
 
@@ -299,6 +418,90 @@ const UpaBial: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                    <h3 className="text-xl font-bold text-slate-800">{editingBial.id ? 'Edit Bial' : 'Add New Bial'}</h3>
+                    <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                </div>
+                <div className="p-6 space-y-5 overflow-y-auto bg-white">
+                    <div className="grid grid-cols-4 gap-4">
+                        <div className="col-span-1">
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Bial No</label>
+                            <input 
+                                type="number"
+                                className="w-full border p-2.5 rounded-lg text-center font-bold" 
+                                value={editingBial.number || ''} 
+                                onChange={e => setEditingBial({...editingBial, number: parseInt(e.target.value)})} 
+                            />
+                        </div>
+                        <div className="col-span-3">
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Leader Name</label>
+                            <input 
+                                className="w-full border p-2.5 rounded-lg" 
+                                value={editingBial.leader || ''} 
+                                onChange={e => setEditingBial({...editingBial, leader: e.target.value})} 
+                                placeholder="Upa Name"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Area Description</label>
+                        <textarea 
+                            className="w-full border p-2.5 rounded-lg h-24" 
+                            value={editingBial.areaDescription || ''} 
+                            onChange={e => setEditingBial({...editingBial, areaDescription: e.target.value})} 
+                            placeholder="Describe the area..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Leader Photo</label>
+                        <div className="flex gap-2">
+                            <input className="w-full border p-2.5 rounded-lg" value={editingBial.imageUrl || ''} onChange={e => setEditingBial({...editingBial, imageUrl: e.target.value})} placeholder="https://..." />
+                            <button onClick={() => fileInputRef.current?.click()} disabled={uploadingImage} className="px-4 bg-slate-100 border rounded-lg text-slate-600 hover:bg-slate-200">
+                                {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                            </button>
+                        </div>
+                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+                        <p className="text-xs text-slate-400 mt-1">Upload an image or paste a direct link. If empty, it uses the hardcoded default.</p>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center justify-between">
+                            <span>Assistant Members</span>
+                            <button onClick={handleAddMember} className="text-xs text-church-600 flex items-center hover:underline"><Plus size={12} className="mr-1"/> Add Member</button>
+                        </label>
+                        <div className="space-y-2">
+                            {(editingBial.members || []).map((member, index) => (
+                                <div key={index} className="flex gap-2 items-center">
+                                    <span className="text-xs font-bold text-slate-400 w-4">{index + 1}.</span>
+                                    <input 
+                                        className="flex-1 border p-2 rounded-lg text-sm" 
+                                        value={member} 
+                                        onChange={e => handleMemberChange(index, e.target.value)}
+                                        placeholder="Member Name"
+                                    />
+                                    <button onClick={() => handleRemoveMember(index)} className="p-2 text-red-500 hover:bg-red-100 rounded-lg"><Trash2 size={16} /></button>
+                                </div>
+                            ))}
+                            {(editingBial.members || []).length === 0 && <p className="text-sm text-slate-400 italic">No assistant members added.</p>}
+                        </div>
+                    </div>
+                </div>
+                <div className="p-6 bg-slate-50 border-t flex justify-end space-x-3 rounded-b-2xl">
+                    <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-white">Cancel</button>
+                    <button onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 bg-church-600 text-white rounded-xl font-bold hover:bg-church-700 flex items-center shadow-lg shadow-church-200">
+                        {isSaving ? <Loader className="animate-spin mr-2" size={18}/> : <Save className="mr-2" size={18} />} Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
