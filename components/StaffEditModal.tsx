@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Staff } from '../types';
-import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen } from 'lucide-react';
+import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle } from 'lucide-react';
 
 interface StaffEditModalProps {
   staff: Partial<Staff>;
@@ -131,26 +131,75 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     />
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
-                    <input
-                    className="w-full border border-slate-300 rounded p-2.5"
-                    value={formData.probationTenure || ''}
-                    onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
-                    placeholder="e.g. 2005 - 2007"
-                    />
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                <input
+                className="w-full border border-slate-300 rounded p-2.5"
+                value={formData.probationTenure || ''}
+                onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
+                placeholder="e.g. 2005 - 2007"
+                />
+            </div>
+            
+            {/* Multiple Previous Bials Section */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Previous Bials History</label>
+                <div className="space-y-2">
+                    {(formData.previousBials || []).map((item, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                            <input 
+                                className="flex-1 border border-slate-300 rounded p-2 text-sm" 
+                                placeholder="Bial Name" 
+                                value={item.field} 
+                                onChange={e => {
+                                    const list = [...(formData.previousBials || [])];
+                                    list[index] = { ...list[index], field: e.target.value };
+                                    setFormData({ ...formData, previousBials: list });
+                                }}
+                            />
+                            <input 
+                                className="w-32 border border-slate-300 rounded p-2 text-sm" 
+                                placeholder="Tenure (e.g. 2010-15)" 
+                                value={item.period} 
+                                onChange={e => {
+                                    const list = [...(formData.previousBials || [])];
+                                    list[index] = { ...list[index], period: e.target.value };
+                                    setFormData({ ...formData, previousBials: list });
+                                }}
+                            />
+                            <button 
+                                onClick={() => {
+                                    const list = [...(formData.previousBials || [])];
+                                    list.splice(index, 1);
+                                    setFormData({ ...formData, previousBials: list });
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    ))}
                 </div>
-                <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Previous Bial</label>
+                <button 
+                    type="button"
+                    onClick={() => setFormData({ ...formData, previousBials: [...(formData.previousBials || []), { field: '', period: '' }] })}
+                    className="mt-3 text-xs font-bold text-church-600 flex items-center gap-1 hover:underline"
+                >
+                    <PlusCircle size={14}/> Add Previous Bial
+                </button>
+                
+                {/* Legacy input for backward compatibility or simple entry */}
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Single Entry (Legacy)</label>
                     <input
-                    className="w-full border border-slate-300 rounded p-2.5"
-                    value={formData.previousBial || ''}
-                    onChange={e => setFormData({ ...formData, previousBial: e.target.value })}
-                    placeholder="e.g. Lunglei Chanmari"
+                        className="w-full border border-slate-300 rounded p-2 text-sm text-slate-500"
+                        value={formData.previousBial || ''}
+                        onChange={e => setFormData({ ...formData, previousBial: e.target.value })}
+                        placeholder="Previous Bial (Legacy string field)"
                     />
                 </div>
             </div>
+
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
                 <input

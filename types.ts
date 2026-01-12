@@ -88,6 +88,11 @@ export interface Ministry {
   image: string;
 }
 
+export interface ServiceHistory {
+    field: string;
+    period: string;
+}
+
 export interface Staff {
   id: string;
   name: string;
@@ -103,12 +108,8 @@ export interface Staff {
   imageScale?: number; // 1.0+
   // New pastoral fields
   probationTenure?: string;
-  previousBial?: string;
-}
-
-export interface ServiceHistory {
-    field: string;
-    period: string;
+  previousBial?: string; // Legacy field
+  previousBials?: ServiceHistory[]; // New field for multiple entries
 }
 
 export interface Missionary {

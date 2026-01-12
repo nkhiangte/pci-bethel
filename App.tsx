@@ -3,8 +3,8 @@ import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-// FIX: Changed default import to named import based on the error message "Module ... has no default export".
-import { Home } from './pages/Home';
+import Chatbot from './components/Chatbot';
+import Home from './pages/Home';
 import About from './pages/About';
 import Events from './pages/Events';
 import Announcements from './pages/Announcements';
@@ -19,20 +19,19 @@ import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
-import AdminDuties from './pages/AdminDuties'; // Import new page
-import AdminUsers from './pages/AdminUsers'; // Added AdminUsers
-import StaffEditModal from './components/StaffEditModal'; // FIX: Import new generic modal component
+import AdminDuties from './pages/AdminDuties'; 
+import AdminUsers from './pages/AdminUsers'; 
+import StaffEditModal from './components/StaffEditModal'; 
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
-// FIX: Import SundaySchool, Statistics, and Records components
 import SundaySchool from './pages/SundaySchool';
 import Statistics from './pages/Statistics';
 import Records from './pages/Records';
-import Archives from './pages/Archives'; // FIX: Changed from named import to default import
+import Archives from './pages/Archives'; 
 import InkhawmChanvo from './pages/InkhawmChanvo';
-import UpaBial from './pages/UpaBial'; // Added UpaBial
-import Articles from './pages/Articles'; // Added Articles
-import Missionaries from './pages/Missionaries'; // Added Missionaries
+import UpaBial from './pages/UpaBial'; 
+import Articles from './pages/Articles'; 
+import Missionaries from './pages/Missionaries'; 
 
 const App: React.FC = () => {
   return (
@@ -81,6 +80,7 @@ const App: React.FC = () => {
                 <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
               </Routes>
             </main>
+            <Chatbot />
             <Footer />
           </div>
         </HashRouter>
