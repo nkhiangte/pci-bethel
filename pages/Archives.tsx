@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft, DollarSign, Globe, Home, Heart, Coffee, Smile, Library, Mic, Mic2, GraduationCap, Book, BookOpen, Music, Settings } from 'lucide-react';
+import { Archive, FileText, Image, Video, History, File, Plus, Edit, Trash, Search, Loader, ExternalLink, X, Save, Users, Database, ChevronLeft, FolderOpen, AlertTriangle, UserSearch, Play, ArrowLeft, DollarSign, Globe, Home, Heart, Coffee, Smile, Library, Mic, Mic2, GraduationCap, Book, BookOpen, Music, Settings, UserCheck, Cross } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Document': FileText,
@@ -12,7 +12,9 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Video': Video,
     'History': History,
     'Minute': File,
-    'Rawngbawltu te': Users 
+    'Rawngbawltu te': Users,
+    'Pastors': UserCheck,
+    'Upa kal ta te': Cross
 };
 
 const SUB_CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -41,6 +43,8 @@ const SUB_CATEGORY_ICONS: Record<string, React.ElementType> = {
 
 // Category Metadata for the Grid View
 const ARCHIVE_SECTIONS = [
+    { id: 'Pastors', label: 'Pastors', icon: UserCheck, color: 'bg-cyan-600', description: 'Records of our spiritual shepherds.' },
+    { id: 'Upa kal ta te', label: 'Upa kal ta te', icon: Cross, color: 'bg-slate-600', description: 'Kohhran hruaitu min kalsan tawhte.' },
     { id: 'Document', label: 'Documents', icon: FileText, color: 'bg-blue-500', description: 'Official papers, reports, and publications.' },
     { id: 'Photo', label: 'Photos', icon: Image, color: 'bg-emerald-500', description: 'Gallery of church events and memories.' },
     { id: 'Video', label: 'Videos', icon: Video, color: 'bg-red-500', description: 'Recordings of services and special items.' },
@@ -204,7 +208,7 @@ export const Archives: React.FC = () => {
                         baseQuery = baseQuery.where('subCategory', '==', selectedSubCategory);
                     }
                 } else {
-                    // For main categories
+                    // For main categories (including Pastors and Deceased Elders)
                     baseQuery = baseQuery.where('category', '==', selectedCategory);
                 }
 
@@ -936,8 +940,8 @@ export const Archives: React.FC = () => {
                         </div>
                         <div className="p-6 space-y-4 overflow-y-auto">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Title (Year or Name)</label>
-                                <input className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.title || ''} onChange={e => setEditingEntry({...editingEntry, title: e.target.value})} placeholder="e.g., 2023 or Annual Report" />
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Title (Name or Year)</label>
+                                <input className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.title || ''} onChange={e => setEditingEntry({...editingEntry, title: e.target.value})} placeholder="e.g., Rev. Zosangliana or 2023" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -965,11 +969,11 @@ export const Archives: React.FC = () => {
                                 </div>
                             )}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Link (URL)</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Link (Image URL / Video)</label>
                                 <input className="w-full border border-slate-300 rounded p-2.5" value={editingEntry.link || ''} onChange={e => setEditingEntry({...editingEntry, link: e.target.value})} placeholder="https://..." />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Description / Names List</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Description / Biography</label>
                                 <textarea className="w-full border border-slate-300 rounded p-2.5 h-32" value={editingEntry.description || ''} onChange={e => setEditingEntry({...editingEntry, description: e.target.value})} placeholder="Details about this record..." />
                             </div>
                         </div>
