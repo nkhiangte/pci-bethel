@@ -509,7 +509,7 @@ const Missionaries: React.FC = () => {
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 mb-1 block flex items-center"><ZoomIn size={10} className="mr-1"/> Zoom ({editingMissionary.imageScale ?? 1}x)</label>
                                         <input 
-                                            type="range" min="1" max="3" step="0.1"
+                                            type="range" min="0.1" max="3" step="0.1"
                                             value={editingMissionary.imageScale ?? 1} 
                                             onChange={e => setEditingMissionary({...editingMissionary, imageScale: Number(e.target.value)})}
                                             className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-church-600"
