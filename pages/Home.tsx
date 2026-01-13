@@ -13,7 +13,7 @@ import StaffEditModal from '../components/StaffEditModal';
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
-  const { weeklyDuty: staticDuty } = getConstants(language);
+  const { weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
   
   const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticDuty);
   const [latestNews, setLatestNews] = useState<Announcement[]>([]);
@@ -31,7 +31,11 @@ const Home: React.FC = () => {
 
   // Fetch Data
   const fetchData = useCallback(async () => {
-    if (!db || !db.collection) return;
+    if (!db || !db.collection) {
+        setPastors(staticPastors);
+        setElders(staticElders);
+        return;
+    }
 
     try {
         // Fetch Weekly Duty
@@ -52,7 +56,7 @@ const Home: React.FC = () => {
         pastorsData = pastorsData.filter((p, index, self) => 
             index === self.findIndex((t) => t.name === p.name)
         );
-        setPastors(pastorsData);
+        setPastors(pastorsData.length > 0 ? pastorsData : staticPastors);
 
         // Fetch Elders & Deduplicate
         const eldersSnap = await db.collection('elders').orderBy('order', 'asc').get();
@@ -61,12 +65,16 @@ const Home: React.FC = () => {
         eldersData = eldersData.filter((e, index, self) => 
             index === self.findIndex((t) => t.name === e.name)
         );
-        setElders(eldersData);
+        setElders(eldersData.length > 0 ? eldersData : staticElders);
 
     } catch (e) {
-        console.error("Error fetching homepage data", e);
+        console.error("Error fetching homepage data:", e);
+        // Fallback to static data on error
+        setPastors(staticPastors);
+        setElders(staticElders);
+        setWeeklyDuty(staticDuty);
     }
-  }, []);
+  }, [staticPastors, staticElders, staticDuty]);
 
   useEffect(() => {
     fetchData();

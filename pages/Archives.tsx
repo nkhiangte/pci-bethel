@@ -10,8 +10,10 @@ import {
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
   ExternalLink, Play, Loader, Save, Folder, ArrowLeft,
   ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar,
-  BarChart3, LayoutList, TrendingUp, PieChart, FolderOpen, Briefcase, UserCog
+  BarChart3, LayoutList, TrendingUp, PieChart, FolderOpen, Briefcase, UserCog, FileDown,
+  FileSpreadsheet, FileUp
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
@@ -51,12 +53,17 @@ const SS_ZIRTIRTUTE_DEPARTMENTS = [
     'Pre-Beginner', 'Beginner', 'Primary', 'Junior', 'Intermediate', 'Sacrament', 'Senior', 'Puitling'
 ];
 
+const TEACHER_COLUMN_COUNT = 20;
+
 const getYouTubeId = (url: string | undefined) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 };
+
+// Generate years 2025 down to 1981
+const SS_YEAR_RANGE = Array.from({length: 2025 - 1981 + 1}, (_, i) => (2025 - i).toString());
 
 const Archives: React.FC = () => {
   const { t } = useLanguage();
@@ -90,6 +97,7 @@ const Archives: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Reset view mode when category changes
   useEffect(() => {
@@ -225,7 +233,7 @@ const Archives: React.FC = () => {
       setCurrentSSPath(prev => [...prev, folderName]);
   };
 
-  const handleAddNew = () => {
+  const handleAddNew = (prefilledYear?: string) => {
     let defaultDepartment = '';
     if (selectedSubCategory === 'SUNDAY SCHOOL') {
         if (currentSSPath[0] === 'Committee') defaultDepartment = 'Committee';
@@ -241,7 +249,8 @@ const Archives: React.FC = () => {
       department: defaultDepartment,
       description: '',
       link: '',
-      imageUrls: []
+      imageUrls: [],
+      ss_year: prefilledYear // Prefill year if provided
     });
     setIsEditModalOpen(true);
   };
@@ -258,6 +267,122 @@ const Archives: React.FC = () => {
       fetchArchives();
     } catch (error) {
       console.error("Error deleting archive:", error);
+    }
+  };
+
+  const handleExportExcel = () => {
+      if (isSSDepartmentView) {
+          const exportData = SS_YEAR_RANGE.map(year => {
+              const record = archives.find(a => a.ss_year === year);
+              const teacherList = record?.ss_dept_teachers ? record.ss_dept_teachers.split(',').map(t => t.trim()) : [];
+              
+              const row: any = {
+                  Year: year,
+                  Leader: record?.ss_dept_leader || '-',
+                  'Asst. Leader': record?.ss_dept_asst_leader || '-',
+                  Secretary: record?.ss_dept_secretary || '-',
+              };
+
+              // Add teachers to columns
+              for (let i = 0; i < TEACHER_COLUMN_COUNT; i++) {
+                  row[`Zirtirtu ${i + 1}`] = teacherList[i] || '-';
+              }
+
+              return row;
+          });
+          const ws = XLSX.utils.json_to_sheet(exportData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Teachers");
+          XLSX.writeFile(wb, `${currentSSPath[1]}_Department_Teachers.xlsx`);
+      }
+  };
+
+  const handleDownloadTemplate = () => {
+    if (!isSSDepartmentView) return;
+    
+    const headers = ['Year', 'Leader', 'Asst. Leader', 'Secretary'];
+    for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) headers.push(`Zirtirtu ${i}`);
+    
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `${currentSSPath[1]}_Teachers_Import_Template.xlsx`);
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !isSSDepartmentView) return;
+    
+    setLoading(true);
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        const department = currentSSPath[1];
+        
+        // Fetch existing records for this department to avoid duplicates or to update them
+        const existingSnapshot = await db.collection('archives')
+            .where('category', '==', 'Rawngbawltu te')
+            .where('subCategory', '==', 'SUNDAY SCHOOL')
+            .where('department', '==', department)
+            .get();
+            
+        const yearMap = new Map();
+        existingSnapshot.docs.forEach((doc: any) => yearMap.set(doc.data().ss_year, doc.id));
+        
+        const batch = db.batch();
+        let operationCount = 0;
+
+        jsonData.forEach((row: any) => {
+            const year = row['Year'] ? String(row['Year']) : null;
+            if (!year) return;
+
+            const teachers: string[] = [];
+            for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) {
+                const tName = row[`Zirtirtu ${i}`] || row[`Teacher ${i}`]; // Handle both EN/MZ header
+                if (tName) teachers.push(String(tName).trim());
+            }
+
+            const docData = {
+                category: 'Rawngbawltu te',
+                subCategory: 'SUNDAY SCHOOL',
+                department: department,
+                title: `${department} Department Teachers ${year}`,
+                date: `${year}-01-01`,
+                ss_year: year,
+                ss_dept_leader: row['Leader'] || '',
+                ss_dept_asst_leader: row['Asst. Leader'] || '',
+                ss_dept_secretary: row['Secretary'] || '',
+                ss_dept_teachers: teachers.join(', '),
+                description: `Imported record for ${department} Department ${year}`
+            };
+
+            if (yearMap.has(year)) {
+                const docRef = db.collection('archives').doc(yearMap.get(year));
+                batch.set(docRef, docData, { merge: true });
+            } else {
+                const docRef = db.collection('archives').doc();
+                batch.set(docRef, docData);
+            }
+            operationCount++;
+        });
+
+        if (operationCount > 0) {
+            await batch.commit();
+            alert(`Successfully imported/updated ${operationCount} records.`);
+            fetchArchives(); // Refresh list
+        } else {
+            alert("No valid data found in file.");
+        }
+
+    } catch (error) {
+        console.error("Import error:", error);
+        alert("Failed to import file. Please check the format.");
+    } finally {
+        setLoading(false);
+        if (importInputRef.current) importInputRef.current.value = '';
     }
   };
 
@@ -297,8 +422,8 @@ const Archives: React.FC = () => {
       if (data.category !== 'Rawngbawltu te') delete data.subCategory;
       if (data.subCategory !== 'SUNDAY SCHOOL') delete data.department;
 
-      // Ensure proper sorting for Hotute based on Year
-      if (data.department === 'Hotute' && data.ss_year) {
+      // Ensure proper sorting based on Year
+      if ((data.department === 'Hotute' || SS_ZIRTIRTUTE_DEPARTMENTS.includes(data.department || '')) && data.ss_year) {
           data.date = `${data.ss_year}-01-01`; // Set date for consistent sorting
       }
 
@@ -316,10 +441,15 @@ const Archives: React.FC = () => {
     setIsSaving(false);
   };
 
-  const filteredArchives = archives.filter(item => 
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredArchives = archives.filter(item => {
+      const term = searchTerm.toLowerCase();
+      // Enhanced search for Sunday School tables
+      if (item.ss_year && item.ss_year.includes(term)) return true;
+      if (item.ss_dept_teachers && item.ss_dept_teachers.toLowerCase().includes(term)) return true;
+      if (item.ss_dept_leader && item.ss_dept_leader.toLowerCase().includes(term)) return true;
+      
+      return item.title.toLowerCase().includes(term) || item.description.toLowerCase().includes(term);
+  });
 
   // --- ANALYTICS LOGIC ---
   const analyticsData = useMemo(() => {
@@ -381,7 +511,8 @@ const Archives: React.FC = () => {
   const isSSRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 0;
   const isSSZirtirtuteRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Zirtirtute';
   const isSSHotute = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Hotute';
-  const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute;
+  const isSSDepartmentView = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 2 && currentSSPath[0] === 'Zirtirtute';
+  const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute && !isSSDepartmentView;
 
   return (
     <div className="bg-slate-50 min-h-screen py-12">
@@ -430,14 +561,14 @@ const Archives: React.FC = () => {
                                 }
                             </h2>
                             <p className="text-sm text-slate-500">
-                                {isViewingRecords || isSSHotute ? 'Viewing records' : 'Select a folder'}
+                                {isViewingRecords || isSSHotute || isSSDepartmentView ? 'Viewing records' : 'Select a folder'}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-end md:items-center">
                         {/* Only show controls if we are viewing records */}
-                        {(isViewingRecords || isSSHotute) && (
+                        {(isViewingRecords || isSSHotute || isSSDepartmentView) && (
                             <>
                                 <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
                                     <button 
@@ -454,25 +585,63 @@ const Archives: React.FC = () => {
                                     </button>
                                 </div>
 
-                                {viewMode === 'list' && !isSSHotute && (
-                                    <div className="relative flex-grow md:flex-grow-0 w-full md:w-auto">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search..." 
-                                            className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
+                                {viewMode === 'list' && (
+                                    <div className="relative flex-grow md:flex-grow-0 w-full md:w-auto flex gap-2">
+                                        <div className="relative flex-grow">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input 
+                                                type="text" 
+                                                placeholder={isSSDepartmentView ? "Search teachers..." : "Search..."} 
+                                                className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                        </div>
+                                        {isSSDepartmentView && (
+                                            <>
+                                                {isAdmin && (
+                                                    <>
+                                                        <button 
+                                                            onClick={handleDownloadTemplate}
+                                                            className="p-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition shadow-sm"
+                                                            title="Download Import Template"
+                                                        >
+                                                            <FileSpreadsheet size={20} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => importInputRef.current?.click()}
+                                                            className="p-2 bg-church-50 text-church-700 border border-church-200 rounded-lg hover:bg-church-100 transition shadow-sm"
+                                                            title="Import from Excel"
+                                                        >
+                                                            <FileUp size={20} />
+                                                        </button>
+                                                        <input 
+                                                            type="file" 
+                                                            ref={importInputRef} 
+                                                            onChange={handleImportFile} 
+                                                            className="hidden" 
+                                                            accept=".xlsx, .xls, .csv" 
+                                                        />
+                                                    </>
+                                                )}
+                                                <button 
+                                                    onClick={handleExportExcel}
+                                                    className="p-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition shadow-sm"
+                                                    title="Export to Excel"
+                                                >
+                                                    <FileDown size={20} />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </>
                         )}
                         
-                        {isAdmin && (isViewingRecords || isSSHotute) && viewMode === 'list' && (
+                        {isAdmin && (isViewingRecords || isSSHotute || isSSDepartmentView) && viewMode === 'list' && (
                             <div className="flex gap-2">
                                 <button 
-                                    onClick={handleAddNew}
+                                    onClick={() => handleAddNew()}
                                     className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap"
                                 >
                                     <Plus size={18} className="mr-2" /> Add Entry
@@ -608,6 +777,79 @@ const Archives: React.FC = () => {
                                     {archives.length === 0 && (
                                         <tr>
                                             <td colSpan={10} className="px-4 py-8 text-center text-slate-500 italic">No leadership records found. Add a new entry to get started.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* SUNDAY SCHOOL DEPARTMENT VIEW: Year-based Table */}
+                {isSSDepartmentView && viewMode === 'list' && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4 whitespace-nowrap sticky left-0 bg-slate-900 z-10 w-24 border-r border-slate-700">Year</th>
+                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Leader</th>
+                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Asst. Leader</th>
+                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Secretary</th>
+                                        {/* Dynamic Headers for Zirtirtu 1 to 20 */}
+                                        {Array.from({ length: TEACHER_COLUMN_COUNT }).map((_, i) => (
+                                            <th key={i} className="px-4 py-4 whitespace-nowrap text-[10px] w-40 border-r border-slate-700">Zirtirtu {i + 1}</th>
+                                        ))}
+                                        {isAdmin && <th className="px-4 py-4 whitespace-nowrap text-right w-24">Actions</th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {SS_YEAR_RANGE.map((year) => {
+                                        // Find entry for this year
+                                        const entry = filteredArchives.find(a => a.ss_year === year);
+                                        // If filtering is active and no entry matches, skip year row unless it's the specific year being searched
+                                        if (searchTerm && !entry) return null;
+
+                                        // Parse teachers string into array
+                                        const teacherList = entry?.ss_dept_teachers ? entry.ss_dept_teachers.split(',').map(t => t.trim()) : [];
+
+                                        return (
+                                            <tr key={year} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4 font-black text-church-900 sticky left-0 bg-white hover:bg-slate-50 border-r border-slate-100">{year}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_leader || '-'}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_asst_leader || '-'}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_secretary || '-'}</td>
+                                                
+                                                {/* Map first 20 teachers to columns */}
+                                                {Array.from({ length: TEACHER_COLUMN_COUNT }).map((_, i) => (
+                                                    <td key={i} className="px-4 py-4 text-xs text-slate-700 border-r border-slate-100">
+                                                        {teacherList[i] || '-'}
+                                                    </td>
+                                                ))}
+
+                                                {isAdmin && (
+                                                    <td className="px-4 py-4 text-right">
+                                                        {entry ? (
+                                                            <div className="flex justify-end gap-2">
+                                                                <button onClick={() => handleEdit(entry)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16}/></button>
+                                                                <button onClick={() => handleDelete(entry.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash size={16}/></button>
+                                                            </div>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => handleAddNew(year)} 
+                                                                className="text-xs font-bold text-church-600 hover:text-church-800 hover:underline"
+                                                            >
+                                                                + Add
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        );
+                                    })}
+                                    {searchTerm && filteredArchives.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6 + TEACHER_COLUMN_COUNT} className="px-6 py-8 text-center text-slate-500 italic">No records found matching "{searchTerm}".</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -789,8 +1031,10 @@ const Archives: React.FC = () => {
                     <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                 </div>
                 <div className="p-6 space-y-4 overflow-y-auto">
+                    {/* Render fields based on context */}
                     {editingArchive.department === 'Hotute' ? (
                         <div className="space-y-4">
+                            {/* ... (Existing Hotute Fields) ... */}
                             <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1">Superintendent</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_superintendent || ''} onChange={e => setEditingArchive({...editingArchive, ss_superintendent: e.target.value})} /></div>
@@ -807,6 +1051,19 @@ const Archives: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 1</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS1 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS1: e.target.value})} /></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 2</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS2 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS2: e.target.value})} /></div>
+                            </div>
+                        </div>
+                    ) : SS_ZIRTIRTUTE_DEPARTMENTS.includes(editingArchive.department || '') ? (
+                        <div className="space-y-4">
+                            <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_leader: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_asst_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_asst_leader: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_secretary: e.target.value})} /></div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Teachers (comma separated)</label>
+                                <textarea className="w-full border p-2.5 rounded-lg h-24" value={editingArchive.ss_dept_teachers || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_teachers: e.target.value})} placeholder="Teacher 1, Teacher 2, ..." />
                             </div>
                         </div>
                     ) : (

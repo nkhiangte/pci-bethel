@@ -255,6 +255,12 @@ export interface ArchiveEntry {
   ss_asstSecy2?: string;
   ss_asstSecyNPSS1?: string;
   ss_asstSecyNPSS2?: string;
+
+  // Specific fields for Sunday School Department Zirtirtute
+  ss_dept_leader?: string;
+  ss_dept_asst_leader?: string;
+  ss_dept_secretary?: string;
+  ss_dept_teachers?: string; // Comma separated names
 }
 
 export interface ProgramField {

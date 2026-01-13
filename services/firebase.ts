@@ -35,6 +35,7 @@ const mockDb = {
     }),
     where: function() { return this; },
     orderBy: function() { return this; },
+    limit: function() { return this; }, // Added limit to prevent crashes in mock mode
   }),
   batch: () => ({
     set: () => {},
@@ -42,7 +43,8 @@ const mockDb = {
     delete: () => {},
     commit: async () => {}
   }),
-  settings: () => {}
+  settings: () => {},
+  enablePersistence: async () => {}
 };
 
 const mockAuth = {
@@ -56,7 +58,8 @@ const mockAuth = {
   createUserWithEmailAndPassword: async () => {
     throw new Error("Firebase Auth not initialized");
   },
-  signOut: async () => {}
+  signOut: async () => {},
+  currentUser: null
 };
 
 try {
@@ -70,11 +73,9 @@ try {
   auth = firebase.auth();
   storage = firebase.storage();
   
-  // Reverted forced long-polling which was causing 10s timeouts in some environments.
-  // Using standard auto-detection.
+  // FIX: Removed conflicting experimentalForceLongPolling and invalid 'merge' property
   db.settings({
     ignoreUndefinedProperties: true,
-    merge: true
   });
 
   // Enable offline persistence
