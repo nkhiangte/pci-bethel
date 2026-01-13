@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -728,10 +729,15 @@ const Archives: React.FC = () => {
                                             <input 
                                                 type="text" 
                                                 placeholder={isSSDepartmentView ? "Search teachers..." : "Search..."} 
-                                                className="w-full md:w-64 pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
+                                                className="w-full md:w-64 pl-10 pr-12 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
+                                            {searchTerm && (
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-full">
+                                                    {filteredArchives.length}
+                                                </div>
+                                            )}
                                         </div>
                                         {(isSSDepartmentView || isSSHotute) && (
                                             <>
