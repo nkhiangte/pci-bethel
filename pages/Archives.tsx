@@ -10,7 +10,7 @@ import {
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
   ExternalLink, Play, Loader, Save, Folder, ArrowLeft,
   ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar,
-  BarChart3, LayoutList, TrendingUp, PieChart
+  BarChart3, LayoutList, TrendingUp, PieChart, FolderOpen, Briefcase, UserCog
 } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
@@ -47,6 +47,10 @@ const DEFAULT_RAWNGBAWLTU_SUBCATEGORIES = [
     'KOHHRAN HMEICHHIA', 'KTP', 'KOHHRAN PAVALAI PAWL'
 ];
 
+const SS_ZIRTIRTUTE_DEPARTMENTS = [
+    'Pre-Beginner', 'Beginner', 'Primary', 'Junior', 'Intermediate', 'Sacrament', 'Senior', 'Puitling'
+];
+
 const getYouTubeId = (url: string | undefined) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -72,6 +76,9 @@ const Archives: React.FC = () => {
   // View Mode: List or Analytics
   const [viewMode, setViewMode] = useState<'list' | 'analytics'>('list');
 
+  // Sunday School Navigation State
+  const [currentSSPath, setCurrentSSPath] = useState<string[]>([]);
+
   // Edit/Add Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingArchive, setEditingArchive] = useState<Partial<ArchiveEntry>>({});
@@ -87,6 +94,7 @@ const Archives: React.FC = () => {
   // Reset view mode when category changes
   useEffect(() => {
       setViewMode('list');
+      setCurrentSSPath([]); // Reset SS path when changing main categories
   }, [selectedCategory, selectedSubCategory]);
 
   // Fetch Metadata (Subcategories)
@@ -115,41 +123,72 @@ const Archives: React.FC = () => {
     }
 
     setLoading(true);
-    try {
-      let query = db.collection('archives').where('category', '==', selectedCategory);
-      
-      if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
-          query = query.where('subCategory', '==', selectedSubCategory);
-      }
+    
+    // Check if we are in a Sunday School specific folder structure
+    let shouldFetch = true;
+    let targetDepartment: string | undefined = undefined;
 
-      const snapshot = await query.orderBy('date', 'desc').get();
+    if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory === 'SUNDAY SCHOOL') {
+        if (currentSSPath.length === 0) {
+            // Root of SS: Show Committee & Zirtirtute folders (No fetch)
+            shouldFetch = false;
+        } else if (currentSSPath.length === 1 && currentSSPath[0] === 'Committee') {
+            // Inside SS -> Committee (Fetch with department='Committee')
+            targetDepartment = 'Committee';
+        } else if (currentSSPath.length === 1 && currentSSPath[0] === 'Hotute') {
+            // Inside SS -> Hotute (Fetch with department='Hotute')
+            targetDepartment = 'Hotute';
+        } else if (currentSSPath.length === 1 && currentSSPath[0] === 'Zirtirtute') {
+            // Inside SS -> Zirtirtute (Show Departments folders, No fetch)
+            shouldFetch = false;
+        } else if (currentSSPath.length === 2 && currentSSPath[0] === 'Zirtirtute') {
+            // Inside SS -> Zirtirtute -> [Department] (Fetch)
+            targetDepartment = currentSSPath[1];
+        }
+    }
+
+    if (!shouldFetch) {
+        setArchives([]);
+        setLoading(false);
+        return;
+    }
+
+    try {
+      // Simplified query: Only filter by main category.
+      // Filtering by subCategory/department and sorting by date happens client-side
+      // to avoid complex composite index requirements which cause errors.
+      const query = db.collection('archives').where('category', '==', selectedCategory);
+      const snapshot = await query.get();
       
       if (!snapshot.empty) {
-        const data = snapshot.docs.map((doc: any) => ({
+        let data = snapshot.docs.map((doc: any) => ({
           id: doc.id,
           ...doc.data()
         })) as ArchiveEntry[];
+
+        // Client-side filtering for sub-category
+        if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
+            data = data.filter(d => d.subCategory === selectedSubCategory);
+            
+            // Client-side filtering for department
+            if (targetDepartment) {
+                data = data.filter(d => d.department === targetDepartment);
+            }
+        }
+
+        // Client-side sorting by date (descending)
+        data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
         setArchives(data);
       } else {
         setArchives([]);
       }
     } catch (error: any) {
       console.error("Error fetching archives:", error);
-      // Fallback for missing index
-      if (error.code === 'failed-precondition' || error.message?.includes('index')) {
-          try {
-             const baseSnap = await db.collection('archives').where('category', '==', selectedCategory).get();
-             let data = baseSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ArchiveEntry[];
-             if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
-                 data = data.filter(d => d.subCategory === selectedSubCategory);
-             }
-             data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-             setArchives(data);
-          } catch (e) { setArchives([]); }
-      }
+      setArchives([]);
     }
     setLoading(false);
-  }, [selectedCategory, selectedSubCategory]);
+  }, [selectedCategory, selectedSubCategory, currentSSPath]);
 
   useEffect(() => {
     fetchArchives();
@@ -168,6 +207,12 @@ const Archives: React.FC = () => {
   };
 
   const handleBack = () => {
+      // Handle Sunday School internal navigation
+      if (selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length > 0) {
+          setCurrentSSPath(prev => prev.slice(0, -1));
+          return;
+      }
+
       if (selectedCategory === 'Rawngbawltu te' && selectedSubCategory) {
           setSearchParams({ category: selectedCategory });
       } else {
@@ -176,12 +221,24 @@ const Archives: React.FC = () => {
       setArchives([]);
   };
 
+  const handleSSFolderClick = (folderName: string) => {
+      setCurrentSSPath(prev => [...prev, folderName]);
+  };
+
   const handleAddNew = () => {
+    let defaultDepartment = '';
+    if (selectedSubCategory === 'SUNDAY SCHOOL') {
+        if (currentSSPath[0] === 'Committee') defaultDepartment = 'Committee';
+        if (currentSSPath[0] === 'Hotute') defaultDepartment = 'Hotute';
+        if (currentSSPath.length === 2 && currentSSPath[0] === 'Zirtirtute') defaultDepartment = currentSSPath[1];
+    }
+
     setEditingArchive({
       title: '',
       date: new Date().toISOString().split('T')[0],
       category: (selectedCategory as any) || 'Document',
       subCategory: selectedSubCategory || '',
+      department: defaultDepartment,
       description: '',
       link: '',
       imageUrls: []
@@ -238,6 +295,12 @@ const Archives: React.FC = () => {
       
       // Ensure category consistency
       if (data.category !== 'Rawngbawltu te') delete data.subCategory;
+      if (data.subCategory !== 'SUNDAY SCHOOL') delete data.department;
+
+      // Ensure proper sorting for Hotute based on Year
+      if (data.department === 'Hotute' && data.ss_year) {
+          data.date = `${data.ss_year}-01-01`; // Set date for consistent sorting
+      }
 
       if (id) {
         await db.collection('archives').doc(id).set(data, { merge: true });
@@ -306,6 +369,20 @@ const Archives: React.FC = () => {
   // Determine layout based on category
   const isListView = selectedCategory === 'Pastors' || selectedCategory === 'Upa kal ta te' || selectedCategory === 'Weekly Program';
 
+  // Helper for Breadcrumbs in Sunday School
+  const getBreadcrumbTitle = () => {
+      if (selectedSubCategory !== 'SUNDAY SCHOOL') return '';
+      if (currentSSPath.length === 0) return 'Sunday School';
+      if (currentSSPath.length === 1) return `Sunday School > ${currentSSPath[0]}`;
+      if (currentSSPath.length === 2) return `... > ${currentSSPath[0]} > ${currentSSPath[1]}`;
+      return 'Sunday School';
+  };
+
+  const isSSRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 0;
+  const isSSZirtirtuteRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Zirtirtute';
+  const isSSHotute = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Hotute';
+  const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute;
+
   return (
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -347,23 +424,20 @@ const Archives: React.FC = () => {
                         </button>
                         <div>
                             <h2 className="text-3xl font-bold text-slate-800 flex items-center">
-                                {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory ? 
-                                    'Departments' : 
-                                    (selectedSubCategory || ARCHIVE_SECTIONS.find(s => s.id === selectedCategory)?.label)
+                                {selectedSubCategory === 'SUNDAY SCHOOL' ? getBreadcrumbTitle() : 
+                                 (selectedCategory === 'Rawngbawltu te' && !selectedSubCategory ? 'Departments' : 
+                                 (selectedSubCategory || ARCHIVE_SECTIONS.find(s => s.id === selectedCategory)?.label))
                                 }
                             </h2>
                             <p className="text-sm text-slate-500">
-                                {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory 
-                                    ? 'Select a department to view records' 
-                                    : 'Viewing records'
-                                }
+                                {isViewingRecords || isSSHotute ? 'Viewing records' : 'Select a folder'}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-end md:items-center">
                         {/* Only show controls if we are viewing records */}
-                        {!(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && (
+                        {(isViewingRecords || isSSHotute) && (
                             <>
                                 <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
                                     <button 
@@ -380,7 +454,7 @@ const Archives: React.FC = () => {
                                     </button>
                                 </div>
 
-                                {viewMode === 'list' && (
+                                {viewMode === 'list' && !isSSHotute && (
                                     <div className="relative flex-grow md:flex-grow-0 w-full md:w-auto">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                         <input 
@@ -395,7 +469,7 @@ const Archives: React.FC = () => {
                             </>
                         )}
                         
-                        {isAdmin && viewMode === 'list' && (
+                        {isAdmin && (isViewingRecords || isSSHotute) && viewMode === 'list' && (
                             <div className="flex gap-2">
                                 <button 
                                     onClick={handleAddNew}
@@ -408,8 +482,8 @@ const Archives: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Sub-Category Grid for 'Rawngbawltu te' */}
-                {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory ? (
+                {/* Sub-Category Grid for 'Rawngbawltu te' Root */}
+                {selectedCategory === 'Rawngbawltu te' && !selectedSubCategory && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                         {subCategories.map((sub) => (
                             <button
@@ -426,149 +500,280 @@ const Archives: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                ) : (
-                    /* Content View: Analytics or List */
-                    loading ? (
-                        <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
-                    ) : viewMode === 'analytics' ? (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
-                            {/* Analytics Dashboard */}
-                            {analyticsData ? (
-                                <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><LayoutList size={24}/></div>
-                                            <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.total}</h3>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Total Records</p>
-                                        </div>
-                                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                            <div className="p-3 bg-green-50 text-green-600 rounded-full mb-3"><TrendingUp size={24}/></div>
-                                            <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.currentYearCount}</h3>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Added in {new Date().getFullYear()}</p>
-                                        </div>
-                                        {analyticsData.avgTenure > 0 && (
-                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                                <div className="p-3 bg-purple-50 text-purple-600 rounded-full mb-3"><FileClock size={24}/></div>
-                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.avgTenure} <span className="text-base text-slate-500 font-medium">yrs</span></h3>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Avg. Tenure</p>
-                                            </div>
-                                        )}
-                                    </div>
+                )}
 
-                                    {/* Charts Section */}
-                                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                                        <h3 className="text-lg font-bold text-slate-800 mb-8 flex items-center">
-                                            <BarChart3 size={20} className="mr-2 text-church-600" /> Yearly Distribution
-                                        </h3>
-                                        <div className="h-64 flex items-end gap-2 sm:gap-4 justify-center">
-                                            {analyticsData.sortedYears.map((d, i) => {
-                                                const max = Math.max(...analyticsData.sortedYears.map(y => y.count));
-                                                const height = (d.count / max) * 100;
-                                                return (
-                                                    <div key={i} className="flex-1 flex flex-col items-center group max-w-[60px]">
-                                                        <div className="relative w-full flex justify-center h-full items-end">
-                                                            <div 
-                                                                className="bg-church-200 group-hover:bg-church-500 transition-all duration-500 rounded-t-lg w-full relative min-h-[4px]" 
-                                                                style={{ height: `${height}%` }}
-                                                            >
-                                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                                                    {d.count} entries
+                {/* SUNDAY SCHOOL ROOT: Committee, Zirtirtute & Hotute Folders */}
+                {isSSRoot && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <button
+                            onClick={() => handleSSFolderClick('Committee')}
+                            className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-300 transition-all duration-200 text-left group flex items-center"
+                        >
+                            <div className="p-4 bg-blue-50 text-blue-600 rounded-xl mr-5 group-hover:scale-110 transition-transform">
+                                <Briefcase size={32} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg">Sunday School Committee</h3>
+                                <p className="text-slate-500 text-sm">Committee records & minutes</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleSSFolderClick('Zirtirtute')}
+                            className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-green-300 transition-all duration-200 text-left group flex items-center"
+                        >
+                            <div className="p-4 bg-green-50 text-green-600 rounded-xl mr-5 group-hover:scale-110 transition-transform">
+                                <Users size={32} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg">Sunday School Zirtirtute</h3>
+                                <p className="text-slate-500 text-sm">Teachers by department</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleSSFolderClick('Hotute')}
+                            className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-purple-300 transition-all duration-200 text-left group flex items-center"
+                        >
+                            <div className="p-4 bg-purple-50 text-purple-600 rounded-xl mr-5 group-hover:scale-110 transition-transform">
+                                <UserCog size={32} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg">Sunday School Hotute</h3>
+                                <p className="text-slate-500 text-sm">Yearly Leadership Records</p>
+                            </div>
+                        </button>
+                    </div>
+                )}
+
+                {/* SUNDAY SCHOOL ZIRTIRTUTE: Department Folders */}
+                {isSSZirtirtuteRoot && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => (
+                            <button
+                                key={dept}
+                                onClick={() => handleSSFolderClick(dept)}
+                                className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-yellow-300 transition-all duration-200 text-left group flex items-center"
+                            >
+                                <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg mr-4 group-hover:bg-yellow-100 transition-colors shrink-0">
+                                    <FolderOpen size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800 text-sm">{dept}</h3>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* SUNDAY SCHOOL HOTUTE: Table View */}
+                {isSSHotute && viewMode === 'list' && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
+                                    <tr>
+                                        <th className="px-4 py-4 whitespace-nowrap sticky left-0 bg-slate-900 z-10">Year</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Superintendent</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Supdt</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Supdt (NPSS)</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Secretary</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Secretary 1</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Secretary 2</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Secy (NPSS) 1</th>
+                                        <th className="px-4 py-4 whitespace-nowrap">Asst. Secy (NPSS) 2</th>
+                                        {isAdmin && <th className="px-4 py-4 whitespace-nowrap text-right">Actions</th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {archives.map((entry) => (
+                                        <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-4 py-3 font-bold text-church-900 sticky left-0 bg-white hover:bg-slate-50">{entry.ss_year}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_superintendent || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSupdt || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSupdtNPSS || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_secretary || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSecy1 || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSecy2 || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSecyNPSS1 || '-'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_asstSecyNPSS2 || '-'}</td>
+                                            {isAdmin && (
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button onClick={() => handleEdit(entry)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16}/></button>
+                                                        <button onClick={() => handleDelete(entry.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash size={16}/></button>
+                                                    </div>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))}
+                                    {archives.length === 0 && (
+                                        <tr>
+                                            <td colSpan={10} className="px-4 py-8 text-center text-slate-500 italic">No leadership records found. Add a new entry to get started.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- RECORD LISTING VIEW (Standard) --- */}
+                {isViewingRecords && (
+                    <>
+                        {loading ? (
+                            <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
+                        ) : viewMode === 'analytics' ? (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
+                                {/* Analytics Dashboard */}
+                                {analyticsData ? (
+                                    <>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                                <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><LayoutList size={24}/></div>
+                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.total}</h3>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Total Records</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                                <div className="p-3 bg-green-50 text-green-600 rounded-full mb-3"><TrendingUp size={24}/></div>
+                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.currentYearCount}</h3>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Added in {new Date().getFullYear()}</p>
+                                            </div>
+                                            {analyticsData.avgTenure > 0 && (
+                                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                                                    <div className="p-3 bg-purple-50 text-purple-600 rounded-full mb-3"><FileClock size={24}/></div>
+                                                    <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.avgTenure} <span className="text-base text-slate-500 font-medium">yrs</span></h3>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Avg. Tenure</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Charts Section */}
+                                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                                            <h3 className="text-lg font-bold text-slate-800 mb-8 flex items-center">
+                                                <BarChart3 size={20} className="mr-2 text-church-600" /> Yearly Distribution
+                                            </h3>
+                                            <div className="h-64 flex items-end gap-2 sm:gap-4 justify-center">
+                                                {analyticsData.sortedYears.map((d, i) => {
+                                                    const max = Math.max(...analyticsData.sortedYears.map(y => y.count));
+                                                    const height = (d.count / max) * 100;
+                                                    return (
+                                                        <div key={i} className="flex-1 flex flex-col items-center group max-w-[60px]">
+                                                            <div className="relative w-full flex justify-center h-full items-end">
+                                                                <div 
+                                                                    className="bg-church-200 group-hover:bg-church-500 transition-all duration-500 rounded-t-lg w-full relative min-h-[4px]" 
+                                                                    style={{ height: `${height}%` }}
+                                                                >
+                                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                                                        {d.count} entries
+                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                            <span className="text-[10px] font-bold text-slate-400 mt-3 -rotate-45 sm:rotate-0 origin-top-left sm:origin-center">{d.year}</span>
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-slate-400 mt-3 -rotate-45 sm:rotate-0 origin-top-left sm:origin-center">{d.year}</span>
-                                                    </div>
-                                                );
-                                            })}
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-20 text-slate-400">Not enough data for analytics.</div>
-                            )}
-                        </div>
-                    ) : filteredArchives.length > 0 ? (
-                        <div className={isListView ? "space-y-6" : "grid md:grid-cols-2 lg:grid-cols-3 gap-6"}>
-                            {filteredArchives.map(entry => {
-                                const Icon = CATEGORY_ICONS[entry.category] || Archive;
-                                const isOfficeBearer = entry.category === 'Rawngbawltu te';
-                                const showFullDescription = isOfficeBearer || ['Pastors', 'Upa kal ta te', 'Weekly Program'].includes(entry.category);
-                                const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
+                                    </>
+                                ) : (
+                                    <div className="text-center py-20 text-slate-400">Not enough data for analytics.</div>
+                                )}
+                            </div>
+                        ) : filteredArchives.length > 0 ? (
+                            <div className={isListView ? "space-y-6" : "grid md:grid-cols-2 lg:grid-cols-3 gap-6"}>
+                                {filteredArchives.map(entry => {
+                                    const Icon = CATEGORY_ICONS[entry.category] || Archive;
+                                    const isOfficeBearer = entry.category === 'Rawngbawltu te';
+                                    const showFullDescription = isOfficeBearer || ['Pastors', 'Upa kal ta te', 'Weekly Program'].includes(entry.category);
+                                    const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
+                                    const isPastor = entry.category === 'Pastors';
 
-                                return (
-                                    <div key={entry.id} className={`bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col ${isListView ? '' : 'h-full'}`}>
-                                        {isAdmin && (
-                                            <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
-                                                <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
-                                            </div>
-                                        )}
-                                        
-                                        {youtubeId ? (
-                                            <div className="flex flex-col h-full">
-                                                <div className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm" onClick={() => setPlayingVideoId(youtubeId)}>
-                                                    <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={entry.title} className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
-                                                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition"><Play size={20} className="text-church-600 ml-1 fill-current" /></div>
-                                                    </div>
+                                    return (
+                                        <div key={entry.id} className={`bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col ${isListView ? '' : 'h-full'}`}>
+                                            {isAdmin && (
+                                                <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                    <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
+                                                    <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
                                                 </div>
-                                                <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
-                                                <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
-                                                <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div className="flex items-start mb-4">
-                                                    <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0"><Icon size={24} /></div>
-                                                    <div>
-                                                        {!isOfficeBearer && (<div className="flex flex-wrap gap-2 mb-1"><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>{entry.subCategory && (<span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>)}</div>)}
-                                                        <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                                        {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
+                                            )}
+                                            
+                                            {youtubeId ? (
+                                                <div className="flex flex-col h-full">
+                                                    <div className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm" onClick={() => setPlayingVideoId(youtubeId)}>
+                                                        <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={entry.title} className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
+                                                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition"><Play size={20} className="text-church-600 ml-1 fill-current" /></div>
+                                                        </div>
                                                     </div>
+                                                    <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
+                                                    <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
+                                                    <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
                                                 </div>
-                                                
-                                                {(entry.category === 'Upa kal ta te' || entry.category === 'Pastors') && (
-                                                    <div className="mt-3 mb-3 space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 w-full sm:w-auto inline-block">
-                                                        {entry.birthDate && <div><span className="font-bold text-slate-700">Pian Ni:</span> {entry.birthDate}</div>}
-                                                        {entry.ordinationDate && <div><span className="font-bold text-slate-700">Nemngheh Ni:</span> {entry.ordinationDate}</div>}
-                                                        {entry.category === 'Pastors' && entry.tenureYears && <div><span className="font-bold text-slate-700">Tenure:</span> {entry.tenureYears}</div>}
-                                                        {entry.deathDate && <div><span className="font-bold text-slate-700">Thih Ni:</span> {entry.deathDate}</div>}
-                                                    </div>
-                                                )}
+                                            ) : (
+                                                <>
+                                                    {/* Display Pastor Image at Top */}
+                                                    {isPastor && entry.imageUrls && entry.imageUrls.length > 0 && (
+                                                        <div className="mb-6 flex justify-center">
+                                                             <div 
+                                                                className="w-40 h-40 rounded-full overflow-hidden border-4 border-slate-50 shadow-lg cursor-pointer hover:scale-105 transition-transform bg-slate-200"
+                                                                onClick={() => setPreviewImage(entry.imageUrls![0])}
+                                                             >
+                                                                <img src={entry.imageUrls![0]} alt={entry.title} className="w-full h-full object-cover" />
+                                                             </div>
+                                                        </div>
+                                                    )}
 
-                                                <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap leading-relaxed ${showFullDescription ? '' : 'line-clamp-3'}`}>{entry.description}</div>
-                                                
-                                                {entry.imageUrls && entry.imageUrls.length > 0 && (
-                                                    <div className={`grid gap-2 mb-4 ${entry.imageUrls.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-2 md:grid-cols-4'}`}>
-                                                        {entry.imageUrls.slice(0, 4).map((url, i) => (
-                                                            <div 
-                                                                key={i} 
-                                                                className="relative overflow-hidden rounded-lg bg-slate-100 aspect-square cursor-pointer hover:opacity-90"
-                                                                onClick={() => setPreviewImage(url)}
-                                                            >
-                                                                <img src={url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
-                                                                {i === 3 && entry.imageUrls!.length > 4 && (
-                                                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold">+{entry.imageUrls!.length - 4}</div>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                    <div className="flex items-start mb-4">
+                                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0"><Icon size={24} /></div>
+                                                        <div>
+                                                            {!isOfficeBearer && (<div className="flex flex-wrap gap-2 mb-1"><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>{entry.subCategory && (<span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>)}</div>)}
+                                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
+                                                            {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
+                                                        </div>
                                                     </div>
-                                                )}
+                                                    
+                                                    {(entry.category === 'Upa kal ta te' || entry.category === 'Pastors') && (
+                                                        <div className="mt-3 mb-3 space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 w-full sm:w-auto inline-block">
+                                                            {entry.birthDate && <div><span className="font-bold text-slate-700">Pian Ni:</span> {entry.birthDate}</div>}
+                                                            {entry.ordinationDate && <div><span className="font-bold text-slate-700">Nemngheh Ni:</span> {entry.ordinationDate}</div>}
+                                                            {entry.category === 'Pastors' && entry.tenureYears && <div><span className="font-bold text-slate-700">Tenure:</span> {entry.tenureYears}</div>}
+                                                            {entry.deathDate && <div><span className="font-bold text-slate-700">Thih Ni:</span> {entry.deathDate}</div>}
+                                                        </div>
+                                                    )}
 
-                                                {entry.link && (<a href={entry.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto">View Resource <ExternalLink size={14} className="ml-1" /></a>)}
-                                            </>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-200">
-                            <Archive className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                            <h3 className="text-lg font-bold text-slate-700">No archives found</h3>
-                            <p className="text-slate-500 mt-1">Try changing search terms or add new entries.</p>
-                        </div>
-                    )
+                                                    <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap leading-relaxed ${showFullDescription ? '' : 'line-clamp-3'}`}>{entry.description}</div>
+                                                    
+                                                    {entry.imageUrls && entry.imageUrls.length > 0 && (
+                                                        <div className={`grid gap-2 mb-4 ${entry.imageUrls.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-2 md:grid-cols-4'}`}>
+                                                            {entry.imageUrls.slice(isPastor ? 1 : 0, 4).map((url, i) => (
+                                                                <div 
+                                                                    key={i} 
+                                                                    className="relative overflow-hidden rounded-lg bg-slate-100 aspect-square cursor-pointer hover:opacity-90"
+                                                                    onClick={() => setPreviewImage(url)}
+                                                                >
+                                                                    <img src={url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                                                                    {i === 3 && entry.imageUrls!.length > 4 && (
+                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold">+{entry.imageUrls!.length - 4}</div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {entry.link && (<a href={entry.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto">View Resource <ExternalLink size={14} className="ml-1" /></a>)}
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-200">
+                                <Archive className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                                <h3 className="text-lg font-bold text-slate-700">No archives found</h3>
+                                <p className="text-slate-500 mt-1">Try changing search terms or add new entries.</p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         )}
@@ -584,82 +789,118 @@ const Archives: React.FC = () => {
                     <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                 </div>
                 <div className="p-6 space-y-4 overflow-y-auto">
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                        <input className="w-full border p-2.5 rounded-lg" value={editingArchive.title || ''} onChange={e => setEditingArchive({...editingArchive, title: e.target.value})} placeholder="Title" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                            <select className="w-full border p-2.5 rounded-lg" value={editingArchive.category} onChange={e => setEditingArchive({...editingArchive, category: e.target.value as any})}>
-                                {ARCHIVE_SECTIONS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                            </select>
+                    {editingArchive.department === 'Hotute' ? (
+                        <div className="space-y-4">
+                            <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Superintendent</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_superintendent || ''} onChange={e => setEditingArchive({...editingArchive, ss_superintendent: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_secretary: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Supdt</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSupdt || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSupdt: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Supdt (NPSS)</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSupdtNPSS || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSupdtNPSS: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secretary 1</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecy1 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecy1: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secretary 2</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecy2 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecy2: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 1</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS1 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS1: e.target.value})} /></div>
+                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 2</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS2 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS2: e.target.value})} /></div>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
-                            <input type="date" className="w-full border p-2.5 rounded-lg" value={editingArchive.date || ''} onChange={e => setEditingArchive({...editingArchive, date: e.target.value})} />
-                        </div>
-                    </div>
-                    
-                    {editingArchive.category === 'Rawngbawltu te' && (
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Sub Category</label>
-                            <select className="w-full border p-2.5 rounded-lg" value={editingArchive.subCategory || ''} onChange={e => setEditingArchive({...editingArchive, subCategory: e.target.value})}>
-                                <option value="" disabled>Select Department</option>
-                                {subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                            </select>
-                        </div>
-                    )}
+                    ) : (
+                        <>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingArchive.title || ''} onChange={e => setEditingArchive({...editingArchive, title: e.target.value})} placeholder="Title" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.category} onChange={e => setEditingArchive({...editingArchive, category: e.target.value as any})}>
+                                        {ARCHIVE_SECTIONS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                                    <input type="date" className="w-full border p-2.5 rounded-lg" value={editingArchive.date || ''} onChange={e => setEditingArchive({...editingArchive, date: e.target.value})} />
+                                </div>
+                            </div>
+                            
+                            {editingArchive.category === 'Rawngbawltu te' && (
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Sub Category</label>
+                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.subCategory || ''} onChange={e => setEditingArchive({...editingArchive, subCategory: e.target.value})}>
+                                        <option value="" disabled>Select Sub-Category</option>
+                                        {subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                                    </select>
+                                </div>
+                            )}
 
-                    {(editingArchive.category === 'Pastors' || editingArchive.category === 'Upa kal ta te') && (
-                        <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                            <div><label className="block text-xs font-bold text-slate-500 mb-1">Pian Ni (DOB)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.birthDate || ''} onChange={e => setEditingArchive({...editingArchive, birthDate: e.target.value})} /></div>
-                            <div><label className="block text-xs font-bold text-slate-500 mb-1">Nemngheh Ni</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.ordinationDate || ''} onChange={e => setEditingArchive({...editingArchive, ordinationDate: e.target.value})} /></div>
-                            <div><label className="block text-xs font-bold text-slate-500 mb-1">Thih Ni (DOD)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.deathDate || ''} onChange={e => setEditingArchive({...editingArchive, deathDate: e.target.value})} /></div>
-                            {editingArchive.category === 'Pastors' && <div><label className="block text-xs font-bold text-slate-500 mb-1">Tenure</label><input className="w-full border p-2 rounded" value={editingArchive.tenureYears || ''} onChange={e => setEditingArchive({...editingArchive, tenureYears: e.target.value})} placeholder="e.g. 2010 - 2015" /></div>}
-                        </div>
-                    )}
+                            {editingArchive.subCategory === 'SUNDAY SCHOOL' && (
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Department / Folder</label>
+                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.department || ''} onChange={e => setEditingArchive({...editingArchive, department: e.target.value})}>
+                                        <option value="" disabled>Select Department</option>
+                                        <option value="Committee">Committee</option>
+                                        <option value="Hotute">Hotute</option>
+                                        {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                                    </select>
+                                </div>
+                            )}
 
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Description / Content</label>
-                        <textarea className="w-full border p-2.5 rounded-lg h-32" value={editingArchive.description || ''} onChange={e => setEditingArchive({...editingArchive, description: e.target.value})} placeholder="Details..." />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">External Link / Video URL</label>
-                        <input className="w-full border p-2.5 rounded-lg" value={editingArchive.link || ''} onChange={e => setEditingArchive({...editingArchive, link: e.target.value})} placeholder="https://..." />
-                    </div>
-                    
-                    {/* Image Upload Section */}
-                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
-                            <ImageIcon size={16} /> Photo Gallery
-                        </label>
-                        
-                        <div className="grid grid-cols-3 gap-3 mb-3">
-                            {editingArchive.imageUrls?.map((url, index) => (
-                                <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-white border border-slate-200">
-                                    <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
+                            {(editingArchive.category === 'Pastors' || editingArchive.category === 'Upa kal ta te') && (
+                                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Pian Ni (DOB)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.birthDate || ''} onChange={e => setEditingArchive({...editingArchive, birthDate: e.target.value})} /></div>
+                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Nemngheh Ni</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.ordinationDate || ''} onChange={e => setEditingArchive({...editingArchive, ordinationDate: e.target.value})} /></div>
+                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Thih Ni (DOD)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.deathDate || ''} onChange={e => setEditingArchive({...editingArchive, deathDate: e.target.value})} /></div>
+                                    {editingArchive.category === 'Pastors' && <div><label className="block text-xs font-bold text-slate-500 mb-1">Tenure</label><input className="w-full border p-2 rounded" value={editingArchive.tenureYears || ''} onChange={e => setEditingArchive({...editingArchive, tenureYears: e.target.value})} placeholder="e.g. 2010 - 2015" /></div>}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Description / Content</label>
+                                <textarea className="w-full border p-2.5 rounded-lg h-32" value={editingArchive.description || ''} onChange={e => setEditingArchive({...editingArchive, description: e.target.value})} placeholder="Details..." />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">External Link / Video URL</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingArchive.link || ''} onChange={e => setEditingArchive({...editingArchive, link: e.target.value})} placeholder="https://..." />
+                            </div>
+                            
+                            {/* Image Upload Section */}
+                            <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                                    <ImageIcon size={16} /> Photo Gallery
+                                </label>
+                                
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    {editingArchive.imageUrls?.map((url, index) => (
+                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-white border border-slate-200">
+                                            <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
+                                            <button 
+                                                onClick={() => setEditingArchive(prev => ({ ...prev, imageUrls: prev.imageUrls?.filter((_, i) => i !== index) }))} 
+                                                className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-700"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
                                     <button 
-                                        onClick={() => setEditingArchive(prev => ({ ...prev, imageUrls: prev.imageUrls?.filter((_, i) => i !== index) }))} 
-                                        className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-700"
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingImage}
+                                        className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-400 transition bg-white"
                                     >
-                                        <Trash2 size={12} />
+                                        {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                                        <span className="text-[10px] font-bold uppercase mt-1">Upload</span>
                                     </button>
                                 </div>
-                            ))}
-                            <button 
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploadingImage}
-                                className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-400 transition bg-white"
-                            >
-                                {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
-                                <span className="text-[10px] font-bold uppercase mt-1">Upload</span>
-                            </button>
-                        </div>
-                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" multiple />
-                        {uploadingImage && <p className="text-xs text-church-600 animate-pulse text-center">Uploading to ImgBB...</p>}
-                    </div>
+                                <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" multiple />
+                                {uploadingImage && <p className="text-xs text-church-600 animate-pulse text-center">Uploading to ImgBB...</p>}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <div className="p-6 bg-slate-50 flex justify-end space-x-3 rounded-b-2xl">
                     <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border border-slate-300 rounded-lg font-bold text-slate-700">Cancel</button>

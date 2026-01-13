@@ -235,6 +235,7 @@ export interface ArchiveEntry {
   date: string;
   category: 'Document' | 'Photo' | 'Video' | 'History' | 'Minute' | 'Rawngbawltu te' | 'Pastors' | 'Upa kal ta te' | 'Weekly Program';
   subCategory?: string; // New field for sub-categories under Rawngbawltu te
+  department?: string; // New field for Sunday School hierarchy (e.g., 'Primary', 'Committee')
   description: string;
   link?: string; // Optional URL to the file
   imageUrls?: string[]; // Optional multiple images for profiles
@@ -243,6 +244,17 @@ export interface ArchiveEntry {
   ordinationDate?: string;
   deathDate?: string;
   tenureYears?: string; // e.g., "2010 - 2015"
+  
+  // Specific fields for Sunday School Hotute
+  ss_year?: string;
+  ss_superintendent?: string;
+  ss_asstSupdt?: string;
+  ss_asstSupdtNPSS?: string;
+  ss_secretary?: string;
+  ss_asstSecy1?: string;
+  ss_asstSecy2?: string;
+  ss_asstSecyNPSS1?: string;
+  ss_asstSecyNPSS2?: string;
 }
 
 export interface ProgramField {
