@@ -45,8 +45,33 @@ const Missionaries: React.FC = () => {
                 id: doc.id,
                 ...doc.data()
             })) as Missionary[];
-            // Sort by name for now
-            data.sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Sort by seniority (earliest start year first)
+            data.sort((a, b) => {
+                const getStartYear = (m: Missionary) => {
+                    const years: number[] = [];
+                    // Check legacy period field
+                    if (m.period) {
+                        const match = m.period.match(/\d{4}/);
+                        if (match) years.push(parseInt(match[0]));
+                    }
+                    // Check service history
+                    if (m.serviceHistory) {
+                        m.serviceHistory.forEach(h => {
+                            const match = h.period.match(/\d{4}/);
+                            if (match) years.push(parseInt(match[0]));
+                        });
+                    }
+                    return years.length > 0 ? Math.min(...years) : 9999;
+                };
+
+                const yearA = getStartYear(a);
+                const yearB = getStartYear(b);
+                
+                if (yearA !== yearB) return yearA - yearB;
+                return a.name.localeCompare(b.name);
+            });
+
             setMissionaries(data);
         } else {
             setMissionaries([]);
@@ -206,7 +231,7 @@ const Missionaries: React.FC = () => {
                         <Globe size={40} />
                     </div>
                 </div>
-                <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Kan Missionary Te</h1>
+                <h1 className="text-4xl font-serif font-bold text-church-900 mb-4">Kan kohhran atanga Krista pasaltha te</h1>
                 <p className="text-slate-600 max-w-2xl mx-auto text-lg">
                     "Go into all the world and preach the gospel to all creation." - Mark 16:15
                 </p>
