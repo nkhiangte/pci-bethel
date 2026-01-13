@@ -117,6 +117,7 @@ export interface Staff {
 export interface Missionary {
   id: string;
   name: string;
+  qualification?: string; // New field for educational qualification
   field: string; // Mission Field (e.g., Arunachal, Nepal) - kept for backward compat/summary
   imageUrl: string;
   period?: string; // e.g. 2010 - Present - kept for backward compat/summary

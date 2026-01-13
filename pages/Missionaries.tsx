@@ -108,6 +108,7 @@ const Missionaries: React.FC = () => {
   const handleAddNew = () => {
     setEditingMissionary({
         name: '',
+        qualification: '',
         field: '',
         period: '',
         bio: '',
@@ -271,6 +272,7 @@ const Missionaries: React.FC = () => {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                 <div className="absolute bottom-4 left-4 right-4 text-white">
                                     <h3 className="text-xl font-bold font-serif leading-tight mb-1">{m.name}</h3>
+                                    {m.qualification && <p className="text-xs text-church-200 font-medium mb-1 uppercase tracking-wide">{m.qualification}</p>}
                                     <div className="flex flex-col gap-1 text-sm font-medium text-church-200">
                                         <div className="flex items-center">
                                             <MapPin size={14} className="mr-1" /> {m.field || 'Multiple Fields'}
@@ -347,6 +349,9 @@ const Missionaries: React.FC = () => {
                         <div className="absolute bottom-0 left-0 w-full p-8 md:p-10 text-white">
                             <span className="inline-block px-3 py-1 bg-church-600 rounded-full text-xs font-bold uppercase tracking-widest mb-3">Missionary</span>
                             <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight mb-2">{selectedMissionary.name}</h2>
+                            {selectedMissionary.qualification && (
+                                <p className="text-lg text-church-200 font-medium mb-4">{selectedMissionary.qualification}</p>
+                            )}
                             <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-slate-300">
                                 {selectedMissionary.serviceHistory && selectedMissionary.serviceHistory.length > 0 ? (
                                     <span>Served in {selectedMissionary.serviceHistory.length} fields</span>
@@ -404,9 +409,15 @@ const Missionaries: React.FC = () => {
                     </div>
                     
                     <div className="p-6 space-y-5 overflow-y-auto bg-white">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
-                            <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.name || ''} onChange={e => setEditingMissionary({...editingMissionary, name: e.target.value})} placeholder="Full Name" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.name || ''} onChange={e => setEditingMissionary({...editingMissionary, name: e.target.value})} placeholder="Full Name" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Qualification</label>
+                                <input className="w-full border p-2.5 rounded-lg" value={editingMissionary.qualification || ''} onChange={e => setEditingMissionary({...editingMissionary, qualification: e.target.value})} placeholder="e.g. B.Th, M.Div" />
+                            </div>
                         </div>
                         
                         {/* Multiple Mission Fields Section */}
