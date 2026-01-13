@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -521,14 +520,77 @@ const Archives: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleGlobalSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!globalSearchTerm.trim()) return;
+
+    setIsGlobalSearching(true);
+    setGlobalSearchResults([]);
+    setHasSearched(true);
+
+    if (!db || !db.collection) {
+        setIsGlobalSearching(false);
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection('archives')
+            .where('category', '==', 'Rawngbawltu te')
+            .where('subCategory', '==', 'SUNDAY SCHOOL')
+            .get();
+
+        if (!snapshot.empty) {
+            const allDocs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ArchiveEntry[];
+            const termLower = globalSearchTerm.toLowerCase();
+            
+            const results = allDocs.filter(doc => {
+                if (!SS_ZIRTIRTUTE_DEPARTMENTS.includes(doc.department || '')) return false;
+
+                const teachers = doc.ss_dept_teachers ? doc.ss_dept_teachers.toLowerCase() : '';
+                const leader = doc.ss_dept_leader ? doc.ss_dept_leader.toLowerCase() : '';
+                const secretary = doc.ss_dept_secretary ? doc.ss_dept_secretary.toLowerCase() : '';
+                
+                return teachers.includes(termLower) || leader.includes(termLower) || secretary.includes(termLower);
+            });
+            
+            results.sort((a, b) => (b.ss_year || '').localeCompare(a.ss_year || ''));
+            setGlobalSearchResults(results);
+        }
+    } catch (error) {
+        console.error("Global search error:", error);
+    }
+    setIsGlobalSearching(false);
+  };
+
+  const clearGlobalSearch = () => {
+      setGlobalSearchTerm('');
+      setGlobalSearchResults([]);
+      setHasSearched(false);
+  };
+
   const filteredArchives = archives.filter(item => {
       const term = searchTerm.toLowerCase();
-      // Enhanced search for Sunday School tables
+      
+      // Check generic fields
+      if (item.title.toLowerCase().includes(term)) return true;
+      if (item.description.toLowerCase().includes(term)) return true;
       if (item.ss_year && item.ss_year.includes(term)) return true;
+
+      // Check Zirtirtute specific fields
       if (item.ss_dept_teachers && item.ss_dept_teachers.toLowerCase().includes(term)) return true;
       if (item.ss_dept_leader && item.ss_dept_leader.toLowerCase().includes(term)) return true;
       
-      return item.title.toLowerCase().includes(term) || item.description.toLowerCase().includes(term);
+      // Check Hotute specific fields
+      if (item.ss_superintendent && item.ss_superintendent.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSupdt && item.ss_asstSupdt.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSupdtNPSS && item.ss_asstSupdtNPSS.toLowerCase().includes(term)) return true;
+      if (item.ss_secretary && item.ss_secretary.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSecy1 && item.ss_asstSecy1.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSecy2 && item.ss_asstSecy2.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSecyNPSS1 && item.ss_asstSecyNPSS1.toLowerCase().includes(term)) return true;
+      if (item.ss_asstSecyNPSS2 && item.ss_asstSecyNPSS2.toLowerCase().includes(term)) return true;
+
+      return false;
   });
 
   // --- ANALYTICS LOGIC ---
@@ -586,57 +648,6 @@ const Archives: React.FC = () => {
       if (currentSSPath.length === 1) return `Sunday School > ${currentSSPath[0]}`;
       if (currentSSPath.length === 2) return `... > ${currentSSPath[0]} > ${currentSSPath[1]}`;
       return 'Sunday School';
-  };
-
-  // Global Search Handler
-  const handleGlobalSearch = async (e?: React.FormEvent) => {
-      e?.preventDefault();
-      if (!globalSearchTerm.trim()) return;
-      
-      setIsGlobalSearching(true);
-      setHasSearched(true);
-      try {
-          // Fetch all Sunday School records
-          const snapshot = await db.collection('archives')
-            .where('category', '==', 'Rawngbawltu te')
-            .where('subCategory', '==', 'SUNDAY SCHOOL')
-            .get();
-            
-          const allDocs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ArchiveEntry[];
-          
-          const term = globalSearchTerm.toLowerCase();
-          const results = allDocs.filter(doc => {
-              // Only search in department records (exclude Hotute/Committee if desired)
-              if (doc.department === 'Hotute' || doc.department === 'Committee') return false;
-
-              const teachers = doc.ss_dept_teachers?.toLowerCase() || '';
-              const leader = doc.ss_dept_leader?.toLowerCase() || '';
-              const asst = doc.ss_dept_asst_leader?.toLowerCase() || '';
-              const secy = doc.ss_dept_secretary?.toLowerCase() || '';
-              
-              return teachers.includes(term) || leader.includes(term) || asst.includes(term) || secy.includes(term);
-          });
-          
-          // Sort by Year desc, then Department
-          results.sort((a, b) => {
-              const yearDiff = parseInt(b.ss_year || '0') - parseInt(a.ss_year || '0');
-              if (yearDiff !== 0) return yearDiff;
-              return (a.department || '').localeCompare(b.department || '');
-          });
-
-          setGlobalSearchResults(results);
-          
-      } catch (e) {
-          console.error(e);
-          setGlobalSearchResults([]);
-      }
-      setIsGlobalSearching(false);
-  };
-
-  const clearGlobalSearch = () => {
-      setGlobalSearchTerm('');
-      setGlobalSearchResults([]);
-      setHasSearched(false);
   };
 
   return (
@@ -967,7 +978,7 @@ const Archives: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {archives.map((entry) => (
+                                    {filteredArchives.map((entry) => (
                                         <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-4 py-3 font-bold text-church-900 sticky left-0 bg-white hover:bg-slate-50">{entry.ss_year}</td>
                                             <td className="px-4 py-3 text-sm text-slate-700">{entry.ss_superintendent || '-'}</td>
@@ -988,7 +999,7 @@ const Archives: React.FC = () => {
                                             )}
                                         </tr>
                                     ))}
-                                    {archives.length === 0 && (
+                                    {filteredArchives.length === 0 && (
                                         <tr>
                                             <td colSpan={10} className="px-4 py-8 text-center text-slate-500 italic">No leadership records found. Add a new entry to get started.</td>
                                         </tr>
