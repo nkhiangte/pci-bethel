@@ -11,7 +11,7 @@ import {
   ExternalLink, Play, Loader, Save, Folder, ArrowLeft,
   ChevronRight, Settings, Upload, Trash2, Cross, UserCheck, Calendar,
   BarChart3, LayoutList, TrendingUp, PieChart, FolderOpen, Briefcase, UserCog, FileDown,
-  FileSpreadsheet, FileUp
+  FileSpreadsheet, FileUp, Search as SearchIcon
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -96,6 +96,12 @@ const Archives: React.FC = () => {
 
   const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute && !isSSDepartmentView;
 
+  // Global Search State for Sunday School
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [globalSearchResults, setGlobalSearchResults] = useState<ArchiveEntry[]>([]);
+  const [isGlobalSearching, setIsGlobalSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
   // Edit/Add Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingArchive, setEditingArchive] = useState<Partial<ArchiveEntry>>({});
@@ -113,6 +119,9 @@ const Archives: React.FC = () => {
   useEffect(() => {
       setViewMode('list');
       setCurrentSSPath([]); // Reset SS path when changing main categories
+      setHasSearched(false);
+      setGlobalSearchTerm('');
+      setGlobalSearchResults([]);
   }, [selectedCategory, selectedSubCategory]);
 
   // Fetch Metadata (Subcategories)
@@ -579,6 +588,57 @@ const Archives: React.FC = () => {
       return 'Sunday School';
   };
 
+  // Global Search Handler
+  const handleGlobalSearch = async (e?: React.FormEvent) => {
+      e?.preventDefault();
+      if (!globalSearchTerm.trim()) return;
+      
+      setIsGlobalSearching(true);
+      setHasSearched(true);
+      try {
+          // Fetch all Sunday School records
+          const snapshot = await db.collection('archives')
+            .where('category', '==', 'Rawngbawltu te')
+            .where('subCategory', '==', 'SUNDAY SCHOOL')
+            .get();
+            
+          const allDocs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ArchiveEntry[];
+          
+          const term = globalSearchTerm.toLowerCase();
+          const results = allDocs.filter(doc => {
+              // Only search in department records (exclude Hotute/Committee if desired)
+              if (doc.department === 'Hotute' || doc.department === 'Committee') return false;
+
+              const teachers = doc.ss_dept_teachers?.toLowerCase() || '';
+              const leader = doc.ss_dept_leader?.toLowerCase() || '';
+              const asst = doc.ss_dept_asst_leader?.toLowerCase() || '';
+              const secy = doc.ss_dept_secretary?.toLowerCase() || '';
+              
+              return teachers.includes(term) || leader.includes(term) || asst.includes(term) || secy.includes(term);
+          });
+          
+          // Sort by Year desc, then Department
+          results.sort((a, b) => {
+              const yearDiff = parseInt(b.ss_year || '0') - parseInt(a.ss_year || '0');
+              if (yearDiff !== 0) return yearDiff;
+              return (a.department || '').localeCompare(b.department || '');
+          });
+
+          setGlobalSearchResults(results);
+          
+      } catch (e) {
+          console.error(e);
+          setGlobalSearchResults([]);
+      }
+      setIsGlobalSearching(false);
+  };
+
+  const clearGlobalSearch = () => {
+      setGlobalSearchTerm('');
+      setGlobalSearchResults([]);
+      setHasSearched(false);
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -782,21 +842,108 @@ const Archives: React.FC = () => {
 
                 {/* SUNDAY SCHOOL ZIRTIRTUTE: Department Folders */}
                 {isSSZirtirtuteRoot && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => (
-                            <button
-                                key={dept}
-                                onClick={() => handleSSFolderClick(dept)}
-                                className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-yellow-300 transition-all duration-200 text-left group flex items-center"
-                            >
-                                <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg mr-4 group-hover:bg-yellow-100 transition-colors shrink-0">
-                                    <FolderOpen size={24} />
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        {/* GLOBAL SEARCH SECTION */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                                <SearchIcon size={20} className="mr-2 text-church-600" /> Search Zirtirtu (All Departments)
+                            </h3>
+                            <form onSubmit={handleGlobalSearch} className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter teacher name (e.g. Lalhruaia)..." 
+                                    className="flex-grow p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-church-500 outline-none"
+                                    value={globalSearchTerm}
+                                    onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                                />
+                                <button 
+                                    type="submit" 
+                                    className="bg-church-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-church-700 transition flex items-center"
+                                    disabled={isGlobalSearching}
+                                >
+                                    {isGlobalSearching ? <Loader size={20} className="animate-spin" /> : 'Search'}
+                                </button>
+                                {hasSearched && (
+                                    <button 
+                                        type="button" 
+                                        onClick={clearGlobalSearch}
+                                        className="bg-slate-100 text-slate-600 px-4 py-3 rounded-xl font-bold hover:bg-slate-200 transition"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </form>
+
+                            {/* Global Search Results */}
+                            {hasSearched && !isGlobalSearching && (
+                                <div className="mt-6 border-t border-slate-100 pt-6">
+                                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
+                                        Found {globalSearchResults.length} records matching "{globalSearchTerm}"
+                                    </h4>
+                                    
+                                    {globalSearchResults.length > 0 ? (
+                                        <div className="grid gap-4">
+                                            {globalSearchResults.map((result) => {
+                                                // Highlight matches roughly
+                                                const matchText = (text: string) => text.toLowerCase().includes(globalSearchTerm.toLowerCase());
+                                                
+                                                return (
+                                                    <div key={result.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-church-300 transition">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <span className="inline-block px-2 py-1 bg-church-100 text-church-700 rounded text-xs font-bold uppercase tracking-wide mb-1">
+                                                                    {result.department}
+                                                                </span>
+                                                                <h5 className="font-bold text-lg text-slate-900">{result.ss_year}</h5>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-sm text-slate-600 space-y-1">
+                                                            {result.ss_dept_leader && (
+                                                                <p><span className="font-semibold text-slate-500">Leader:</span> <span className={matchText(result.ss_dept_leader) ? "bg-yellow-200" : ""}>{result.ss_dept_leader}</span></p>
+                                                            )}
+                                                            {result.ss_dept_secretary && (
+                                                                <p><span className="font-semibold text-slate-500">Secretary:</span> <span className={matchText(result.ss_dept_secretary) ? "bg-yellow-200" : ""}>{result.ss_dept_secretary}</span></p>
+                                                            )}
+                                                            {result.ss_dept_teachers && (
+                                                                <div className="mt-2 pt-2 border-t border-slate-200">
+                                                                    <span className="font-semibold text-slate-500 block mb-1">Teachers:</span>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {result.ss_dept_teachers.split(',').map((tName, i) => (
+                                                                            <span key={i} className={`px-2 py-1 rounded text-xs border ${matchText(tName) ? "bg-yellow-100 border-yellow-300 text-yellow-900 font-bold" : "bg-white border-slate-200"}`}>
+                                                                                {tName.trim()}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 italic">No teachers found matching your search.</p>
+                                    )}
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-slate-800 text-sm">{dept}</h3>
-                                </div>
-                            </button>
-                        ))}
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => (
+                                <button
+                                    key={dept}
+                                    onClick={() => handleSSFolderClick(dept)}
+                                    className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-yellow-300 transition-all duration-200 text-left group flex items-center"
+                                >
+                                    <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg mr-4 group-hover:bg-yellow-100 transition-colors shrink-0">
+                                        <FolderOpen size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-sm">{dept}</h3>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -863,7 +1010,7 @@ const Archives: React.FC = () => {
                                         {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Leader</th>}
                                         {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Asst. Leader</th>}
                                         {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Secretary</th>}
-                                        {/* Dynamic Headers for Zirtirtu 1 to 20/40 */}
+                                        {/* Dynamic Headers for Zirtirtu 1 to 20/40/60 */}
                                         {Array.from({ length: teacherColumnCount }).map((_, i) => (
                                             <th key={i} className="px-4 py-4 whitespace-nowrap text-[10px] w-40 border-r border-slate-700">Zirtirtu {i + 1}</th>
                                         ))}
