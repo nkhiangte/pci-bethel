@@ -53,8 +53,6 @@ const SS_ZIRTIRTUTE_DEPARTMENTS = [
     'Pre-Beginner', 'Beginner', 'Primary', 'Junior', 'Intermediate', 'Sacrament', 'Senior', 'Puitling'
 ];
 
-const TEACHER_COLUMN_COUNT = 20;
-
 const getYouTubeId = (url: string | undefined) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -85,6 +83,18 @@ const Archives: React.FC = () => {
 
   // Sunday School Navigation State
   const [currentSSPath, setCurrentSSPath] = useState<string[]>([]);
+
+  // Derived State for Sunday School Logic
+  const isSSRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 0;
+  const isSSZirtirtuteRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Zirtirtute';
+  const isSSHotute = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Hotute';
+  const isSSDepartmentView = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 2 && currentSSPath[0] === 'Zirtirtute';
+  
+  // Puitling Special Logic: 60 teachers, no leader/secretary
+  const isPuitling = isSSDepartmentView && currentSSPath[1] === 'Puitling';
+  const teacherColumnCount = isPuitling ? 60 : 20;
+
+  const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute && !isSSDepartmentView;
 
   // Edit/Add Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -276,15 +286,16 @@ const Archives: React.FC = () => {
               const record = archives.find(a => a.ss_year === year);
               const teacherList = record?.ss_dept_teachers ? record.ss_dept_teachers.split(',').map(t => t.trim()) : [];
               
-              const row: any = {
-                  Year: year,
-                  Leader: record?.ss_dept_leader || '-',
-                  'Asst. Leader': record?.ss_dept_asst_leader || '-',
-                  Secretary: record?.ss_dept_secretary || '-',
-              };
+              const row: any = { Year: year };
+              
+              if (!isPuitling) {
+                  row.Leader = record?.ss_dept_leader || '-';
+                  row['Asst. Leader'] = record?.ss_dept_asst_leader || '-';
+                  row.Secretary = record?.ss_dept_secretary || '-';
+              }
 
               // Add teachers to columns
-              for (let i = 0; i < TEACHER_COLUMN_COUNT; i++) {
+              for (let i = 0; i < teacherColumnCount; i++) {
                   row[`Zirtirtu ${i + 1}`] = teacherList[i] || '-';
               }
 
@@ -299,8 +310,11 @@ const Archives: React.FC = () => {
 
   const handleDownloadTemplate = () => {
     if (isSSDepartmentView) {
-        const headers = ['Year', 'Leader', 'Asst. Leader', 'Secretary'];
-        for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) headers.push(`Zirtirtu ${i}`);
+        const headers = ['Year'];
+        if (!isPuitling) {
+            headers.push('Leader', 'Asst. Leader', 'Secretary');
+        }
+        for(let i=1; i<=teacherColumnCount; i++) headers.push(`Zirtirtu ${i}`);
         
         const ws = XLSX.utils.aoa_to_sheet([headers]);
         const wb = XLSX.utils.book_new();
@@ -350,24 +364,28 @@ const Archives: React.FC = () => {
                 if (!year) return;
 
                 const teachers: string[] = [];
-                for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) {
+                for(let i=1; i<=teacherColumnCount; i++) {
                     const tName = row[`Zirtirtu ${i}`] || row[`Teacher ${i}`]; // Handle both EN/MZ header
                     if (tName) teachers.push(String(tName).trim());
                 }
 
-                const docData = {
+                const docData: any = {
                     category: 'Rawngbawltu te',
                     subCategory: 'SUNDAY SCHOOL',
                     department: department,
                     title: `${department} Department Teachers ${year}`,
                     date: `${year}-01-01`,
                     ss_year: year,
-                    ss_dept_leader: row['Leader'] || '',
-                    ss_dept_asst_leader: row['Asst. Leader'] || '',
-                    ss_dept_secretary: row['Secretary'] || '',
                     ss_dept_teachers: teachers.join(', '),
                     description: `Imported record for ${department} Department ${year}`
                 };
+
+                // Only add leadership fields for non-Puitling departments
+                if (!isPuitling) {
+                    docData.ss_dept_leader = row['Leader'] || '';
+                    docData.ss_dept_asst_leader = row['Asst. Leader'] || '';
+                    docData.ss_dept_secretary = row['Secretary'] || '';
+                }
 
                 if (yearMap.has(year)) {
                     const docRef = db.collection('archives').doc(yearMap.get(year));
@@ -560,12 +578,6 @@ const Archives: React.FC = () => {
       if (currentSSPath.length === 2) return `... > ${currentSSPath[0]} > ${currentSSPath[1]}`;
       return 'Sunday School';
   };
-
-  const isSSRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 0;
-  const isSSZirtirtuteRoot = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Zirtirtute';
-  const isSSHotute = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 1 && currentSSPath[0] === 'Hotute';
-  const isSSDepartmentView = selectedSubCategory === 'SUNDAY SCHOOL' && currentSSPath.length === 2 && currentSSPath[0] === 'Zirtirtute';
-  const isViewingRecords = !(selectedCategory === 'Rawngbawltu te' && !selectedSubCategory) && !isSSRoot && !isSSZirtirtuteRoot && !isSSHotute && !isSSDepartmentView;
 
   return (
     <div className="bg-slate-50 min-h-screen py-12">
@@ -848,11 +860,11 @@ const Archives: React.FC = () => {
                                 <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
                                     <tr>
                                         <th className="px-6 py-4 whitespace-nowrap sticky left-0 bg-slate-900 z-10 w-24 border-r border-slate-700">Year</th>
-                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Leader</th>
-                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Asst. Leader</th>
-                                        <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Secretary</th>
-                                        {/* Dynamic Headers for Zirtirtu 1 to 20 */}
-                                        {Array.from({ length: TEACHER_COLUMN_COUNT }).map((_, i) => (
+                                        {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Leader</th>}
+                                        {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Asst. Leader</th>}
+                                        {!isPuitling && <th className="px-6 py-4 whitespace-nowrap w-48 border-r border-slate-700">Secretary</th>}
+                                        {/* Dynamic Headers for Zirtirtu 1 to 20/40 */}
+                                        {Array.from({ length: teacherColumnCount }).map((_, i) => (
                                             <th key={i} className="px-4 py-4 whitespace-nowrap text-[10px] w-40 border-r border-slate-700">Zirtirtu {i + 1}</th>
                                         ))}
                                         {isAdmin && <th className="px-4 py-4 whitespace-nowrap text-right w-24">Actions</th>}
@@ -871,12 +883,12 @@ const Archives: React.FC = () => {
                                         return (
                                             <tr key={year} className="hover:bg-slate-50 transition-colors">
                                                 <td className="px-6 py-4 font-black text-church-900 sticky left-0 bg-white hover:bg-slate-50 border-r border-slate-100">{year}</td>
-                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_leader || '-'}</td>
-                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_asst_leader || '-'}</td>
-                                                <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_secretary || '-'}</td>
+                                                {!isPuitling && <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_leader || '-'}</td>}
+                                                {!isPuitling && <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_asst_leader || '-'}</td>}
+                                                {!isPuitling && <td className="px-6 py-4 text-sm text-slate-700 border-r border-slate-100">{entry?.ss_dept_secretary || '-'}</td>}
                                                 
-                                                {/* Map first 20 teachers to columns */}
-                                                {Array.from({ length: TEACHER_COLUMN_COUNT }).map((_, i) => (
+                                                {/* Map teachers to columns */}
+                                                {Array.from({ length: teacherColumnCount }).map((_, i) => (
                                                     <td key={i} className="px-4 py-4 text-xs text-slate-700 border-r border-slate-100">
                                                         {teacherList[i] || '-'}
                                                     </td>
@@ -904,7 +916,7 @@ const Archives: React.FC = () => {
                                     })}
                                     {searchTerm && filteredArchives.length === 0 && (
                                         <tr>
-                                            <td colSpan={6 + TEACHER_COLUMN_COUNT} className="px-6 py-8 text-center text-slate-500 italic">No records found matching "{searchTerm}".</td>
+                                            <td colSpan={(isPuitling ? 1 : 4) + teacherColumnCount + (isAdmin ? 1 : 0)} className="px-6 py-8 text-center text-slate-500 italic">No records found matching "{searchTerm}".</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1111,11 +1123,14 @@ const Archives: React.FC = () => {
                     ) : SS_ZIRTIRTUTE_DEPARTMENTS.includes(editingArchive.department || '') ? (
                         <div className="space-y-4">
                             <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_leader: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_asst_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_asst_leader: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_secretary: e.target.value})} /></div>
-                            </div>
+                            {/* Hide Leader inputs for Puitling */}
+                            {editingArchive.department !== 'Puitling' && (
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_leader: e.target.value})} /></div>
+                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_asst_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_asst_leader: e.target.value})} /></div>
+                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_secretary: e.target.value})} /></div>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Teachers (comma separated)</label>
                                 <textarea className="w-full border p-2.5 rounded-lg h-24" value={editingArchive.ss_dept_teachers || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_teachers: e.target.value})} placeholder="Teacher 1, Teacher 2, ..." />
