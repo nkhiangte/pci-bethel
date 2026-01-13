@@ -298,20 +298,30 @@ const Archives: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    if (!isSSDepartmentView) return;
-    
-    const headers = ['Year', 'Leader', 'Asst. Leader', 'Secretary'];
-    for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) headers.push(`Zirtirtu ${i}`);
-    
-    const ws = XLSX.utils.aoa_to_sheet([headers]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, `${currentSSPath[1]}_Teachers_Import_Template.xlsx`);
+    if (isSSDepartmentView) {
+        const headers = ['Year', 'Leader', 'Asst. Leader', 'Secretary'];
+        for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) headers.push(`Zirtirtu ${i}`);
+        
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        XLSX.writeFile(wb, `${currentSSPath[1]}_Teachers_Import_Template.xlsx`);
+    } else if (isSSHotute) {
+        const headers = [
+            'Year', 'Superintendent', 'Asst. Supdt', 'Asst. Supdt (NPSS)', 
+            'Secretary', 'Asst. Secretary 1', 'Asst. Secretary 2', 
+            'Asst. Secy (NPSS) 1', 'Asst. Secy (NPSS) 2'
+        ];
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Hotute_Template");
+        XLSX.writeFile(wb, `SundaySchool_Hotute_Import_Template.xlsx`);
+    }
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !isSSDepartmentView) return;
+    if (!file) return;
     
     setLoading(true);
     try {
@@ -320,54 +330,97 @@ const Archives: React.FC = () => {
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
-        const department = currentSSPath[1];
-        
-        // Fetch existing records for this department to avoid duplicates or to update them
-        const existingSnapshot = await db.collection('archives')
-            .where('category', '==', 'Rawngbawltu te')
-            .where('subCategory', '==', 'SUNDAY SCHOOL')
-            .where('department', '==', department)
-            .get();
-            
-        const yearMap = new Map();
-        existingSnapshot.docs.forEach((doc: any) => yearMap.set(doc.data().ss_year, doc.id));
-        
         const batch = db.batch();
         let operationCount = 0;
 
-        jsonData.forEach((row: any) => {
-            const year = row['Year'] ? String(row['Year']) : null;
-            if (!year) return;
+        if (isSSDepartmentView) {
+            const department = currentSSPath[1];
+            // Fetch existing records for this department
+            const existingSnapshot = await db.collection('archives')
+                .where('category', '==', 'Rawngbawltu te')
+                .where('subCategory', '==', 'SUNDAY SCHOOL')
+                .where('department', '==', department)
+                .get();
+                
+            const yearMap = new Map();
+            existingSnapshot.docs.forEach((doc: any) => yearMap.set(doc.data().ss_year, doc.id));
 
-            const teachers: string[] = [];
-            for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) {
-                const tName = row[`Zirtirtu ${i}`] || row[`Teacher ${i}`]; // Handle both EN/MZ header
-                if (tName) teachers.push(String(tName).trim());
-            }
+            jsonData.forEach((row: any) => {
+                const year = row['Year'] ? String(row['Year']) : null;
+                if (!year) return;
 
-            const docData = {
-                category: 'Rawngbawltu te',
-                subCategory: 'SUNDAY SCHOOL',
-                department: department,
-                title: `${department} Department Teachers ${year}`,
-                date: `${year}-01-01`,
-                ss_year: year,
-                ss_dept_leader: row['Leader'] || '',
-                ss_dept_asst_leader: row['Asst. Leader'] || '',
-                ss_dept_secretary: row['Secretary'] || '',
-                ss_dept_teachers: teachers.join(', '),
-                description: `Imported record for ${department} Department ${year}`
-            };
+                const teachers: string[] = [];
+                for(let i=1; i<=TEACHER_COLUMN_COUNT; i++) {
+                    const tName = row[`Zirtirtu ${i}`] || row[`Teacher ${i}`]; // Handle both EN/MZ header
+                    if (tName) teachers.push(String(tName).trim());
+                }
 
-            if (yearMap.has(year)) {
-                const docRef = db.collection('archives').doc(yearMap.get(year));
-                batch.set(docRef, docData, { merge: true });
-            } else {
-                const docRef = db.collection('archives').doc();
-                batch.set(docRef, docData);
-            }
-            operationCount++;
-        });
+                const docData = {
+                    category: 'Rawngbawltu te',
+                    subCategory: 'SUNDAY SCHOOL',
+                    department: department,
+                    title: `${department} Department Teachers ${year}`,
+                    date: `${year}-01-01`,
+                    ss_year: year,
+                    ss_dept_leader: row['Leader'] || '',
+                    ss_dept_asst_leader: row['Asst. Leader'] || '',
+                    ss_dept_secretary: row['Secretary'] || '',
+                    ss_dept_teachers: teachers.join(', '),
+                    description: `Imported record for ${department} Department ${year}`
+                };
+
+                if (yearMap.has(year)) {
+                    const docRef = db.collection('archives').doc(yearMap.get(year));
+                    batch.set(docRef, docData, { merge: true });
+                } else {
+                    const docRef = db.collection('archives').doc();
+                    batch.set(docRef, docData);
+                }
+                operationCount++;
+            });
+        } else if (isSSHotute) {
+            // Fetch existing Hotute records
+            const existingSnapshot = await db.collection('archives')
+                .where('category', '==', 'Rawngbawltu te')
+                .where('subCategory', '==', 'SUNDAY SCHOOL')
+                .where('department', '==', 'Hotute')
+                .get();
+                
+            const yearMap = new Map();
+            existingSnapshot.docs.forEach((doc: any) => yearMap.set(doc.data().ss_year, doc.id));
+
+            jsonData.forEach((row: any) => {
+                const year = row['Year'] ? String(row['Year']) : null;
+                if (!year) return;
+
+                const docData = {
+                    category: 'Rawngbawltu te',
+                    subCategory: 'SUNDAY SCHOOL',
+                    department: 'Hotute',
+                    title: `Sunday School Hotute ${year}`,
+                    date: `${year}-01-01`,
+                    ss_year: year,
+                    ss_superintendent: row['Superintendent'] || '',
+                    ss_asstSupdt: row['Asst. Supdt'] || '',
+                    ss_asstSupdtNPSS: row['Asst. Supdt (NPSS)'] || '',
+                    ss_secretary: row['Secretary'] || '',
+                    ss_asstSecy1: row['Asst. Secretary 1'] || '',
+                    ss_asstSecy2: row['Asst. Secretary 2'] || '',
+                    ss_asstSecyNPSS1: row['Asst. Secy (NPSS) 1'] || '',
+                    ss_asstSecyNPSS2: row['Asst. Secy (NPSS) 2'] || '',
+                    description: `Imported record for Sunday School Hotute ${year}`
+                };
+
+                if (yearMap.has(year)) {
+                    const docRef = db.collection('archives').doc(yearMap.get(year));
+                    batch.set(docRef, docData, { merge: true });
+                } else {
+                    const docRef = db.collection('archives').doc();
+                    batch.set(docRef, docData);
+                }
+                operationCount++;
+            });
+        }
 
         if (operationCount > 0) {
             await batch.commit();
@@ -597,7 +650,7 @@ const Archives: React.FC = () => {
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
                                         </div>
-                                        {isSSDepartmentView && (
+                                        {(isSSDepartmentView || isSSHotute) && (
                                             <>
                                                 {isAdmin && (
                                                     <>
@@ -624,13 +677,15 @@ const Archives: React.FC = () => {
                                                         />
                                                     </>
                                                 )}
-                                                <button 
-                                                    onClick={handleExportExcel}
-                                                    className="p-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition shadow-sm"
-                                                    title="Export to Excel"
-                                                >
-                                                    <FileDown size={20} />
-                                                </button>
+                                                {isSSDepartmentView && (
+                                                    <button 
+                                                        onClick={handleExportExcel}
+                                                        className="p-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition shadow-sm"
+                                                        title="Export to Excel"
+                                                    >
+                                                        <FileDown size={20} />
+                                                    </button>
+                                                )}
                                             </>
                                         )}
                                     </div>
