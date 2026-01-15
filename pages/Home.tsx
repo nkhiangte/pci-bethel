@@ -584,7 +584,7 @@ const Home: React.FC = () => {
                 {/* Footer Controls */}
                 <div className="p-8 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                        © Champhai Bethel Kohhran Archives
+                        Â© Champhai Bethel Kohhran Archives
                     </p>
                     <button 
                         onClick={() => setSelectedLeader(null)}

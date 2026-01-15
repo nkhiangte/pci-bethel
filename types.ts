@@ -222,7 +222,7 @@ export interface InkhawmpuiRecord {
   eventName: string;
   year: number;
   theme: string;
-  location: string;
+  puipate: string; // Changed from location to puipate
   speakers: string;
 }
 

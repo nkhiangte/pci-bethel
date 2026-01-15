@@ -35,6 +35,7 @@ export const translations = {
       newsTitle: 'Latest News',
       puipate: 'Our Leaders',
       kohhranElders: 'Church Elders',
+      kohhranEldersCount: '14 Active Elders',
       kohhranProPastors: 'Church Pro Pastors',
       viewAll: 'View All',
       serviceTimes: 'Service Times',
@@ -161,8 +162,7 @@ export const translations = {
         eventName: 'Event Name',
         year: 'Year',
         theme: 'Theme',
-        location: 'Location',
-        speakers: 'Key Speakers',
+        puipate: 'Puipate',
         fatherName: "Family Member / Parent",
         causeOfDeath: "Cause of Death"
       }
@@ -241,6 +241,7 @@ export const translations = {
       newsTitle: 'Thuthar & Hriattirna',
       puipate: 'Kohhran Puipate',
       kohhranElders: 'Kohhran Upate',
+      kohhranEldersCount: 'Upa 14 kan ni',
       kohhranProPastors: 'Kohhran Pro Pastorte',
       viewAll: 'En Vek Rawh',
       serviceTimes: 'Inkhawm Hun',
@@ -365,10 +366,9 @@ export const translations = {
         age: 'Kum',
         familyContact: 'Chhungte Biak Pawh Theih',
         eventName: 'Inkhawmpui Hming',
-        year: 'Kum',
+        year: 'A hun',
         theme: 'Thupui',
-        location: 'A Hmun',
-        speakers: 'Thusawitu Pawimawh',
+        puipate: 'Puipate',
         fatherName: "Chhungte Hming",
         causeOfDeath: "Thih Chhan"
       }
@@ -401,7 +401,7 @@ export const translations = {
       signupSubtitle: 'Kohhran member ni turin lo inziak lut rawh',
       email: 'Email Address',
       password: 'Password',
-      fullName: 'Hming Pum',
+      fullName: 'Full Name',
       secretCode: 'Admin Code (A tul bik ah chauh)',
       signIn: 'Lut Rawh',
       signUp: 'Inziak Lut',

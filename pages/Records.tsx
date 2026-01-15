@@ -24,7 +24,7 @@ const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
     wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
     death: ['name', 'fatherName', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
-    inkhawmpui: ['eventName', 'year', 'theme', 'location', 'speakers'],
+    inkhawmpui: ['eventName', 'year', 'theme', 'puipate', 'speakers'],
 };
 
 const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
@@ -170,7 +170,7 @@ const Records: React.FC = () => {
             case 'baptism': setEditingRecord({ type: 'baptism', name: '', dateOfBirth: '', baptismDate: '', parents: '', minister: '' }); break;
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
             case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
-            case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', location: '', speakers: '' }); break;
+            case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', puipate: '', speakers: '' }); break;
         }
         setIsEditModalOpen(true);
     };
@@ -287,7 +287,8 @@ const Records: React.FC = () => {
                     parents: ['nu leh pa', 'chhungte'],
                     minister: ['inneihtir tu', 'baptistu', 'minister', 'vuitu'],
                     dateOfDeath: ['thih ni', 'date of death'],
-                    causeOfDeath: ['thih chhan', 'cause of death']
+                    causeOfDeath: ['thih chhan', 'cause of death'],
+                    puipate: ['puipate', 'leaders', 'officers']
                 };
                 Object.entries(mizoHeads).forEach(([key, variations]) => {
                     variations.forEach(v => headerMap[v.toLowerCase()] = key);
@@ -417,7 +418,7 @@ const Records: React.FC = () => {
                 case 'baptism': return (rec.name?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
                 case 'wedding': return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term));
                 case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).fatherName?.toLowerCase().includes(term));
-                case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || rec.speakers?.toLowerCase().includes(term));
+                case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || (rec as InkhawmpuiRecord).speakers?.toLowerCase().includes(term) || (rec as InkhawmpuiRecord).puipate?.toLowerCase().includes(term));
                 default: return false;
             }
         });
@@ -547,7 +548,7 @@ const Records: React.FC = () => {
                                             {finalSortedRecords.map(rec => (
                                                 <tr key={rec.id} className="hover:bg-slate-50 transition group/row">
                                                     {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                        <td key={header} className="px-6 py-5 text-sm text-slate-700 font-medium">{dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}</td>
+                                                        <td key={header} className="px-6 py-5 text-sm text-slate-700 font-medium whitespace-pre-wrap">{dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}</td>
                                                     ))}
                                                     {isAdmin && (
                                                         <td className="px-6 py-5 text-right">
@@ -728,7 +729,21 @@ const Records: React.FC = () => {
                             {TEMPLATE_HEADERS[activeTab].map(field => (
                                 <div key={field}>
                                     <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || field.replace(/([A-Z])/g, ' $1')}</label>
-                                    <input type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'} className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" value={(editingRecord as any)[field] || ''} onChange={e => setEditingRecord({...editingRecord, [field]: e.target.value})} />
+                                    {field === 'puipate' ? (
+                                        <textarea 
+                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white h-24" 
+                                            value={(editingRecord as any)[field] || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)}
+                                            placeholder="Enter names, one per line or separated by commas"
+                                        />
+                                    ) : (
+                                        <input 
+                                            type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'} 
+                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
+                                            value={(editingRecord as any)[field] || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 
+                                        />
+                                    )}
                                 </div>
                             ))}
                         </div>
