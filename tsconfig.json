@@ -24,8 +24,9 @@
         "./*"
       ]
     },
-    "baseUrl": ".", // FIX: Added baseUrl for path resolution
+    "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": ["src"]
 }
