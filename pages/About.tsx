@@ -8,6 +8,7 @@ import { Loader, History, Target, ShieldCheck, Plus, Edit, Trash, BookOpen, Quot
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
+import { translations } from '../translations';
 
 // Define the structure for the editable content
 interface AboutPageContent {
@@ -178,6 +179,29 @@ const About: React.FC = () => {
       return (content as any)[langKey] || fallback;
   };
 
+  // Merge current DB content with default translations for the modal
+  const getMergedContent = (): Partial<AboutPageContent> => ({
+      en_title: content.en_title || translations.en.about.title,
+      mizo_title: content.mizo_title || translations.mizo.about.title,
+      en_subtitle: content.en_subtitle || translations.en.about.subtitle,
+      mizo_subtitle: content.mizo_subtitle || translations.mizo.about.subtitle,
+      en_historyTitle: content.en_historyTitle || translations.en.about.historyTitle,
+      mizo_historyTitle: content.mizo_historyTitle || translations.mizo.about.historyTitle,
+      en_historyText: content.en_historyText || translations.en.about.historyText,
+      mizo_historyText: content.mizo_historyText || translations.mizo.about.historyText,
+      en_missionTitle: content.en_missionTitle || translations.en.about.missionTitle,
+      mizo_missionTitle: content.mizo_missionTitle || translations.mizo.about.missionTitle,
+      en_missionText: content.en_missionText || translations.en.about.missionText,
+      mizo_missionText: content.mizo_missionText || translations.mizo.about.missionText,
+      en_faithTitle: content.en_faithTitle || translations.en.about.faithTitle,
+      mizo_faithTitle: content.mizo_faithTitle || translations.mizo.about.faithTitle,
+      en_faithText: content.en_faithText || translations.en.about.faithText,
+      mizo_faithText: content.mizo_faithText || translations.mizo.about.faithText,
+      stats_families: content.stats_families || 440,
+      stats_members: content.stats_members || 2094,
+      stats_sundayschool: content.stats_sundayschool || 1773,
+  });
+
   return (
     <div className="bg-slate-50 min-h-screen relative">
       {/* Hero */}
@@ -206,17 +230,17 @@ const About: React.FC = () => {
                     <History size={32} className="mr-3" />
                     <h2 className="text-2xl font-bold text-slate-900">{c('en_historyTitle', t.about.historyTitle)}</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">{c('en_historyText', t.about.historyText)}</p>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c('en_historyText', t.about.historyText)}</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex items-center mb-6 text-church-600">
                     <Target size={32} className="mr-3" />
                     <h2 className="text-2xl font-bold text-slate-900">{c('en_missionTitle', t.about.missionTitle)}</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">{c('en_missionText', t.about.missionText)}</p>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c('en_missionText', t.about.missionText)}</p>
                 <div className="mt-6 pt-6 border-t border-slate-100">
                     <h3 className="font-bold text-slate-900 mb-2 flex items-center"><ShieldCheck size={20} className="mr-2 text-church-500"/> {c('en_faithTitle', t.about.faithTitle)}</h3>
-                    <p className="text-slate-600 text-sm">{c('en_faithText', t.about.faithText)}</p>
+                    <p className="text-slate-600 text-sm whitespace-pre-wrap">{c('en_faithText', t.about.faithText)}</p>
                 </div>
             </div>
         </div>
@@ -244,7 +268,75 @@ const About: React.FC = () => {
                     </div>
                 )}
             </div>
-            {/* ... rest of the leaders rendering logic ... */}
+            
+            {/* Pastors & Pro Pastors */}
+            <div className="flex flex-wrap justify-center gap-12 mb-16">
+                {allPastoralLeaders.length > 0 ? (
+                    allPastoralLeaders.map(p => (
+                        <div key={p.id} className="text-center group relative cursor-pointer" onClick={() => setSelectedLeader(p)}>
+                            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl mx-auto mb-5 relative bg-slate-200">
+                                <img 
+                                    src={p.imageUrl} 
+                                    alt={p.name} 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    style={{
+                                        objectPosition: `${p.imagePositionX ?? 50}% ${p.imagePositionY ?? 0}%`,
+                                        transform: `scale(${p.imageScale ?? 1})`
+                                    }}
+                                />
+                            </div>
+                            <h3 className="font-bold text-xl text-slate-900 mb-1">{p.name}</h3>
+                            <p className="text-sm font-bold text-church-600 uppercase tracking-widest">{p.role}</p>
+                            {isAdmin && (
+                                <div className="absolute top-0 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={(e) => handleEditClick(e, p, p.collection)} className="p-2 bg-white text-church-600 rounded-full shadow-md"><Edit size={14}/></button>
+                                    <button onClick={() => handleDelete(p.id, p.collection)} className="p-2 bg-white text-red-600 rounded-full shadow-md"><Trash size={14}/></button>
+                                </div>
+                            )}
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-slate-500 italic">No pastor data available.</p>
+                )}
+            </div>
+
+            {/* Elders */}
+            <div className="text-center mb-8">
+                <h3 className="text-xl font-bold text-slate-700 mb-2">{t.about.statsElders}</h3>
+                <div className="h-0.5 w-10 bg-slate-300 mx-auto mb-8"></div>
+                {isAdmin && (
+                    <button onClick={() => handleAddNew('elders')} className="flex items-center mx-auto text-sm font-bold text-white bg-church-600 px-3 py-1 rounded-full shadow-sm hover:bg-church-700 mb-6">
+                        <Plus size={14} className="mr-1"/> Add Elder
+                    </button>
+                )}
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                {elders.map(e => (
+                    <div key={e.id} className="text-center group cursor-pointer relative" onClick={() => setSelectedLeader(e)}>
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto mb-3 bg-slate-200">
+                            <img 
+                                src={e.imageUrl} 
+                                alt={e.name} 
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                style={{
+                                    objectPosition: `${e.imagePositionX ?? 50}% ${e.imagePositionY ?? 0}%`,
+                                    transform: `scale(${e.imageScale ?? 1})`
+                                }}
+                            />
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-800 leading-tight group-hover:text-church-700 transition-colors">{e.name}</h4>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">{e.role}</p>
+                        
+                        {isAdmin && (
+                            <div className="absolute top-0 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={(ev) => handleEditClick(ev, e, 'elders')} className="p-1 bg-white text-church-600 rounded-full shadow-sm"><Edit size={12}/></button>
+                                <button onClick={() => handleDelete(e.id, 'elders')} className="p-1 bg-white text-red-600 rounded-full shadow-sm"><Trash size={12}/></button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
 
       </div>
@@ -252,7 +344,7 @@ const About: React.FC = () => {
       {/* Page Content Edit Modal */}
       {isPageEditModalOpen && (
         <PageContentEditModal
-          content={content}
+          content={getMergedContent()}
           onClose={() => setIsPageEditModalOpen(false)}
           onSave={handleSaveContent}
           isLoading={isSaving}
@@ -274,6 +366,188 @@ const About: React.FC = () => {
       )}
 
       {/* BIOGRAPHY THEATER MODAL (unchanged) */}
+      {selectedLeader && (
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedLeader(null)}>
+            <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+                
+                {/* Header Profile Area */}
+                <div className="relative min-h-[14rem] md:min-h-[16rem] shrink-0 bg-church-900 text-white flex items-end overflow-hidden">
+                    <img 
+                        src={selectedLeader.imageUrl} 
+                        className="absolute inset-0 w-full h-full object-cover opacity-40" 
+                        alt="Profile BG"
+                        style={{ objectPosition: `${selectedLeader.imagePositionX ?? 50}% ${selectedLeader.imagePositionY ?? 0}%` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-church-900 via-church-900/60 to-transparent"></div>
+                    
+                    <button 
+                        onClick={() => setSelectedLeader(null)}
+                        className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full transition text-white border border-white/20 z-20"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center md:items-end gap-6 w-full">
+                        {/* Image */}
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white shrink-0">
+                            <img 
+                                src={selectedLeader.imageUrl} 
+                                alt={selectedLeader.name} 
+                                className="w-full h-full object-cover" 
+                                style={{ objectPosition: `${selectedLeader.imagePositionX ?? 50}% ${selectedLeader.imagePositionY ?? 0}%` }}
+                            />
+                        </div>
+                        <div className="text-center md:text-left flex-1">
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
+                                <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full shadow-lg">
+                                    {selectedLeader.role}
+                                </span>
+                                {selectedLeader.qualification && (
+                                    <span className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                                        {selectedLeader.qualification}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <h2 className="text-2xl md:text-4xl font-serif font-black mb-2 leading-tight">
+                                {selectedLeader.name}
+                            </h2>
+                            
+                            <div className="flex flex-col gap-1 text-sm text-church-200 opacity-90 mt-2">
+                                {/* Ordination & Probation Row */}
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                                     {selectedLeader.period && (
+                                        <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-xs">
+                                            <Calendar size={14} /> Ordination: {selectedLeader.period}
+                                        </div>
+                                    )}
+                                    {selectedLeader.probationTenure && (
+                                        <>
+                                            <div className="hidden md:block w-1 h-1 rounded-full bg-church-400"></div>
+                                            <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-xs">
+                                                Probation: {selectedLeader.probationTenure}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Previous Bials Row (if exists) */}
+                                {selectedLeader.previousBials && selectedLeader.previousBials.length > 0 && (
+                                     <div className="text-xs mt-1 leading-relaxed">
+                                        <span className="font-bold uppercase tracking-widest text-church-400 mr-2">Previous Bials:</span>
+                                        {selectedLeader.previousBials.map((b, i) => (
+                                            <span key={i} className="inline-block mr-2">
+                                                {b.field} <span className="opacity-70">({b.period})</span>{i < selectedLeader.previousBials!.length - 1 ? ',' : ''}
+                                            </span>
+                                        ))}
+                                     </div>
+                                )}
+                                
+                                {/* Contact Buttons */}
+                                {selectedLeader.phoneNumber && (
+                                    <div className="flex gap-2 justify-center md:justify-start mt-3">
+                                        <a href={`tel:${selectedLeader.phoneNumber}`} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
+                                            <Phone size={12} /> Call
+                                        </a>
+                                        <a href={`https://wa.me/${selectedLeader.phoneNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
+                                            <MessageCircle size={12} /> WhatsApp
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
+                    <div className="grid lg:grid-cols-12 gap-12">
+                        {/* Bio Text */}
+                        <div className="lg:col-span-8">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="h-px bg-slate-100 flex-1"></div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Biography & Testimonial</h3>
+                                <div className="h-px bg-slate-100 flex-1"></div>
+                            </div>
+                            
+                            {selectedLeader.biography ? (
+                                <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {selectedLeader.biography}
+                                </article>
+                            ) : (
+                                <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                    <BookOpen size={40} className="mx-auto text-slate-300 mb-4" />
+                                    <p className="text-slate-500 italic">Detailed biography not yet added to Firebase.</p>
+                                    {isAdmin && <p className="text-church-600 text-sm mt-2 font-bold underline cursor-pointer" onClick={() => {
+                                        setEditingStaff(selectedLeader);
+                                        setTargetCollection(
+                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' :
+                                            proPastors.some(p => p.id === selectedLeader.id) ? 'proPastors' : 'elders'
+                                        );
+                                        setIsStaffEditModalOpen(true);
+                                    }}>Click here to add biography</p>}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sidebar Info */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden">
+                                <Quote size={48} className="absolute -top-4 -left-4 text-church-100" />
+                                <h4 className="text-xs font-black text-church-600 uppercase tracking-widest mb-4 relative z-10">Mission / Quote</h4>
+                                <p className="text-slate-600 italic font-serif leading-relaxed relative z-10">
+                                    "{selectedLeader.description}"
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Leadership Record</h4>
+                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-church-50 rounded-xl flex items-center justify-center text-church-600 shadow-inner">
+                                        <ShieldCheck size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Current Role</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedLeader.role}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {isAdmin && (
+                                <button 
+                                    onClick={() => {
+                                        setEditingStaff(selectedLeader);
+                                        setTargetCollection(
+                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' :
+                                            proPastors.some(p => p.id === selectedLeader.id) ? 'proPastors' : 'elders'
+                                        );
+                                        setIsStaffEditModalOpen(true);
+                                    }}
+                                    className="w-full py-4 bg-church-50 text-church-700 font-black uppercase text-[10px] tracking-widest rounded-2xl border border-church-100 hover:bg-church-100 transition shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <Edit size={14} /> Edit Firebase Record
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Footer Controls */}
+                <div className="p-8 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        © Champhai Bethel Kohhran Archives
+                    </p>
+                    <button 
+                        onClick={() => setSelectedLeader(null)}
+                        className="px-10 py-3 bg-slate-900 text-white rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition shadow-lg"
+                    >
+                        Close Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
     </div>
   );
 };
@@ -327,7 +601,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             <h4 className="font-bold text-center text-slate-600">English Content</h4>
                             <FormField label="Title" name="en_title" />
                             <FormField label="Subtitle" name="en_subtitle" />
-                            <FormField label="History Title" name="en_historyTitle" />
+                            <FormField label="History Title (Kan Chanchin)" name="en_historyTitle" />
                             <FormField label="History Text" name="en_historyText" isTextarea />
                             <FormField label="Mission Title" name="en_missionTitle" />
                             <FormField label="Mission Text" name="en_missionText" isTextarea />
@@ -339,7 +613,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             <h4 className="font-bold text-center text-slate-600">Mizo Content</h4>
                             <FormField label="Title" name="mizo_title" />
                             <FormField label="Subtitle" name="mizo_subtitle" />
-                            <FormField label="History Title" name="mizo_historyTitle" />
+                            <FormField label="History Title (Kan Chanchin)" name="mizo_historyTitle" />
                             <FormField label="History Text" name="mizo_historyText" isTextarea />
                             <FormField label="Mission Title" name="mizo_missionTitle" />
                             <FormField label="Mission Text" name="mizo_missionText" isTextarea />
