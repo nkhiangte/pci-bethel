@@ -13,11 +13,12 @@ import StaffEditModal from '../components/StaffEditModal';
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
-  const { weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders } = getConstants(language);
+  const { weeklyDuty: staticDuty, pastors: staticPastors, elders: staticElders, proPastors: staticProPastors } = getConstants(language);
   
   const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticDuty);
   const [latestNews, setLatestNews] = useState<Announcement[]>([]);
   const [pastors, setPastors] = useState<Staff[]>([]);
+  const [proPastors, setProPastors] = useState<Staff[]>([]);
   const [elders, setElders] = useState<Staff[]>([]);
   const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay();
 
@@ -33,6 +34,7 @@ const Home: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!db || !db.collection) {
         setPastors(staticPastors);
+        setProPastors(staticProPastors);
         setElders(staticElders);
         return;
     }
@@ -52,16 +54,22 @@ const Home: React.FC = () => {
         // Fetch Pastors & Deduplicate
         const pastorsSnap = await db.collection('pastors').orderBy('order', 'asc').get();
         let pastorsData = pastorsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Staff[];
-        // Filter duplicates by name, keeping the first one
         pastorsData = pastorsData.filter((p, index, self) => 
             index === self.findIndex((t) => t.name === p.name)
         );
         setPastors(pastorsData.length > 0 ? pastorsData : staticPastors);
 
+        // Fetch Pro Pastors & Deduplicate
+        const proPastorsSnap = await db.collection('proPastors').orderBy('order', 'asc').get();
+        let proPastorsData = proPastorsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Staff[];
+        proPastorsData = proPastorsData.filter((p, index, self) => 
+            index === self.findIndex((t) => t.name === p.name)
+        );
+        setProPastors(proPastorsData.length > 0 ? proPastorsData : staticProPastors);
+
         // Fetch Elders & Deduplicate
         const eldersSnap = await db.collection('elders').orderBy('order', 'asc').get();
         let eldersData = eldersSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Staff[];
-        // Filter duplicates by name
         eldersData = eldersData.filter((e, index, self) => 
             index === self.findIndex((t) => t.name === e.name)
         );
@@ -71,23 +79,28 @@ const Home: React.FC = () => {
         console.error("Error fetching homepage data:", e);
         // Fallback to static data on error
         setPastors(staticPastors);
+        setProPastors(staticProPastors);
         setElders(staticElders);
         setWeeklyDuty(staticDuty);
     }
-  }, [staticPastors, staticElders, staticDuty]);
+  }, [staticPastors, staticProPastors, staticElders, staticDuty]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData, language]);
 
   // Admin Handlers
-  const handleAddNew = (collection: 'pastors' | 'elders') => {
-    setEditingStaff({ name: '', role: collection === 'elders' ? 'Upa' : 'Pastor', imageUrl: '', description: '', biography: '' });
+  const handleAddNew = (collection: 'pastors' | 'elders' | 'proPastors') => {
+    let defaultRole = 'Pastor';
+    if (collection === 'elders') defaultRole = 'Upa';
+    if (collection === 'proPastors') defaultRole = 'Pro Pastor';
+
+    setEditingStaff({ name: '', role: defaultRole, imageUrl: '', description: '', biography: '' });
     setTargetCollection(collection);
     setIsEditModalOpen(true);
   };
 
-  const handleEditClick = (e: React.MouseEvent, staff: Staff, collection: 'pastors' | 'elders') => {
+  const handleEditClick = (e: React.MouseEvent, staff: Staff, collection: 'pastors' | 'elders' | 'proPastors') => {
     e.stopPropagation();
     setEditingStaff(staff);
     setTargetCollection(collection);
@@ -100,7 +113,7 @@ const Home: React.FC = () => {
       if (staff.id) {
         await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
       } else {
-        const currentList = collectionName === 'pastors' ? pastors : elders;
+        const currentList = collectionName === 'pastors' ? pastors : collectionName === 'elders' ? elders : proPastors;
         const maxOrder = currentList.length > 0 ? Math.max(...currentList.map(s => s.order || 0)) : 0;
         await db.collection(collectionName).add({ ...staff, order: maxOrder + 1 });
       }
@@ -153,6 +166,11 @@ const Home: React.FC = () => {
     }
     return null;
   };
+
+  const allPastoralLeaders = [
+    ...pastors.map(p => ({ ...p, collection: 'pastors' as const })),
+    ...proPastors.map(p => ({ ...p, collection: 'proPastors' as const }))
+  ];
 
   return (
     <div className="space-y-16 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -312,21 +330,29 @@ const Home: React.FC = () => {
             <div className="h-1 w-20 bg-church-500 mx-auto mt-3 rounded-full"></div>
          </div>
          
-         {/* Pastors */}
+         {/* Pastors & Pro Pastors */}
          <div className="mb-12">
              <div className="flex justify-center gap-8 flex-wrap relative">
                 {isAdmin && (
-                    <button 
-                        onClick={() => handleAddNew('pastors')} 
-                        className="absolute right-0 top-0 text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center shadow-sm"
-                    >
-                        <Plus size={12} className="mr-1"/> Add Pastor
-                    </button>
+                    <div className="absolute right-0 top-0 flex flex-col gap-2 z-10 md:flex-row">
+                        <button 
+                            onClick={() => handleAddNew('pastors')} 
+                            className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center shadow-sm"
+                        >
+                            <Plus size={12} className="mr-1"/> Add Pastor
+                        </button>
+                        <button 
+                            onClick={() => handleAddNew('proPastors')} 
+                            className="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full hover:bg-blue-700 flex items-center shadow-sm"
+                        >
+                            <Plus size={12} className="mr-1"/> Add Pro-Pastor
+                        </button>
+                    </div>
                 )}
-                {pastors.length === 0 ? (
+                {allPastoralLeaders.length === 0 ? (
                     <p className="text-slate-500 italic">No pastor data available.</p>
                 ) : (
-                    pastors.map(p => (
+                    allPastoralLeaders.map(p => (
                     <div key={p.id} className="text-center group relative cursor-pointer" onClick={() => setSelectedLeader(p)}>
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto mb-4 relative bg-slate-200">
                             <img 
@@ -344,7 +370,7 @@ const Home: React.FC = () => {
                         
                         {isAdmin && (
                             <button 
-                                onClick={(e) => handleEditClick(e, p, 'pastors')}
+                                onClick={(e) => handleEditClick(e, p, p.collection)}
                                 className="absolute top-0 right-0 p-1.5 bg-white text-church-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                                 <Edit size={14} />
@@ -532,7 +558,8 @@ const Home: React.FC = () => {
                                     {isAdmin && <p className="text-church-600 text-sm mt-2 font-bold underline cursor-pointer" onClick={() => {
                                         setEditingStaff(selectedLeader);
                                         setTargetCollection(
-                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 'elders'
+                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' :
+                                            proPastors.some(p => p.id === selectedLeader.id) ? 'proPastors' : 'elders'
                                         );
                                         setIsEditModalOpen(true);
                                     }}>Click here to add biography</p>}
@@ -568,7 +595,8 @@ const Home: React.FC = () => {
                                     onClick={() => {
                                         setEditingStaff(selectedLeader);
                                         setTargetCollection(
-                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' : 'elders'
+                                            pastors.some(p => p.id === selectedLeader.id) ? 'pastors' :
+                                            proPastors.some(p => p.id === selectedLeader.id) ? 'proPastors' : 'elders'
                                         );
                                         setIsEditModalOpen(true);
                                     }}
@@ -584,7 +612,7 @@ const Home: React.FC = () => {
                 {/* Footer Controls */}
                 <div className="p-8 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                        Â© Champhai Bethel Kohhran Archives
+                        © Champhai Bethel Kohhran Archives
                     </p>
                     <button 
                         onClick={() => setSelectedLeader(null)}
