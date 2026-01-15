@@ -437,6 +437,20 @@ const Records: React.FC = () => {
         return sorted;
     }, [searchedRecords, sortConfig]);
 
+    // Helper function to apply specific colors to Inkhawmpui columns
+    const getCellClass = (type: RecordType, header: string) => {
+        if (type !== 'inkhawmpui') return 'text-slate-700';
+        
+        switch(header) {
+            case 'eventName': return 'font-bold text-church-800 text-base leading-tight'; // Highlight Event Name
+            case 'year': return 'font-mono text-blue-700 bg-blue-50 px-2 py-1 rounded text-xs font-bold inline-block border border-blue-100'; // Badge for Year
+            case 'theme': return 'text-slate-600 italic font-serif border-l-2 border-church-200 pl-3'; // Distinct Theme style
+            case 'puipate': return 'text-slate-800 text-xs font-medium bg-orange-50/50 p-2.5 rounded-lg border border-orange-100 whitespace-pre-line leading-relaxed'; // Box for Leaders
+            case 'speakers': return 'text-purple-700 font-semibold'; // Color for Speakers
+            default: return 'text-slate-700';
+        }
+    };
+
     const categoryCards = [
         { id: 'baptism', title: 'Baptisma Record', sub: 'Hming & Ni chhinchhiahte', icon: Droplet, img: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
         { id: 'wedding', title: 'Inneihna Record', sub: 'Inneih hriatpuina hrang hrang', icon: Heart, img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
@@ -548,7 +562,9 @@ const Records: React.FC = () => {
                                             {finalSortedRecords.map(rec => (
                                                 <tr key={rec.id} className="hover:bg-slate-50 transition group/row">
                                                     {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                        <td key={header} className="px-6 py-5 text-sm text-slate-700 font-medium whitespace-pre-wrap">{dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}</td>
+                                                        <td key={header} className={`px-6 py-5 text-sm font-medium ${getCellClass(activeTab, header)}`}>
+                                                            {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
+                                                        </td>
                                                     ))}
                                                     {isAdmin && (
                                                         <td className="px-6 py-5 text-right">
