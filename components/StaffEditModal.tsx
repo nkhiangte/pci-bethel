@@ -62,7 +62,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                         <span>{formData.imagePositionX ?? 50}%</span>
                     </div>
                     <input 
-                        type="range" min="0" max="100" 
+                        type="range" min="-100" max="200" 
                         value={formData.imagePositionX ?? 50} 
                         onChange={(e) => setFormData({...formData, imagePositionX: Number(e.target.value)})}
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-church-600"
@@ -74,7 +74,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                         <span>{formData.imagePositionY ?? 0}%</span>
                     </div>
                     <input 
-                        type="range" min="0" max="100" 
+                        type="range" min="-100" max="200" 
                         value={formData.imagePositionY ?? 0} 
                         onChange={(e) => setFormData({...formData, imagePositionY: Number(e.target.value)})}
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-church-600"

@@ -20,7 +20,9 @@ const Home: React.FC = () => {
   const [pastors, setPastors] = useState<Staff[]>([]);
   const [proPastors, setProPastors] = useState<Staff[]>([]);
   const [elders, setElders] = useState<Staff[]>([]);
-  const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay();
+  
+  // Pass current language to hook so it fetches the correct version
+  const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay(language);
 
   // Admin & Modal States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

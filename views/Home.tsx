@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
+import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/Card';
 
 const Home: React.FC = () => {
-  const { verse, loading, error } = useVerseOfTheDay();
+  const { language } = useLanguage();
+  const { verse, loading, error } = useVerseOfTheDay(language);
 
   const renderVerseContent = () => {
     if (loading) {

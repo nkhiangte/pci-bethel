@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Language } from "../translations";
 
@@ -32,11 +33,11 @@ export const getDailyVerse = async (language: Language = 'en'): Promise<{ text: 
     return null;
   }
 
-  const langPrompt = language === 'mizo' ? 'Mizo (Lusei)' : 'English';
+  // Improved prompt to ensure Mizo Bible translation is used
+  const langPrompt = language === 'mizo' ? 'Mizo (Mizo Bible)' : 'English (NIV or ESV)';
   
   try {
     const response = await ai.models.generateContent({
-      // FIX: Updated model to 'gemini-3-flash-preview' for basic text tasks as per coding guidelines.
       model: 'gemini-3-flash-preview',
       contents: `Generate a single, uplifting Bible verse for the day in ${langPrompt}. Return JSON with "text" and "reference" fields.`,
       config: {

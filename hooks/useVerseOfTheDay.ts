@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { getDailyVerse } from '../services/geminiService';
+import { Language } from '../translations';
 
 interface VerseData {
   verse: string;
   date: string;
 }
 
-export const useVerseOfTheDay = () => {
+export const useVerseOfTheDay = (language: Language) => {
   const [verse, setVerse] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,9 @@ export const useVerseOfTheDay = () => {
 
       try {
         const today = new Date().toISOString().split('T')[0];
-        const cachedData = localStorage.getItem('verseOfTheDay');
+        // Create a language-specific cache key so EN/MZ verses don't overwrite each other
+        const cacheKey = `verseOfTheDay_${language}`;
+        const cachedData = localStorage.getItem(cacheKey);
 
         if (cachedData) {
           const { verse: cachedVerse, date }: VerseData = JSON.parse(cachedData);
@@ -30,18 +33,22 @@ export const useVerseOfTheDay = () => {
           }
         }
         
-        const verseObj = await getDailyVerse();
+        const verseObj = await getDailyVerse(language);
         
         if (verseObj) {
             const newVerse = `${verseObj.text} - ${verseObj.reference}`;
             setVerse(newVerse);
             const verseData: VerseData = { verse: newVerse, date: today };
-            localStorage.setItem('verseOfTheDay', JSON.stringify(verseData));
+            localStorage.setItem(cacheKey, JSON.stringify(verseData));
         } else {
-             const fallbackVerse = "The Lord is my shepherd, I lack nothing. - Psalm 23:1";
+             // Fallback verses based on language
+             const fallbackVerse = language === 'mizo' 
+                ? "LALPA chu mi vengtu a ni a; ka tlachham lovang. - Sam 23:1"
+                : "The Lord is my shepherd, I lack nothing. - Psalm 23:1";
+
              setVerse(fallbackVerse);
              const verseData: VerseData = { verse: fallbackVerse, date: today };
-             localStorage.setItem('verseOfTheDay', JSON.stringify(verseData));
+             localStorage.setItem(cacheKey, JSON.stringify(verseData));
              setError('Failed to fetch verse of the day, showing default.');
         }
 
@@ -54,7 +61,7 @@ export const useVerseOfTheDay = () => {
     };
 
     getVerse();
-  }, []);
+  }, [language]); // Re-run effect when language changes
 
   return { verse, loading, error };
 };
