@@ -439,14 +439,48 @@ const Records: React.FC = () => {
 
     // Helper function to apply specific colors to Inkhawmpui columns
     const getCellClass = (type: RecordType, header: string) => {
-        if (type !== 'inkhawmpui') return 'text-slate-700';
+        // Base styles for reuse
+        const nameStyle = 'font-bold text-slate-900 text-base';
+        const dateBadgeStyle = 'font-mono text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-blue-100 shadow-sm';
+        const ministerStyle = 'text-purple-700 font-bold text-xs bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100 inline-block';
         
-        switch(header) {
-            case 'eventName': return 'font-bold text-church-800 text-base leading-tight'; // Highlight Event Name
-            case 'year': return 'font-mono text-blue-700 bg-blue-50 px-2 py-1 rounded text-xs font-bold inline-block border border-blue-100'; // Badge for Year
-            case 'theme': return 'text-slate-600 italic font-serif border-l-2 border-church-200 pl-3'; // Distinct Theme style
-            case 'puipate': return 'text-slate-800 text-xs font-medium bg-orange-50/50 p-2.5 rounded-lg border border-orange-100 whitespace-pre-line leading-relaxed'; // Box for Leaders
-            case 'speakers': return 'text-purple-700 font-semibold'; // Color for Speakers
+        switch(type) {
+            case 'baptism':
+                switch(header) {
+                    case 'name': return nameStyle;
+                    case 'dateOfBirth': return 'text-slate-500 font-mono text-xs';
+                    case 'baptismDate': return dateBadgeStyle;
+                    case 'parents': return 'text-slate-600 italic border-l-2 border-slate-200 pl-3 text-sm';
+                    case 'minister': return ministerStyle;
+                    default: return 'text-slate-700';
+                }
+            case 'wedding':
+                switch(header) {
+                    case 'groomName': return 'font-bold text-blue-900 text-base';
+                    case 'brideName': return 'font-bold text-pink-900 text-base';
+                    case 'weddingDate': return 'font-mono text-pink-700 bg-pink-50 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-pink-100 shadow-sm';
+                    case 'minister': return ministerStyle;
+                    default: return 'text-slate-700';
+                }
+            case 'death':
+                switch(header) {
+                    case 'name': return 'font-bold text-slate-900 text-base';
+                    case 'fatherName': return 'text-slate-500 text-sm';
+                    case 'age': return 'font-mono font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded text-xs border border-orange-100 inline-block';
+                    case 'dateOfDeath': return 'font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-slate-200';
+                    case 'causeOfDeath': return 'text-red-600 italic text-sm font-medium';
+                    case 'minister': return ministerStyle;
+                    default: return 'text-slate-700';
+                }
+            case 'inkhawmpui':
+                switch(header) {
+                    case 'eventName': return 'font-bold text-church-800 text-base leading-tight'; // Highlight Event Name
+                    case 'year': return dateBadgeStyle; // Badge for Year
+                    case 'theme': return 'text-slate-600 italic font-serif border-l-2 border-church-200 pl-3'; // Distinct Theme style
+                    case 'puipate': return 'text-slate-800 text-xs font-medium bg-orange-50/50 p-2.5 rounded-lg border border-orange-100 whitespace-pre-line leading-relaxed'; // Box for Leaders
+                    case 'speakers': return 'text-purple-700 font-semibold'; // Color for Speakers
+                    default: return 'text-slate-700';
+                }
             default: return 'text-slate-700';
         }
     };
