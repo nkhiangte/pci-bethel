@@ -90,6 +90,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // New KTP Collections
+    match /ktpContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ktpGallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ktpProductions/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ktpWhosWho/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /ministries/{docId} {
       allow read: if true;
       allow write: if isAdmin();

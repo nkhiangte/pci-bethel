@@ -10,7 +10,7 @@ const AdminDashboard: React.FC = () => {
   const { isAdmin, currentUser } = useAuth();
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
-  if (!currentUser) return <Navigate to="/login" replace />;
+  if (!currentUser) return <Navigate to="/login" />;
   if (!isAdmin) return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
           <div className="text-center">

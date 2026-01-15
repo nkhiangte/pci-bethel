@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { ArchiveEntry } from '../types';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Archive, FileText, Image as ImageIcon, Video, History, 
   FileClock, Users, User, Search, Plus, Edit, Trash, X, 
@@ -63,6 +63,17 @@ const getYouTubeId = (url: string | undefined) => {
 // Generate years 2025 down to 1981
 const SS_YEAR_RANGE = Array.from({length: 2025 - 1981 + 1}, (_, i) => (2025 - i).toString());
 
+const triggerDownload = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
 const Archives: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
@@ -71,8 +82,10 @@ const Archives: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Navigation State via URL Params
+  // Navigation State via URL Params (v6 compatible)
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
   const selectedCategory = searchParams.get('category');
   const selectedSubCategory = searchParams.get('sub');
 
@@ -313,7 +326,9 @@ const Archives: React.FC = () => {
           const ws = XLSX.utils.json_to_sheet(exportData);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Teachers");
-          XLSX.writeFile(wb, `${currentSSPath[1]}_Department_Teachers.xlsx`);
+          
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          triggerDownload(new Blob([wbout], { type: 'application/octet-stream' }), `${currentSSPath[1]}_Department_Teachers.xlsx`);
       }
   };
 
@@ -328,7 +343,10 @@ const Archives: React.FC = () => {
         const ws = XLSX.utils.aoa_to_sheet([headers]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Template");
-        XLSX.writeFile(wb, `${currentSSPath[1]}_Teachers_Import_Template.xlsx`);
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        triggerDownload(new Blob([wbout], { type: 'application/octet-stream' }), `${currentSSPath[1]}_Teachers_Import_Template.xlsx`);
+
     } else if (isSSHotute) {
         const headers = [
             'Year', 'Superintendent', 'Asst. Supdt', 'Asst. Supdt (NPSS)', 
@@ -338,7 +356,9 @@ const Archives: React.FC = () => {
         const ws = XLSX.utils.aoa_to_sheet([headers]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Hotute_Template");
-        XLSX.writeFile(wb, `SundaySchool_Hotute_Import_Template.xlsx`);
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        triggerDownload(new Blob([wbout], { type: 'application/octet-stream' }), `SundaySchool_Hotute_Import_Template.xlsx`);
     }
   };
 
@@ -1091,333 +1111,269 @@ const Archives: React.FC = () => {
 
                 {/* --- RECORD LISTING VIEW (Standard) --- */}
                 {isViewingRecords && (
-                    <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                         {loading ? (
-                            <div className="flex justify-center py-20"><Loader className="animate-spin text-church-500 w-10 h-10" /></div>
-                        ) : viewMode === 'analytics' ? (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
-                                {/* Analytics Dashboard */}
-                                {analyticsData ? (
-                                    <>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                                <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><LayoutList size={24}/></div>
-                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.total}</h3>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Total Records</p>
-                                            </div>
-                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                                <div className="p-3 bg-green-50 text-green-600 rounded-full mb-3"><TrendingUp size={24}/></div>
-                                                <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.currentYearCount}</h3>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Added in {new Date().getFullYear()}</p>
-                                            </div>
-                                            {analyticsData.avgTenure > 0 && (
-                                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-                                                    <div className="p-3 bg-purple-50 text-purple-600 rounded-full mb-3"><FileClock size={24}/></div>
-                                                    <h3 className="text-4xl font-serif font-black text-slate-900">{analyticsData.avgTenure} <span className="text-base text-slate-500 font-medium">yrs</span></h3>
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Avg. Tenure</p>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Charts Section */}
-                                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                                            <h3 className="text-lg font-bold text-slate-800 mb-8 flex items-center">
-                                                <BarChart3 size={20} className="mr-2 text-church-600" /> Yearly Distribution
-                                            </h3>
-                                            <div className="h-64 flex items-end gap-2 sm:gap-4 justify-center">
-                                                {analyticsData.sortedYears.map((d, i) => {
-                                                    const max = Math.max(...analyticsData.sortedYears.map(y => y.count));
-                                                    const height = (d.count / max) * 100;
-                                                    return (
-                                                        <div key={i} className="flex-1 flex flex-col items-center group max-w-[60px]">
-                                                            <div className="relative w-full flex justify-center h-full items-end">
-                                                                <div 
-                                                                    className="bg-church-200 group-hover:bg-church-500 transition-all duration-500 rounded-t-lg w-full relative min-h-[4px]" 
-                                                                    style={{ height: `${height}%` }}
-                                                                >
-                                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                                                        {d.count} entries
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <span className="text-[10px] font-bold text-slate-400 mt-3 -rotate-45 sm:rotate-0 origin-top-left sm:origin-center">{d.year}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center py-20 text-slate-400">Not enough data for analytics.</div>
-                                )}
+                            <div className="col-span-full flex justify-center py-20">
+                                <Loader className="animate-spin text-church-500 w-10 h-10" />
                             </div>
                         ) : filteredArchives.length > 0 ? (
-                            <div className={isListView ? "space-y-6" : "grid md:grid-cols-2 lg:grid-cols-3 gap-6"}>
-                                {filteredArchives.map(entry => {
-                                    const Icon = CATEGORY_ICONS[entry.category] || Archive;
-                                    const isOfficeBearer = entry.category === 'Rawngbawltu te';
-                                    const showFullDescription = isOfficeBearer || ['Pastors', 'Upa kal ta te', 'Weekly Program'].includes(entry.category);
-                                    const youtubeId = entry.category === 'Video' ? getYouTubeId(entry.link) : null;
-                                    const isPastor = entry.category === 'Pastors';
+                            filteredArchives.map((archive) => {
+                                const Icon = CATEGORY_ICONS[archive.category] || FileText;
+                                const isVideo = archive.category === 'Video';
+                                const videoId = isVideo ? getYouTubeId(archive.link) : null;
 
-                                    return (
-                                        <div key={entry.id} className={`bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition group relative flex flex-col ${isListView ? '' : 'h-full'}`}>
-                                            {isAdmin && (
-                                                <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                    <button onClick={() => handleEdit(entry)} className="p-1.5 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100"><Edit size={16} /></button>
-                                                    <button onClick={() => handleDelete(entry.id)} className="p-1.5 text-red-600 bg-red-50 rounded-full hover:bg-red-100"><Trash size={16} /></button>
-                                                </div>
-                                            )}
-                                            
-                                            {youtubeId ? (
-                                                <div className="flex flex-col h-full">
-                                                    <div className="relative w-full aspect-video bg-slate-100 rounded-lg overflow-hidden mb-4 cursor-pointer group/video shadow-sm" onClick={() => setPlayingVideoId(youtubeId)}>
-                                                        <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={entry.title} className="w-full h-full object-cover" />
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover/video:bg-black/30 transition">
-                                                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover/video:scale-110 transition"><Play size={20} className="text-church-600 ml-1 fill-current" /></div>
+                                return (
+                                    <div key={archive.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
+                                        {/* Thumbnail Section */}
+                                        <div className="h-48 bg-slate-200 relative overflow-hidden shrink-0">
+                                            {isVideo && videoId ? (
+                                                <div className="w-full h-full relative cursor-pointer" onClick={() => setPlayingVideoId(videoId)}>
+                                                    <img src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} alt="Video Thumbnail" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                                                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                            <Play className="ml-1 text-church-600" size={24} />
                                                         </div>
                                                     </div>
-                                                    <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{entry.title}</h3>
-                                                    <p className="text-xs text-slate-500 mb-3">{entry.date}</p>
-                                                    <div className="text-slate-600 text-sm mb-4 line-clamp-3 flex-grow">{entry.description}</div>
+                                                </div>
+                                            ) : archive.category === 'Photo' && archive.imageUrls && archive.imageUrls.length > 0 ? (
+                                                <div className="w-full h-full relative cursor-pointer" onClick={() => setPreviewImage(archive.imageUrls![0])}>
+                                                    <img src={archive.imageUrls[0]} alt="Thumbnail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    {archive.imageUrls.length > 1 && (
+                                                        <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded font-bold">
+                                                            +{archive.imageUrls.length - 1}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <>
-                                                    {/* Display Pastor Image at Top */}
-                                                    {isPastor && entry.imageUrls && entry.imageUrls.length > 0 && (
-                                                        <div className="mb-6 flex justify-center">
-                                                             <div 
-                                                                className="w-40 h-40 rounded-full overflow-hidden border-4 border-slate-50 shadow-lg cursor-pointer hover:scale-105 transition-transform bg-slate-200"
-                                                                onClick={() => setPreviewImage(entry.imageUrls![0])}
-                                                             >
-                                                                <img src={entry.imageUrls![0]} alt={entry.title} className="w-full h-full object-cover" />
-                                                             </div>
-                                                        </div>
-                                                    )}
+                                                <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                                                    <Icon size={48} />
+                                                </div>
+                                            )}
+                                            <div className="absolute top-3 left-3">
+                                                <span className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-sm border border-slate-200">
+                                                    {archive.category}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                                                    <div className="flex items-start mb-4">
-                                                        <div className="p-3 bg-church-50 text-church-600 rounded-lg mr-4 shrink-0"><Icon size={24} /></div>
-                                                        <div>
-                                                            {!isOfficeBearer && (<div className="flex flex-wrap gap-2 mb-1"><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{entry.category}</span>{entry.subCategory && (<span className="text-xs font-bold text-church-600 bg-church-100 px-2 py-0.5 rounded-full">{entry.subCategory}</span>)}</div>)}
-                                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{entry.title}</h3>
-                                                            {!isOfficeBearer && <p className="text-xs text-slate-500 mt-1">{entry.date}</p>}
-                                                        </div>
+                                        {/* Content Section */}
+                                        <div className="p-6 flex flex-col flex-grow">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{archive.date}</span>
+                                                {isAdmin && (
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEdit(archive)} className="text-slate-400 hover:text-blue-600"><Edit size={14} /></button>
+                                                        <button onClick={() => handleDelete(archive.id)} className="text-slate-400 hover:text-red-600"><Trash size={14} /></button>
                                                     </div>
-                                                    
-                                                    {(entry.category === 'Upa kal ta te' || entry.category === 'Pastors') && (
-                                                        <div className="mt-3 mb-3 space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 w-full sm:w-auto inline-block">
-                                                            {entry.birthDate && <div><span className="font-bold text-slate-700">Pian Ni:</span> {entry.birthDate}</div>}
-                                                            {entry.ordinationDate && <div><span className="font-bold text-slate-700">Nemngheh Ni:</span> {entry.ordinationDate}</div>}
-                                                            {entry.category === 'Pastors' && entry.tenureYears && <div><span className="font-bold text-slate-700">Tenure:</span> {entry.tenureYears}</div>}
-                                                            {entry.deathDate && <div><span className="font-bold text-slate-700">Thih Ni:</span> {entry.deathDate}</div>}
-                                                        </div>
-                                                    )}
-
-                                                    <div className={`text-slate-600 text-sm mb-4 flex-grow whitespace-pre-wrap leading-relaxed ${showFullDescription ? '' : 'line-clamp-3'}`}>{entry.description}</div>
-                                                    
-                                                    {entry.imageUrls && entry.imageUrls.length > 0 && (
-                                                        <div className={`grid gap-2 mb-4 ${entry.imageUrls.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-2 md:grid-cols-4'}`}>
-                                                            {entry.imageUrls.slice(isPastor ? 1 : 0, 4).map((url, i) => (
-                                                                <div 
-                                                                    key={i} 
-                                                                    className="relative overflow-hidden rounded-lg bg-slate-100 aspect-square cursor-pointer hover:opacity-90"
-                                                                    onClick={() => setPreviewImage(url)}
-                                                                >
-                                                                    <img src={url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
-                                                                    {i === 3 && entry.imageUrls!.length > 4 && (
-                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold">+{entry.imageUrls!.length - 4}</div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                    {entry.link && (<a href={entry.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-church-600 hover:text-church-800 mt-auto">View Resource <ExternalLink size={14} className="ml-1" /></a>)}
-                                                </>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-lg text-slate-800 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{archive.title}</h3>
+                                            <p className="text-sm text-slate-600 line-clamp-3 mb-4 flex-grow">{archive.description}</p>
+                                            
+                                            {/* Action Button */}
+                                            {archive.link && !isVideo && (
+                                                <a 
+                                                    href={archive.link} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="mt-auto flex items-center justify-center w-full py-2.5 rounded-lg bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider hover:bg-church-50 hover:text-church-600 transition-colors border border-slate-100"
+                                                >
+                                                    <ExternalLink size={14} className="mr-2" /> Open Resource
+                                                </a>
                                             )}
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    </div>
+                                );
+                            })
                         ) : (
-                            <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-200">
-                                <Archive className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                                <h3 className="text-lg font-bold text-slate-700">No archives found</h3>
-                                <p className="text-slate-500 mt-1">Try changing search terms or add new entries.</p>
+                            <div className="col-span-full text-center py-20">
+                                <div className="inline-block p-4 bg-slate-100 rounded-full mb-4 text-slate-300">
+                                    <FolderOpen size={48} />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-600 mb-1">No Archives Found</h3>
+                                <p className="text-slate-400 text-sm">Try adjusting your search or select a different category.</p>
                             </div>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         )}
 
-      </div>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                    <h3 className="text-xl font-bold text-slate-800">{editingArchive.id ? 'Edit Entry' : 'Add New Entry'}</h3>
-                    <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+        {/* Video Player Modal */}
+        {playingVideoId && (
+            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setPlayingVideoId(null)}>
+                <button className="absolute top-6 right-6 text-white/70 hover:text-white transition p-2 bg-white/10 rounded-full hover:bg-white/20"><X size={24}/></button>
+                <div className="w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 bg-black">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={`https://www.youtube.com/embed/${playingVideoId}?autoplay=1`} 
+                        title="YouTube Video" 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                    ></iframe>
                 </div>
-                <div className="p-6 space-y-4 overflow-y-auto">
-                    {/* Render fields based on context */}
-                    {editingArchive.department === 'Hotute' ? (
-                        <div className="space-y-4">
-                            {/* ... (Existing Hotute Fields) ... */}
-                            <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Superintendent</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_superintendent || ''} onChange={e => setEditingArchive({...editingArchive, ss_superintendent: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_secretary: e.target.value})} /></div>
+            </div>
+        )}
+
+        {/* Image Preview Modal */}
+        {previewImage && (
+            <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setPreviewImage(null)}>
+                <button className="absolute top-6 right-6 text-white/70 hover:text-white transition p-2 bg-white/10 rounded-full hover:bg-white/20"><X size={24}/></button>
+                <div className="relative max-w-5xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                    <img src={previewImage} alt="Full Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" />
+                </div>
+            </div>
+        )}
+
+        {/* Edit/Add Modal */}
+        {isEditModalOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                    <div className="p-6 border-b bg-slate-50 rounded-t-2xl flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-slate-800">{editingArchive.id ? 'Edit Entry' : 'Add New Entry'}</h3>
+                        <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                    </div>
+                    
+                    <div className="p-6 space-y-5 overflow-y-auto bg-white">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                            <input 
+                                className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                value={editingArchive.title || ''} 
+                                onChange={e => setEditingArchive({...editingArchive, title: e.target.value})} 
+                                placeholder="Archive Title"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                                <input 
+                                    type="date"
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                    value={editingArchive.date || ''} 
+                                    onChange={e => setEditingArchive({...editingArchive, date: e.target.value})} 
+                                />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Supdt</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSupdt || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSupdt: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Supdt (NPSS)</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSupdtNPSS || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSupdtNPSS: e.target.value})} /></div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secretary 1</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecy1 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecy1: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secretary 2</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecy2 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecy2: e.target.value})} /></div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 1</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS1 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS1: e.target.value})} /></div>
-                                <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Secy (NPSS) 2</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_asstSecyNPSS2 || ''} onChange={e => setEditingArchive({...editingArchive, ss_asstSecyNPSS2: e.target.value})} /></div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                                <select 
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                    value={editingArchive.category} 
+                                    onChange={e => setEditingArchive({...editingArchive, category: e.target.value as any})}
+                                >
+                                    {Object.keys(CATEGORY_ICONS).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
                             </div>
                         </div>
-                    ) : SS_ZIRTIRTUTE_DEPARTMENTS.includes(editingArchive.department || '') ? (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="number" className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_year || ''} onChange={e => setEditingArchive({...editingArchive, ss_year: e.target.value})} placeholder="e.g. 2025" /></div>
-                            {/* Hide Leader inputs for Puitling */}
-                            {editingArchive.department !== 'Puitling' && (
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_leader: e.target.value})} /></div>
-                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Asst. Leader</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_asst_leader || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_asst_leader: e.target.value})} /></div>
-                                    <div><label className="block text-sm font-bold text-slate-700 mb-1">Secretary</label><input className="w-full border p-2.5 rounded-lg" value={editingArchive.ss_dept_secretary || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_secretary: e.target.value})} /></div>
-                                </div>
-                            )}
+
+                        {/* Rawngbawltu te Sub-Category Selection */}
+                        {editingArchive.category === 'Rawngbawltu te' && (
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Teachers (comma separated)</label>
-                                <textarea className="w-full border p-2.5 rounded-lg h-24" value={editingArchive.ss_dept_teachers || ''} onChange={e => setEditingArchive({...editingArchive, ss_dept_teachers: e.target.value})} placeholder="Teacher 1, Teacher 2, ..." />
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Sub-Category (Committee)</label>
+                                <select 
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                    value={editingArchive.subCategory || ''} 
+                                    onChange={e => setEditingArchive({...editingArchive, subCategory: e.target.value})}
+                                >
+                                    <option value="">Select Committee</option>
+                                    {subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                                </select>
                             </div>
+                        )}
+
+                        {/* Sunday School Department Selection */}
+                        {editingArchive.category === 'Rawngbawltu te' && editingArchive.subCategory === 'SUNDAY SCHOOL' && (
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Department</label>
+                                <select 
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                    value={editingArchive.department || ''} 
+                                    onChange={e => setEditingArchive({...editingArchive, department: e.target.value})}
+                                >
+                                    <option value="">Select Folder</option>
+                                    <option value="Committee">Committee</option>
+                                    <option value="Hotute">Hotute</option>
+                                    {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                                </select>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                            <textarea 
+                                className="w-full border p-2.5 rounded-lg h-32 focus:ring-2 focus:ring-church-500 outline-none" 
+                                value={editingArchive.description || ''} 
+                                onChange={e => setEditingArchive({...editingArchive, description: e.target.value})} 
+                                placeholder="Details about this archive entry..."
+                            />
                         </div>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                                <input className="w-full border p-2.5 rounded-lg" value={editingArchive.title || ''} onChange={e => setEditingArchive({...editingArchive, title: e.target.value})} placeholder="Title" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.category} onChange={e => setEditingArchive({...editingArchive, category: e.target.value as any})}>
-                                        {ARCHIVE_SECTIONS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
-                                    <input type="date" className="w-full border p-2.5 rounded-lg" value={editingArchive.date || ''} onChange={e => setEditingArchive({...editingArchive, date: e.target.value})} />
-                                </div>
-                            </div>
-                            
-                            {editingArchive.category === 'Rawngbawltu te' && (
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Sub Category</label>
-                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.subCategory || ''} onChange={e => setEditingArchive({...editingArchive, subCategory: e.target.value})}>
-                                        <option value="" disabled>Select Sub-Category</option>
-                                        {subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                                    </select>
-                                </div>
-                            )}
 
-                            {editingArchive.subCategory === 'SUNDAY SCHOOL' && (
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Department / Folder</label>
-                                    <select className="w-full border p-2.5 rounded-lg" value={editingArchive.department || ''} onChange={e => setEditingArchive({...editingArchive, department: e.target.value})}>
-                                        <option value="" disabled>Select Department</option>
-                                        <option value="Committee">Committee</option>
-                                        <option value="Hotute">Hotute</option>
-                                        {SS_ZIRTIRTUTE_DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                                    </select>
-                                </div>
-                            )}
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Link / Resource URL</label>
+                            <input 
+                                className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
+                                value={editingArchive.link || ''} 
+                                onChange={e => setEditingArchive({...editingArchive, link: e.target.value})} 
+                                placeholder="https://... (Drive Link, YouTube, etc.)"
+                            />
+                        </div>
 
-                            {(editingArchive.category === 'Pastors' || editingArchive.category === 'Upa kal ta te') && (
-                                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Pian Ni (DOB)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.birthDate || ''} onChange={e => setEditingArchive({...editingArchive, birthDate: e.target.value})} /></div>
-                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Nemngheh Ni</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.ordinationDate || ''} onChange={e => setEditingArchive({...editingArchive, ordinationDate: e.target.value})} /></div>
-                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">Thih Ni (DOD)</label><input type="text" placeholder="DD/MM/YYYY" className="w-full border p-2 rounded" value={editingArchive.deathDate || ''} onChange={e => setEditingArchive({...editingArchive, deathDate: e.target.value})} /></div>
-                                    {editingArchive.category === 'Pastors' && <div><label className="block text-xs font-bold text-slate-500 mb-1">Tenure</label><input className="w-full border p-2 rounded" value={editingArchive.tenureYears || ''} onChange={e => setEditingArchive({...editingArchive, tenureYears: e.target.value})} placeholder="e.g. 2010 - 2015" /></div>}
-                                </div>
-                            )}
-
+                        {/* Image Upload for Photos */}
+                        {editingArchive.category === 'Photo' && (
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Description / Content</label>
-                                <textarea className="w-full border p-2.5 rounded-lg h-32" value={editingArchive.description || ''} onChange={e => setEditingArchive({...editingArchive, description: e.target.value})} placeholder="Details..." />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">External Link / Video URL</label>
-                                <input className="w-full border p-2.5 rounded-lg" value={editingArchive.link || ''} onChange={e => setEditingArchive({...editingArchive, link: e.target.value})} placeholder="https://..." />
-                            </div>
-                            
-                            {/* Image Upload Section */}
-                            <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
-                                    <ImageIcon size={16} /> Photo Gallery
-                                </label>
-                                
-                                <div className="grid grid-cols-3 gap-3 mb-3">
-                                    {editingArchive.imageUrls?.map((url, index) => (
-                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-white border border-slate-200">
-                                            <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" />
-                                            <button 
-                                                onClick={() => setEditingArchive(prev => ({ ...prev, imageUrls: prev.imageUrls?.filter((_, i) => i !== index) }))} 
-                                                className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-700"
-                                            >
-                                                <Trash2 size={12} />
-                                            </button>
-                                        </div>
-                                    ))}
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Images</label>
+                                <div className="flex gap-2 items-center">
                                     <button 
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={uploadingImage}
-                                        className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-400 transition bg-white"
+                                        className="px-4 py-2 bg-slate-100 border rounded-lg text-slate-600 hover:bg-slate-200 text-sm font-bold flex items-center"
                                     >
-                                        {uploadingImage ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
-                                        <span className="text-[10px] font-bold uppercase mt-1">Upload</span>
+                                        {uploadingImage ? <Loader className="animate-spin mr-2" size={16}/> : <Upload className="mr-2" size={16}/>} 
+                                        Upload Images
                                     </button>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        onChange={handleImageUpload} 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        multiple 
+                                    />
                                 </div>
-                                <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" multiple />
-                                {uploadingImage && <p className="text-xs text-church-600 animate-pulse text-center">Uploading to ImgBB...</p>}
+                                {editingArchive.imageUrls && editingArchive.imageUrls.length > 0 && (
+                                    <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                                        {editingArchive.imageUrls.map((url, idx) => (
+                                            <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-200">
+                                                <img src={url} className="w-full h-full object-cover" alt="thumb" />
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setEditingArchive(prev => ({...prev, imageUrls: prev.imageUrls?.filter((_, i) => i !== idx)}))}
+                                                    className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        </>
-                    )}
-                </div>
-                <div className="p-6 bg-slate-50 flex justify-end space-x-3 rounded-b-2xl">
-                    <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border border-slate-300 rounded-lg font-bold text-slate-700">Cancel</button>
-                    <button onClick={handleSave} disabled={isSaving} className="px-6 py-2 bg-church-600 text-white rounded-lg font-bold flex items-center">{isSaving ? <Loader className="animate-spin mr-2" size={16}/> : <Save className="mr-2" size={16} />} Save</button>
+                        )}
+                    </div>
+
+                    <div className="p-6 bg-slate-50 border-t flex justify-end space-x-3 rounded-b-2xl">
+                        <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-white transition">Cancel</button>
+                        <button onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 bg-church-600 text-white rounded-xl font-bold hover:bg-church-700 flex items-center shadow-lg shadow-church-200 transition disabled:opacity-50">
+                            {isSaving ? <Loader className="animate-spin mr-2" size={18}/> : <Save className="mr-2" size={18} />} Save Entry
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-      )}
-
-      {/* Video Modal */}
-      {playingVideoId && (
-        <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-300" onClick={() => setPlayingVideoId(null)}>
-            <div className="w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl relative">
-                <button onClick={() => setPlayingVideoId(null)} className="absolute top-4 right-4 text-white/50 hover:text-white z-10 bg-black/20 p-2 rounded-full"><X size={24}/></button>
-                <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${playingVideoId}?autoplay=1`} title="YouTube video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-            </div>
-        </div>
-      )}
-
-      {/* Image Preview Modal */}
-      {previewImage && (
-        <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setPreviewImage(null)}>
-            <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={e => e.stopPropagation()} />
-            <button onClick={() => setPreviewImage(null)} className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 p-2 rounded-full"><X size={32}/></button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

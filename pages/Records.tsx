@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   BookUser, Baby, Cross, Users, Plus, Edit, Trash, X, Save, 
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
@@ -54,12 +54,25 @@ const formatDateCell = (value: any): string => {
   return String(value);
 };
 
+const triggerDownload = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
 const Records: React.FC = () => {
     const { t, language } = useLanguage();
     const { isAdmin } = useAuth();
     
-    // URL Params Integration
+    // URL Params Integration (v6 compatible)
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+
     const typeParam = searchParams.get('type') as RecordType | null;
     
     const activeTab = typeParam || 'baptism';
@@ -232,7 +245,9 @@ const Records: React.FC = () => {
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Records");
-        XLSX.writeFile(wb, `Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        triggerDownload(new Blob([wbout], { type: 'application/octet-stream' }), `Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const handleExportPDF = () => {
@@ -254,7 +269,9 @@ const Records: React.FC = () => {
             headStyles: { fillColor: [134, 120, 79] }, 
             styles: { fontSize: 8 }
         });
-        doc.save(`Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+        
+        const pdfBlob = doc.output('blob');
+        triggerDownload(pdfBlob, `Bethel_Kohhran_${activeTab}_Records_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -788,7 +805,7 @@ const Records: React.FC = () => {
                                         />
                                     ) : (
                                         <input 
-                                            type={field.toLowerCase().includes('date') ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'} 
+                                            type={dateFields.includes(field) ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'} 
                                             className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
                                             value={(editingRecord as any)[field] || ''} 
                                             onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 

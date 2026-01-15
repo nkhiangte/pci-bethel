@@ -164,7 +164,7 @@ const AdminDuties: React.FC = () => {
         }));
     };
 
-    if (!currentUser) return <Navigate to="/login" replace />;
+    if (!currentUser) return <Navigate to="/login" />;
     if (!isAdmin) return <div className="p-20 text-center">Access Denied</div>;
 
     const ServiceConfigBox = ({ type, title, icon: Icon }: { type: 'sundaySchool' | 'morning' | 'evening', title: string, icon: any }) => (

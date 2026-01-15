@@ -1,12 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
 import { Ministry, KTPHruaitute, KTPMember, KTPGroup, KTPBudget, BudgetItem, KTPSubCommittee } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus, DollarSign } from 'lucide-react';
+import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus, DollarSign, Image as ImageIcon, Play, Upload, ExternalLink, User } from 'lucide-react';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
 const INITIAL_KTP_2026_DATA: KTPHruaitute = {
     year: 2026,
@@ -198,20 +200,21 @@ const Fellowship: React.FC = () => {
   const [fellowship, setFellowship] = useState<Ministry | null | undefined>(undefined);
 
   const isKTP = id === 'ktp';
-  const [ktpActiveTab, setKtpActiveTab] = useState('circular'); // Changed initial tab from 'home' to 'circular'
+  const [ktpActiveTab, setKtpActiveTab] = useState('circular'); 
   
   // State for KTP specific data
   const [ktpHruaitute, setKtpHruaitute] = useState<KTPHruaitute | null | undefined>(undefined);
   const [ktpBudget, setKtpBudget] = useState<KTPBudget | null | undefined>(undefined);
   const [loadingKtpData, setLoadingKtpData] = useState(false);
+  
+  // Modals
   const [isHruaituteEditModalOpen, setIsHruaituteEditModalOpen] = useState(false);
   const [isBudgetEditModalOpen, setIsBudgetEditModalOpen] = useState(false);
 
   const ktpNavLinks = [
-    // { id: 'home', label: 'Home', icon: Home }, // Removed Home tab
-    { id: 'circular', label: '2026 hruaitute', icon: Book },
-    { id: 'sub-committees', label: 'Sub-Committees', icon: Users }, // New tab for Sub-Committees
-    { id: 'project-budget', label: 'Project & Budget 2026', icon: DollarSign },
+    { id: 'circular', label: '2026 Hruaitute', icon: Book },
+    { id: 'sub-committees', label: 'Sub-Committees', icon: Users }, 
+    { id: 'project-budget', label: 'Project & Budget', icon: DollarSign },
     { id: 'members', label: 'Member List', icon: List },
     { id: 'history', label: 'Our History', icon: History },
     { id: 'gallery', label: 'Picture Gallery', icon: Camera },
@@ -260,7 +263,7 @@ const Fellowship: React.FC = () => {
             return;
         }
 
-        if (tab === 'circular' || tab === 'sub-committees') { // Fetch KTPHruaitute for both these tabs
+        if (tab === 'circular' || tab === 'sub-committees') { 
             try {
                 const docRef = db.collection('ktpLeaders').doc('2026');
                 const docSnap = await docRef.get();
@@ -279,6 +282,7 @@ const Fellowship: React.FC = () => {
                 setKtpBudget(null);
             }
         }
+        // Other tabs fetch data inside their own components
         setLoadingKtpData(false);
     };
 
@@ -338,36 +342,16 @@ const Fellowship: React.FC = () => {
   if (!fellowship) return <Navigate to="/worship" replace />;
 
   const renderKtpTabContent = () => {
-    if (loadingKtpData) return <div className="text-center py-20"><Loader className="animate-spin h-8 w-8 text-cyan-500 mx-auto" /></div>;
+    if (loadingKtpData && (ktpActiveTab === 'circular' || ktpActiveTab === 'sub-committees' || ktpActiveTab === 'project-budget')) {
+        return <div className="text-center py-20"><Loader className="animate-spin h-8 w-8 text-cyan-500 mx-auto" /></div>;
+    }
 
     switch(ktpActiveTab) {
-        case 'home':
-            return (
-                <div>
-                  {/* Removed h2 "Leadership & Schedule" */}
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="flex items-start space-x-4">
-                      <div className="p-3 bg-cyan-50 text-cyan-600 rounded-lg"><Users size={24} /></div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Leader</h3>
-                        <p className="text-slate-600 mt-1">{fellowship.leader}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-4">
-                      <div className="p-3 bg-cyan-50 text-cyan-600 rounded-lg"><Clock size={24} /></div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Regular Meeting</h3>
-                        <p className="text-slate-600 mt-1">{fellowship.schedule}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            );
         case 'circular':
             return ktpHruaitute ? 
                    <KTPHruaituteView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
                    <KTPDataMissing title="Hruaitute Details" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
-        case 'sub-committees': // New case for Sub-Committees
+        case 'sub-committees': 
             return ktpHruaitute ?
                    <KTPSubCommitteesView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
                    <KTPDataMissing title="Sub-Committees" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
@@ -375,6 +359,16 @@ const Fellowship: React.FC = () => {
             return ktpBudget ?
                    <KTPBudgetView data={ktpBudget} onEdit={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} /> :
                    <KTPDataMissing title="Project & Budget" onSetup={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_BUDGET.year} />;
+        case 'history':
+            return <KTPHistoryView isAdmin={isAdmin} />;
+        case 'gallery':
+            return <KTPGalleryView isAdmin={isAdmin} />;
+        case 'productions':
+            return <KTPProductionsView isAdmin={isAdmin} />;
+        case 'whoswho':
+            return <KTPWhosWhoView isAdmin={isAdmin} />;
+        case 'members':
+            return <KtpContentPlaceholder tabId={ktpActiveTab} />; // Member list can be complex, leaving as placeholder or can be simple list
         default:
             return <KtpContentPlaceholder tabId={ktpActiveTab} />;
     }
@@ -472,11 +466,343 @@ const Fellowship: React.FC = () => {
   );
 };
 
+// --- Helper Functions and Components ---
+
 const formatWhatsAppLink = (phone: string) => {
     const cleaned = phone.replace(/[^0-9]/g, '');
     if (cleaned.length === 10) return `https://wa.me/91${cleaned}`;
     if (cleaned.startsWith('91') && cleaned.length === 12) return `https://wa.me/${cleaned}`;
     return `https://wa.me/${cleaned}`;
+};
+
+// --- New Admin Components ---
+
+const KTPHistoryView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+    const [historyText, setHistoryText] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState('');
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (db?.collection) {
+                try {
+                    const doc = await db.collection('ktpContent').doc('history').get();
+                    if (doc.exists) setHistoryText(doc.data()?.text || '');
+                } catch (e) { console.error(e); }
+            }
+            setLoading(false);
+        };
+        fetchHistory();
+    }, []);
+
+    const handleSave = async () => {
+        if (db?.collection) {
+            await db.collection('ktpContent').doc('history').set({ text: editText }, { merge: true });
+            setHistoryText(editText);
+            setIsEditing(false);
+        }
+    };
+
+    if (loading) return <div className="text-center p-8"><Loader className="animate-spin mx-auto text-cyan-600"/></div>;
+
+    return (
+        <div className="relative">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-slate-800">Our History</h3>
+                {isAdmin && <button onClick={() => { setEditText(historyText); setIsEditing(true); }} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Edit size={14}/> Edit</button>}
+            </div>
+            {isEditing ? (
+                <div className="space-y-4">
+                    <textarea className="w-full h-96 p-4 border rounded-lg focus:ring-2 focus:ring-cyan-500 font-serif leading-relaxed" value={editText} onChange={e => setEditText(e.target.value)} />
+                    <div className="flex gap-2 justify-end">
+                        <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded hover:bg-slate-50">Cancel</button>
+                        <button onClick={handleSave} className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700">Save</button>
+                    </div>
+                </div>
+            ) : (
+                <div className="prose max-w-none text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">
+                    {historyText || <p className="italic text-slate-400 text-center py-10">History has not been added yet.</p>}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const KTPGalleryView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+    const [images, setImages] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAdding, setIsAdding] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [newImage, setNewImage] = useState({ url: '', caption: '' });
+
+    const fetchImages = async () => {
+        setLoading(true);
+        if (db?.collection) {
+            const snap = await db.collection('ktpGallery').orderBy('createdAt', 'desc').get();
+            setImages(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => { fetchImages(); }, []);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) setNewImage(prev => ({ ...prev, url: data.data.url }));
+        } catch (err) { alert('Upload failed'); }
+        setUploading(false);
+    };
+
+    const handleSave = async () => {
+        if (!newImage.url) return;
+        await db.collection('ktpGallery').add({ ...newImage, createdAt: new Date().toISOString() });
+        setIsAdding(false);
+        setNewImage({ url: '', caption: '' });
+        fetchImages();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Delete this photo?')) {
+            await db.collection('ktpGallery').doc(id).delete();
+            fetchImages();
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-slate-800">Picture Gallery</h3>
+                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Photo</button>}
+            </div>
+            
+            {isAdding && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
+                        <h4 className="font-bold mb-4">Add New Photo</h4>
+                        <div className="space-y-3">
+                            <div className="flex gap-2">
+                                <input className="flex-1 border p-2 rounded" placeholder="Image URL" value={newImage.url} onChange={e => setNewImage({...newImage, url: e.target.value})} />
+                                <button onClick={() => fileRef.current?.click()} className="bg-slate-100 p-2 rounded border hover:bg-slate-200">{uploading ? <Loader className="animate-spin" size={20}/> : <Upload size={20}/>}</button>
+                                <input type="file" ref={fileRef} className="hidden" onChange={handleUpload} accept="image/*"/>
+                            </div>
+                            <input className="w-full border p-2 rounded" placeholder="Caption" value={newImage.caption} onChange={e => setNewImage({...newImage, caption: e.target.value})} />
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
+                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {images.map(img => (
+                        <div key={img.id} className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden shadow-sm">
+                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                            {img.caption && <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white text-xs p-2 truncate">{img.caption}</div>}
+                            {isAdmin && <button onClick={() => handleDelete(img.id)} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
+                        </div>
+                    ))}
+                    {images.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No photos added yet.</div>}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const KTPProductionsView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+    const [videos, setVideos] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAdding, setIsAdding] = useState(false);
+    const [newVideo, setNewVideo] = useState({ title: '', url: '', desc: '' });
+
+    const fetchVideos = async () => {
+        setLoading(true);
+        if (db?.collection) {
+            const snap = await db.collection('ktpProductions').orderBy('createdAt', 'desc').get();
+            setVideos(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => { fetchVideos(); }, []);
+
+    const getYouTubeId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const handleSave = async () => {
+        if (!newVideo.url || !newVideo.title) return;
+        await db.collection('ktpProductions').add({ ...newVideo, createdAt: new Date().toISOString() });
+        setIsAdding(false);
+        setNewVideo({ title: '', url: '', desc: '' });
+        fetchVideos();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Delete video?')) {
+            await db.collection('ktpProductions').doc(id).delete();
+            fetchVideos();
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-slate-800">Productions</h3>
+                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Video</button>}
+            </div>
+
+            {isAdding && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
+                        <h4 className="font-bold mb-4">Add Production</h4>
+                        <div className="space-y-3">
+                            <input className="w-full border p-2 rounded" placeholder="Title" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
+                            <input className="w-full border p-2 rounded" placeholder="YouTube URL" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} />
+                            <textarea className="w-full border p-2 rounded" placeholder="Description" value={newVideo.desc} onChange={e => setNewVideo({...newVideo, desc: e.target.value})} />
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
+                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {videos.map(video => {
+                        const vidId = getYouTubeId(video.url);
+                        return (
+                            <div key={video.id} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
+                                <div className="aspect-video bg-slate-900 relative">
+                                    {vidId ? (
+                                        <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${vidId}`} title={video.title} frameBorder="0" allowFullScreen></iframe>
+                                    ) : <div className="w-full h-full flex items-center justify-center text-white"><Video/></div>}
+                                    {isAdmin && <button onClick={() => handleDelete(video.id)} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition z-10"><Trash2 size={14}/></button>}
+                                </div>
+                                <div className="p-4">
+                                    <h4 className="font-bold text-lg text-slate-800 line-clamp-1">{video.title}</h4>
+                                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{video.desc}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {videos.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No productions added yet.</div>}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const KTPWhosWhoView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+    const [profiles, setProfiles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAdding, setIsAdding] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [form, setForm] = useState({ name: '', role: '', desc: '', imageUrl: '' });
+
+    const fetchProfiles = async () => {
+        setLoading(true);
+        if (db?.collection) {
+            const snap = await db.collection('ktpWhosWho').orderBy('createdAt', 'desc').get();
+            setProfiles(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => { fetchProfiles(); }, []);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) setForm(prev => ({ ...prev, imageUrl: data.data.url }));
+        } catch (err) { alert('Upload failed'); }
+        setUploading(false);
+    };
+
+    const handleSave = async () => {
+        if (!form.name) return;
+        await db.collection('ktpWhosWho').add({ ...form, createdAt: new Date().toISOString() });
+        setIsAdding(false);
+        setForm({ name: '', role: '', desc: '', imageUrl: '' });
+        fetchProfiles();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Delete profile?')) {
+            await db.collection('ktpWhosWho').doc(id).delete();
+            fetchProfiles();
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-slate-800">Who's Who</h3>
+                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Profile</button>}
+            </div>
+
+            {isAdding && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
+                        <h4 className="font-bold mb-4">Add Profile</h4>
+                        <div className="space-y-3">
+                            <input className="w-full border p-2 rounded" placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                            <input className="w-full border p-2 rounded" placeholder="Role / Achievement" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
+                            <div className="flex gap-2">
+                                <input className="flex-1 border p-2 rounded" placeholder="Image URL" value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} />
+                                <button onClick={() => fileRef.current?.click()} className="bg-slate-100 p-2 rounded border hover:bg-slate-200">{uploading ? <Loader className="animate-spin" size={20}/> : <Upload size={20}/>}</button>
+                                <input type="file" ref={fileRef} className="hidden" onChange={handleUpload} accept="image/*"/>
+                            </div>
+                            <textarea className="w-full border p-2 rounded" placeholder="Description / Bio" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} />
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
+                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {profiles.map(p => (
+                        <div key={p.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col items-center text-center relative group hover:shadow-md transition">
+                            {isAdmin && <button onClick={() => handleDelete(p.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"><Trash2 size={16}/></button>}
+                            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-slate-200 border-4 border-white shadow-md">
+                                {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={40}/></div>}
+                            </div>
+                            <h4 className="font-bold text-lg text-slate-900">{p.name}</h4>
+                            <p className="text-sm text-cyan-600 font-semibold mb-2 uppercase tracking-wide">{p.role}</p>
+                            <p className="text-sm text-slate-500">{p.desc}</p>
+                        </div>
+                    ))}
+                    {profiles.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No profiles added yet.</div>}
+                </div>
+            )}
+        </div>
+    );
 };
 
 const KTPBudgetView: React.FC<{ data: KTPBudget, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => {
@@ -560,11 +886,9 @@ const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdm
                 </div>
             </Section>
         )}
-        {/* Removed subCommittees rendering from here */}
     </div>
 );
 
-// New component for Sub-Committees
 const KTPSubCommitteesView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
     <div>
         <div className="flex justify-between items-start mb-6 pb-4 border-b">
@@ -580,7 +904,6 @@ const KTPSubCommitteesView: React.FC<{ data: KTPHruaitute, onEdit: () => void, i
 
         {data.subCommittees && data.subCommittees.length > 0 ? (
              <Section title="Sub-Committees">
-                {/* Removed the inner grid, now Section's grid will control the layout */}
                 {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
             </Section>
         ) : (
@@ -635,9 +958,9 @@ const SubCommitteeCard: React.FC<{ subcommittee: KTPSubCommittee }> = ({ subcomm
             <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">{subcommittee.name}</h4>
             <ul className="space-y-1.5 mb-3">
                 {leaders.map(member => (
-                    <li key={member.id} className="text-sm flex items-baseline gap-1"> {/* Added flex and items-baseline */}
-                        <span className="text-slate-600 whitespace-nowrap">{member.role}:</span> {/* Added whitespace-nowrap */}
-                        <span className="font-semibold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">{member.name}</span> {/* Added whitespace-nowrap, overflow-hidden, text-ellipsis */}
+                    <li key={member.id} className="text-sm flex items-baseline gap-1"> 
+                        <span className="text-slate-600 whitespace-nowrap">{member.role}:</span> 
+                        <span className="font-semibold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">{member.name}</span> 
                     </li>
                 ))}
             </ul>

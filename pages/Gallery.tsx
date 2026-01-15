@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GalleryItem } from '../types';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -130,17 +130,19 @@ const Gallery: React.FC = () => {
 
          {/* Sub-page Navigation */}
          <div className="flex justify-center border-b border-slate-200 mb-8 bg-white/50 backdrop-blur-sm rounded-t-lg shadow-sm">
-           {subGalleries.map(sg => (
-              <NavLink
+           {subGalleries.map(sg => {
+              const isActive = location.pathname.startsWith(sg.path);
+              return (
+              <Link
                 key={sg.path}
                 to={sg.path}
-                className={({isActive}) => `px-6 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
+                className={`px-6 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
                   isActive ? 'border-church-500 text-church-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {sg.name}
-              </NavLink>
-           ))}
+              </Link>
+           )})}
          </div>
          
          {filteredImages.length > 0 ? (

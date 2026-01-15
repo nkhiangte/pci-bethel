@@ -95,17 +95,13 @@ const Navbar: React.FC = () => {
               <img 
                 src={logoUrl} 
                 alt="PCI Logo" 
-                className="h-8 w-8 object-contain drop-shadow-sm bg-white rounded-full p-0.5" 
+                className="h-10 w-10 object-contain drop-shadow-sm bg-white rounded-full p-0.5" 
                 onError={(e) => {
                   e.currentTarget.src = "https://via.placeholder.com/40";
                   e.currentTarget.onerror = null;
                 }}
               />
-              <div className="flex flex-col">
-                <span className="font-bold text-lg leading-tight tracking-tight">Mizoram Synod</span>
-                <span className="text-xs font-light text-slate-300 -mt-0.5">(Presbyterian Church of India)</span>
-                <span className="text-sm font-semibold text-white mt-0.5">Champhai Bethel Kohhran</span>
-              </div>
+              <span className="font-bold text-xl leading-tight tracking-tight text-white">Champhai Bethel Kohhran</span>
             </Link>
           </div>
           

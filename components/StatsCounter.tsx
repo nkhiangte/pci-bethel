@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { Users, BookOpen, Home as HomeIcon } from 'lucide-react';
 
-const statsData = {
-    families: 440, // 431 + 9
-    members: 2094,
-    sundaySchoolStudents: 1773
-};
+interface StatsCounterProps {
+  families: number;
+  members: number;
+  sundaySchoolStudents: number;
+}
 
 const AnimatedCounter = ({ endValue }: { endValue: number }) => {
     const [count, setCount] = useState(0);
@@ -37,13 +37,13 @@ const AnimatedCounter = ({ endValue }: { endValue: number }) => {
     return <span className="text-4xl lg:text-5xl font-bold text-church-900">{count.toLocaleString()}</span>;
 };
 
-const StatsCounter: React.FC = () => {
+const StatsCounter: React.FC<StatsCounterProps> = ({ families, members, sundaySchoolStudents }) => {
   const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1 });
 
   const statItems = [
-    { icon: Users, value: statsData.members, label: 'Total Members' },
-    { icon: HomeIcon, value: statsData.families, label: 'Families' },
-    { icon: BookOpen, value: statsData.sundaySchoolStudents, label: 'Sunday School Students' }
+    { icon: Users, value: members, label: 'Total Members' },
+    { icon: HomeIcon, value: families, label: 'Families' },
+    { icon: BookOpen, value: sundaySchoolStudents, label: 'Sunday School Students' }
   ];
 
   return (

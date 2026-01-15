@@ -21,7 +21,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
 import AdminDuties from './pages/AdminDuties'; 
 import AdminUsers from './pages/AdminUsers'; 
-import StaffEditModal from './components/StaffEditModal'; 
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import SundaySchool from './pages/SundaySchool';
@@ -55,7 +54,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/upa-bial" element={<UpaBial />} />
-                <Route path="/missionaries" element={<Missionaries />} /> {/* Added Route */}
+                <Route path="/missionaries" element={<Missionaries />} />
                 <Route path="/articles" element={<Articles />} /> 
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
