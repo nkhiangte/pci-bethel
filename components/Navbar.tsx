@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
   const navLinks = [
     { name: t.nav.home, path: '/' },
     { name: t.nav.upaBial, path: '/upa-bial' },
-    { name: t.nav.missionaries, path: '/missionaries' }, // Added Missionaries
+    { name: t.nav.missionaries, path: '/missionaries' },
     { name: t.nav.articles, path: '/articles' },
     { name: t.nav.about, path: '/about' },
     { name: t.nav.events, path: '/events' },
@@ -51,6 +51,7 @@ const Navbar: React.FC = () => {
       path: '#',
       children: [
         { name: 'Membership Forms', path: '/membership' },
+        { name: 'Thawhlawm Thawhna', path: '/thawhlawm' },
         { name: t.nav.resources, path: '/resources' },
         { name: t.nav.giving, path: '/giving' },
       ]

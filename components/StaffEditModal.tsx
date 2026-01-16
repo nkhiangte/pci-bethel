@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Staff } from '../types';
-import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone } from 'lucide-react';
+import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone, Hand } from 'lucide-react';
 
 interface StaffEditModalProps {
   staff: Partial<Staff>;
@@ -16,6 +16,9 @@ interface StaffEditModalProps {
 
 const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave, onDelete, isLoading, showDeleteConfirm, setShowDeleteConfirm, collectionName }) => {
   const [formData, setFormData] = useState<Partial<Staff>>(staff);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setFormData(staff);
@@ -29,6 +32,64 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
     }
   };
 
+  // --- Drag and Zoom Logic ---
+
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    // Prevent scrolling on touch devices while dragging
+    // if ('touches' in e) e.preventDefault(); 
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const dx = clientX - dragStart.x;
+    const dy = clientY - dragStart.y;
+
+    // Sensitivity factor: Convert pixels to percentage movement
+    // Lower divisor = faster movement. 
+    // We subtract because decreasing object-position % moves the image RIGHT/DOWN visually
+    const sensitivity = 0.3; 
+
+    setFormData(prev => ({
+      ...prev,
+      imagePositionX: (prev.imagePositionX ?? 50) - (dx * sensitivity),
+      imagePositionY: (prev.imagePositionY ?? 0) - (dy * sensitivity)
+    }));
+
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    // Prevent page scroll when zooming image
+    e.stopPropagation();
+    
+    const scaleStep = 0.1;
+    const currentScale = formData.imageScale ?? 1;
+    let newScale = currentScale;
+
+    if (e.deltaY < 0) {
+        // Zoom In
+        newScale = Math.min(currentScale + scaleStep, 3);
+    } else {
+        // Zoom Out
+        newScale = Math.max(currentScale - scaleStep, 1);
+    }
+
+    setFormData(prev => ({ ...prev, imageScale: parseFloat(newScale.toFixed(1)) }));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col md:flex-row overflow-hidden animate-in zoom-in-90 duration-200">
@@ -37,18 +98,34 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
         <div className="md:w-1/2 bg-slate-100 p-6 flex flex-col border-r border-slate-200">
             <h3 className="font-bold text-slate-700 mb-4 flex items-center"><Move size={18} className="mr-2"/> Image Adjustments</h3>
             
-            <div className="flex-1 flex items-center justify-center mb-6 bg-slate-200 rounded-lg overflow-hidden relative shadow-inner min-h-[300px]">
+            <div 
+                ref={imageContainerRef}
+                className="flex-1 flex items-center justify-center mb-6 bg-slate-200 rounded-lg overflow-hidden relative shadow-inner min-h-[300px] select-none"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
+                onWheel={handleWheel}
+            >
                 {formData.imageUrl ? (
-                    <div className="relative w-64 h-64 rounded-full md:rounded-lg overflow-hidden bg-white shadow-lg border-4 border-white">
+                    <div className="relative w-64 h-64 rounded-full md:rounded-lg overflow-hidden bg-white shadow-lg border-4 border-white group cursor-grab active:cursor-grabbing">
                         <img 
                             src={formData.imageUrl} 
                             alt="Preview" 
-                            className="w-full h-full object-cover transition-all duration-200"
+                            className="w-full h-full object-cover transition-transform duration-75 ease-out pointer-events-none" // pointer-events-none ensures drag events bubble to container
                             style={{
                                 objectPosition: `${formData.imagePositionX ?? 50}% ${formData.imagePositionY ?? 0}%`,
                                 transform: `scale(${formData.imageScale ?? 1})`
                             }}
                         />
+                        {/* Hint Overlay */}
+                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <Hand className="text-white mb-1" size={24} />
+                            <span className="text-white text-[10px] font-bold uppercase tracking-wider text-center px-4">Drag to Move<br/>Scroll to Zoom</span>
+                        </div>
                     </div>
                 ) : (
                     <div className="text-slate-400">Enter Image URL to Preview</div>
@@ -59,7 +136,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 <div>
                     <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
                         <span>Horizontal (X)</span>
-                        <span>{formData.imagePositionX ?? 50}%</span>
+                        <span>{Math.round(formData.imagePositionX ?? 50)}%</span>
                     </div>
                     <input 
                         type="range" min="-100" max="200" 
@@ -71,7 +148,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 <div>
                     <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
                         <span>Vertical (Y)</span>
-                        <span>{formData.imagePositionY ?? 0}%</span>
+                        <span>{Math.round(formData.imagePositionY ?? 0)}%</span>
                     </div>
                     <input 
                         type="range" min="-100" max="200" 

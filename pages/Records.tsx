@@ -10,11 +10,13 @@ import {
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
   Search, ExternalLink, FileText, ChevronLeft, Droplet, 
   Heart, Church, ArrowRight, CheckCircle2, ArrowUp, ArrowDown, ArrowUpDown,
-  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar
+  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
 type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
 type ViewMode = 'selection' | 'details';
@@ -95,6 +97,80 @@ const Records: React.FC = () => {
     const [importError, setImportError] = useState<string | null>(null);
     const [importFileName, setImportFileName] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Folder Image Customization State
+    const [folderImages, setFolderImages] = useState<Record<string, string>>({});
+    const [uploadingFolderId, setUploadingFolderId] = useState<string | null>(null);
+    const folderImageInputRef = useRef<HTMLInputElement>(null);
+    const targetFolderIdRef = useRef<string | null>(null);
+
+    const categoryCards = [
+        { id: 'baptism', title: 'Baptisma Record', sub: 'Hming & Ni chhinchhiahte', icon: Droplet, defaultImg: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
+        { id: 'wedding', title: 'Inneihna Record', sub: 'Inneih hriatpuina hrang hrang', icon: Heart, defaultImg: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
+        { id: 'death', title: 'Thihna Record', sub: 'Mithi chhinchhiahna leh thlan', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
+        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial leh Inkhawmpui Liante', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
+    ];
+
+    // Fetch Folder Images
+    useEffect(() => {
+        const fetchFolderImages = async () => {
+            if (!db || !db.collection) return;
+            try {
+                const doc = await db.collection('settings').doc('recordImages').get();
+                if (doc.exists) {
+                    setFolderImages(doc.data() as Record<string, string>);
+                }
+            } catch (e) {
+                console.error("Error fetching record images", e);
+            }
+        };
+        fetchFolderImages();
+    }, []);
+
+    const handleFolderImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const targetId = targetFolderIdRef.current;
+        
+        if (!file || !targetId) return;
+
+        setUploadingFolderId(targetId);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST', body: formData,
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                const newUrl = result.data.url;
+                
+                // Update Firebase
+                if (db && db.collection) {
+                    await db.collection('settings').doc('recordImages').set({
+                        [targetId]: newUrl
+                    }, { merge: true });
+                }
+
+                // Update Local State
+                setFolderImages(prev => ({ ...prev, [targetId]: newUrl }));
+            } else {
+                alert("Image upload failed.");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Error connecting to image server.");
+        } finally {
+            setUploadingFolderId(null);
+            if (folderImageInputRef.current) folderImageInputRef.current.value = '';
+        }
+    };
+
+    const triggerFolderImageUpload = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation(); // Prevent card click
+        targetFolderIdRef.current = id;
+        folderImageInputRef.current?.click();
+    };
 
     const fetchRecords = useCallback(async () => {
         if (viewMode === 'selection') return;
@@ -502,13 +578,6 @@ const Records: React.FC = () => {
         }
     };
 
-    const categoryCards = [
-        { id: 'baptism', title: 'Baptisma Record', sub: 'Hming & Ni chhinchhiahte', icon: Droplet, img: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
-        { id: 'wedding', title: 'Inneihna Record', sub: 'Inneih hriatpuina hrang hrang', icon: Heart, img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
-        { id: 'death', title: 'Thihna Record', sub: 'Mithi chhinchhiahna leh thlan', icon: Church, img: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
-        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial leh Inkhawmpui Liante', icon: Users, img: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
-    ];
-
     if (viewMode === 'selection') {
         return (
             <div className="bg-[#0f0a1a] min-h-screen text-white pb-24">
@@ -524,18 +593,49 @@ const Records: React.FC = () => {
                     </div>
                 </div>
                 <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {categoryCards.map((card) => (
-                        <button key={card.id} onClick={() => handleSelectCategory(card.id as RecordType)} className="relative aspect-[1.2/1] rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-300 shadow-2xl">
-                            <img src={card.img} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
-                            <div className="absolute top-6 right-6 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform"><card.icon size={22} className="text-white fill-current" /></div>
-                            <div className="absolute bottom-8 left-8 text-left">
-                                <h3 className="text-2xl font-serif font-black text-white leading-tight mb-2">{card.title}</h3>
-                                <p className="text-slate-300 text-sm font-medium">{card.sub}</p>
+                    {categoryCards.map((card) => {
+                        const bgImage = folderImages[card.id] || card.defaultImg;
+                        const isUploading = uploadingFolderId === card.id;
+
+                        return (
+                            <div key={card.id} className="relative group">
+                                <button onClick={() => handleSelectCategory(card.id as RecordType)} className="w-full relative aspect-[1.2/1] rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-300 shadow-2xl">
+                                    <img src={bgImage} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
+                                    <div className="absolute top-6 right-6 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform"><card.icon size={22} className="text-white fill-current" /></div>
+                                    <div className="absolute bottom-8 left-8 text-left">
+                                        <h3 className="text-2xl font-serif font-black text-white leading-tight mb-2">{card.title}</h3>
+                                        <p className="text-slate-300 text-sm font-medium">{card.sub}</p>
+                                    </div>
+                                    {isUploading && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                                            <Loader className="animate-spin text-white w-8 h-8" />
+                                        </div>
+                                    )}
+                                </button>
+                                
+                                {/* Admin Edit Image Button */}
+                                {isAdmin && (
+                                    <button 
+                                        onClick={(e) => triggerFolderImageUpload(e, card.id)}
+                                        className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-white text-white hover:text-black rounded-full backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100"
+                                        title="Change Cover Image"
+                                    >
+                                        <Camera size={16} />
+                                    </button>
+                                )}
                             </div>
-                        </button>
-                    ))}
+                        )
+                    })}
                 </div>
+                {/* Hidden Input for Folder Image Upload */}
+                <input 
+                    type="file" 
+                    ref={folderImageInputRef} 
+                    className="hidden" 
+                    onChange={handleFolderImageUpload} 
+                    accept="image/*" 
+                />
             </div>
         );
     }
