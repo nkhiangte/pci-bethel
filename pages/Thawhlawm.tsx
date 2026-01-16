@@ -223,7 +223,10 @@ const Thawhlawm: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-      const ws = XLSX.utils.json_to_sheet([{ "Family Name": "Example Family Name" }]);
+      const ws = XLSX.utils.json_to_sheet([
+          { "Sl. No": 1, "Hming": "Example Name 1" },
+          { "Sl. No": 2, "Hming": "Example Name 2" }
+      ]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Template");
       XLSX.writeFile(wb, "Bial_Family_List_Template.xlsx");
@@ -240,8 +243,17 @@ const Thawhlawm: React.FC = () => {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           
           const names = jsonData.map((row: any) => {
-              return row['Family Name'] || Object.values(row)[0];
-          }).filter(n => typeof n === 'string' && n.trim() !== '');
+              // Look for 'Hming', 'Family Name', or 'Name'.
+              let name = row['Hming'] || row['Family Name'] || row['Name'];
+              
+              // Fallback if standard headers not found
+              if (!name) {
+                  // Iterate through values to find a likely name (string, length > 1, not numeric)
+                  const values = Object.values(row);
+                  name = values.find(v => typeof v === 'string' && isNaN(Number(v)) && v.trim().length > 1);
+              }
+              return name;
+          }).filter(n => typeof n === 'string' && n.trim() !== '' && !n.includes('Example Name'));
 
           if (names.length > 0) {
               setManageNamesText(prev => {
@@ -252,7 +264,7 @@ const Thawhlawm: React.FC = () => {
               });
               alert(`Loaded ${names.length} names from file.`);
           } else {
-              alert("No valid names found in file.");
+              alert("No valid names found in file. Please ensure column header is 'Hming'.");
           }
       } catch (error) {
           console.error("Error reading file:", error);
