@@ -36,6 +36,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Fix for "Error fetching families"
+    match /bialMembers/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /committees/{docId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -133,6 +139,13 @@ service cloud.firestore {
     match /sundaySchoolDepartments/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // Fix for Thawhlawm submission
+    match /thawhlawm/{docId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
     }
 
     match /weeklyDuties/{docId} {

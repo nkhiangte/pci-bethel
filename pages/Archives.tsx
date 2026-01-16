@@ -1135,7 +1135,7 @@ const Archives: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ) : archive.category === 'Photo' && archive.imageUrls && archive.imageUrls.length > 0 ? (
+                                            ) : (archive.category === 'Photo' || archive.category === 'Pastors' || archive.category === 'Upa kal ta te') && archive.imageUrls && archive.imageUrls.length > 0 ? (
                                                 <div className="w-full h-full relative cursor-pointer" onClick={() => setPreviewImage(archive.imageUrls![0])}>
                                                     <img src={archive.imageUrls[0]} alt="Thumbnail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                     {archive.imageUrls.length > 1 && (
@@ -1321,8 +1321,8 @@ const Archives: React.FC = () => {
                             />
                         </div>
 
-                        {/* Image Upload for Photos */}
-                        {editingArchive.category === 'Photo' && (
+                        {/* Image Upload for Photos, Pastors, and Elders */}
+                        {(editingArchive.category === 'Photo' || editingArchive.category === 'Pastors' || editingArchive.category === 'Upa kal ta te') && (
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Images</label>
                                 <div className="flex gap-2 items-center">
