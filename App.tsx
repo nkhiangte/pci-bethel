@@ -31,6 +31,7 @@ import InkhawmChanvo from './pages/InkhawmChanvo';
 import UpaBial from './pages/UpaBial'; 
 import Articles from './pages/Articles'; 
 import Missionaries from './pages/Missionaries'; 
+import Thawhlawm from './pages/Thawhlawm';
 
 const App: React.FC = () => {
   return (
@@ -77,6 +78,7 @@ const App: React.FC = () => {
                 <Route path="/records" element={<Records />} /> 
                 <Route path="/archives" element={<Archives />} />
                 <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
+                <Route path="/thawhlawm" element={<Thawhlawm />} />
               </Routes>
             </main>
             <Chatbot />

@@ -47,11 +47,21 @@ const Navbar: React.FC = () => {
       ]
     },
     { 
+      name: 'Thawhlawm Thawhna', 
+      path: '#',
+      children: [
+        { name: 'Pathian Ram', path: '/thawhlawm?category=pathian-ram' },
+        { name: 'Ramthar', path: '/thawhlawm?category=ramthar' },
+        { name: 'Refreshment', path: '/thawhlawm?category=refreshment' },
+        { name: 'Building', path: '/thawhlawm?category=building' },
+        { name: 'Masihi Sangati', path: '/thawhlawm?category=masihi-sangati' },
+      ]
+    },
+    { 
       name: t.nav.members, 
       path: '#',
       children: [
         { name: 'Membership Forms', path: '/membership' },
-        { name: 'Thawhlawm Thawhna', path: '/#contribution' }, // Updated Link
         { name: t.nav.resources, path: '/resources' },
         { name: t.nav.giving, path: '/giving' },
       ]
@@ -63,7 +73,7 @@ const Navbar: React.FC = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
-  const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path));
+  const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path));
 
 
   const toggleLanguage = () => {
@@ -131,7 +141,7 @@ const Navbar: React.FC = () => {
                               key={child.path}
                               to={child.path}
                               className={`block px-4 py-2 text-sm ${
-                                isActive(child.path)
+                                isActive(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path)
                                   ? 'bg-church-50 text-church-700 font-bold'
                                   : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                               }`}
@@ -241,7 +251,7 @@ const Navbar: React.FC = () => {
                             to={child.path}
                             onClick={() => setIsOpen(false)}
                             className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                              isActive(child.path)
+                              isActive(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path)
                                 ? 'bg-church-800 text-white'
                                 : 'text-slate-400 hover:bg-church-800 hover:text-white'
                             }`}
