@@ -31,7 +31,6 @@ import InkhawmChanvo from './pages/InkhawmChanvo';
 import UpaBial from './pages/UpaBial'; 
 import Articles from './pages/Articles'; 
 import Missionaries from './pages/Missionaries'; 
-import Thawhlawm from './pages/Thawhlawm';
 
 const App: React.FC = () => {
   return (
@@ -68,7 +67,6 @@ const App: React.FC = () => {
                 <Route path="/membership" element={<Membership />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/giving" element={<Giving />} />
-                <Route path="/thawhlawm" element={<Thawhlawm />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/gallery/*" element={<Gallery />} />
                 <Route path="/admin" element={<AdminDashboard />} />

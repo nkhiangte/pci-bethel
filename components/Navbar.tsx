@@ -51,7 +51,7 @@ const Navbar: React.FC = () => {
       path: '#',
       children: [
         { name: 'Membership Forms', path: '/membership' },
-        { name: 'Thawhlawm Thawhna', path: '/thawhlawm' },
+        { name: 'Thawhlawm Thawhna', path: '/#contribution' }, // Updated Link
         { name: t.nav.resources, path: '/resources' },
         { name: t.nav.giving, path: '/giving' },
       ]
