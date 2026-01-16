@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Heart, Globe, Coffee, Home, Users, ArrowLeft, Calendar, User, MapPin, DollarSign, QrCode, Upload, CheckCircle2, Loader, ArrowRight, Settings, Save, X, FileDown, FileUp } from 'lucide-react';
+import { Heart, Globe, Coffee, Home, Users, ArrowLeft, Calendar, User, MapPin, DollarSign, QrCode, Upload, CheckCircle2, Loader, ArrowRight, Settings, Save, X, FileDown, FileUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import * as XLSX from 'xlsx';
@@ -91,7 +91,15 @@ const Thawhlawm: React.FC = () => {
               const doc = await db.collection('bialMembers').doc(docId).get();
               if (doc.exists) {
                   const data = doc.data();
-                  setFamilyOptions(data?.families || []);
+                  // Ensure names are sorted naturally if they start with numbers (e.g. "1. Name", "2. Name", "10. Name")
+                  const loadedFamilies = data?.families || [];
+                  loadedFamilies.sort((a: string, b: string) => {
+                      const numA = parseInt(a.split('.')[0]) || 0;
+                      const numB = parseInt(b.split('.')[0]) || 0;
+                      if (numA && numB) return numA - numB;
+                      return a.localeCompare(b);
+                  });
+                  setFamilyOptions(loadedFamilies);
               } else {
                   setFamilyOptions([]);
               }
@@ -224,8 +232,8 @@ const Thawhlawm: React.FC = () => {
 
   const handleDownloadTemplate = () => {
       const ws = XLSX.utils.json_to_sheet([
-          { "Sl. No": 1, "Hming": "Example Name 1" },
-          { "Sl. No": 2, "Hming": "Example Name 2" }
+          { "Serial No": 1, "Family Name": "Example Name 1" },
+          { "Serial No": 2, "Family Name": "Example Name 2" }
       ]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -243,16 +251,14 @@ const Thawhlawm: React.FC = () => {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           
           const names = jsonData.map((row: any) => {
-              // Look for 'Hming', 'Family Name', or 'Name'.
-              let name = row['Hming'] || row['Family Name'] || row['Name'];
+              // Match specified headers 'Serial No' and 'Family Name'
+              const slNo = row['Serial No'] || row['Sl. No'] || row['Sl No'];
+              const name = row['Family Name'] || row['Hming'] || row['Name'];
               
-              // Fallback if standard headers not found
-              if (!name) {
-                  // Iterate through values to find a likely name (string, length > 1, not numeric)
-                  const values = Object.values(row);
-                  name = values.find(v => typeof v === 'string' && isNaN(Number(v)) && v.trim().length > 1);
-              }
-              return name;
+              if (!name) return null;
+              
+              // Include Serial Number if present
+              return slNo ? `${slNo}. ${name}` : name;
           }).filter(n => typeof n === 'string' && n.trim() !== '' && !n.includes('Example Name'));
 
           if (names.length > 0) {
@@ -260,11 +266,18 @@ const Thawhlawm: React.FC = () => {
                   const existing = prev ? prev.split('\n') : [];
                   // Combine and deduplicate
                   const combined = Array.from(new Set([...existing, ...names]));
+                  // Sort naturally
+                  combined.sort((a, b) => {
+                      const numA = parseInt(a.split('.')[0]) || 0;
+                      const numB = parseInt(b.split('.')[0]) || 0;
+                      if (numA && numB) return numA - numB;
+                      return a.localeCompare(b);
+                  });
                   return combined.join('\n');
               });
               alert(`Loaded ${names.length} names from file.`);
           } else {
-              alert("No valid names found in file. Please ensure column header is 'Hming'.");
+              alert("No valid names found in file. Please ensure column headers are 'Serial No' and 'Family Name'.");
           }
       } catch (error) {
           console.error("Error reading file:", error);
@@ -280,8 +293,6 @@ const Thawhlawm: React.FC = () => {
       try {
           const docId = manageBial.toLowerCase().replace(/\s+/g, '-');
           const families = manageNamesText.split('\n').map(s => s.trim()).filter(Boolean);
-          // Sort alphabetically
-          families.sort((a, b) => a.localeCompare(b));
           
           await db.collection('bialMembers').doc(docId).set({
               bial: manageBial,
@@ -417,31 +428,30 @@ const Thawhlawm: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Name Field with Auto-populate */}
+                            {/* Name Field (Dropdown) */}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Hming (Full Name)</label>
                                 <div className="relative">
-                                    <input 
-                                        type="text" 
+                                    <select 
                                         name="name"
-                                        list="family-suggestions"
                                         value={formData.name}
                                         onChange={handleInputChange}
-                                        placeholder={fetchingFamilies ? "Loading names..." : "Select or type name..."}
-                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition"
+                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition appearance-none"
                                         required
-                                        autoComplete="off"
-                                        disabled={!formData.bial}
-                                    />
-                                    <datalist id="family-suggestions">
+                                        disabled={!formData.bial || fetchingFamilies}
+                                    >
+                                        <option value="">Select Name...</option>
                                         {familyOptions.map((name, idx) => (
-                                            <option key={idx} value={name} />
+                                            <option key={idx} value={name}>{name}</option>
                                         ))}
-                                    </datalist>
-                                    {fetchingFamilies && (
+                                    </select>
+                                    
+                                    {fetchingFamilies ? (
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                             <Loader size={16} className="animate-spin text-church-500" />
                                         </div>
+                                    ) : (
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                                     )}
                                 </div>
                                 {!formData.bial && (
