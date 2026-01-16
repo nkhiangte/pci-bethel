@@ -124,6 +124,7 @@ const Archives: React.FC = () => {
   // View Modal State
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedArchive, setSelectedArchive] = useState<ArchiveEntry | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -1170,17 +1171,27 @@ const Archives: React.FC = () => {
                                             <h3 className="font-bold text-lg text-slate-800 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{archive.title}</h3>
                                             <p className="text-sm text-slate-600 line-clamp-3 mb-4 flex-grow">{archive.description}</p>
                                             
-                                            {/* Action Button */}
-                                            {archive.link && !isVideo && (
-                                                <a 
-                                                    href={archive.link} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="mt-auto flex items-center justify-center w-full py-2.5 rounded-lg bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider hover:bg-church-50 hover:text-church-600 transition-colors border border-slate-100"
+                                            <div className="mt-auto space-y-2">
+                                                {/* Read More Button for Bio/Description */}
+                                                <button 
+                                                    onClick={() => setSelectedArchive(archive)}
+                                                    className="w-full py-2 rounded-lg bg-church-50 text-church-600 font-bold text-xs uppercase tracking-wider hover:bg-church-100 transition-colors border border-church-100"
                                                 >
-                                                    <ExternalLink size={14} className="mr-2" /> Open Resource
-                                                </a>
-                                            )}
+                                                    Read Full Details
+                                                </button>
+
+                                                {/* External Link Button */}
+                                                {archive.link && !isVideo && (
+                                                    <a 
+                                                        href={archive.link} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="flex items-center justify-center w-full py-2 rounded-lg bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider hover:bg-slate-100 hover:text-slate-800 transition-colors border border-slate-100"
+                                                    >
+                                                        <ExternalLink size={14} className="mr-2" /> Open Resource
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -1227,9 +1238,64 @@ const Archives: React.FC = () => {
             </div>
         )}
 
+        {/* Reader Modal */}
+        {selectedArchive && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in" onClick={() => setSelectedArchive(null)}>
+                <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="relative h-48 md:h-64 shrink-0 bg-slate-900 overflow-hidden">
+                        {(selectedArchive.imageUrls && selectedArchive.imageUrls.length > 0) ? (
+                            <img 
+                                src={selectedArchive.imageUrls[0]} 
+                                alt={selectedArchive.title} 
+                                className="w-full h-full object-cover opacity-80" 
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-200">
+                                {React.createElement(CATEGORY_ICONS[selectedArchive.category] || FileText, { size: 64 })}
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                        <button onClick={() => setSelectedArchive(null)} className="absolute top-4 right-4 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition"><X size={24}/></button>
+                        <div className="absolute bottom-0 left-0 w-full p-6 text-white">
+                            <span className="inline-block px-2 py-1 bg-church-600 rounded text-[10px] font-bold uppercase tracking-widest mb-2">{selectedArchive.category}</span>
+                            <h2 className="text-2xl md:text-3xl font-serif font-bold leading-tight">{selectedArchive.title}</h2>
+                            <p className="text-sm opacity-80 mt-1">{selectedArchive.date}</p>
+                        </div>
+                    </div>
+                    <div className="p-8 overflow-y-auto">
+                        {/* Image Gallery Grid if multiple images */}
+                        {selectedArchive.imageUrls && selectedArchive.imageUrls.length > 1 && (
+                            <div className="grid grid-cols-4 gap-2 mb-6">
+                                {selectedArchive.imageUrls.map((url, i) => (
+                                    <img key={i} src={url} className="h-20 w-full object-cover rounded-lg cursor-pointer hover:opacity-80" onClick={() => setPreviewImage(url)} alt={`Gallery ${i}`} />
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="prose prose-slate max-w-none font-serif text-slate-700 whitespace-pre-wrap leading-relaxed">
+                            {selectedArchive.description}
+                        </div>
+
+                        {selectedArchive.link && (
+                            <div className="mt-8 pt-6 border-t border-slate-100">
+                                <a 
+                                    href={selectedArchive.link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="inline-flex items-center gap-2 text-church-600 font-bold hover:underline"
+                                >
+                                    <ExternalLink size={16} /> Open Attached Resource
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* Edit/Add Modal */}
         {isEditModalOpen && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
                     <div className="p-6 border-b bg-slate-50 rounded-t-2xl flex justify-between items-center">
                         <h3 className="text-xl font-bold text-slate-800">{editingArchive.id ? 'Edit Entry' : 'Add New Entry'}</h3>
