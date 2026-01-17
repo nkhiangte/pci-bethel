@@ -21,6 +21,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminMinistries from './pages/AdminMinistries';
 import AdminDuties from './pages/AdminDuties'; 
 import AdminUsers from './pages/AdminUsers'; 
+import AdminThawhlawm from './pages/AdminThawhlawm';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import SundaySchool from './pages/SundaySchool';
@@ -74,6 +75,7 @@ const App: React.FC = () => {
                 <Route path="/admin/ministries" element={<AdminMinistries />} />
                 <Route path="/admin/duties" element={<AdminDuties />} /> 
                 <Route path="/admin/users" element={<AdminUsers />} /> 
+                <Route path="/admin/thawhlawm" element={<AdminThawhlawm />} /> 
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> 
                 <Route path="/archives" element={<Archives />} />

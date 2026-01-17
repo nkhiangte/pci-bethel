@@ -10,7 +10,7 @@ import {
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
   Search, ExternalLink, FileText, ChevronLeft, Droplet, 
   Heart, Church, ArrowRight, CheckCircle2, ArrowUp, ArrowDown, ArrowUpDown,
-  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload
+  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload, Database
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -671,19 +671,25 @@ const Records: React.FC = () => {
                 {displayMode === 'table' ? (
                     <>
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <div className="relative w-full md:w-96">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search in these records..." className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" />
+                            <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto flex-1">
+                                <div className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm whitespace-nowrap border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
+                                    <Database size={16} className="text-church-600" />
+                                    <span>{finalSortedRecords.length} Entries</span>
+                                </div>
+                                <div className="relative w-full md:w-96">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search records..." className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" />
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 w-full md:w-auto">
+                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                                 {isAdmin && (
                                     <>
                                         <button onClick={handleExportExcel} className="p-2.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" title="Export Excel"><FileSpreadsheet size={20}/></button>
                                         <button onClick={handleExportPDF} className="p-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition" title="Export PDF"><FileText size={20}/></button>
                                         <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition" title="Import Data"><FileUp size={20}/></button>
                                         <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .csv" />
-                                        <div className="h-8 w-px bg-slate-200 mx-2"></div>
-                                        <button onClick={handleAddNew} className="flex items-center px-4 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold transition shadow-sm"><Plus size={18} className="mr-2" /> Add Entry</button>
+                                        <div className="h-8 w-px bg-slate-200 mx-2 hidden md:block"></div>
+                                        <button onClick={handleAddNew} className="flex items-center px-4 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold transition shadow-sm whitespace-nowrap"><Plus size={18} className="mr-2" /> Add Entry</button>
                                     </>
                                 )}
                             </div>
