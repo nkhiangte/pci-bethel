@@ -507,20 +507,30 @@ const Records: React.FC = () => {
         return records.filter(rec => {
             if (!searchTerm) return true;
             const term = searchTerm.toLowerCase();
+            
+            // Helper to safely check inclusion
+            const match = (val: any) => {
+                if (val === null || val === undefined) return false;
+                return String(val).toLowerCase().includes(term);
+            };
+
             switch (rec.type) {
                 case 'baptism': {
                     const r = rec as BaptismRecord;
-                    return (
-                        r.name?.toLowerCase().includes(term) || 
-                        r.minister?.toLowerCase().includes(term) ||
-                        r.parents?.toLowerCase().includes(term) ||
-                        r.baptismDate?.includes(term) ||
-                        r.dateOfBirth?.includes(term)
-                    );
+                    return match(r.name) || match(r.minister) || match(r.parents) || match(r.baptismDate) || match(r.dateOfBirth);
                 }
-                case 'wedding': return (rec.groomName?.toLowerCase().includes(term) || rec.brideName?.toLowerCase().includes(term) || rec.minister?.toLowerCase().includes(term) || (rec as WeddingRecord).weddingDate?.includes(term));
-                case 'death': return (rec.name?.toLowerCase().includes(term) || (rec as DeathRecord).fatherName?.toLowerCase().includes(term) || (rec as DeathRecord).dateOfDeath?.includes(term));
-                case 'inkhawmpui': return (rec.eventName?.toLowerCase().includes(term) || (rec as InkhawmpuiRecord).speakers?.toLowerCase().includes(term) || (rec as InkhawmpuiRecord).puipate?.toLowerCase().includes(term) || String((rec as InkhawmpuiRecord).year).includes(term));
+                case 'wedding': {
+                    const r = rec as WeddingRecord;
+                    return match(r.groomName) || match(r.brideName) || match(r.minister) || match(r.weddingDate);
+                }
+                case 'death': {
+                    const r = rec as DeathRecord;
+                    return match(r.name) || match(r.fatherName) || match(r.dateOfDeath) || match(r.causeOfDeath) || match(r.minister);
+                }
+                case 'inkhawmpui': {
+                    const r = rec as InkhawmpuiRecord;
+                    return match(r.eventName) || match(r.speakers) || match(r.puipate) || match(r.theme) || match(r.year);
+                }
                 default: return false;
             }
         });
