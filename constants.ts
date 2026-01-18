@@ -206,7 +206,7 @@ const DATA = {
         id: 'ktp',
         name: 'Kristian Ṭhalai Pawl',
         acronym: 'KTP',
-        description: 'Kohhran ṭhalai rualte rawngbawlna.',
+        description: 'Rawngbawl tura Chhandam',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Thawhṭanni @ 7:00 PM',
         image: 'https://picsum.photos/800/600?random=10'
