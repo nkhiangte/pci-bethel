@@ -224,7 +224,7 @@ const Records: React.FC = () => {
                      data.sort((a: any, b: any) => {
                          const valA = a[sortField];
                          const valB = b[sortField];
-                         if (activeTab === 'inkhawmpui') return (Number(valB) || 0) - (Number(valA) || 0);
+                         // Use string comparison for all date fields including year to handle ISO dates vs numbers correctly
                          return String(valB || '').localeCompare(String(valA || ''));
                      });
                      setRecords(data);
@@ -259,7 +259,7 @@ const Records: React.FC = () => {
             case 'baptism': setEditingRecord({ type: 'baptism', name: '', dateOfBirth: '', baptismDate: '', parents: '', minister: '' }); break;
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
             case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
-            case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().getFullYear(), theme: '', puipate: '', speakers: '' }); break;
+            case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().toISOString().split('T')[0], theme: '', puipate: '', speakers: '' }); break;
         }
         setIsEditModalOpen(true);
     };
@@ -308,7 +308,8 @@ const Records: React.FC = () => {
 
     const handleExportExcel = () => {
         const headers = TEMPLATE_HEADERS[activeTab];
-        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
+        // Included 'year' in dateFields to ensure it formats correctly in exports
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
         const exportData = finalSortedRecords.map(rec => {
             const row: any = {};
             headers.forEach(header => {
@@ -329,7 +330,8 @@ const Records: React.FC = () => {
     const handleExportPDF = () => {
         const doc = new jsPDF();
         const headers = TEMPLATE_HEADERS[activeTab];
-        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
+        // Included 'year' in dateFields to ensure it formats correctly in exports
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
         const tableHead = headers.map(h => t.records.theads[h as keyof typeof t.records.theads] || h);
         const tableBody = finalSortedRecords.map(rec => headers.map(header => {
             const value = (rec as any)[header];
@@ -437,7 +439,8 @@ const Records: React.FC = () => {
         setLoading(false);
     };
 
-    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath'];
+    // Included 'year' here to treat it as a date field for inputs/formatting
+    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
 
     // Analytics Processing Logic
     const stats = useMemo(() => {
@@ -949,7 +952,7 @@ const Records: React.FC = () => {
                                         />
                                     ) : (
                                         <input 
-                                            type={dateFields.includes(field) ? 'date' : field === 'age' || field === 'year' ? 'number' : 'text'} 
+                                            type={dateFields.includes(field) ? 'date' : field === 'age' ? 'number' : 'text'} 
                                             className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
                                             value={(editingRecord as any)[field] || ''} 
                                             onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 
