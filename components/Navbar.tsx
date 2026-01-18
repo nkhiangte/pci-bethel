@@ -41,9 +41,9 @@ const Navbar: React.FC = () => {
       name: t.nav.fellowships, 
       path: '#',
       children: [
-        { name: 'Kohhran Hmeichhia (KPVM)', path: '/fellowship/kpvm' },
+        { name: 'Kohhran Hmeichhia', path: '/fellowship/kpvm' },
         { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/fellowship/ktp' },
-        { name: 'Kohhran Pavalai Pawl', path: '/fellowship/pavlai' },
+        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/fellowship/pavlai' },
       ]
     },
     { 
@@ -55,15 +55,6 @@ const Navbar: React.FC = () => {
         { name: 'Refreshment', path: '/thawhlawm?category=refreshment' },
         { name: 'Building', path: '/thawhlawm?category=building' },
         { name: 'Masihi Sangati', path: '/thawhlawm?category=masihi-sangati' },
-      ]
-    },
-    { 
-      name: t.nav.members, 
-      path: '#',
-      children: [
-        { name: 'Membership Forms', path: '/membership' },
-        { name: t.nav.resources, path: '/resources' },
-        { name: t.nav.giving, path: '/giving' },
       ]
     },
     { name: t.nav.records, path: '/records' },

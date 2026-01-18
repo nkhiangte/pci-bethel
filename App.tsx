@@ -12,9 +12,6 @@ import Departments from './pages/Departments';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Fellowship from './pages/Fellowship';
-import Membership from './pages/Membership';
-import Resources from './pages/Resources';
-import Giving from './pages/Giving';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
@@ -66,9 +63,6 @@ const App: React.FC = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/fellowship/:id" element={<Fellowship />} />
-                <Route path="/membership" element={<Membership />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/giving" element={<Giving />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/gallery/*" element={<Gallery />} />
                 <Route path="/admin" element={<AdminDashboard />} />

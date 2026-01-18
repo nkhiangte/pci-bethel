@@ -28,7 +28,6 @@ const AdminDashboard: React.FC = () => {
       { title: 'Manage Announcements', icon: Bell, link: '/announcements', color: 'bg-orange-500', desc: 'Post new updates for the congregation.' },
       { title: 'Manage Ministries', icon: Users, link: '/admin/ministries', color: 'bg-blue-500', desc: 'Update fellowship leaders and schedules.' },
       { title: 'Manage Weekly Duties', icon: ClipboardList, link: '/admin/duties', color: 'bg-indigo-500', desc: 'Update ushers, song leaders, etc.' },
-      { title: 'Upload Reports', icon: FileText, link: '/resources', color: 'bg-green-500', desc: 'Upload weekly bulletins and annual reports.' },
       { title: 'Manage Gallery', icon: Image, link: '/gallery', color: 'bg-purple-500', desc: 'Upload photos from recent events.' },
       { title: 'Manage Users', icon: UserCog, link: '/admin/users', color: 'bg-pink-500', desc: 'Manage registered users and admin roles.' },
   ];
@@ -95,18 +94,6 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mt-12">
-                {/* Quick Upload */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
-                        <Upload className="mr-2 text-church-500" /> Quick File Upload
-                    </h3>
-                    <div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:bg-slate-50 transition cursor-pointer">
-                        <FileText className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                        <p className="font-medium text-slate-600">Drag and drop weekly bulletin PDF here</p>
-                        <p className="text-xs text-slate-400 mt-1">or click to browse files</p>
-                    </div>
-                </div>
-
                 {/* System Maintenance */}
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
