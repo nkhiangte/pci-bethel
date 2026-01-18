@@ -525,7 +525,7 @@ const Records: React.FC = () => {
                 }
                 case 'death': {
                     const r = rec as DeathRecord;
-                    return match(r.name) || match(r.fatherName) || match(r.dateOfDeath) || match(r.causeOfDeath) || match(r.minister);
+                    return match(r.name) || match(r.fatherName) || match(r.dateOfDeath) || match(r.causeOfDeath) || match(r.minister) || match(r.age);
                 }
                 case 'inkhawmpui': {
                     const r = rec as InkhawmpuiRecord;
@@ -552,48 +552,58 @@ const Records: React.FC = () => {
     // Helper function to apply specific colors to Inkhawmpui columns
     const getCellClass = (type: RecordType, header: string) => {
         // Base styles for reuse
-        const nameStyle = 'font-bold text-slate-900 text-base';
-        const dateBadgeStyle = 'font-mono text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-blue-100 shadow-sm';
-        const ministerStyle = 'text-purple-700 font-bold text-xs bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100 inline-block';
+        const nameStyle = 'font-bold text-slate-900 text-sm md:text-base';
+        const dateBadgeStyle = 'font-mono text-blue-700 bg-blue-50 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold inline-block border border-blue-100 shadow-sm';
+        const ministerStyle = 'text-purple-700 font-bold text-[10px] md:text-xs bg-purple-50 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg border border-purple-100 inline-block';
         
         switch(type) {
             case 'baptism':
                 switch(header) {
                     case 'name': return nameStyle;
-                    case 'dateOfBirth': return 'text-slate-500 font-mono text-xs';
+                    case 'dateOfBirth': return 'text-slate-500 font-mono text-[10px] md:text-xs';
                     case 'baptismDate': return dateBadgeStyle;
-                    case 'parents': return 'text-slate-600 italic border-l-2 border-slate-200 pl-3 text-sm';
+                    case 'parents': return 'text-slate-600 italic border-l-2 border-slate-200 pl-2 md:pl-3 text-xs md:text-sm';
                     case 'minister': return ministerStyle;
-                    default: return 'text-slate-700';
+                    default: return 'text-slate-700 text-xs md:text-sm';
                 }
             case 'wedding':
                 switch(header) {
-                    case 'groomName': return 'font-bold text-blue-900 text-base';
-                    case 'brideName': return 'font-bold text-pink-900 text-base';
-                    case 'weddingDate': return 'font-mono text-pink-700 bg-pink-50 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-pink-100 shadow-sm';
+                    case 'groomName': return 'font-bold text-blue-900 text-sm md:text-base';
+                    case 'brideName': return 'font-bold text-pink-900 text-sm md:text-base';
+                    case 'weddingDate': return 'font-mono text-pink-700 bg-pink-50 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold inline-block border border-pink-100 shadow-sm';
                     case 'minister': return ministerStyle;
-                    default: return 'text-slate-700';
+                    default: return 'text-slate-700 text-xs md:text-sm';
                 }
             case 'death':
                 switch(header) {
-                    case 'name': return 'font-bold text-slate-900 text-base';
-                    case 'fatherName': return 'text-slate-500 text-sm';
-                    case 'age': return 'font-mono font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded text-xs border border-orange-100 inline-block';
-                    case 'dateOfDeath': return 'font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold inline-block border border-slate-200';
-                    case 'causeOfDeath': return 'text-red-600 italic text-sm font-medium';
+                    case 'name': return 'font-bold text-slate-900 text-sm md:text-base';
+                    case 'fatherName': return 'text-slate-500 text-xs md:text-sm';
+                    case 'age': return 'font-mono font-black text-orange-600 bg-orange-50 px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs border border-orange-100 inline-block';
+                    case 'dateOfDeath': return 'font-mono text-slate-600 bg-slate-100 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold inline-block border border-slate-200';
+                    case 'causeOfDeath': return 'text-red-600 italic text-xs md:text-sm font-medium';
                     case 'minister': return ministerStyle;
-                    default: return 'text-slate-700';
+                    default: return 'text-slate-700 text-xs md:text-sm';
                 }
             case 'inkhawmpui':
                 switch(header) {
-                    case 'eventName': return 'font-bold text-church-800 text-base leading-tight'; // Highlight Event Name
+                    case 'eventName': return 'font-bold text-church-800 text-sm md:text-base leading-tight'; // Highlight Event Name
                     case 'year': return dateBadgeStyle; // Badge for Year
-                    case 'theme': return 'text-slate-600 italic font-serif border-l-2 border-church-200 pl-3'; // Distinct Theme style
-                    case 'puipate': return 'text-slate-800 text-xs font-medium bg-orange-50/50 p-2.5 rounded-lg border border-orange-100 whitespace-pre-line leading-relaxed'; // Box for Leaders
-                    case 'speakers': return 'text-purple-700 font-semibold'; // Color for Speakers
-                    default: return 'text-slate-700';
+                    case 'theme': return 'text-slate-600 italic font-serif border-l-2 border-church-200 pl-2 md:pl-3 text-xs md:text-sm'; // Distinct Theme style
+                    case 'puipate': return 'text-slate-800 text-[10px] md:text-xs font-medium bg-orange-50/50 p-2 md:p-2.5 rounded-lg border border-orange-100 whitespace-pre-line leading-relaxed'; // Box for Leaders
+                    case 'speakers': return 'text-purple-700 font-semibold text-xs md:text-sm'; // Color for Speakers
+                    default: return 'text-slate-700 text-xs md:text-sm';
                 }
-            default: return 'text-slate-700';
+            default: return 'text-slate-700 text-xs md:text-sm';
+        }
+    };
+
+    const getSearchPlaceholder = (tab: RecordType) => {
+        switch (tab) {
+            case 'baptism': return "Search Name, Parents, Year, Minister...";
+            case 'wedding': return "Search Couple, Year, Minister...";
+            case 'death': return "Search Name, Chhungte, Year, Minister...";
+            case 'inkhawmpui': return "Search Event, Year, Speaker...";
+            default: return "Search records...";
         }
     };
 
@@ -703,7 +713,7 @@ const Records: React.FC = () => {
                                         type="text" 
                                         value={searchTerm} 
                                         onChange={(e) => setSearchTerm(e.target.value)} 
-                                        placeholder={activeTab === 'baptism' ? "Search Name, Parents, Year, Minister..." : "Search records..."}
+                                        placeholder={getSearchPlaceholder(activeTab)}
                                         className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" 
                                     />
                                 </div>
@@ -733,28 +743,29 @@ const Records: React.FC = () => {
                                         <thead className="bg-slate-900 text-white uppercase text-[10px] font-black tracking-widest">
                                             <tr>
                                                 {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                    <th key={header} className="px-6 py-5 cursor-pointer hover:bg-slate-800 transition-colors group/th" onClick={() => handleSort(header)}>
-                                                        <div className="flex items-center">{t.records.theads[header as keyof typeof t.records.theads] || header}
-                                                            <span className="ml-2">{sortConfig?.key === header ? (sortConfig.direction === 'asc' ? <ArrowUp size={14} className="text-church-400" /> : <ArrowDown size={14} className="text-church-400" />) : (<ArrowUpDown size={14} className="text-slate-600 group-hover/th:text-slate-400" />)}</span>
+                                                    <th key={header} className="px-3 py-3 md:px-6 md:py-5 cursor-pointer hover:bg-slate-800 transition-colors group/th" onClick={() => handleSort(header)}>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="whitespace-nowrap">{t.records.theads[header as keyof typeof t.records.theads] || header}</span>
+                                                            <span className="ml-1">{sortConfig?.key === header ? (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-church-400" /> : <ArrowDown size={12} className="text-church-400" />) : (<ArrowUpDown size={12} className="text-slate-600 group-hover/th:text-slate-400" />)}</span>
                                                         </div>
                                                     </th>
                                                 ))}
-                                                {isAdmin && <th className="px-6 py-5 text-right font-black">Actions</th>}
+                                                {isAdmin && <th className="px-3 py-3 md:px-6 md:py-5 text-right font-black">Actions</th>}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {finalSortedRecords.map(rec => (
                                                 <tr key={rec.id} className="hover:bg-slate-50 transition group/row">
                                                     {TEMPLATE_HEADERS[activeTab].map(header => (
-                                                        <td key={header} className={`px-6 py-5 text-sm font-medium ${getCellClass(activeTab, header)}`}>
+                                                        <td key={header} className={`px-3 py-3 md:px-6 md:py-5 text-xs md:text-sm font-medium ${getCellClass(activeTab, header)}`}>
                                                             {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
                                                         </td>
                                                     ))}
                                                     {isAdmin && (
-                                                        <td className="px-6 py-5 text-right">
-                                                            <div className="flex justify-end space-x-2">
-                                                                <button onClick={() => handleEdit(rec)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit size={16} /></button>
-                                                                <button onClick={() => handleDelete(rec.id!)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash size={16} /></button>
+                                                        <td className="px-3 py-3 md:px-6 md:py-5 text-right">
+                                                            <div className="flex justify-end space-x-1 md:space-x-2">
+                                                                <button onClick={() => handleEdit(rec)} className="p-1.5 md:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit size={14} className="md:w-4 md:h-4" /></button>
+                                                                <button onClick={() => handleDelete(rec.id!)} className="p-1.5 md:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash size={14} className="md:w-4 md:h-4" /></button>
                                                             </div>
                                                         </td>
                                                     )}
