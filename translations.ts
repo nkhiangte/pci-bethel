@@ -3,9 +3,6 @@ export type Language = 'en' | 'mizo';
 
 export const translations = {
   en: {
-    common: {
-      description: 'Description'
-    },
     nav: {
       home: 'Home',
       upaBial: 'Upa Bial',
@@ -21,55 +18,80 @@ export const translations = {
       records: 'Records',
       archives: 'Archives',
       gallery: 'Gallery',
-      contact: 'Contact'
-    },
-    footer: {
-      churchDesc: 'Mizoram Synod (PCI) Champhai Bethel Kohhran.',
-      quickLinks: 'Quick Links',
-      contactUs: 'Contact Us',
-      rightsReserved: 'All rights reserved.'
+      contact: 'Contact',
     },
     auth: {
-      loginTitle: 'Member Login',
-      loginSubtitle: 'Sign in to access church records',
-      email: 'Email Address',
-      password: 'Password',
       signIn: 'Sign In',
-      signOut: 'Sign Out',
       logout: 'Logout',
+      welcome: 'Welcome',
+      loginTitle: 'Member Login',
+      loginSubtitle: 'Sign in to access your account',
+      email: 'Email address',
+      password: 'Password',
       noAccount: "Don't have an account?",
-      signUp: 'Sign Up',
+      signUp: 'Sign up',
       signupTitle: 'Create Account',
-      signupSubtitle: 'Register as a member',
+      signupSubtitle: 'Join our digital community',
       fullName: 'Full Name',
-      secretCode: 'Secret Code',
+      secretCode: 'Secret Code (Optional)',
       hasAccount: 'Already have an account?',
-      welcome: 'Welcome'
+    },
+    footer: {
+      churchDesc: 'A community of believers united in faith and service.',
+      quickLinks: 'Quick Links',
+      contactUs: 'Contact Us',
+      rightsReserved: 'All rights reserved.',
     },
     home: {
       verseOfTheDay: 'Verse of the Day',
-      newsTitle: 'Latest News',
+      newsTitle: 'Latest News & Updates',
       viewAll: 'View All',
-      puipate: 'Church Leaders',
-      weeklyProgram: []
+      puipate: 'Pastors & Elders',
+      weeklyProgram: [ // Mock for type checking if needed in Events.tsx
+        { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
+        { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
+        { name: 'Zan Inkhawm', time: '07:00 PM', dayOfWeek: 0 },
+        { name: 'Nilai Zan Inkhawm', time: '07:00 PM', dayOfWeek: 3 },
+        { name: 'Inrinni Zan Inkhawm', time: '07:00 PM', dayOfWeek: 6 },
+      ]
     },
     about: {
       title: 'About Us',
-      subtitle: 'Our History & Mission',
+      subtitle: 'Knowing God and making Him known.',
       historyTitle: 'Our History',
-      historyText: 'History of Champhai Bethel Church...',
+      historyText: 'Established in...',
       missionTitle: 'Our Mission',
-      missionText: 'To proclaim the Gospel...',
+      missionText: 'To spread the Gospel...',
       faithTitle: 'Our Faith',
       faithText: 'We believe in...',
       shepherdsTitle: 'Our Shepherds',
-      statsElders: 'Church Elders'
+      statsElders: 'Church Elders',
+    },
+    events: {
+      title: 'Events & Programs',
+    },
+    announcements: {
+      title: 'Announcements',
+    },
+    departments: {
+      title: 'Committees & Departments',
+      subtitle: 'Serving the church through various ministries.',
+    },
+    sundaySchool: {
+      preBeginner: 'Pre-Beginner',
+      beginner: 'Beginner',
+      primary: 'Primary',
+      junior: 'Junior',
+      intermediate: 'Intermediate',
+      sacrament: 'Sacrament',
+      senior: 'Senior',
+      puitling: 'Puitling',
     },
     worship: {
-      title: 'Worship & Ministries',
+      title: 'Worship Service',
       tabMinistries: 'Ministries',
       tabOrder: 'Order of Service',
-      serviceOrderTitle: 'Service Order',
+      serviceOrderTitle: 'Order of Service',
       events: {
         callToWorship: 'Call to Worship',
         invocation: 'Invocation',
@@ -78,42 +100,17 @@ export const translations = {
         special: 'Special Item',
         sermon: 'Sermon',
         offertory: 'Offertory',
-        closing: 'Closing Hymn',
+        closing: 'Closing Song',
         benediction: 'Benediction'
       }
     },
     media: {
-      title: 'Media',
+      title: 'Media Resources',
       latestSermon: 'Latest Sermon',
       watchNow: 'Watch Now',
       audio: 'Audio',
       recentMessages: 'Recent Messages',
-      photoGallery: 'Photo Gallery'
-    },
-    events: {
-      title: 'Weekly Program'
-    },
-    announcements: {
-      title: 'Announcements'
-    },
-    departments: {
-      title: 'Committees',
-      subtitle: 'Church Departments & Committees'
-    },
-    articles: {
-      title: 'Articles',
-      subtitle: 'Sermons & Writings',
-      readMore: 'Read More',
-      writtenBy: 'Written by',
-      category: {
-        all: 'All',
-        article: 'Article',
-        sermon: 'Sermon'
-      }
-    },
-    archives: {
-      title: 'Archives',
-      subtitle: 'Historical Records & Documents'
+      photoGallery: 'Photo Gallery',
     },
     records: {
       tabs: {
@@ -122,7 +119,8 @@ export const translations = {
         death: 'Death',
         conference: 'Conference',
         inkhawmpui: 'Conference',
-        gospelCamping: 'Gospel Camping'
+        gospelCamping: 'Gospel Camping',
+        pemDawnsawn: 'Incoming Transfer'
       },
       theads: {
         name: 'Name',
@@ -133,7 +131,7 @@ export const translations = {
         groomName: 'Groom',
         brideName: 'Bride',
         weddingDate: 'Wedding Date',
-        fatherName: 'Father/Husband Name',
+        fatherName: "Father's Name",
         age: 'Age',
         dateOfDeath: 'Date of Death',
         causeOfDeath: 'Cause of Death',
@@ -144,8 +142,106 @@ export const translations = {
         speakers: 'Speakers',
         team: 'Team',
         speaker: 'Speaker',
-        date: 'Date'
+        date: 'Date',
+        headOfFamily: 'Head of Family',
+        fathersName: "Father's Name",
+        noOfMembers: 'No. of Members',
+        previousChurch: 'Previous Church'
       }
+    },
+    articles: {
+      title: 'Articles & Sermons',
+      subtitle: 'Spiritual nourishment and church updates.',
+      category: {
+        all: 'All',
+        article: 'Article',
+        sermon: 'Sermon',
+      },
+      readMore: 'Read More',
+      writtenBy: 'Written By',
+    },
+    archives: {
+      title: 'Archives',
+      subtitle: 'Preserving our history and records.',
+    },
+    common: {
+      description: 'Description',
+    }
+  },
+  mizo: {
+    nav: {
+      home: 'Home',
+      upaBial: 'Upa Bial',
+      missionaries: 'Missionari',
+      articles: 'Thuziak',
+      about: 'Kan Chanchin',
+      events: 'Programme',
+      announcements: 'Thupuan',
+      departments: 'Committee Peng',
+      chanvo: 'Inkhawm Chanvo',
+      sundaySchool: 'Sunday School',
+      fellowships: 'Fellowships',
+      records: 'Chhinchhiahna',
+      archives: 'Archives',
+      gallery: 'Gallery',
+      contact: 'Biakpawhna',
+    },
+    auth: {
+      signIn: 'Lut Rawh',
+      logout: 'Chhuak Rawh',
+      welcome: 'Chibai',
+      loginTitle: 'Member Login',
+      loginSubtitle: 'I account-ah lut rawh',
+      email: 'Email address',
+      password: 'Password',
+      noAccount: "Account i la nei lo?",
+      signUp: 'Inziak lut rawh',
+      signupTitle: 'Account Siamna',
+      signupSubtitle: 'Kan zingah lo tel ve rawh',
+      fullName: 'Hming Pum',
+      secretCode: 'Thuruk (Optional)',
+      hasAccount: 'Account i nei tawh?',
+    },
+    footer: {
+      churchDesc: 'Rinna leh rawngbawlnaa inlungrual.',
+      quickLinks: 'Quick Links',
+      contactUs: 'Biakpawhna',
+      rightsReserved: 'All rights reserved.',
+    },
+    home: {
+      verseOfTheDay: 'Vawiin Chang Thlan',
+      newsTitle: 'Chanchin Thar',
+      viewAll: 'En Zawng Zawng',
+      puipate: 'Kohhran Puipate',
+      weeklyProgram: [
+        { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
+        { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
+        { name: 'Zan Inkhawm', time: '07:00 PM', dayOfWeek: 0 },
+        { name: 'Nilai Zan Inkhawm', time: '07:00 PM', dayOfWeek: 3 },
+        { name: 'Inrinni Zan Inkhawm', time: '07:00 PM', dayOfWeek: 6 },
+      ]
+    },
+    about: {
+      title: 'Kan Chanchin',
+      subtitle: 'Pathian hriat leh amah hriattir.',
+      historyTitle: 'Kan Chanchin',
+      historyText: 'A din tan kum...',
+      missionTitle: 'Kan Tum',
+      missionText: 'Chanchin Tha hril...',
+      faithTitle: 'Kan Rinna',
+      faithText: 'Kan rin dan...',
+      shepherdsTitle: 'Kan Vengtute',
+      statsElders: 'Kohhran Upate',
+    },
+    events: {
+      title: 'Programme',
+    },
+    announcements: {
+      title: 'Thupuan',
+    },
+    departments: {
+      title: 'Committee & Department',
+      subtitle: 'Rawngbawlna hrang hrangte.',
     },
     sundaySchool: {
       preBeginner: 'Pre-Beginner',
@@ -155,83 +251,19 @@ export const translations = {
       intermediate: 'Intermediate',
       sacrament: 'Sacrament',
       senior: 'Senior',
-      puitling: 'Puitling (Adult)'
-    }
-  },
-  mizo: {
-    common: {
-      description: 'Hrilhfiahna'
-    },
-    nav: {
-      home: 'Home',
-      upaBial: 'Upa Bial',
-      missionaries: 'Missionaries',
-      articles: 'Thuziakte',
-      about: 'Kan Chanchin',
-      events: 'Programme',
-      announcements: 'Thupuan',
-      departments: 'Committee Peng',
-      chanvo: 'Inkhawm Chanvo',
-      sundaySchool: 'Sunday School',
-      fellowships: 'Fellowships',
-      records: 'Chhinchhiahna',
-      archives: 'Dahthatte',
-      gallery: 'Thlalak',
-      contact: 'Biakpawhna'
-    },
-    footer: {
-      churchDesc: 'Mizoram Synod (PCI) Champhai Bethel Kohhran.',
-      quickLinks: 'Quick Links',
-      contactUs: 'Biakpawhna',
-      rightsReserved: 'All rights reserved.'
-    },
-    auth: {
-      loginTitle: 'Member Login',
-      loginSubtitle: 'Lut rawh le',
-      email: 'Email Address',
-      password: 'Password',
-      signIn: 'Lut Rawh',
-      signOut: 'Chhuak Rawh',
-      logout: 'Chhuak Rawh',
-      noAccount: "Account i nei lo em ni?",
-      signUp: 'Inziak Lut Rawh',
-      signupTitle: 'Account Siamna',
-      signupSubtitle: 'Member thar tan',
-      fullName: 'Hming Pum',
-      secretCode: 'Thuruk (Admin tan)',
-      hasAccount: 'Account i nei tawh em?',
-      welcome: 'Chibai'
-    },
-    home: {
-      verseOfTheDay: 'Vawiin Chang Thlan',
-      newsTitle: 'Chanchin Thar',
-      viewAll: 'En Zawng Zawng',
-      puipate: 'Kohhran Puipate',
-      weeklyProgram: []
-    },
-    about: {
-      title: 'Kan Chanchin',
-      subtitle: 'Kohhran Chanchin leh Thurin',
-      historyTitle: 'Kohhran Chanchin',
-      historyText: 'Champhai Bethel Kohhran chanchin...',
-      missionTitle: 'Kan Tum',
-      missionText: 'Chanchin Tha hril...',
-      faithTitle: 'Kan Thurin',
-      faithText: 'Kan rin dan...',
-      shepherdsTitle: 'Min Vengtute',
-      statsElders: 'Kohhran Upate'
+      puitling: 'Puitling',
     },
     worship: {
-      title: 'Inkhawm & Rawngbawlna',
-      tabMinistries: 'Rawngbawlna Peng',
-      tabOrder: 'Inkhawm Dan',
-      serviceOrderTitle: 'Pathianni Inkhawm',
+      title: 'Inkhawm',
+      tabMinistries: 'Rawngbawlna',
+      tabOrder: 'Inkhawm Hruidah',
+      serviceOrderTitle: 'Inkhawm Hruidah',
       events: {
-        callToWorship: 'Chibai Bukna',
+        callToWorship: 'Kaihruai',
         invocation: 'Tawngtaina',
-        praise: 'Fakna & Chawimawina',
+        praise: 'Fakna Hla',
         reading: 'Bible Chhiar',
-        special: 'Zai / Item Bik',
+        special: 'Special Item',
         sermon: 'Thuchah',
         offertory: 'Thawhlawm',
         closing: 'Hla Tawp',
@@ -239,37 +271,12 @@ export const translations = {
       }
     },
     media: {
-      title: 'Media',
+      title: 'Media Resources',
       latestSermon: 'Thuchah Thar Ber',
       watchNow: 'En Rawh',
       audio: 'Ngaithla Rawh',
       recentMessages: 'Thuchah Hnuhnung',
-      photoGallery: 'Thlalak'
-    },
-    events: {
-      title: 'Inkhawm Programme'
-    },
-    announcements: {
-      title: 'Thupuan'
-    },
-    departments: {
-      title: 'Committee Pengte',
-      subtitle: 'Kohhran hnuaia committee hrang hrangte'
-    },
-    articles: {
-      title: 'Thuziak & Thuchah',
-      subtitle: 'Thlarau lam chaw',
-      readMore: 'Chhiar Zawm',
-      writtenBy: 'Ziaktu',
-      category: {
-        all: 'A Vaiin',
-        article: 'Thuziak',
-        sermon: 'Thuchah'
-      }
-    },
-    archives: {
-      title: 'Dahthatte',
-      subtitle: 'Kohhran record leh thil hlui dahthatte'
+      photoGallery: 'Thlalak',
     },
     records: {
       tabs: {
@@ -278,7 +285,8 @@ export const translations = {
         death: 'Thihna',
         conference: 'Inkhawmpui',
         inkhawmpui: 'Inkhawmpui',
-        gospelCamping: 'Gospel Camping'
+        gospelCamping: 'Gospel Camping',
+        pemDawnsawn: 'Pem Dawnsawn'
       },
       theads: {
         name: 'Hming',
@@ -300,18 +308,30 @@ export const translations = {
         speakers: 'Speakers',
         team: 'Team / Pawl',
         speaker: 'Speaker',
-        date: 'Date / A hun'
+        date: 'Date / A hun',
+        headOfFamily: 'Chhungkaw Hotu',
+        fathersName: 'Chhungkaw Hotu Pa',
+        noOfMembers: 'Member Zat',
+        previousChurch: 'Lo Pemsan Kohhran'
       }
     },
-    sundaySchool: {
-      preBeginner: 'Pre-Beginner',
-      beginner: 'Beginner',
-      primary: 'Primary',
-      junior: 'Junior',
-      intermediate: 'Intermediate',
-      sacrament: 'Sacrament',
-      senior: 'Senior',
-      puitling: 'Puitling'
+    articles: {
+      title: 'Thuziak & Thuchah',
+      subtitle: 'Thlarau lam chaw.',
+      category: {
+        all: 'A Vaiin',
+        article: 'Thuziak',
+        sermon: 'Thuchah',
+      },
+      readMore: 'Chhiar Zawm Rawh',
+      writtenBy: 'Ziak Tu',
+    },
+    archives: {
+      title: 'Archives',
+      subtitle: 'Kan chanchin leh thil hlui vawngthatna.',
+    },
+    common: {
+      description: 'Hrilhfiahna',
     }
   }
 };

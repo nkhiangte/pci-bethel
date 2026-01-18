@@ -23,31 +23,6 @@ export interface Announcement {
   videoUrls?: string[];
 }
 
-export interface Sermon {
-  id: string;
-  title: string;
-  date: string;
-  preacher: string;
-  scripture: string;
-  description: string;
-  audioUrl?: string;
-  videoUrl?: string;
-}
-
-export interface ProgramField {
-  id: string;
-  label: string;
-  value: string;
-}
-
-export interface EventProgram {
-  hruaitu?: string;
-  tantu?: string;
-  thuhriltu?: string;
-  thupui?: string;
-  [key: string]: string | undefined;
-}
-
 export interface Event {
   id?: string;
   title: string;
@@ -57,11 +32,26 @@ export interface Event {
   description?: string;
   type?: string;
   isCancelled?: boolean;
-  dayOfWeek?: number;
-  program?: EventProgram;
   isRecurringTemplate?: boolean;
-  leader?: string; // used in EVENTS_DATA mapping
-  name?: string; // used in weeklyProgram constant
+  dayOfWeek?: number;
+  program?: {
+    hruaitu?: string;
+    tantu?: string;
+    thuhriltu?: string;
+    thupui?: string;
+    [key: string]: string | undefined;
+  };
+}
+
+export interface Sermon {
+  id: string;
+  title: string;
+  date: string;
+  preacher: string;
+  scripture: string;
+  description: string;
+  audioUrl?: string;
+  videoUrl?: string;
 }
 
 export interface Ministry {
@@ -75,31 +65,36 @@ export interface Ministry {
 }
 
 export interface Staff {
-  id?: string;
+  id: string;
   name: string;
   role: string;
   imageUrl: string;
+  period?: string;
   description?: string;
-  period?: string; // Tenure/Ordination year
   order?: number;
   biography?: string;
   imagePositionX?: number;
   imagePositionY?: number;
   imageScale?: number;
-  phoneNumber?: string;
   qualification?: string;
   probationTenure?: string;
+  phoneNumber?: string;
   previousBials?: { field: string; period: string }[];
-  collection?: 'pastors' | 'elders' | 'proPastors';
+}
+
+export interface ProgramField {
+  id: string;
+  label: string;
+  value: string;
 }
 
 export interface WeeklyDuty {
   id: string;
   month: string;
-  weekRange: string;
   thawhlawmChiartute: string[];
-  buhfaithamHralhtute?: string[]; // Optional based on usage
+  buhfaithamHralhtute: string[];
   ushers: string[];
+  weekRange: string;
   zaiHruaitu: string;
   pianoTumtu: string;
   hlaHriltu: string;
@@ -110,7 +105,7 @@ export interface WeeklyDuty {
     morning: string;
     evening: string;
   };
-  serviceTitles?: {
+  serviceTitles: {
     sundaySchool: string;
     morning: string;
     evening: string;
@@ -120,24 +115,83 @@ export interface WeeklyDuty {
     morning: ProgramField[];
     evening: ProgramField[];
   };
-  midWeek?: {
-    nilai: {
-      title: string;
-      time: string;
-      hruaitu: string;
-      tantu: string;
-      thupui: string;
-      thuhriltu: string;
-    };
-    inrinni: {
-      title: string;
-      time: string;
-      hruaitu: string;
-      tantu: string;
-      thupui: string;
-      thuhriltu: string;
-    };
-  };
+  midWeek: {
+    nilai: any;
+    inrinni: any;
+  }
+}
+
+// Records
+export interface BaptismRecord {
+  id?: string;
+  type: 'baptism';
+  name: string;
+  dateOfBirth: string;
+  baptismDate: string;
+  parents: string;
+  minister: string;
+}
+
+export interface WeddingRecord {
+  id?: string;
+  type: 'wedding';
+  groomName: string;
+  brideName: string;
+  weddingDate: string;
+  minister: string;
+}
+
+export interface DeathRecord {
+  id?: string;
+  type: 'death';
+  name: string;
+  fatherName: string;
+  age: string;
+  dateOfDeath: string;
+  causeOfDeath: string;
+  minister: string;
+}
+
+export interface InkhawmpuiRecord {
+  id?: string;
+  type: 'inkhawmpui';
+  eventName: string;
+  year: number | string;
+  theme: string;
+  puipate: string;
+  speakers: string;
+}
+
+export interface GospelCampingRecord {
+  id?: string;
+  type: 'gospelCamping';
+  year: string;
+  team: string;
+  speaker: string;
+  date: string;
+}
+
+export interface PemDawnsawnRecord {
+  id?: string;
+  type: 'pemDawnsawn';
+  date: string;
+  headOfFamily: string;
+  fathersName: string;
+  noOfMembers: string | number;
+  previousChurch: string;
+}
+
+export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord | GospelCampingRecord | PemDawnsawnRecord;
+
+export interface SundaySchoolDepartment {
+  id: string;
+  name: string;
+  leader: string;
+  asstLeader?: string;
+  secretary?: string;
+  teachers: string[];
+  description: string;
+  students: number;
 }
 
 export interface UserProfile {
@@ -149,54 +203,11 @@ export interface UserProfile {
   createdAt: string;
 }
 
-export interface CommitteeMember {
-  id?: string;
-  name: string;
-  role: string;
-  phone?: string;
-}
-
-export interface Committee {
-  id: string;
-  name: string;
-  icon: string;
-  description?: string;
-  members: CommitteeMember[];
-  order?: number;
-}
-
-export interface ArchiveEntry {
-  id: string;
-  title: string;
-  date: string;
-  category: string;
-  subCategory?: string;
-  department?: string; // For Sunday School structure
-  description?: string;
-  link?: string;
-  imageUrls?: string[];
-  ss_year?: string;
-  ss_dept_teachers?: string;
-  ss_dept_leader?: string;
-  ss_dept_asst_leader?: string;
-  ss_dept_secretary?: string;
-  // Sunday School Hotute fields
-  ss_superintendent?: string;
-  ss_asstSupdt?: string;
-  ss_asstSupdtNPSS?: string;
-  ss_secretary?: string;
-  ss_asstSecy1?: string;
-  ss_asstSecy2?: string;
-  ss_asstSecyNPSS1?: string;
-  ss_asstSecyNPSS2?: string;
-  tenureYears?: string; // For analytics
-}
-
 export interface KTPMember {
   id: string;
   name: string;
-  role?: string;
   phone?: string;
+  role?: string;
 }
 
 export interface KTPGroup {
@@ -235,7 +246,7 @@ export interface KTPBudget {
 export interface Resource {
   id: string;
   title: string;
-  category: string;
+  category: 'Bulletin' | 'Report' | 'Form' | 'Article';
   date: string;
   downloadUrl: string;
   fileSize?: string;
@@ -249,66 +260,30 @@ export interface GalleryItem {
   date: string;
 }
 
-export interface BaptismRecord {
-  id?: string;
-  type: 'baptism';
-  name: string;
-  dateOfBirth: string;
-  baptismDate: string;
-  parents: string;
-  minister: string;
-}
-
-export interface WeddingRecord {
-  id?: string;
-  type: 'wedding';
-  groomName: string;
-  brideName: string;
-  weddingDate: string;
-  minister: string;
-}
-
-export interface DeathRecord {
-  id?: string;
-  type: 'death';
-  name: string;
-  fatherName: string;
-  age: string | number;
-  dateOfDeath: string;
-  causeOfDeath: string;
-  minister: string;
-}
-
-export interface InkhawmpuiRecord {
-  id?: string;
-  type: 'inkhawmpui';
-  eventName: string;
-  year: number | string;
-  theme: string;
-  puipate: string;
-  speakers: string;
-}
-
-export interface GospelCampingRecord {
-  id?: string;
-  type: 'gospelCamping';
-  year: string;
-  team: string;
-  speaker: string;
-  date: string;
-}
-
-export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord | GospelCampingRecord;
-
-export interface SundaySchoolDepartment {
+export interface ArchiveEntry {
   id: string;
-  name: string;
-  leader: string;
-  asstLeader?: string;
-  secretary?: string;
-  teachers: string[];
+  title: string;
+  date: string;
+  category: string;
+  subCategory?: string;
+  department?: string;
   description: string;
-  students?: number;
+  link: string;
+  imageUrls?: string[];
+  ss_year?: string;
+  ss_dept_teachers?: string;
+  ss_dept_leader?: string;
+  ss_dept_asst_leader?: string;
+  ss_dept_secretary?: string;
+  ss_superintendent?: string;
+  ss_asstSupdt?: string;
+  ss_asstSupdtNPSS?: string;
+  ss_secretary?: string;
+  ss_asstSecy1?: string;
+  ss_asstSecy2?: string;
+  ss_asstSecyNPSS1?: string;
+  ss_asstSecyNPSS2?: string;
+  tenureYears?: string;
 }
 
 export interface Article {
@@ -323,21 +298,37 @@ export interface Article {
   views?: number;
 }
 
+export interface Missionary {
+  id: string;
+  name: string;
+  qualification?: string;
+  field?: string;
+  period?: string;
+  bio?: string;
+  imageUrl?: string;
+  serviceHistory?: ServiceHistory[];
+  imagePositionX?: number;
+  imagePositionY?: number;
+  imageScale?: number;
+}
+
 export interface ServiceHistory {
   field: string;
   period: string;
 }
 
-export interface Missionary {
+export interface CommitteeMember {
+  id?: string;
+  name: string;
+  role: string;
+  phone?: string;
+}
+
+export interface Committee {
   id: string;
   name: string;
-  qualification?: string;
-  field: string; // Current/Latest field
-  period?: string; // Current/Latest period
-  bio?: string;
-  imageUrl?: string;
-  imagePositionX?: number;
-  imagePositionY?: number;
-  imageScale?: number;
-  serviceHistory?: ServiceHistory[];
+  icon: string;
+  description?: string;
+  members: CommitteeMember[];
+  order?: number;
 }

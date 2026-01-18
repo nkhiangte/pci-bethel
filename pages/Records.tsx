@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord } from '../types';
+import { ChurchRecord, BaptismRecord, WeddingRecord, DeathRecord, InkhawmpuiRecord, PemDawnsawnRecord } from '../types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   BookUser, Baby, Cross, Users, Plus, Edit, Trash, X, Save, 
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
   Search, ExternalLink, FileText, ChevronLeft, Droplet, 
   Heart, Church, ArrowRight, CheckCircle2, ArrowUp, ArrowDown, ArrowUpDown,
-  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload, Database, Tent
+  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload, Database, Tent, UserPlus
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -18,7 +18,7 @@ import autoTable from 'jspdf-autotable';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
-type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui' | 'gospelCamping';
+type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui' | 'gospelCamping' | 'pemDawnsawn';
 type ViewMode = 'selection' | 'details';
 type DisplayMode = 'table' | 'analytics';
 
@@ -28,6 +28,7 @@ const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     death: ['name', 'fatherName', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
     inkhawmpui: ['eventName', 'year', 'theme', 'puipate', 'speakers'],
     gospelCamping: ['year', 'team', 'speaker', 'date'],
+    pemDawnsawn: ['date', 'headOfFamily', 'fathersName', 'noOfMembers', 'previousChurch'],
 };
 
 const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
@@ -36,6 +37,7 @@ const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
     death: 'dateOfDeath',
     inkhawmpui: 'year',
     gospelCamping: 'year',
+    pemDawnsawn: 'date',
 };
 
 const formatDateCell = (value: any): string => {
@@ -112,6 +114,7 @@ const Records: React.FC = () => {
         { id: 'death', title: 'Thihna Record', sub: 'Mithi chhinchhiahna leh thlan', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
         { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial leh Inkhawmpui Liante', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
         { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent, defaultImg: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80&w=800' },
+        { id: 'pemDawnsawn', title: 'Pem Dawnsawn', sub: 'Incoming Transfer Records', icon: UserPlus, defaultImg: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?auto=format&fit=crop&q=80&w=800' },
     ];
 
     // Fetch Folder Images
@@ -264,6 +267,7 @@ const Records: React.FC = () => {
             case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
             case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().toISOString().split('T')[0], theme: '', puipate: '', speakers: '' }); break;
             case 'gospelCamping': setEditingRecord({ type: 'gospelCamping', year: new Date().getFullYear().toString(), team: '', speaker: '', date: '' }); break;
+            case 'pemDawnsawn': setEditingRecord({ type: 'pemDawnsawn', date: new Date().toISOString().split('T')[0], headOfFamily: '', fathersName: '', noOfMembers: '', previousChurch: '' }); break;
         }
         setIsEditModalOpen(true);
     };
@@ -288,6 +292,11 @@ const Records: React.FC = () => {
         setLoading(true);
         try {
             const { id, ...data } = editingRecord;
+            
+            // Ensure data consistency for numeric fields
+            if (data.noOfMembers) data.noOfMembers = Number(data.noOfMembers);
+            if (data.age) data.age = Number(data.age);
+
             if (id) {
                 await db.collection('records').doc(id).set(data, { merge: true });
             } else {
@@ -312,8 +321,8 @@ const Records: React.FC = () => {
 
     const handleExportExcel = () => {
         const headers = TEMPLATE_HEADERS[activeTab];
-        // Included 'year' in dateFields to ensure it formats correctly in exports
-        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
+        // Only include actual date fields, explicitly excluding 'year' to avoid formatting issues
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'date'];
         const exportData = finalSortedRecords.map(rec => {
             const row: any = {};
             headers.forEach(header => {
@@ -334,8 +343,8 @@ const Records: React.FC = () => {
     const handleExportPDF = () => {
         const doc = new jsPDF();
         const headers = TEMPLATE_HEADERS[activeTab];
-        // Included 'year' in dateFields to ensure it formats correctly in exports
-        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
+        // Only include actual date fields, explicitly excluding 'year'
+        const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'date'];
         const tableHead = headers.map(h => t.records.theads[h as keyof typeof t.records.theads] || h);
         const tableBody = finalSortedRecords.map(rec => headers.map(header => {
             const value = (rec as any)[header];
@@ -390,7 +399,11 @@ const Records: React.FC = () => {
                     puipate: ['puipate', 'leaders', 'officers'],
                     team: ['team', 'pawl'],
                     speaker: ['speaker', 'thusawitu'],
-                    date: ['date', 'a hun', 'hun']
+                    date: ['date', 'a hun', 'hun'],
+                    headOfFamily: ['head of family', 'chhungkaw hotu'],
+                    fathersName: ['fathers name', 'chhungkaw hotu pa', "head of family's father"],
+                    noOfMembers: ['no of members', 'member zat'],
+                    previousChurch: ['previous church', 'lo pemsan kohhran']
                 };
                 Object.entries(mizoHeads).forEach(([key, variations]) => {
                     variations.forEach(v => headerMap[v.toLowerCase()] = key);
@@ -446,8 +459,8 @@ const Records: React.FC = () => {
         setLoading(false);
     };
 
-    // Included 'year' here to treat it as a date field for inputs/formatting
-    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'year'];
+    // Removed 'year' to treat it as a number field in forms/tables
+    const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'date'];
 
     // Analytics Processing Logic
     const stats = useMemo(() => {
@@ -466,7 +479,7 @@ const Records: React.FC = () => {
 
         records.forEach((rec: any) => {
             // Year Trends
-            const dateVal = rec.baptismDate || rec.weddingDate || rec.dateOfDeath || (rec.year ? String(rec.year) : '');
+            const dateVal = rec.baptismDate || rec.weddingDate || rec.dateOfDeath || rec.date || (rec.year ? String(rec.year) : '');
             if (dateVal) {
                 const year = String(dateVal).split('-')[0].split('/')[0];
                 if (year.length === 4) {
@@ -545,6 +558,10 @@ const Records: React.FC = () => {
                     const r = rec as any;
                     return match(r.year) || match(r.team) || match(r.speaker) || match(r.date);
                 }
+                case 'pemDawnsawn': {
+                    const r = rec as PemDawnsawnRecord;
+                    return match(r.headOfFamily) || match(r.fathersName) || match(r.previousChurch) || match(r.date);
+                }
                 default: return false;
             }
         });
@@ -615,6 +632,14 @@ const Records: React.FC = () => {
                     case 'date': return 'text-slate-600 font-medium text-xs md:text-sm';
                     default: return 'text-slate-700 text-xs md:text-sm';
                 }
+            case 'pemDawnsawn':
+                switch(header) {
+                    case 'date': return dateBadgeStyle;
+                    case 'headOfFamily': return nameStyle;
+                    case 'noOfMembers': return 'font-mono font-black text-green-600 bg-green-50 px-2 py-0.5 rounded text-[10px] md:text-xs border border-green-100 inline-block';
+                    case 'previousChurch': return 'text-slate-600 italic font-medium text-xs md:text-sm';
+                    default: return 'text-slate-700 text-xs md:text-sm';
+                }
             default: return 'text-slate-700 text-xs md:text-sm';
         }
     };
@@ -626,6 +651,7 @@ const Records: React.FC = () => {
             case 'death': return "Search Name, Chhungte, Year, Minister...";
             case 'inkhawmpui': return "Search Event, Year, Speaker...";
             case 'gospelCamping': return "Search Team, Speaker, Year...";
+            case 'pemDawnsawn': return "Search Family Name, Previous Church...";
             default: return "Search records...";
         }
     };
@@ -972,7 +998,7 @@ const Records: React.FC = () => {
                                         />
                                     ) : (
                                         <input 
-                                            type={dateFields.includes(field) ? 'date' : field === 'age' ? 'number' : 'text'} 
+                                            type={dateFields.includes(field) ? 'date' : (field === 'age' || field === 'noOfMembers' || field === 'year') ? 'number' : 'text'} 
                                             className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
                                             value={(editingRecord as any)[field] || ''} 
                                             onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 
