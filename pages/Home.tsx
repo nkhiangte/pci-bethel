@@ -196,7 +196,14 @@ const Home: React.FC = () => {
       <section>
         <div className="flex items-center justify-between mb-6">
             <div>
-                <h2 className="text-2xl font-serif font-bold text-slate-900">Inkhawm & Rawngbawlna</h2>
+                <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-serif font-bold text-slate-900">Inkhawm & Rawngbawlna</h2>
+                    {isAdmin && (
+                        <Link to="/admin/duties" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title="Edit Weekly Duties">
+                            <Edit size={18} />
+                        </Link>
+                    )}
+                </div>
                 <p className="text-slate-500 text-sm mt-1">{weeklyDuty.weekRange}</p>
             </div>
             <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
