@@ -289,7 +289,16 @@ export interface InkhawmpuiRecord {
   speakers: string;
 }
 
-export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord;
+export interface GospelCampingRecord {
+  id?: string;
+  type: 'gospelCamping';
+  year: string;
+  team: string;
+  speaker: string;
+  date: string;
+}
+
+export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord | GospelCampingRecord;
 
 export interface SundaySchoolDepartment {
   id: string;

@@ -1,301 +1,243 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { db } from '../services/firebase';
-import { WeeklyDuty, ProgramField } from '../types';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../services/firebase';
+import { WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
-import { Loader, Save, X, Database, Shield, ClipboardList, Clock, CalendarDays, Mic, BookOpen, Plus, Trash2, Users } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
-    const { isAdmin, currentUser } = useAuth();
-    const [duties, setDuties] = useState<Partial<WeeklyDuty>>({});
-    const [loading, setLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+  const { isAdmin } = useAuth();
+  const [duties, setDuties] = useState<WeeklyDuty | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-    const { weeklyDuty: staticDuty } = getConstants('mizo');
+  useEffect(() => {
+    fetchDuties();
+  }, []);
 
-    const fetchDuties = useCallback(async () => {
-        setLoading(true);
-        if (!db?.doc) {
-            setDuties(staticDuty as any);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const docRef = db.collection('weeklyDuties').doc('current');
-            
-            // Add a timeout to fallback to static data if Firestore is slow/offline
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Fetch timeout')), 5000)
-            );
-            
-            // Try to fetch from server/cache
-            const docSnap: any = await Promise.race([
-                docRef.get(),
-                timeoutPromise
-            ]);
-
-            if (docSnap.exists) {
-                const data = docSnap.data() as any;
-                
-                // MIGRATION LOGIC: Convert old object format to new array format
-                const newServicePrograms: any = {
-                    sundaySchool: Array.isArray(data.servicePrograms?.sundaySchool) ? data.servicePrograms.sundaySchool : [],
-                    morning: Array.isArray(data.servicePrograms?.morning) ? data.servicePrograms.morning : [],
-                    evening: Array.isArray(data.servicePrograms?.evening) ? data.servicePrograms.evening : []
-                };
-
-                // If it was an object, map standard fields
-                if (data.servicePrograms && !Array.isArray(data.servicePrograms.sundaySchool)) {
-                    if (data.servicePrograms.sundaySchool?.tantu) newServicePrograms.sundaySchool.push({ id: 'legacy-1', label: 'Ṭantu', value: data.servicePrograms.sundaySchool.tantu });
-                    if (data.servicePrograms.sundaySchool?.zirlai) newServicePrograms.sundaySchool.push({ id: 'legacy-2', label: 'Zirlai / Topic', value: data.servicePrograms.sundaySchool.zirlai });
-                    
-                    if (data.servicePrograms.morning?.thuhriltu) newServicePrograms.morning.push({ id: 'legacy-1', label: 'Thuhriltu', value: data.servicePrograms.morning.thuhriltu });
-                    if (data.servicePrograms.morning?.tantu) newServicePrograms.morning.push({ id: 'legacy-2', label: 'Ṭantu', value: data.servicePrograms.morning.tantu });
-
-                    if (data.servicePrograms.evening?.thuhriltu) newServicePrograms.evening.push({ id: 'legacy-1', label: 'Thuhriltu', value: data.servicePrograms.evening.thuhriltu });
-                    if (data.servicePrograms.evening?.tantu) newServicePrograms.evening.push({ id: 'legacy-2', label: 'Ṭantu', value: data.servicePrograms.evening.tantu });
-                }
-
-                setDuties({ ...data, servicePrograms: newServicePrograms });
-            } else {
-                setDuties(staticDuty as any);
-            }
-        } catch (error: any) {
-            console.warn("Using static duties due to fetch error:", error.message || error);
-            setDuties(staticDuty as any); 
-        }
+  const fetchDuties = async () => {
+    setLoading(true);
+    if (!db || !db.collection) {
+        // Fallback for dev/offline
+        setDuties(getConstants('en').weeklyDuty); // Default
         setLoading(false);
-    }, [staticDuty]);
+        return;
+    }
+    try {
+      const doc = await db.collection('weeklyDuties').doc('current').get();
+      if (doc.exists) {
+        setDuties(doc.data() as WeeklyDuty);
+      } else {
+        setDuties(getConstants('en').weeklyDuty);
+      }
+    } catch (error) {
+      console.error("Error fetching duties:", error);
+      setDuties(getConstants('en').weeklyDuty);
+    }
+    setLoading(false);
+  };
 
-    useEffect(() => {
-        fetchDuties();
-    }, [fetchDuties]);
+  const handleFieldChange = (field: keyof WeeklyDuty, value: any) => {
+    if (!duties) return;
+    setDuties({ ...duties, [field]: value });
+  };
 
-    const handleSave = async () => {
-        if (!db?.doc || !window.confirm("Are you sure you want to update the weekly duties? This will be live on the homepage immediately.")) {
-            return;
-        }
-        setIsSaving(true);
-        try {
-            await db.collection('weeklyDuties').doc('current').set(duties, { merge: true });
-            alert("Weekly duties and service times updated successfully!");
-        } catch (error) {
-            console.error("Error saving duties:", error);
-            alert("An error occurred. Please try again.");
-        }
-        setIsSaving(false);
-    };
+  const handleArrayChange = (field: 'thawhlawmChiartute' | 'ushers', value: string) => {
+      if (!duties) return;
+      const array = value.split('\n').filter(line => line.trim() !== '');
+      setDuties({ ...duties, [field]: array });
+  };
 
-    const handleFieldChange = (field: keyof WeeklyDuty, value: string) => {
-        setDuties(prev => ({ ...prev, [field]: value }));
-    };
+  // Helper for deeply nested program fields
+  const handleProgramFieldChange = (
+      service: 'sundaySchool' | 'morning' | 'evening', 
+      index: number, 
+      key: 'label' | 'value', 
+      newVal: string
+  ) => {
+      if (!duties) return;
+      const updatedPrograms = { ...duties.servicePrograms };
+      const currentServiceProgram = [...updatedPrograms[service]];
+      currentServiceProgram[index] = { ...currentServiceProgram[index], [key]: newVal };
+      updatedPrograms[service] = currentServiceProgram;
+      setDuties({ ...duties, servicePrograms: updatedPrograms });
+  };
 
-    const handleListChange = (field: keyof WeeklyDuty, value: string) => {
-        setDuties(prev => ({ ...prev, [field]: value.split('\n') }));
-    };
+  const addProgramField = (service: 'sundaySchool' | 'morning' | 'evening') => {
+      if (!duties) return;
+      const updatedPrograms = { ...duties.servicePrograms };
+      updatedPrograms[service] = [...updatedPrograms[service], { id: Date.now().toString(), label: '', value: '' }];
+      setDuties({ ...duties, servicePrograms: updatedPrograms });
+  };
 
-    const handleServiceTimeChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
-        setDuties(prev => ({
-            ...prev,
-            serviceTimes: {
-                ...(prev.serviceTimes || { sundaySchool: '', morning: '', evening: '' }),
-                [timeType]: value
-            }
-        }));
-    };
+  const removeProgramField = (service: 'sundaySchool' | 'morning' | 'evening', index: number) => {
+      if (!duties) return;
+      const updatedPrograms = { ...duties.servicePrograms };
+      const currentServiceProgram = [...updatedPrograms[service]];
+      currentServiceProgram.splice(index, 1);
+      updatedPrograms[service] = currentServiceProgram;
+      setDuties({ ...duties, servicePrograms: updatedPrograms });
+  };
 
-    const handleServiceTitleChange = (timeType: 'sundaySchool' | 'morning' | 'evening', value: string) => {
-        setDuties(prev => ({
-            ...prev,
-            serviceTitles: {
-                ...(prev.serviceTitles || { sundaySchool: '', morning: '', evening: '' }),
-                [timeType]: value
-            }
-        }));
-    };
+  const handleSave = async () => {
+      if (!db || !db.collection || !duties) return;
+      setSaving(true);
+      try {
+          await db.collection('weeklyDuties').doc('current').set(duties);
+          alert("Duties updated successfully!");
+      } catch (error) {
+          console.error("Error saving:", error);
+          alert("Failed to save.");
+      }
+      setSaving(false);
+  };
 
-    // New Dynamic Program Handlers
-    const addProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening') => {
-        const newField: ProgramField = { id: Date.now().toString(), label: '', value: '' };
-        setDuties(prev => ({
-            ...prev,
-            servicePrograms: {
-                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
-                [serviceType]: [...(prev.servicePrograms?.[serviceType] || []), newField]
-            }
-        }));
-    };
+  if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied</div>;
+  if (loading || !duties) return <div className="p-20 text-center"><Loader className="animate-spin mx-auto text-church-500"/></div>;
 
-    const removeProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening', fieldId: string) => {
-        setDuties(prev => ({
-            ...prev,
-            servicePrograms: {
-                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
-                [serviceType]: (prev.servicePrograms?.[serviceType] || []).filter(f => f.id !== fieldId)
-            }
-        }));
-    };
+  return (
+      <div className="bg-slate-50 min-h-screen py-12">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                  <div>
+                      <Link to="/admin" className="text-slate-500 hover:text-church-600 flex items-center mb-2"><ArrowLeft size={16} className="mr-1"/> Dashboard</Link>
+                      <h1 className="text-3xl font-serif font-bold text-church-900">Weekly Duties Manager</h1>
+                  </div>
+                  <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-church-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-church-700 transition disabled:opacity-50">
+                      {saving ? <Loader className="animate-spin" size={20}/> : <Save size={20}/>} Save Changes
+                  </button>
+              </div>
 
-    const updateProgramField = (serviceType: 'sundaySchool' | 'morning' | 'evening', fieldId: string, key: 'label' | 'value', value: string) => {
-        setDuties(prev => ({
-            ...prev,
-            servicePrograms: {
-                ...(prev.servicePrograms || { sundaySchool: [], morning: [], evening: [] }),
-                [serviceType]: (prev.servicePrograms?.[serviceType] || []).map(f => 
-                    f.id === fieldId ? { ...f, [key]: value } : f
-                )
-            }
-        }));
-    };
+              <div className="space-y-8">
+                  
+                  {/* General Info */}
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4">General Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Month</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.month} onChange={e => handleFieldChange('month', e.target.value)} />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Week Range</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.weekRange} onChange={e => handleFieldChange('weekRange', e.target.value)} />
+                          </div>
+                      </div>
+                  </div>
 
-    const handleMidWeekChange = (day: 'nilai' | 'inrinni', field: string, value: string) => {
-        setDuties(prev => ({
-            ...prev,
-            midWeek: {
-                ...prev.midWeek,
-                [day]: {
-                    ...(prev.midWeek?.[day] || {}),
-                    [field]: value
-                }
-            } as any
-        }));
-    };
+                  {/* Key People */}
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4">Duty Assignees</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Zai Hruaitu</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.zaiHruaitu} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hla Hriltu</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.hlaHriltu} onChange={e => handleFieldChange('hlaHriltu', e.target.value)} />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Piano Tumtu</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.pianoTumtu} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Light & Sound</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.lightAndSoundDuty} onChange={e => handleFieldChange('lightAndSoundDuty', e.target.value)} />
+                          </div>
+                          <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Biak In Pangpar</label>
+                              <input className="w-full border p-3 rounded-lg" value={duties.pangparKhawitu || ''} onChange={e => handleFieldChange('pangparKhawitu', e.target.value)} />
+                          </div>
+                      </div>
+                  </div>
 
-    if (!currentUser) return <Navigate to="/login" replace />;
-    if (!isAdmin) return <div className="p-20 text-center">Access Denied</div>;
+                  {/* Lists */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Thawhlawm Chhiartute (One per line)</label>
+                          <textarea 
+                              className="w-full border p-3 rounded-lg h-40" 
+                              value={duties.thawhlawmChiartute.join('\n')} 
+                              onChange={e => handleArrayChange('thawhlawmChiartute', e.target.value)} 
+                          />
+                      </div>
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Ushers (One per line)</label>
+                          <textarea 
+                              className="w-full border p-3 rounded-lg h-40" 
+                              value={duties.ushers.join('\n')} 
+                              onChange={e => handleArrayChange('ushers', e.target.value)} 
+                          />
+                      </div>
+                  </div>
 
-    const ServiceConfigBox = ({ type, title, icon: Icon }: { type: 'sundaySchool' | 'morning' | 'evening', title: string, icon: any }) => (
-        <div className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h4 className="font-black text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-3">
-                <Icon size={20} className="text-church-600"/> {title}
-            </h4>
-            
-            <div className="space-y-3 mb-6">
-                <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Display Title</label>
-                    <input 
-                        className="w-full border border-slate-200 p-3 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white transition" 
-                        value={duties.serviceTitles?.[type] || ''} 
-                        onChange={e => handleServiceTitleChange(type, e.target.value)} 
-                        placeholder="e.g. Sunday School"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Time</label>
-                    <input 
-                        className="w-full border border-slate-200 p-3 rounded-xl text-sm bg-slate-50 focus:bg-white transition" 
-                        value={duties.serviceTimes?.[type] || ''} 
-                        onChange={e => handleServiceTimeChange(type, e.target.value)} 
-                        placeholder="e.g. 10:00 AM"
-                    />
-                </div>
-            </div>
+                  {/* Programs */}
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Service Programs</h3>
+                      
+                      {/* Sunday School */}
+                      <div className="mb-8">
+                          <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                              <h4 className="font-bold text-church-600">Sunday School Program</h4>
+                              <button onClick={() => addProgramField('sundaySchool')} className="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200 flex items-center"><Plus size={14} className="mr-1"/> Add Item</button>
+                          </div>
+                          <div className="space-y-3">
+                              {duties.servicePrograms.sundaySchool.map((item, idx) => (
+                                  <div key={idx} className="flex gap-4 items-center">
+                                      <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
+                                      <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label (e.g. Tantu)" value={item.label} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'label', e.target.value)} />
+                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'value', e.target.value)} />
+                                      <button onClick={() => removeProgramField('sundaySchool', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
 
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Program Fields</label>
-                    <button onClick={() => addProgramField(type)} className="text-church-600 hover:text-church-800 flex items-center text-[10px] font-black uppercase tracking-tighter bg-church-50 px-2 py-1 rounded">
-                        <Plus size={12} className="mr-1"/> Add Field
-                    </button>
-                </div>
-                
-                <div className="space-y-3">
-                    {(duties.servicePrograms?.[type] || []).map((field) => (
-                        <div key={field.id} className="flex gap-2 items-start group">
-                            <div className="flex-1 space-y-1">
-                                <input 
-                                    className="w-full border-none bg-slate-100 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 focus:ring-1 focus:ring-church-200" 
-                                    value={field.label} 
-                                    onChange={e => updateProgramField(type, field.id, 'label', e.target.value)} 
-                                    placeholder="LABEL (e.g. ṬANTU)"
-                                />
-                                <input 
-                                    className="w-full border border-slate-200 p-2 rounded-lg text-sm font-bold text-slate-800 focus:ring-1 focus:ring-church-300" 
-                                    value={field.value} 
-                                    onChange={e => updateProgramField(type, field.id, 'value', e.target.value)} 
-                                    placeholder="Value"
-                                />
-                            </div>
-                            <button onClick={() => removeProgramField(type, field.id)} className="p-2 text-slate-300 hover:text-red-500 mt-6 transition-colors">
-                                <Trash2 size={16} />
-                            </button>
-                        </div>
-                    ))}
-                    {(duties.servicePrograms?.[type] || []).length === 0 && (
-                        <p className="text-[10px] text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">No program details added yet.</p>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+                      {/* Morning Service */}
+                      <div className="mb-8">
+                          <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                              <h4 className="font-bold text-church-600">Morning Service (Chawhnu)</h4>
+                              <button onClick={() => addProgramField('morning')} className="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200 flex items-center"><Plus size={14} className="mr-1"/> Add Item</button>
+                          </div>
+                          <div className="space-y-3">
+                              {duties.servicePrograms.morning.map((item, idx) => (
+                                  <div key={idx} className="flex gap-4 items-center">
+                                      <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
+                                      <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('morning', idx, 'label', e.target.value)} />
+                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('morning', idx, 'value', e.target.value)} />
+                                      <button onClick={() => removeProgramField('morning', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
 
-    return (
-        <div className="py-12 bg-slate-50 min-h-screen">
-            <div className="max-w-6xl mx-auto px-6">
-                <div className="mb-12">
-                    <h1 className="text-4xl font-serif font-black text-slate-900 mb-2">Manage Weekly Duties</h1>
-                    <p className="text-slate-500 font-medium">Configure program details and service times for the congregation.</p>
-                </div>
+                      {/* Evening Service */}
+                      <div>
+                          <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                              <h4 className="font-bold text-church-600">Evening Service (Zan)</h4>
+                              <button onClick={() => addProgramField('evening')} className="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200 flex items-center"><Plus size={14} className="mr-1"/> Add Item</button>
+                          </div>
+                          <div className="space-y-3">
+                              {duties.servicePrograms.evening.map((item, idx) => (
+                                  <div key={idx} className="flex gap-4 items-center">
+                                      <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
+                                      <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('evening', idx, 'label', e.target.value)} />
+                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('evening', idx, 'value', e.target.value)} />
+                                      <button onClick={() => removeProgramField('evening', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
 
-                {loading ? <div className="text-center py-24"><Loader className="animate-spin h-12 w-12 mx-auto text-church-600" /></div>
-                : (
-                    <div className="space-y-12">
-                        {/* Sunday Services Section */}
-                        <div className="grid lg:grid-cols-3 gap-8">
-                            <ServiceConfigBox type="sundaySchool" title="Sunday School" icon={BookOpen} />
-                            <ServiceConfigBox type="morning" title="Chawhnu Inkhawm" icon={Clock} />
-                            <ServiceConfigBox type="evening" title="Zan Inkhawm" icon={Mic} />
-                        </div>
-
-                        {/* Other Personnel and Ranges */}
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm grid md:grid-cols-2 gap-12">
-                            <div className="space-y-6">
-                                <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs border-b pb-4 flex items-center gap-2"><ClipboardList size={18} className="text-church-600"/> General Settings</h3>
-                                <div className="grid gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Week Range</label>
-                                        <input className="w-full border border-slate-200 p-3 rounded-xl text-sm font-bold" value={duties.weekRange || ''} onChange={e => handleFieldChange('weekRange', e.target.value)} placeholder="e.g. 05 - 11 Jan, 2026" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Zai Hruaitu</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.zaiHruaitu || ''} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} /></div>
-                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Hla Hriltu</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.hlaHriltu || ''} onChange={e => handleFieldChange('hlaHriltu', e.target.value)} /></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Piano</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.pianoTumtu || ''} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} /></div>
-                                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Sound</label><input className="w-full border border-slate-200 p-3 rounded-xl text-sm" value={duties.lightAndSoundDuty || ''} onChange={e => handleFieldChange('lightAndSoundDuty', e.target.value)} /></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs border-b pb-4 flex items-center gap-2"><Users size={18} className="text-church-600"/> Team Rosters</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Thawhlawm Chhiartute (One per line)</label>
-                                        <textarea className="w-full border border-slate-200 p-3 rounded-xl text-xs h-24" value={duties.thawhlawmChiartute?.join('\n') || ''} onChange={e => handleListChange('thawhlawmChiartute', e.target.value)} />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Ushers (One per line)</label>
-                                        <textarea className="w-full border border-slate-200 p-3 rounded-xl text-xs h-24" value={duties.ushers?.join('\n') || ''} onChange={e => handleListChange('ushers', e.target.value)} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end pt-8">
-                            <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-4 px-10 py-5 bg-church-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-church-700 shadow-2xl transition disabled:opacity-50">
-                                {isSaving ? <Loader className="animate-spin" size={20}/> : <Save size={20} />}
-                                {isSaving ? 'Updating...' : 'Publish Changes'}
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+                  </div>
+              </div>
+          </div>
+      </div>
+  );
 };
 
 export default AdminDuties;

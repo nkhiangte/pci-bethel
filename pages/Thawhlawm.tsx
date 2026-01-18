@@ -30,6 +30,7 @@ interface ContributionForm {
     pathianRam: string;
     ramthar: string;
     tualchhung: string;
+    amount: string;
 }
 
 const INITIAL_FORM: ContributionForm = {
@@ -39,7 +40,8 @@ const INITIAL_FORM: ContributionForm = {
     bial: '',
     pathianRam: '',
     ramthar: '',
-    tualchhung: ''
+    tualchhung: '',
+    amount: ''
 };
 
 const Thawhlawm: React.FC = () => {
@@ -71,11 +73,15 @@ const Thawhlawm: React.FC = () => {
 
   useEffect(() => {
       // Auto-calculate total
-      const pr = parseFloat(formData.pathianRam) || 0;
-      const rt = parseFloat(formData.ramthar) || 0;
-      const tc = parseFloat(formData.tualchhung) || 0;
-      setTotal(pr + rt + tc);
-  }, [formData.pathianRam, formData.ramthar, formData.tualchhung]);
+      if (activeCategory === 'pathian-ram') {
+          const pr = parseFloat(formData.pathianRam) || 0;
+          const rt = parseFloat(formData.ramthar) || 0;
+          const tc = parseFloat(formData.tualchhung) || 0;
+          setTotal(pr + rt + tc);
+      } else {
+          setTotal(parseFloat(formData.amount) || 0);
+      }
+  }, [formData.pathianRam, formData.ramthar, formData.tualchhung, formData.amount, activeCategory]);
 
   // Fetch families when Bial changes
   useEffect(() => {
@@ -463,39 +469,54 @@ const Thawhlawm: React.FC = () => {
                             </h3>
                             
                             <div className="grid gap-4">
-                                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <label className="w-32 font-bold text-slate-700 text-sm">Pathian Ram</label>
-                                    <input 
-                                        type="number" 
-                                        name="pathianRam"
-                                        value={formData.pathianRam}
-                                        onChange={handleInputChange}
-                                        placeholder="0"
-                                        className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <label className="w-32 font-bold text-slate-700 text-sm">Ramthar</label>
-                                    <input 
-                                        type="number" 
-                                        name="ramthar"
-                                        value={formData.ramthar}
-                                        onChange={handleInputChange}
-                                        placeholder="0"
-                                        className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-green-500 outline-none"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <label className="w-32 font-bold text-slate-700 text-sm">Tualchhung</label>
-                                    <input 
-                                        type="number" 
-                                        name="tualchhung"
-                                        value={formData.tualchhung}
-                                        onChange={handleInputChange}
-                                        placeholder="0"
-                                        className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-orange-500 outline-none"
-                                    />
-                                </div>
+                                {activeCategory === 'pathian-ram' ? (
+                                    <>
+                                        <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                            <label className="w-32 font-bold text-slate-700 text-sm">Pathian Ram</label>
+                                            <input 
+                                                type="number" 
+                                                name="pathianRam"
+                                                value={formData.pathianRam}
+                                                onChange={handleInputChange}
+                                                placeholder="0"
+                                                className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                            <label className="w-32 font-bold text-slate-700 text-sm">Ramthar</label>
+                                            <input 
+                                                type="number" 
+                                                name="ramthar"
+                                                value={formData.ramthar}
+                                                onChange={handleInputChange}
+                                                placeholder="0"
+                                                className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-green-500 outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                            <label className="w-32 font-bold text-slate-700 text-sm">Tualchhung</label>
+                                            <input 
+                                                type="number" 
+                                                name="tualchhung"
+                                                value={formData.tualchhung}
+                                                onChange={handleInputChange}
+                                                placeholder="0"
+                                                className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-orange-500 outline-none"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                        <input 
+                                            type="number" 
+                                            name="amount"
+                                            value={formData.amount}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter Amount"
+                                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-right font-mono font-bold focus:ring-2 focus:ring-church-500 outline-none"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-6 p-4 bg-church-900 text-white rounded-xl flex justify-between items-center shadow-lg">

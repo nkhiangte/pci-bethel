@@ -10,7 +10,7 @@ import {
   Loader, AlertTriangle, FileDown, FileUp, FileSpreadsheet, 
   Search, ExternalLink, FileText, ChevronLeft, Droplet, 
   Heart, Church, ArrowRight, CheckCircle2, ArrowUp, ArrowDown, ArrowUpDown,
-  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload, Database
+  BarChart3, LayoutList, PieChart, TrendingUp, UserCheck, Calendar, Camera, Upload, Database, Tent
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -18,7 +18,7 @@ import autoTable from 'jspdf-autotable';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
-type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui';
+type RecordType = 'baptism' | 'wedding' | 'death' | 'inkhawmpui' | 'gospelCamping';
 type ViewMode = 'selection' | 'details';
 type DisplayMode = 'table' | 'analytics';
 
@@ -27,6 +27,7 @@ const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
     death: ['name', 'fatherName', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
     inkhawmpui: ['eventName', 'year', 'theme', 'puipate', 'speakers'],
+    gospelCamping: ['year', 'team', 'speaker', 'date'],
 };
 
 const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
@@ -34,6 +35,7 @@ const DATE_SORT_FIELD_MAP: Record<RecordType, string> = {
     wedding: 'weddingDate',
     death: 'dateOfDeath',
     inkhawmpui: 'year',
+    gospelCamping: 'year',
 };
 
 const formatDateCell = (value: any): string => {
@@ -91,7 +93,7 @@ const Records: React.FC = () => {
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingRecord, setEditingRecord] = useState<Partial<BaptismRecord> | Partial<WeddingRecord> | Partial<DeathRecord> | Partial<InkhawmpuiRecord> | null>(null);
+    const [editingRecord, setEditingRecord] = useState<any>(null); // Using any for flexible record types
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [importData, setImportData] = useState<any[] | null>(null);
     const [importError, setImportError] = useState<string | null>(null);
@@ -109,6 +111,7 @@ const Records: React.FC = () => {
         { id: 'wedding', title: 'Inneihna Record', sub: 'Inneih hriatpuina hrang hrang', icon: Heart, defaultImg: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
         { id: 'death', title: 'Thihna Record', sub: 'Mithi chhinchhiahna leh thlan', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
         { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial leh Inkhawmpui Liante', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
+        { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent, defaultImg: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80&w=800' },
     ];
 
     // Fetch Folder Images
@@ -260,6 +263,7 @@ const Records: React.FC = () => {
             case 'wedding': setEditingRecord({ type: 'wedding', groomName: '', brideName: '', weddingDate: '', minister: '' }); break;
             case 'death': setEditingRecord({ type: 'death', name: '', fatherName: '', age: '', dateOfDeath: '', causeOfDeath: '', minister: '' }); break;
             case 'inkhawmpui': setEditingRecord({ type: 'inkhawmpui', eventName: '', year: new Date().toISOString().split('T')[0], theme: '', puipate: '', speakers: '' }); break;
+            case 'gospelCamping': setEditingRecord({ type: 'gospelCamping', year: new Date().getFullYear().toString(), team: '', speaker: '', date: '' }); break;
         }
         setIsEditModalOpen(true);
     };
@@ -338,7 +342,7 @@ const Records: React.FC = () => {
             return dateFields.includes(header) ? formatDateCell(value) : (value || '');
         }));
         doc.setFontSize(16);
-        doc.text(`${t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Records`, 14, 20);
+        doc.text(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Records`, 14, 20);
         autoTable(doc, {
             head: [tableHead],
             body: tableBody,
@@ -383,7 +387,10 @@ const Records: React.FC = () => {
                     minister: ['inneihtir tu', 'baptistu', 'minister', 'vuitu'],
                     dateOfDeath: ['thih ni', 'date of death'],
                     causeOfDeath: ['thih chhan', 'cause of death'],
-                    puipate: ['puipate', 'leaders', 'officers']
+                    puipate: ['puipate', 'leaders', 'officers'],
+                    team: ['team', 'pawl'],
+                    speaker: ['speaker', 'thusawitu'],
+                    date: ['date', 'a hun', 'hun']
                 };
                 Object.entries(mizoHeads).forEach(([key, variations]) => {
                     variations.forEach(v => headerMap[v.toLowerCase()] = key);
@@ -534,6 +541,10 @@ const Records: React.FC = () => {
                     const r = rec as InkhawmpuiRecord;
                     return match(r.eventName) || match(r.speakers) || match(r.puipate) || match(r.theme) || match(r.year);
                 }
+                case 'gospelCamping': {
+                    const r = rec as any;
+                    return match(r.year) || match(r.team) || match(r.speaker) || match(r.date);
+                }
                 default: return false;
             }
         });
@@ -596,6 +607,14 @@ const Records: React.FC = () => {
                     case 'speakers': return 'text-purple-700 font-semibold text-xs md:text-sm'; // Color for Speakers
                     default: return 'text-slate-700 text-xs md:text-sm';
                 }
+            case 'gospelCamping':
+                switch(header) {
+                    case 'year': return dateBadgeStyle;
+                    case 'team': return 'font-bold text-slate-800 text-sm md:text-base';
+                    case 'speaker': return ministerStyle;
+                    case 'date': return 'text-slate-600 font-medium text-xs md:text-sm';
+                    default: return 'text-slate-700 text-xs md:text-sm';
+                }
             default: return 'text-slate-700 text-xs md:text-sm';
         }
     };
@@ -606,6 +625,7 @@ const Records: React.FC = () => {
             case 'wedding': return "Search Couple, Year, Minister...";
             case 'death': return "Search Name, Chhungte, Year, Minister...";
             case 'inkhawmpui': return "Search Event, Year, Speaker...";
+            case 'gospelCamping': return "Search Team, Speaker, Year...";
             default: return "Search records...";
         }
     };
@@ -679,7 +699,7 @@ const Records: React.FC = () => {
                 <div className="relative z-10 max-w-7xl mx-auto px-6">
                     <button onClick={handleBack} className="flex items-center text-church-200 hover:text-white mb-4 transition font-bold"><ChevronLeft size={20} /> Back to Records</button>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                        <h1 className="text-4xl font-serif font-black">{t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab]} Register</h1>
+                        <h1 className="text-4xl font-serif font-black">{activeTab === 'gospelCamping' ? 'Gospel Camping' : t.records.tabs[activeTab === 'inkhawmpui' ? 'conference' : activeTab] || activeTab} Register</h1>
                         
                         <div className="flex bg-church-800/50 p-1 rounded-xl border border-white/10">
                             <button 
