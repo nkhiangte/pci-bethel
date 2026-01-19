@@ -7,106 +7,78 @@ import { db } from '../services/firebase';
 import { SundaySchoolDepartment } from '../types';
 import { Users, UserCheck, Edit, Save, X, Loader, Database, UploadCloud } from 'lucide-react';
 
+// Initial Empty Data Structure for Admin Population
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
     {
       id: 'pre-beginner',
-      leader: 'Pi K Lalrokhumi',
-      asstLeader: 'Pi Mary Lalnunmawii',
-      secretary: 'Nl K Zothansangi',
-      teachers: [
-        'Pi Linda Vanlalruati', 'Pi R.Laldintluangi', 'Pi Lalsiamliani', 'Pi Cicily Lalrindiki',
-        'Nl. Lalremruati', 'Nl. Zodinpuii', 'Pi Lalhriatpuii', 'Nl. Lalnunthari'
-      ],
-      description: 'Focuses on foundational Bible stories and songs for ages 3-4, creating a fun and nurturing environment to introduce them to God\'s love.',
-      students: 25
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'beginner',
-      leader: 'Pi K Lalbiakthangi',
-      asstLeader: 'Pi C Lalchhandami',
-      secretary: 'Nl R Lalmuanawmi',
-      teachers: [
-        'Pi Lalhmingliani', 'Pi Lalhriatpuii', 'Nl H Vanlalruati', 'Pi Vanlalawii',
-        'Pi Lalbiakdiki', 'Pi Lalremruati', 'Nl. Lalnunsiami'
-      ],
-      description: 'Introduction to basic biblical characters and themes for ages 5-6.',
-      students: 30
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'primary',
-      leader: 'Pu Mungngaihsanga',
-      asstLeader: 'Pu H Lalzuitluanga',
-      secretary: 'Nl C Lalbiaknii',
-      teachers: [
-        'Pi Lalremruati', 'Pi Lalbiakdiki', 'Pu Lalrinawma', 'Pi C.Lalhruaitluangi',
-        'Pi R.Lalngaihzuali', 'Pu F.Lalhriatpuia', 'Tv. Thangzasanga'
-      ],
-      description: 'Building a strong foundation in the Word of God for ages 7-9.',
-      students: 45
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'junior',
-      leader: 'Tv H Lalfakawma',
-      asstLeader: 'Pu Lalhmingmawia',
-      secretary: 'Nl Lallawmzuali',
-      teachers: [
-        'Pu Lalruatfela', 'Nl Lalremruati', 'Tv Lalhriatpuia', 'Pu K.Vanengmawia',
-        'Pu R.Lalremmawia', 'Nl. Ngurbawitluangi', 'Tv. B.Thangzauva', 'Nl. Lalrammawii Renthlei'
-      ],
-      description: 'Exploring the Bible in more depth and applying it to daily life for ages 10-12.',
-      students: 50
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'intermediate',
-      leader: 'Pu V Lalbiakdika',
-      asstLeader: 'Pu C Lalengmawia',
-      secretary: 'Tv Vanlalchhana',
-      teachers: [
-        'Pu Zoramenga', 'Tv Thangdeihmanga', 'Nl Lalnunthari', 'Pu Samuel Lalbiakzuala',
-        'Pu T.Lalramnghaka', 'Pu Vanlalruatpuia', 'Tv. Liankhankhama', 'Tv. Chinngoliana'
-      ],
-      description: 'Preparing young teens for confirmation and deeper spiritual understanding (ages 13-15).',
-      students: 40
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'sacrament',
-      leader: 'T Upa Hmingthansanga',
-      asstLeader: 'Pu K Lalengthanga',
-      secretary: 'Pu C Lalmuansanga',
-      teachers: [
-        'Pu R Lalmalsawma', 'Pu C Ramtharnghaka', 'Pu C.Lalchhanhima', 'Pu Lalhmunngheta',
-        'Pu Manliankhupa', 'Pu C.Lalfaka', 'Pu Tluangzathanga', 'Nl. Ningsianmawii'
-      ],
-      description: 'Sacramental preparation and doctrinal studies for ages 16-19.',
-      students: 35
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'senior',
-      leader: 'Pu Zoramenga',
-      asstLeader: 'Pu K Thuamluaia',
-      secretary: 'Tv T Lalnunzira',
-      teachers: [
-        'Pu C Rohmingliana', 'Pu Lalmuanpuia Ralte', 'Pu T.Sangtluanga', 'Pu K.Lalrawna',
-        'Pu JC Laldinthara', 'Pu P.Lalhmingthanga', 'Pu C.Lalrawngbawla', 'Pu Thanglianmanga',
-        'Pu Nelson Khiangte', 'Pu Kapthuama', 'Pu Khawlrosiama', 'Pu Thangkunga Hualngo',
-        'Pu B.Zelkhangova', 'Pu PC Zoramthanga', 'Pu K.Lalengkima', 'Pu Lalthanghulha',
-        'Pu Lalramnghakhlela', 'Pu H.Vanlalthanga'
-      ],
-      description: 'Adult Bible study focusing on advanced topics and practical Christian living.',
-      students: 120
+      leader: '',
+      asstLeader: '',
+      secretary: '',
+      teachers: [],
+      description: '',
+      students: 0
     },
     {
       id: 'puitling',
-      leader: '-', 
-      asstLeader: '-',
-      teachers: [
-        'Pastor & Upa te', 'Pu C.Rohmingliana', 'Pu Lalmuanpuia Ralte', 'Pu T.Sangtluanga',
-        'Pu K.Lalrawna', 'Pu JC Laldinthara', 'Pu P.Lalhmingthanga', 'Pu C.Lalrawngbawla',
-        'Pu Thanglianmanga', 'Pu Nelson Khiangte', 'Pu Kapthuama', 'Pu Khawlrosiama',
-        'Pu Thangkunga Hualngo', 'Pu B.Zelkhangova', 'Pu PC Zoramthanga', 'Pu K.Lalengkima'
-      ],
-      description: 'General adult Sunday School class.',
-      students: 1400
+      leader: '',
+      asstLeader: '',
+      teachers: [],
+      description: '',
+      students: 0
     }
 ];
 
@@ -178,7 +150,7 @@ const SundaySchool: React.FC = () => {
   }, [fetchDepartments]);
 
   const handleSeed = async () => {
-      if (!db || !db.collection || !window.confirm("Overwrite ALL Sunday School data in Firebase with the complete local list?")) return;
+      if (!db || !db.collection || !window.confirm("This will RESET all Sunday School data in Firebase to empty fields. Are you sure?")) return;
       setIsSeeding(true);
       try {
           const batch = db.batch();
@@ -188,7 +160,7 @@ const SundaySchool: React.FC = () => {
           });
           await batch.commit();
           fetchDepartments();
-          alert("All data saved to Firebase successfully!");
+          alert("All data reset successfully!");
       } catch(e) {
           console.error(e);
           alert("Failed to save data to Firebase.");
@@ -226,17 +198,17 @@ const SundaySchool: React.FC = () => {
                   <div className="flex justify-between items-start">
                       <div>
                           <h1 className="text-3xl font-serif font-bold text-church-900">{currentDept.name} Department</h1>
-                          <p className="text-slate-600 mt-2 text-lg">{currentDept.description}</p>
+                          <p className="text-slate-600 mt-2 text-lg">{currentDept.description || 'No description available.'}</p>
                       </div>
                       {isAdmin && (
                           <div className="flex gap-2">
                               <button 
                                 onClick={handleSeed} 
                                 disabled={isSeeding} 
-                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 text-blue-700 text-xs font-bold" 
-                                title="Overwrite Firebase Data with Local List"
+                                className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-red-700 text-xs font-bold" 
+                                title="Reset Firebase Data"
                               >
-                                  <UploadCloud size={16} /> {isSeeding ? 'Saving...' : 'Sync to Firebase'}
+                                  <UploadCloud size={16} /> {isSeeding ? 'Resetting...' : 'Reset Data'}
                               </button>
                               <button onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
                                   <Edit size={20} />
@@ -253,7 +225,7 @@ const SundaySchool: React.FC = () => {
                           <div className="space-y-4">
                               <div className="flex justify-between border-b border-slate-50 pb-2">
                                   <span className="text-slate-500">Leader</span>
-                                  <span className="font-medium text-slate-800">{currentDept.leader}</span>
+                                  <span className="font-medium text-slate-800">{currentDept.leader || '-'}</span>
                               </div>
                               <div className="flex justify-between border-b border-slate-50 pb-2">
                                   <span className="text-slate-500">Asst. Leader</span>
@@ -269,12 +241,16 @@ const SundaySchool: React.FC = () => {
                       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                           <h3 className="font-bold text-slate-800 mb-4 flex items-center"><UserCheck className="mr-2 text-church-600"/> Teachers ({currentDept.teachers.length})</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {currentDept.teachers.map((t, i) => (
-                                  <div key={i} className="flex items-center text-sm text-slate-700">
-                                      <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2 shrink-0"></div>
-                                      {t}
-                                  </div>
-                              ))}
+                              {currentDept.teachers.length > 0 ? (
+                                  currentDept.teachers.map((t, i) => (
+                                      <div key={i} className="flex items-center text-sm text-slate-700">
+                                          <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2 shrink-0"></div>
+                                          {t}
+                                      </div>
+                                  ))
+                              ) : (
+                                  <div className="text-slate-400 italic text-sm col-span-2">No teachers listed yet.</div>
+                              )}
                           </div>
                       </div>
                   </div>
@@ -317,8 +293,12 @@ const SundaySchool: React.FC = () => {
                           <div><label className="block text-sm font-bold mb-1">Secretary</label><input className="w-full border p-2 rounded" value={editingDept.secretary || ''} onChange={e => setEditingDept({...editingDept, secretary: e.target.value})} /></div>
                           <div><label className="block text-sm font-bold mb-1">Student Count</label><input type="number" className="w-full border p-2 rounded" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value)})} /></div>
                           <div>
+                              <label className="block text-sm font-bold mb-1">Description</label>
+                              <textarea className="w-full border p-2 rounded h-20" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} />
+                          </div>
+                          <div>
                               <label className="block text-sm font-bold mb-1">Teachers (comma separated)</label>
-                              <textarea className="w-full border p-2 rounded h-24" value={editingDept.teachers?.join(', ') || ''} onChange={e => setEditingDept({...editingDept, teachers: e.target.value.split(',').map(s => s.trim())})} />
+                              <textarea className="w-full border p-2 rounded h-24" value={editingDept.teachers?.join(', ') || ''} onChange={e => setEditingDept({...editingDept, teachers: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
                           </div>
                       </div>
                       <div className="p-4 border-t flex justify-end gap-2">
