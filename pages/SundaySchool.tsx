@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { SundaySchoolDepartment } from '../types';
-import { Users, UserCheck, Edit, Save, X, Loader, Database, UploadCloud } from 'lucide-react';
+import { Users, UserCheck, Edit, Save, X, Loader, Database, UploadCloud, FileUp } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // Initial Empty Data Structure for Admin Population
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
@@ -92,6 +93,8 @@ const SundaySchool: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Partial<SundaySchoolDepartment> | null>(null);
+  
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to map IDs to Names based on language (or just capitalize ID)
   const getDeptName = useCallback((id: string) => {
@@ -180,6 +183,60 @@ const SundaySchool: React.FC = () => {
       }
   };
 
+  const handleImportTeachers = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      // Find current dept again to be safe inside callback
+      const normalizedId = departmentId?.toLowerCase();
+      const currentDept = departments.find(d => d.id === normalizedId) || departments[0];
+
+      if (!file || !currentDept) return;
+
+      try {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data);
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          
+          // Read as array of arrays to get raw rows
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+          const importedTeachers: string[] = [];
+          
+          // Iterate rows and grab first column, skipping potential headers
+          jsonData.forEach((row: any[]) => {
+              if (row.length > 0) {
+                  const val = String(row[0]).trim();
+                  // Skip obvious headers
+                  if (val && !['name', 'teacher', 'teachers', 'hming', 'zirtirtu'].includes(val.toLowerCase())) {
+                      importedTeachers.push(val);
+                  }
+              }
+          });
+
+          if (importedTeachers.length === 0) {
+              alert("No valid names found in the first column.");
+              return;
+          }
+
+          if (window.confirm(`Found ${importedTeachers.length} names. This will REPLACE the existing teacher list for ${currentDept.name}. Proceed?`)) {
+              if (db && db.collection) {
+                  await db.collection('sundaySchool').doc(currentDept.id).update({
+                      teachers: importedTeachers
+                  });
+                  alert("Teachers imported successfully!");
+                  fetchDepartments();
+              } else {
+                  alert("Database connection unavailable.");
+              }
+          }
+
+      } catch (error) {
+          console.error("Import error:", error);
+          alert("Failed to read file. Please ensure it is a valid Excel or CSV file.");
+      } finally {
+          if (importInputRef.current) importInputRef.current.value = '';
+      }
+  };
+
   // Safe Fallback: If loading, show loader. If not found, use first department (Soft Redirect)
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500"/></div>;
   
@@ -202,6 +259,21 @@ const SundaySchool: React.FC = () => {
                       </div>
                       {isAdmin && (
                           <div className="flex gap-2">
+                              <button 
+                                onClick={() => importInputRef.current?.click()} 
+                                className="p-2 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 text-green-700" 
+                                title="Import Teachers from Excel"
+                              >
+                                  <FileUp size={20} />
+                              </button>
+                              <input 
+                                  type="file" 
+                                  ref={importInputRef} 
+                                  className="hidden" 
+                                  accept=".xlsx, .xls, .csv" 
+                                  onChange={handleImportTeachers} 
+                              />
+
                               <button 
                                 onClick={handleSeed} 
                                 disabled={isSeeding} 
