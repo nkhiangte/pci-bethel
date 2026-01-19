@@ -15,6 +15,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -24,6 +25,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -33,6 +35,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -42,6 +45,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -51,6 +55,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -60,6 +65,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -69,6 +75,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: '',
       asstLeader: '',
       secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -77,6 +84,8 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       id: 'puitling',
       leader: '',
       asstLeader: '',
+      secretary: '',
+      asstSecretary: '',
       teachers: [],
       description: '',
       students: 0
@@ -247,6 +256,10 @@ const SundaySchool: React.FC = () => {
 
   if (!currentDept) return <div className="text-center py-20">No department data found.</div>;
 
+  const isPuitling = currentDept.id === 'puitling';
+  const leaderLabel = isPuitling ? 'Superintendent' : 'Leader';
+  const asstLeaderLabel = isPuitling ? 'Asst. Superintendent' : 'Asst. Leader';
+
   return (
       <div className="py-12 bg-slate-50 min-h-screen">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -297,16 +310,20 @@ const SundaySchool: React.FC = () => {
                           <h3 className="font-bold text-slate-800 mb-4 flex items-center"><Users className="mr-2 text-church-600"/> Leadership</h3>
                           <div className="space-y-4">
                               <div className="flex justify-between border-b border-slate-50 pb-2">
-                                  <span className="text-slate-500">Leader</span>
+                                  <span className="text-slate-500">{leaderLabel}</span>
                                   <span className="font-medium text-slate-800">{currentDept.leader || '-'}</span>
                               </div>
                               <div className="flex justify-between border-b border-slate-50 pb-2">
-                                  <span className="text-slate-500">Asst. Leader</span>
+                                  <span className="text-slate-500">{asstLeaderLabel}</span>
                                   <span className="font-medium text-slate-800">{currentDept.asstLeader || '-'}</span>
                               </div>
                               <div className="flex justify-between border-b border-slate-50 pb-2">
                                   <span className="text-slate-500">Secretary</span>
                                   <span className="font-medium text-slate-800">{currentDept.secretary || '-'}</span>
+                              </div>
+                              <div className="flex justify-between border-b border-slate-50 pb-2">
+                                  <span className="text-slate-500">Asst. Secretary</span>
+                                  <span className="font-medium text-slate-800">{currentDept.asstSecretary || '-'}</span>
                               </div>
                           </div>
                       </div>
@@ -361,9 +378,19 @@ const SundaySchool: React.FC = () => {
                           <button onClick={() => setIsEditModalOpen(false)}><X/></button>
                       </div>
                       <div className="p-6 space-y-4 overflow-y-auto">
-                          <div><label className="block text-sm font-bold mb-1">Leader</label><input className="w-full border p-2 rounded" value={editingDept.leader || ''} onChange={e => setEditingDept({...editingDept, leader: e.target.value})} /></div>
-                          <div><label className="block text-sm font-bold mb-1">Asst. Leader</label><input className="w-full border p-2 rounded" value={editingDept.asstLeader || ''} onChange={e => setEditingDept({...editingDept, asstLeader: e.target.value})} /></div>
+                          {(() => {
+                              const editIsPuitling = editingDept.id === 'puitling';
+                              const editLeaderLabel = editIsPuitling ? 'Superintendent' : 'Leader';
+                              const editAsstLeaderLabel = editIsPuitling ? 'Asst. Superintendent' : 'Asst. Leader';
+                              return (
+                                  <>
+                                      <div><label className="block text-sm font-bold mb-1">{editLeaderLabel}</label><input className="w-full border p-2 rounded" value={editingDept.leader || ''} onChange={e => setEditingDept({...editingDept, leader: e.target.value})} /></div>
+                                      <div><label className="block text-sm font-bold mb-1">{editAsstLeaderLabel}</label><input className="w-full border p-2 rounded" value={editingDept.asstLeader || ''} onChange={e => setEditingDept({...editingDept, asstLeader: e.target.value})} /></div>
+                                  </>
+                              );
+                          })()}
                           <div><label className="block text-sm font-bold mb-1">Secretary</label><input className="w-full border p-2 rounded" value={editingDept.secretary || ''} onChange={e => setEditingDept({...editingDept, secretary: e.target.value})} /></div>
+                          <div><label className="block text-sm font-bold mb-1">Asst. Secretary</label><input className="w-full border p-2 rounded" value={editingDept.asstSecretary || ''} onChange={e => setEditingDept({...editingDept, asstSecretary: e.target.value})} /></div>
                           <div><label className="block text-sm font-bold mb-1">Student Count</label><input type="number" className="w-full border p-2 rounded" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value)})} /></div>
                           <div>
                               <label className="block text-sm font-bold mb-1">Description</label>

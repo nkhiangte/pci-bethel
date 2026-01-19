@@ -189,6 +189,7 @@ export interface SundaySchoolDepartment {
   leader: string;
   asstLeader?: string;
   secretary?: string;
+  asstSecretary?: string;
   teachers: string[];
   description: string;
   students: number;
