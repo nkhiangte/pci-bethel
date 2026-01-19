@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { SundaySchoolDepartment } from '../types';
-import { BookOpen, Users, UserCheck, Edit, Plus, Trash, Save, X, Loader, Database, AlertTriangle } from 'lucide-react';
+import { Users, UserCheck, Edit, Save, X, Loader, Database, UploadCloud } from 'lucide-react';
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
     {
@@ -13,7 +13,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Pi K Lalrokhumi',
       asstLeader: 'Pi Mary Lalnunmawii',
       secretary: 'Nl K Zothansangi',
-      teachers: ['Pi Linda Vanlalruati', 'Pi R.Laldintluangi', 'Pi Lalsiamliani', 'Pi Cicily Lalrindiki'],
+      teachers: [
+        'Pi Linda Vanlalruati', 'Pi R.Laldintluangi', 'Pi Lalsiamliani', 'Pi Cicily Lalrindiki',
+        'Nl. Lalremruati', 'Nl. Zodinpuii', 'Pi Lalhriatpuii', 'Nl. Lalnunthari'
+      ],
       description: 'Focuses on foundational Bible stories and songs for ages 3-4, creating a fun and nurturing environment to introduce them to God\'s love.',
       students: 25
     },
@@ -22,7 +25,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Pi K Lalbiakthangi',
       asstLeader: 'Pi C Lalchhandami',
       secretary: 'Nl R Lalmuanawmi',
-      teachers: ['Pi Lalhmingliani', 'Pi Lalhriatpuii', 'Nl H Vanlalruati'],
+      teachers: [
+        'Pi Lalhmingliani', 'Pi Lalhriatpuii', 'Nl H Vanlalruati', 'Pi Vanlalawii',
+        'Pi Lalbiakdiki', 'Pi Lalremruati', 'Nl. Lalnunsiami'
+      ],
       description: 'Introduction to basic biblical characters and themes for ages 5-6.',
       students: 30
     },
@@ -31,7 +37,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Pu Mungngaihsanga',
       asstLeader: 'Pu H Lalzuitluanga',
       secretary: 'Nl C Lalbiaknii',
-      teachers: ['Pi Lalremruati', 'Pi Lalbiakdiki', 'Pu Lalrinawma'],
+      teachers: [
+        'Pi Lalremruati', 'Pi Lalbiakdiki', 'Pu Lalrinawma', 'Pi C.Lalhruaitluangi',
+        'Pi R.Lalngaihzuali', 'Pu F.Lalhriatpuia', 'Tv. Thangzasanga'
+      ],
       description: 'Building a strong foundation in the Word of God for ages 7-9.',
       students: 45
     },
@@ -40,7 +49,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Tv H Lalfakawma',
       asstLeader: 'Pu Lalhmingmawia',
       secretary: 'Nl Lallawmzuali',
-      teachers: ['Pu Lalruatfela', 'Nl Lalremruati', 'Tv Lalhriatpuia'],
+      teachers: [
+        'Pu Lalruatfela', 'Nl Lalremruati', 'Tv Lalhriatpuia', 'Pu K.Vanengmawia',
+        'Pu R.Lalremmawia', 'Nl. Ngurbawitluangi', 'Tv. B.Thangzauva', 'Nl. Lalrammawii Renthlei'
+      ],
       description: 'Exploring the Bible in more depth and applying it to daily life for ages 10-12.',
       students: 50
     },
@@ -49,7 +61,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Pu V Lalbiakdika',
       asstLeader: 'Pu C Lalengmawia',
       secretary: 'Tv Vanlalchhana',
-      teachers: ['Pu Zoramenga', 'Tv Thangdeihmanga', 'Nl Lalnunthari'],
+      teachers: [
+        'Pu Zoramenga', 'Tv Thangdeihmanga', 'Nl Lalnunthari', 'Pu Samuel Lalbiakzuala',
+        'Pu T.Lalramnghaka', 'Pu Vanlalruatpuia', 'Tv. Liankhankhama', 'Tv. Chinngoliana'
+      ],
       description: 'Preparing young teens for confirmation and deeper spiritual understanding (ages 13-15).',
       students: 40
     },
@@ -58,7 +73,10 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'T Upa Hmingthansanga',
       asstLeader: 'Pu K Lalengthanga',
       secretary: 'Pu C Lalmuansanga',
-      teachers: ['Pu R Lalmalsawma', 'Pu C Ramtharnghaka'],
+      teachers: [
+        'Pu R Lalmalsawma', 'Pu C Ramtharnghaka', 'Pu C.Lalchhanhima', 'Pu Lalhmunngheta',
+        'Pu Manliankhupa', 'Pu C.Lalfaka', 'Pu Tluangzathanga', 'Nl. Ningsianmawii'
+      ],
       description: 'Sacramental preparation and doctrinal studies for ages 16-19.',
       students: 35
     },
@@ -67,15 +85,26 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
       leader: 'Pu Zoramenga',
       asstLeader: 'Pu K Thuamluaia',
       secretary: 'Tv T Lalnunzira',
-      teachers: ['Pu C Rohmingliana', 'Pu Lalmuanpuia Ralte'],
+      teachers: [
+        'Pu C Rohmingliana', 'Pu Lalmuanpuia Ralte', 'Pu T.Sangtluanga', 'Pu K.Lalrawna',
+        'Pu JC Laldinthara', 'Pu P.Lalhmingthanga', 'Pu C.Lalrawngbawla', 'Pu Thanglianmanga',
+        'Pu Nelson Khiangte', 'Pu Kapthuama', 'Pu Khawlrosiama', 'Pu Thangkunga Hualngo',
+        'Pu B.Zelkhangova', 'Pu PC Zoramthanga', 'Pu K.Lalengkima', 'Pu Lalthanghulha',
+        'Pu Lalramnghakhlela', 'Pu H.Vanlalthanga'
+      ],
       description: 'Adult Bible study focusing on advanced topics and practical Christian living.',
       students: 120
     },
     {
       id: 'puitling',
-      leader: '-', // Usually handled by Pastors/Upa
+      leader: '-', 
       asstLeader: '-',
-      teachers: [],
+      teachers: [
+        'Pastor & Upa te', 'Pu C.Rohmingliana', 'Pu Lalmuanpuia Ralte', 'Pu T.Sangtluanga',
+        'Pu K.Lalrawna', 'Pu JC Laldinthara', 'Pu P.Lalhmingthanga', 'Pu C.Lalrawngbawla',
+        'Pu Thanglianmanga', 'Pu Nelson Khiangte', 'Pu Kapthuama', 'Pu Khawlrosiama',
+        'Pu Thangkunga Hualngo', 'Pu B.Zelkhangova', 'Pu PC Zoramthanga', 'Pu K.Lalengkima'
+      ],
       description: 'General adult Sunday School class.',
       students: 1400
     }
@@ -83,7 +112,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
 
 const SundaySchool: React.FC = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { isAdmin } = useAuth();
   
   const [departments, setDepartments] = useState<SundaySchoolDepartment[]>([]);
@@ -93,10 +122,10 @@ const SundaySchool: React.FC = () => {
   const [editingDept, setEditingDept] = useState<Partial<SundaySchoolDepartment> | null>(null);
 
   // Helper to map IDs to Names based on language (or just capitalize ID)
-  const getDeptName = (id: string) => {
+  const getDeptName = useCallback((id: string) => {
       // @ts-ignore
       return t.sundaySchool[id] || id.charAt(0).toUpperCase() + id.slice(1);
-  };
+  }, [t]);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
@@ -142,14 +171,14 @@ const SundaySchool: React.FC = () => {
         setDepartments(mappedData as SundaySchoolDepartment[]);
     }
     setLoading(false);
-  }, [t]);
+  }, [getDeptName]);
 
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
 
   const handleSeed = async () => {
-      if (!db || !db.collection || !window.confirm("Overwrite Sunday School data?")) return;
+      if (!db || !db.collection || !window.confirm("Overwrite ALL Sunday School data in Firebase with the complete local list?")) return;
       setIsSeeding(true);
       try {
           const batch = db.batch();
@@ -159,10 +188,10 @@ const SundaySchool: React.FC = () => {
           });
           await batch.commit();
           fetchDepartments();
-          alert("Seeded successfully");
+          alert("All data saved to Firebase successfully!");
       } catch(e) {
           console.error(e);
-          alert("Failed to seed");
+          alert("Failed to save data to Firebase.");
       }
       setIsSeeding(false);
   };
@@ -179,15 +208,14 @@ const SundaySchool: React.FC = () => {
       }
   };
 
-  const currentDept = departments.find(d => d.id === departmentId);
-
-  // Replaced Redirect with Navigate
-  if (!departmentId) {
-      return <Navigate to={`/sundayschool/pre-beginner`} replace />;
-  }
-
+  // Safe Fallback: If loading, show loader. If not found, use first department (Soft Redirect)
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500"/></div>;
-  if (!currentDept) return <Navigate to="/sundayschool/pre-beginner" replace />;
+  
+  // Find department matching ID (case-insensitive), or default to the first one available
+  const normalizedId = departmentId?.toLowerCase();
+  const currentDept = departments.find(d => d.id === normalizedId) || departments[0];
+
+  if (!currentDept) return <div className="text-center py-20">No department data found.</div>;
 
   return (
       <div className="py-12 bg-slate-50 min-h-screen">
@@ -201,9 +229,19 @@ const SundaySchool: React.FC = () => {
                           <p className="text-slate-600 mt-2 text-lg">{currentDept.description}</p>
                       </div>
                       {isAdmin && (
-                          <button onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
-                              <Edit size={20} />
-                          </button>
+                          <div className="flex gap-2">
+                              <button 
+                                onClick={handleSeed} 
+                                disabled={isSeeding} 
+                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 text-blue-700 text-xs font-bold" 
+                                title="Overwrite Firebase Data with Local List"
+                              >
+                                  <UploadCloud size={16} /> {isSeeding ? 'Saving...' : 'Sync to Firebase'}
+                              </button>
+                              <button onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
+                                  <Edit size={20} />
+                              </button>
+                          </div>
                       )}
                   </div>
               </div>
@@ -233,7 +271,7 @@ const SundaySchool: React.FC = () => {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {currentDept.teachers.map((t, i) => (
                                   <div key={i} className="flex items-center text-sm text-slate-700">
-                                      <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+                                      <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2 shrink-0"></div>
                                       {t}
                                   </div>
                               ))}

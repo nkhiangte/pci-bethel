@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
       name: t.nav.sundaySchool, 
       path: '#',
       children: [
-        { name: t.sundaySchool.preBeginner, path: '/sundayschool/pre-beginner' },
+        { name: t.sundaySchool['pre-beginner'], path: '/sundayschool/pre-beginner' },
         { name: t.sundaySchool.beginner, path: '/sundayschool/beginner' },
         { name: t.sundaySchool.primary, path: '/sundayschool/primary' },
         { name: t.sundaySchool.junior, path: '/sundayschool/junior' },
