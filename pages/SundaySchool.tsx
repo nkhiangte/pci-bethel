@@ -116,7 +116,7 @@ const SundaySchool: React.FC = () => {
     }
 
     try {
-        const snapshot = await db.collection('sundaySchool').get();
+        const snapshot = await db.collection('sundaySchoolDepartments').get();
         if (!snapshot.empty) {
             const fetchedData = snapshot.docs.map((doc: any) => ({
                 id: doc.id,
@@ -138,7 +138,8 @@ const SundaySchool: React.FC = () => {
             setDepartments(mappedData as SundaySchoolDepartment[]);
         }
     } catch (e) {
-        console.error(e);
+        console.error("Error fetching departments:", e);
+        // On error (e.g. collection doesn't exist yet or permission denied), fallback to initial data
         const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({
             ...d,
             name: getDeptName(d.id)
@@ -158,15 +159,15 @@ const SundaySchool: React.FC = () => {
       try {
           const batch = db.batch();
           INITIAL_DEPARTMENTS_DATA.forEach(dept => {
-              const docRef = db.collection('sundaySchool').doc(dept.id);
+              const docRef = db.collection('sundaySchoolDepartments').doc(dept.id);
               batch.set(docRef, { ...dept, name: getDeptName(dept.id) });
           });
           await batch.commit();
           fetchDepartments();
           alert("All data reset successfully!");
-      } catch(e) {
+      } catch(e: any) {
           console.error(e);
-          alert("Failed to save data to Firebase.");
+          alert(`Failed to save data to Firebase: ${e.message}`);
       }
       setIsSeeding(false);
   };
@@ -174,12 +175,12 @@ const SundaySchool: React.FC = () => {
   const handleSave = async () => {
       if (!db || !db.collection || !editingDept || !editingDept.id) return;
       try {
-          await db.collection('sundaySchool').doc(editingDept.id).set(editingDept, { merge: true });
+          await db.collection('sundaySchoolDepartments').doc(editingDept.id).set(editingDept, { merge: true });
           setIsEditModalOpen(false);
           fetchDepartments();
-      } catch (e) {
-          console.error(e);
-          alert("Failed to save");
+      } catch (e: any) {
+          console.error("Save Error:", e);
+          alert(`Failed to save: ${e.message || 'Unknown error'}`);
       }
   };
 
@@ -219,7 +220,7 @@ const SundaySchool: React.FC = () => {
 
           if (window.confirm(`Found ${importedTeachers.length} names. This will REPLACE the existing teacher list for ${currentDept.name}. Proceed?`)) {
               if (db && db.collection) {
-                  await db.collection('sundaySchool').doc(currentDept.id).update({
+                  await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
                       teachers: importedTeachers
                   });
                   alert("Teachers imported successfully!");
@@ -229,9 +230,9 @@ const SundaySchool: React.FC = () => {
               }
           }
 
-      } catch (error) {
+      } catch (error: any) {
           console.error("Import error:", error);
-          alert("Failed to read file. Please ensure it is a valid Excel or CSV file.");
+          alert(`Failed to import: ${error.message || 'Unknown error'}`);
       } finally {
           if (importInputRef.current) importInputRef.current.value = '';
       }
