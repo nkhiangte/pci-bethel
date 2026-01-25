@@ -320,6 +320,22 @@ const Fellowship: React.FC = () => {
     };
     fetchFellowship();
   }, [id, language]);
+  
+  useEffect(() => {
+    if (isKTP && db?.collection) {
+      const fetchKtpData = async () => {
+        try {
+          const leadersDoc = await db.collection('ktpLeaders').doc('2026').get();
+          if (leadersDoc.exists) setKtpHruaitute(leadersDoc.data() as KTPHruaitute);
+
+          const budgetDoc = await db.collection('ktpBudget').doc('2026').get();
+          if (budgetDoc.exists) setKtpBudget(budgetDoc.data() as KTPBudget);
+        } catch (e) { console.error("Error fetching KTP data:", e); }
+      };
+      fetchKtpData();
+    }
+  }, [isKTP]);
+
 
   if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500" /></div>;
   if (fellowship === null) return <Navigate to="/" />;
@@ -418,8 +434,59 @@ const Fellowship: React.FC = () => {
           </div>
       );
   }
+  
+  // --- KTP Specific Render ---
+  if (isKTP) {
+     return (
+        <div className="bg-slate-50 min-h-screen pb-12">
+              <div className="bg-church-900 text-white border-b border-church-800">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                      <div className="flex items-center gap-6">
+                          <div className="w-24 h-24 bg-white p-2 rounded-full shadow-xl shrink-0">
+                             <img src={fellowship.image} alt={fellowship.name} className="w-full h-full object-contain rounded-full" />
+                          </div>
+                          <div>
+                              <h1 className="text-3xl font-serif font-bold text-white">{fellowship.name}</h1>
+                              <p className="text-church-200 mt-2 max-w-2xl">{fellowship.description}</p>
+                          </div>
+                      </div>
+                  </div>
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex space-x-1 overflow-x-auto no-scrollbar">
+                          {ktpNavLinks.map(link => (
+                              <button
+                                  key={link.id}
+                                  onClick={() => setKtpActiveTab(link.id)}
+                                  className={`flex items-center px-4 py-3 border-b-2 text-sm font-bold whitespace-nowrap transition-colors ${
+                                      ktpActiveTab === link.id
+                                          ? 'border-yellow-400 text-yellow-300'
+                                          : 'border-transparent text-church-300 hover:text-white hover:border-church-700'
+                                  }`}
+                              >
+                                  <link.icon size={16} className="mr-2" />
+                                  {link.label}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
 
-  // --- KTP Render (Generic Fallback) ---
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                 {/* KTP Content Tabs */}
+                 {ktpActiveTab === 'circular' && <div className="p-8 bg-white rounded-xl shadow-sm">Hruaitute content goes here...</div>}
+                 {ktpActiveTab === 'sub-committees' && <div className="p-8 bg-white rounded-xl shadow-sm">Sub-Committees content goes here...</div>}
+                 {ktpActiveTab === 'project-budget' && <div className="p-8 bg-white rounded-xl shadow-sm">Project & Budget content goes here...</div>}
+                 {ktpActiveTab === 'members' && <div className="p-8 bg-white rounded-xl shadow-sm">Member List content goes here...</div>}
+                 {ktpActiveTab === 'history' && <div className="p-8 bg-white rounded-xl shadow-sm">History content goes here...</div>}
+                 {ktpActiveTab === 'gallery' && <div className="p-8 bg-white rounded-xl shadow-sm">Gallery content goes here...</div>}
+                 {ktpActiveTab === 'productions' && <div className="p-8 bg-white rounded-xl shadow-sm">Productions content goes here...</div>}
+                 {ktpActiveTab === 'whoswho' && <div className="p-8 bg-white rounded-xl shadow-sm">Who's Who content goes here...</div>}
+              </div>
+        </div>
+     );
+  }
+
+  // --- Generic Fallback Render ---
   return (
     <div className="bg-slate-50 min-h-screen">
         <div className="bg-church-900 text-white py-12">
@@ -450,7 +517,6 @@ const Fellowship: React.FC = () => {
                          <p>{fellowship.schedule}</p>
                      </div>
                  </div>
-                 {isKTP && <p className="mt-8 text-center text-slate-500 italic">KTP Specific content goes here.</p>}
              </div>
         </div>
     </div>
