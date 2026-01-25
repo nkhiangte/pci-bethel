@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPBudget } from '../types';
+import { Ministry, KTPHruaitute, KTPBudget, KTPMember, KTPSubCommittee, BudgetItem } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,116 @@ import {
   Download, FileUp, FileDown, TrendingUp
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+// --- KTP SPECIFIC COMPONENTS ---
+
+const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined }> = ({ data }) => {
+  if (!data) return <div className="p-8 bg-white rounded-xl shadow-sm text-center"><Loader className="animate-spin mx-auto"/></div>;
+
+  const MemberList: React.FC<{ title: string; members: KTPMember[] }> = ({ title, members }) => (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+      <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">{title}</h3>
+      <ul className="space-y-3">
+        {members.map((member, index) => (
+          <li key={index} className="flex justify-between items-center text-sm">
+            <span className="font-semibold text-slate-700">{member.name}</span>
+            <span className="text-slate-500">{member.role}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {data.leaders && <MemberList title="Office Bearers" members={data.leaders} />}
+      {data.committeeMembers && <MemberList title="Committee Members" members={data.committeeMembers} />}
+      {data.exOfficioMembers && <MemberList title="Ex-Officio Members" members={data.exOfficioMembers} />}
+    </div>
+  );
+};
+
+const KtpSubCommittees: React.FC<{ data: KTPSubCommittee[] | undefined }> = ({ data }) => {
+  if (!data || data.length === 0) return <div className="p-8 bg-white rounded-xl shadow-sm text-center">No sub-committee data available.</div>;
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {data.map((committee) => (
+        <div key={committee.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">{committee.name}</h3>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+            {committee.members.map((member, index) => (
+              <li key={index} className="flex justify-between items-baseline text-sm border-b border-slate-100 py-2">
+                <span className="font-semibold text-slate-700">{member.name}</span>
+                <span className="text-slate-500 text-xs">{member.role}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const KtpBudgetComponent: React.FC<{ data: KTPBudget | null | undefined }> = ({ data }) => {
+    if (!data) return <div className="p-8 bg-white rounded-xl shadow-sm text-center"><Loader className="animate-spin mx-auto"/></div>;
+  
+    const calculateTotal = (items: BudgetItem[]) => items.reduce((sum, item) => sum + parseFloat(item.amount.replace(/,/g, '')), 0);
+  
+    const totalIncome = calculateTotal(data.income);
+    const totalExpenditure = calculateTotal(data.expenditure);
+    const balance = totalIncome - totalExpenditure;
+  
+    const formatCurrency = (amount: number) => `₹ ${amount.toLocaleString('en-IN')}`;
+  
+    return (
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 animate-in fade-in duration-300">
+        <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">Project & Budget {data.year}</h2>
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Income */}
+          <div>
+            <h3 className="text-lg font-bold text-green-700 mb-4 flex items-center gap-2"><TrendingUp size={20}/> Sum hmuhna tura ruahman (Income)</h3>
+            <div className="space-y-2 text-sm">
+              {data.income.map((item) => (
+                <div key={item.id} className="flex justify-between p-2 rounded hover:bg-green-50">
+                  <span className="text-slate-700">{item.item}</span>
+                  <span className="font-mono font-semibold text-slate-800">{formatCurrency(parseFloat(item.amount.replace(/,/g, '')))}</span>
+                </div>
+              ))}
+              <div className="flex justify-between p-2 mt-4 border-t-2 border-green-200 font-bold">
+                <span className="text-green-800">Total Income</span>
+                <span className="font-mono text-green-800">{formatCurrency(totalIncome)}</span>
+              </div>
+            </div>
+          </div>
+          {/* Expenditure */}
+          <div>
+            <h3 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2"><FileDown size={20}/> Sum hmanna tura ruahman (Expenditure)</h3>
+            <div className="space-y-2 text-sm">
+              {data.expenditure.map((item) => (
+                <div key={item.id} className="flex justify-between p-2 rounded hover:bg-red-50">
+                  <span className="text-slate-700">{item.item}</span>
+                  <span className="font-mono font-semibold text-slate-800">{formatCurrency(parseFloat(item.amount.replace(/,/g, '')))}</span>
+                </div>
+              ))}
+              <div className="flex justify-between p-2 mt-4 border-t-2 border-red-200 font-bold">
+                <span className="text-red-800">Total Expenditure</span>
+                <span className="font-mono text-red-800">{formatCurrency(totalExpenditure)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Balance */}
+        <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end">
+             <div className={`p-4 rounded-lg flex items-center justify-between w-full md:w-1/2 ${balance >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                <span className={`text-lg font-bold ${balance >= 0 ? 'text-green-800' : 'text-red-800'}`}>Balance</span>
+                <span className={`text-2xl font-mono font-black ${balance >= 0 ? 'text-green-800' : 'text-red-800'}`}>{formatCurrency(balance)}</span>
+             </div>
+        </div>
+      </div>
+    );
+};
+
 
 // --- Generic Stats Table Component ---
 interface StatsTableProps {
@@ -472,10 +582,9 @@ const Fellowship: React.FC = () => {
               </div>
 
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                 {/* KTP Content Tabs */}
-                 {ktpActiveTab === 'circular' && <div className="p-8 bg-white rounded-xl shadow-sm">Hruaitute content goes here...</div>}
-                 {ktpActiveTab === 'sub-committees' && <div className="p-8 bg-white rounded-xl shadow-sm">Sub-Committees content goes here...</div>}
-                 {ktpActiveTab === 'project-budget' && <div className="p-8 bg-white rounded-xl shadow-sm">Project & Budget content goes here...</div>}
+                 {ktpActiveTab === 'circular' && <KtpLeaders data={ktpHruaitute} />}
+                 {ktpActiveTab === 'sub-committees' && <KtpSubCommittees data={ktpHruaitute?.subCommittees} />}
+                 {ktpActiveTab === 'project-budget' && <KtpBudgetComponent data={ktpBudget} />}
                  {ktpActiveTab === 'members' && <div className="p-8 bg-white rounded-xl shadow-sm">Member List content goes here...</div>}
                  {ktpActiveTab === 'history' && <div className="p-8 bg-white rounded-xl shadow-sm">History content goes here...</div>}
                  {ktpActiveTab === 'gallery' && <div className="p-8 bg-white rounded-xl shadow-sm">Gallery content goes here...</div>}
