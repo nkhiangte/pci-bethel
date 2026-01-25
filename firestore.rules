@@ -116,6 +116,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Kohhran Hmeichhia Collections
+    match /kpvmBuhfaitham/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /kpvmNitinInkhawm/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /ministries/{docId} {
       allow read: if true;
       allow write: if isAdmin();
