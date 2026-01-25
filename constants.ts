@@ -74,7 +74,25 @@ const DATA = {
         description: 'The Youth Fellowship of the church, dedicated to serving Christ through music, evangelism, and social work.',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Every Monday @ 7:00 PM',
-        image: 'https://picsum.photos/800/600?random=10'
+        image: 'https://i.ibb.co/L8yPzCq/ktp-logo.png'
+      },
+      {
+        id: 'kpvm',
+        name: 'Kohhran Hmeichhia',
+        acronym: 'KH',
+        description: "The Women's Fellowship, a cornerstone of our church, focusing on spiritual growth, service, and community support.",
+        leader: 'Pi Lalhlimpuii (Leader)',
+        schedule: 'Every Tuesday @ 1:30 PM',
+        image: 'https://i.ibb.co/k2x1G2Q/hmeichhia.jpg'
+      },
+      {
+        id: 'pavlai',
+        name: 'Kohhran Pavalai Pawl',
+        acronym: 'KPP',
+        description: "The Men's Fellowship, providing a space for men to grow in faith and serve the church and community.",
+        leader: 'Pu R. Lalmalsawma (Leader)',
+        schedule: 'Every Friday @ 7:00 PM',
+        image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
       }
     ] as Ministry[],
     pastors: [
@@ -209,7 +227,25 @@ const DATA = {
         description: 'Rawngbawl tura Chhandam',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Thawhṭanni @ 7:00 PM',
-        image: 'https://picsum.photos/800/600?random=10'
+        image: 'https://i.ibb.co/L8yPzCq/ktp-logo.png'
+      },
+      {
+        id: 'kpvm',
+        name: 'Kohhran Hmeichhia',
+        acronym: 'KH',
+        description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
+        leader: 'Pi Lalhlimpuii (Leader)',
+        schedule: 'Thawhlehni @ 1:30 PM',
+        image: 'https://i.ibb.co/k2x1G2Q/hmeichhia.jpg'
+      },
+      {
+        id: 'pavlai',
+        name: 'Kohhran Pavalai Pawl',
+        acronym: 'KPP',
+        description: "Mipa te Pual inkhawmpawlna, rinnaa ṭhanlenna leh kohhran leh khawtlang tana rawngbawlna hmun.",
+        leader: 'Pu R. Lalmalsawma (Leader)',
+        schedule: 'Zirtawpni @ 7:00 PM',
+        image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
       }
     ] as Ministry[],
     pastors: [

@@ -1,197 +1,265 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPMember, KTPGroup, KTPBudget, BudgetItem, KTPSubCommittee } from '../types';
+import { Ministry, KTPHruaitute, KTPBudget } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, Edit, Phone, Save, X, PlusCircle, Trash2, Shield, Plus, UserPlus, DollarSign, Image as ImageIcon, Play, Upload, ExternalLink, User } from 'lucide-react';
+import { 
+  Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, 
+  Edit, Save, X, Trash2, Plus, DollarSign, Table as TableIcon,
+  Download, FileUp, FileDown, TrendingUp
+} from 'lucide-react';
+import * as XLSX from 'xlsx';
 
-const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
+// --- Generic Stats Table Component ---
+interface StatsTableProps {
+  title: string;
+  collectionName: string;
+  columns: { key: string; label: string; type?: 'number' | 'text' }[];
+  isAdmin: boolean;
+}
 
-const INITIAL_KTP_2026_DATA: KTPHruaitute = {
-    year: 2026,
-    leaders: [
-        { id: 'l1', role: 'Leader', name: 'Pu V.Lalbiakdika', phone: '9862501797' },
-        { id: 'l2', role: 'Asst. Leader', name: 'Pu Zoramenga', phone: '8731914707' },
-        { id: 'l3', role: 'Secretary', name: 'Tv. Thangdeihmanga', phone: '9862408944' },
-        { id: 'l4', role: 'Asst. Secretary', name: 'Tv. Vanlalchhana', phone: '9774960512' },
-        { id: 'l5', role: 'Treasurer', name: 'Tv H.Lalfakawma', phone: '9862532108' },
-        { id: 'l6', role: 'Fin. Secretary', name: 'Nl. Lallawmzuali', phone: '9862859665' },
-    ],
-    committeeMembers: [
-        { id: 'cm1', name: 'Pu C. Rodinthara', phone: '8731914713' },
-        { id: 'cm2', name: 'Nl. Ningsianmawii', phone: '8974711669' },
-        { id: 'cm3', name: 'Pu Manliankhupa', phone: '8259813082' },
-        { id: 'cm4', name: 'Pu Lalhmunngheta', phone: '8014535906' },
-        { id: 'cm5', name: 'Pu K. Lalramngheta', phone: '9856015972' },
-        { id: 'cm6', name: 'Nl. B Lalnunsiami', phone: '9862775676' },
-        { id: 'cm7', name: 'Nl. Lalnunthari', phone: '8730975332' },
-        { id: 'cm8', name: 'Pu C. Lalchhanhima', phone: '8974742027' },
-        { id: 'cm9', name: 'Tv. B Thangzauva', phone: '8414932248' },
-        { id: 'cm10', name: 'Tv. PB Hmangaihropuia', phone: '8459481985' },
-        { id: 'cm11', name: 'Tv. Liankhankhama', phone: '8798677049' },
-        { id: 'cm12', name: 'Pu T. Lalramnghaka', phone: '9862652584' },
-        { id: 'cm13', name: 'Pu C. Ramtharnghaka', phone: '9612983809' },
-        { id: 'cm14', name: 'Tv. Vanlaldanmawia', phone: '9612577054' },
-        { id: 'cm15', name: 'Pu Vanlalzamlova', phone: '7628028283' },
-        { id: 'cm16', name: 'Pu Tluangzathanga', phone: '7628875311' },
-        { id: 'cm17', name: 'Tv Vanlalzauva', phone: '8131959913' },
-        { id: 'cm18', name: 'Nl Vungngaihdawni', phone: '7085363712' },
-        { id: 'cm19', name: 'Nl Thangdinsangi', phone: '9612852334' },
-        { id: 'cm20', name: 'Nl V.Nunmawii', phone: '8974238630' },
-        { id: 'cm21', name: 'Nl C.Lalremruati', phone: '9862670041' },
-        { id: 'cm22', name: 'Pu Vanlalruatpuia', phone: '8132804701' },
-        { id: 'cm23', name: 'Pu Lalthangliana', phone: '7085198550' },
-    ],
-    exOfficioMembers: [
-        { id: 'eo1', name: 'Upa David Lalchhanhima', phone: '9862630996', role: 'Kohhran Committee Aiawhte' },
-        { id: 'eo2', name: 'Upa Hmingthanmawia Sailo', phone: '9862532256', role: 'Kohhran Committee Aiawhte' },
-        { id: 'eo3', name: 'Rev. Lalhmingthanga Chhangte', phone: '7085626477', role: 'Ex-Officio' },
-        { id: 'eo4', name: 'Pro Pastor Lallawmsanga', phone: '9862727756', role: 'Ex-Officio' },
-    ],
-    groupLeaders: [
-        {
-            id: 'g1', groupName: 'UPA KHAWIDAWLA', members: [
-                { id: 'g1l1', role: 'Leader', name: 'Pu Tluangzathanga' },
-                { id: 'g1l2', role: 'Asst. Leader', name: 'Tv. Zothanpuia' },
-                { id: 'g1l3', role: 'Secretary', name: 'Tv Thangzasanga' },
-                { id: 'g1l4', role: 'Asst Secretary', name: 'Nl. Lalnunsiami' },
-                { id: 'g1l5', role: 'Treasurer', name: 'Nl. Thangdinsangi' },
-                { id: 'g1l6', role: 'Fin. Secretary', name: 'Tv. Zodintluanga' },
-                { id: 'g1l7', role: 'Branch O.B', name: 'Tv. H. Lalfakawma' },
-            ]
-        },
-        {
-            id: 'g2', groupName: 'Upa MANHLEIA', members: [
-                { id: 'g2l1', role: 'Leader', name: 'Tv B. Thangzauva' },
-                { id: 'g2l2', role: 'Asst. Leader', name: 'Pu Ramdinpuia' },
-                { id: 'g2l3', role: 'Secretary', name: 'Tv Lalhmuliana' },
-                { id: 'g2l4', role: 'Asst.Secretary', name: 'Nl. Ruth Lalnunfeli' },
-                { id: 'g2l5', role: 'Treasurer', name: 'Nl. C. Lalremruati' },
-                { id: 'g2l6', role: 'Fin. Secretary', name: 'Pu Vanlalmawia' },
-                { id: 'g2l7', role: 'Branch O.B', name: 'Pu Zoramenga' },
-            ]
-        },
-        {
-            id: 'g3', groupName: 'UPA C.LALRINTLUANGA', members: [
-                { id: 'g3l1', role: 'Leader', name: 'Pu C.Ramtharnghaka' },
-                { id: 'g3l2', role: 'Asst. Leader', name: 'Pu Lalhruaitluanga' },
-                { id: 'g3l3', role: 'Secretary', name: 'Tv Lalrochawia' },
-                { id: 'g3l4', role: 'Asst. Secretary', name: 'Nl Zodinsangi' },
-                { id: 'g3l5', role: 'Treasurer', name: 'Nl. V.Nunmawiii' },
-                { id: 'g3l6', role: 'Fin. Secretary', name: 'Tv Lalengkima' },
-                { id: 'g3l7', role: 'Branch O.B', name: 'Tv Thangdeihmanga' },
-                { id: 'g3l8', role: 'Branch O.B', name: 'Nl Lallawmzuali' },
-            ]
-        },
-        {
-            id: 'g4', groupName: 'UPA H.LALMAWIA', members: [
-                { id: 'g4l1', role: 'Leader', name: 'Tv Vanlalzauva' },
-                { id: 'g4l2', role: 'Asst. Leader', name: 'Pu Samuel Lalbiakzuala' },
-                { id: 'g4l3', role: 'Secretary', name: 'Tv Chinngoliana' },
-                { id: 'g4l4', role: 'Asst. Secretary', name: 'Nl Zosangpuii' },
-                { id: 'g4l5', role: 'Treasurer', name: 'Nl. Vungngaihdawni' },
-                { id: 'g4l6', role: 'Fin. Secretary', name: 'Tv Lalmalsawmzuala' },
-                { id: 'g4l7', role: 'Branch O.B', name: 'Pu V.Lalbiakdika' },
-                { id: 'g4l8', role: 'Branch O.B', name: 'Tv Vanlalchhana' },
-            ]
-        },
-    ],
-    subCommittees: [
-        {
-            id: 'sc1', name: 'PROGRAMME', members: [
-                { id: 'sc1-c', role: 'Chairman', name: 'Pu V.Lalbiakdika' },
-                { id: 'sc1-s', role: 'Secretary', name: 'Tv Vanlalchhana' },
-                { id: 'sc1-m1', name: 'Pu Zoramenga' }, { id: 'sc1-m2', name: 'Tv Thangdeihmanga' },
-                { id: 'sc1-m3', name: 'Tv H.Lalfakawma' }, { id: 'sc1-m4', name: 'Nl Lallawmzuali' },
-                { id: 'sc1-m5', name: 'Pu Tluangzathanga' }, { id: 'sc1-m6', name: 'Tv B.Thangzauva' },
-                { id: 'sc1-m7', name: 'Pu C.Ramtharnghaka' }, { id: 'sc1-m8', name: 'Tv Vanlalzauva' },
-                { id: 'sc1-m9', name: 'Tv Thangzasanga' }, { id: 'sc1-m10', name: 'Tv Lalhmuliana' },
-                { id: 'sc1-m11', name: 'Tv Lalrochawia' }, { id: 'sc1-m12', name: 'Tv Chinngoliana' },
-            ]
-        },
-        {
-            id: 'sc2', name: 'MUSIC', members: [
-                { id: 'sc2-c', role: 'Chairman', name: 'Tv Thangdeihmanga' },
-                { id: 'sc2-cd', role: 'Conductor', name: 'Tv. Liankhankhama' },
-                { id: 'sc2-acd', role: 'Asst. Conductor', name: 'Pu K.Lalramngheta' },
-                { id: 'sc2-m1', name: 'Tv PB Hmangaihropuia' },
-                { id: 'sc2-m2', name: 'Pu Manliankhupa' },
-                { id: 'sc2-m3', name: 'Tv C.Lalhumhima' },
-            ]
-        },
-        {
-            id: 'sc3', name: 'REFRESHMENT', members: [
-                { id: 'sc3-c', role: 'Chairman', name: 'Nl. Lallawmzuali' },
-                { id: 'sc3-s', role: 'Secretary', name: 'Pu Vanlalzamlova' },
-                { id: 'sc3-m1', name: 'Nl B.Lalnunsiami' }, { id: 'sc3-m2', name: 'Pu T.Lalramnghaka' },
-                { id: 'sc3-m3', name: 'Pu Vanlalruatpuia' }, { id: 'sc3-m4', name: 'Pu Lalthangliana' },
-                { id: 'sc3-m5', name: 'Nl Chingsawmluni' },
-            ]
-        },
-        {
-            id: 'sc4', name: 'EVANGELICAL', members: [
-                { id: 'sc4-c', role: 'Chairman', name: 'Tv H.Lalfakawma' },
-                { id: 'sc4-s', role: 'Secretary', name: 'Nl Ningsianmawii' },
-                { id: 'sc4-m1', name: 'Nl B.Lalnunsiami' }, { id: 'sc4-m2', name: 'Nl Lalnunthari' },
-                { id: 'sc4-m3', name: 'Pu C.Lalchhanhima' }, { id: 'sc4-m4', name: 'Tv Vanlaldanmawia' },
-                { id: 'sc4-m5', name: 'Nl Baby Romalsawmi' }, { id: 'sc4-m6', name: 'Nl Anny Lalliandawli' },
-                { id: 'sc4-m7', name: 'Nl B.Lalrinfeli' },
-            ]
-        },
-        {
-            id: 'sc5', name: 'PROPERTY & DECORATION', members: [
-                { id: 'sc5-c', role: 'Chairman', name: 'Tv. Vanlalchhana' },
-                { id: 'sc5-s', role: 'Secretary', name: 'Pu. Lalhmunngheta' },
-                { id: 'sc5-m1', name: 'Pu V.Lalbiakdika' }, { id: 'sc5-m2', name: 'Pu Zoramenga' },
-                { id: 'sc5-m3', name: 'Tv Thangdeihmanga' }, { id: 'sc1-m4', name: 'Tv H.Lalfakawma' },
-                { id: 'sc5-m5', name: 'Nl. Lallawmzuali' },
-            ]
-        },
-        {
-            id: 'sc6', name: 'MEDIA & DOCUMENTATION', members: [
-                { id: 'sc6-c', role: 'Chairman', name: 'Pu Zoramenga' },
-                { id: 'sc6-s', role: 'Secretary', name: 'Pu Manliankhupa' },
-                { id: 'sc6-m1', name: 'Pu V.Lalbiakdika' }, { id: 'sc6-m2', name: 'Tv Thangdeihmanga' },
-                { id: 'sc6-m3', name: 'Tv Vanlalchhana' }, { id: 'sc6-m4', name: 'Tv H.Lalfakawma' },
-                { id: 'sc6-m5', name: 'Nl Lallawmzuali' }, { id: 'sc6-m6', name: 'Tv C.Lalmuankima' },
-                { id: 'sc6-m7', name: 'Tv Pauengliana' }, { id: 'sc6-m8', name: 'Tv Lalhmangaihsanga' },
-            ]
+const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns, isAdmin }) => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>({});
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    if (!db || !db.collection) {
+        setLoading(false);
+        return;
+    }
+    try {
+      const snapshot = await db.collection(collectionName).get();
+      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort by Year Descending
+      items.sort((a: any, b: any) => parseInt(b.year) - parseInt(a.year));
+      setData(items);
+    } catch (e) {
+      console.error(`Error fetching ${collectionName}:`, e);
+    }
+    setLoading(false);
+  }, [collectionName]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleSave = async () => {
+    if (!db || !db.collection) return;
+    try {
+      const { id, ...saveData } = editingItem;
+      if (id) {
+        await db.collection(collectionName).doc(id).set(saveData, { merge: true });
+      } else {
+        await db.collection(collectionName).add(saveData);
+      }
+      setIsModalOpen(false);
+      fetchData();
+    } catch (e) {
+      alert("Failed to save record.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!db || !window.confirm("Are you sure?")) return;
+    try {
+      await db.collection(collectionName).doc(id).delete();
+      fetchData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleExport = () => {
+    const ws = XLSX.utils.json_to_sheet(data.map(item => {
+        const row: any = {};
+        columns.forEach(col => row[col.label] = item[col.key]);
+        return row;
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data");
+    XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}_Export.xlsx`);
+  };
+
+  const handleTemplate = () => {
+    const row: any = {};
+    columns.forEach(col => row[col.label] = "");
+    const ws = XLSX.utils.json_to_sheet([row]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}_Template.xlsx`);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer);
+      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+      
+      const batch = db.batch();
+      const ref = db.collection(collectionName);
+
+      jsonData.forEach((row: any) => {
+        const docData: any = {};
+        columns.forEach(col => {
+           // Map localized headers back to keys
+           docData[col.key] = row[col.label] !== undefined ? String(row[col.label]) : "";
+        });
+        // Basic Validation: Ensure Year exists
+        if (docData.year) {
+            // Recalculate percentage during import if possible
+            if (collectionName === 'kpvmBuhfaitham' && docData.donors && docData.totalFamilies) {
+                const pct = (parseFloat(docData.donors) / parseFloat(docData.totalFamilies)) * 100;
+                docData.percentage = pct.toFixed(2);
+            } else if (collectionName === 'kpvmNitinInkhawm' && docData.performers && docData.totalHouses) {
+                const pct = (parseFloat(docData.performers) / parseFloat(docData.totalHouses)) * 100;
+                docData.percentage = pct.toFixed(2);
+            }
+
+            const newDoc = ref.doc();
+            batch.set(newDoc, docData);
         }
-    ]
+      });
+
+      await batch.commit();
+      alert("Import successful!");
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert("Import failed. Check file format.");
+    } finally {
+      setIsImporting(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
+  // Helper to auto-calculate percentage if fields are present
+  const updatePercentage = (newItem: any) => {
+      let p = newItem;
+      if (collectionName === 'kpvmBuhfaitham' && p.donors && p.totalFamilies) {
+          const pct = (parseFloat(p.donors) / parseFloat(p.totalFamilies)) * 100;
+          p.percentage = pct.toFixed(2);
+      } else if (collectionName === 'kpvmNitinInkhawm' && p.performers && p.totalHouses) {
+          const pct = (parseFloat(p.performers) / parseFloat(p.totalHouses)) * 100;
+          p.percentage = pct.toFixed(2);
+      }
+      setEditingItem({...p});
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h3 className="text-xl font-bold text-slate-800">{title}</h3>
+            <div className="flex gap-2">
+                <button onClick={handleExport} className="p-2 text-green-600 hover:bg-green-50 rounded-lg border border-green-200" title="Export Excel">
+                    <FileDown size={18} />
+                </button>
+                {isAdmin && (
+                    <>
+                        <button onClick={handleTemplate} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-200" title="Download Template">
+                            <Download size={18} />
+                        </button>
+                        <button onClick={() => importFileRef.current?.click()} className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg border border-orange-200" title="Import Excel">
+                            {isImporting ? <Loader className="animate-spin" size={18}/> : <FileUp size={18} />}
+                        </button>
+                        <input type="file" ref={importFileRef} onChange={handleImport} className="hidden" accept=".xlsx, .xls" />
+                        <button onClick={() => { setEditingItem({}); setIsModalOpen(true); }} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold">
+                            <Plus size={18} className="mr-2"/> Add Record
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+
+        {loading ? (
+            <div className="p-12 text-center"><Loader className="animate-spin mx-auto text-church-500" /></div>
+        ) : (
+            <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider">
+                        <tr>
+                            {columns.map(col => <th key={col.key} className="px-6 py-4">{col.label}</th>)}
+                            {isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {data.map((item) => (
+                            <tr key={item.id} className="hover:bg-slate-50">
+                                {columns.map(col => (
+                                    <td key={col.key} className="px-6 py-4 text-slate-700 font-medium">
+                                        {col.key === 'percentage' ? (
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${parseFloat(item[col.key]) >= 80 ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                {item[col.key]}%
+                                            </span>
+                                        ) : item[col.key]}
+                                    </td>
+                                ))}
+                                {isAdmin && (
+                                    <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                        <button onClick={() => { setEditingItem(item); setIsModalOpen(true); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16}/></button>
+                                        <button onClick={() => handleDelete(item.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                        {data.length === 0 && (
+                            <tr><td colSpan={columns.length + 1} className="p-8 text-center text-slate-400 italic">No records found.</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        )}
+
+        {/* Modal */}
+        {isModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold">{editingItem.id ? 'Edit' : 'Add'} Record</h3>
+                        <button onClick={() => setIsModalOpen(false)}><X size={20}/></button>
+                    </div>
+                    <div className="space-y-4">
+                        {columns.map(col => (
+                            <div key={col.key}>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{col.label}</label>
+                                <input 
+                                    type={col.key === 'year' || col.type === 'number' ? 'number' : 'text'}
+                                    className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-church-500 outline-none"
+                                    value={editingItem[col.key] || ''}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        const newItem = { ...editingItem, [col.key]: val };
+                                        // Trigger auto-calc if relevant fields change
+                                        if (['donors', 'totalFamilies', 'performers', 'totalHouses'].includes(col.key)) {
+                                            updatePercentage(newItem);
+                                        } else {
+                                            setEditingItem(newItem);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-6 flex justify-end gap-3">
+                        <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-lg hover:bg-slate-50">Cancel</button>
+                        <button onClick={handleSave} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold">Save</button>
+                    </div>
+                </div>
+            </div>
+        )}
+    </div>
+  );
 };
-
-const INITIAL_KTP_2026_BUDGET: KTPBudget = {
-    year: 2026,
-    income: [
-      { id: 'i1', item: "Faith Promise", amount: "420000" },
-      { id: 'i2', item: "Inkhawm Thilpek", amount: "160500" },
-      { id: 'i3', item: "Group Budget", amount: "100000" },
-      { id: 'i4', item: "Comt. Budget", amount: "10500" },
-      { id: 'i5', item: "Inhlawhna", amount: "80000" },
-      { id: 'i6', item: "Opening Balance", amount: "632226" },
-    ],
-    expenditure: [
-      { id: 'e1', item: "Missionary chawmna", amount: "96000" },
-      { id: 'e2', item: "Bial KTP Budget", amount: "65000" },
-      { id: 'e3', item: "Bial Conf/meet thlengtu puina", amount: "10000" },
-      { id: 'e4', item: "Property tihchangtlunna", amount: "150000" },
-      { id: 'e5', item: "Half Yearly meet", amount: "80000" },
-      { id: 'e6', item: "KTP inkhawm kim lawmman", amount: "20000" },
-      { id: 'e7', item: "Synod Rescue Home", amount: "20000" },
-      { id: 'e8', item: "Gen. Conference kal na", amount: "30000" },
-      { id: 'e9', item: "YRC Special Budget", amount: "15000" },
-      { id: 'e10', item: "Branch Golden Jubilee pual", amount: "50000" },
-      { id: 'e11', item: "Kohhrana chhunluh", amount: "50000" },
-      { id: 'e12', item: "Krismas leh Kumthar pual", amount: "50000" },
-      { id: 'e13', item: "Branch in enkawlna", amount: "767266" },
-    ],
-};
-
-
-const ktpLogoUrl = "https://i.ibb.co/KzQf1j7j/Gemini-Generated-Image-k4xevgk4xevgk4xe.png";
 
 const Fellowship: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -200,17 +268,13 @@ const Fellowship: React.FC = () => {
   const [fellowship, setFellowship] = useState<Ministry | null | undefined>(undefined);
 
   const isKTP = id === 'ktp';
+  const isKPVM = id === 'kpvm';
   const [ktpActiveTab, setKtpActiveTab] = useState('circular'); 
+  const [kpvmActiveTab, setKpvmActiveTab] = useState('home');
   
-  // State for KTP specific data
   const [ktpHruaitute, setKtpHruaitute] = useState<KTPHruaitute | null | undefined>(undefined);
   const [ktpBudget, setKtpBudget] = useState<KTPBudget | null | undefined>(undefined);
-  const [loadingKtpData, setLoadingKtpData] = useState(false);
   
-  // Modals
-  const [isHruaituteEditModalOpen, setIsHruaituteEditModalOpen] = useState(false);
-  const [isBudgetEditModalOpen, setIsBudgetEditModalOpen] = useState(false);
-
   const ktpNavLinks = [
     { id: 'circular', label: '2026 Hruaitute', icon: Book },
     { id: 'sub-committees', label: 'Sub-Committees', icon: Users }, 
@@ -220,6 +284,12 @@ const Fellowship: React.FC = () => {
     { id: 'gallery', label: 'Picture Gallery', icon: Camera },
     { id: 'productions', label: 'Productions', icon: Video },
     { id: 'whoswho', label: "Who's Who", icon: UserSquare },
+  ];
+
+  const kpvmNavLinks = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'buhfaitham', label: 'Buhfaitham', icon: TrendingUp },
+    { id: 'nitin-inkhawm', label: 'Kristian Chhungkua', icon: Users },
   ];
 
   useEffect(() => {
@@ -251,1000 +321,140 @@ const Fellowship: React.FC = () => {
     fetchFellowship();
   }, [id, language]);
 
-  useEffect(() => {
-    if (!isKTP) return;
-    
-    const fetchKtpDataForTab = async (tab: string) => {
-        setLoadingKtpData(true);
-        if (!db?.doc) {
-            setKtpHruaitute(null);
-            setKtpBudget(null);
-            setLoadingKtpData(false);
-            return;
-        }
+  if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500" /></div>;
+  if (fellowship === null) return <Navigate to="/" />;
 
-        if (tab === 'circular' || tab === 'sub-committees') { 
-            try {
-                const docRef = db.collection('ktpLeaders').doc('2026');
-                const docSnap = await docRef.get();
-                setKtpHruaitute(docSnap.exists ? (docSnap.data() as KTPHruaitute) : null);
-            } catch (error) {
-                console.error("Error fetching KTP Hruaitute:", error);
-                setKtpHruaitute(null);
-            }
-        } else if (tab === 'project-budget') {
-            try {
-                const docRef = db.collection('ktpBudget').doc('2026');
-                const docSnap = await docRef.get();
-                setKtpBudget(docSnap.exists ? (docSnap.data() as KTPBudget) : null);
-            } catch (error) {
-                console.error("Error fetching KTP Budget:", error);
-                setKtpBudget(null);
-            }
-        }
-        // Other tabs fetch data inside their own components
-        setLoadingKtpData(false);
-    };
+  // --- KPVM Specific Render ---
+  if (isKPVM) {
+      return (
+          <div className="bg-slate-50 min-h-screen pb-12">
+              <div className="bg-white border-b border-slate-200">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                      <div className="flex items-center gap-6">
+                          <div className="w-24 h-24 bg-slate-200 rounded-2xl overflow-hidden shadow-md shrink-0">
+                              <img src={fellowship.image} alt={fellowship.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                              <h1 className="text-3xl font-serif font-bold text-slate-900">{fellowship.name}</h1>
+                              <p className="text-slate-600 mt-2 max-w-2xl">{fellowship.description}</p>
+                          </div>
+                      </div>
+                  </div>
+                  {/* Tab Navigation */}
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="flex space-x-1 overflow-x-auto no-scrollbar">
+                          {kpvmNavLinks.map(link => (
+                              <button
+                                  key={link.id}
+                                  onClick={() => setKpvmActiveTab(link.id)}
+                                  className={`flex items-center px-5 py-4 border-b-2 text-sm font-bold whitespace-nowrap transition-colors ${
+                                      kpvmActiveTab === link.id
+                                          ? 'border-church-600 text-church-700 bg-church-50/50'
+                                          : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                  }`}
+                              >
+                                  <link.icon size={18} className="mr-2" />
+                                  {link.label}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
 
-    fetchKtpDataForTab(ktpActiveTab);
-  }, [isKTP, ktpActiveTab]);
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {kpvmActiveTab === 'home' && (
+                      <div className="space-y-8 animate-in fade-in zoom-in duration-300">
+                          {/* Standard Info Card */}
+                          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8">
+                              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><Users size={20} className="mr-2 text-church-600"/> Leadership & Schedule</h3>
+                              <div className="grid md:grid-cols-2 gap-6 text-sm text-slate-700">
+                                  <div className="bg-slate-50 p-4 rounded-lg">
+                                      <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Leader</span>
+                                      <span className="text-lg font-bold">{fellowship.leader || 'N/A'}</span>
+                                  </div>
+                                  <div className="bg-slate-50 p-4 rounded-lg">
+                                      <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Weekly Service</span>
+                                      <span className="text-lg font-bold">{fellowship.schedule || 'N/A'}</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
 
+                  {kpvmActiveTab === 'buhfaitham' && (
+                      <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                          <StatsTable 
+                              title="Buhfaitham Record"
+                              collectionName="kpvmBuhfaitham"
+                              isAdmin={isAdmin}
+                              columns={[
+                                  { key: 'year', label: 'Year', type: 'number' },
+                                  { key: 'totalFamilies', label: 'Chhungkaw zat', type: 'number' },
+                                  { key: 'donors', label: 'Tham thei zat', type: 'number' },
+                                  { key: 'percentage', label: '%', type: 'text' },
+                                  { key: 'weight', label: 'Weight (kg)', type: 'text' },
+                                  { key: 'amount', label: 'Amount (₹)', type: 'text' }
+                              ]}
+                          />
+                      </div>
+                  )}
 
-  const handleSaveKtpData = async (data: KTPHruaitute) => {
-    setLoadingKtpData(true);
-    if (!db?.doc) {
-      alert("Database not available.");
-      setLoadingKtpData(false);
-      return;
-    }
-    try {
-      await db.collection('ktpLeaders').doc(String(data.year)).set(data);
-      setKtpHruaitute(data);
-      setIsHruaituteEditModalOpen(false);
-      alert("Hruaitute updated successfully!");
-    } catch (error) {
-      console.error("Error saving KTP data:", error);
-      alert("Failed to save data.");
-    }
-    setLoadingKtpData(false);
-  };
-  
-  const handleSaveKtpBudget = async (data: KTPBudget) => {
-    setLoadingKtpData(true);
-    if (!db?.doc) {
-      alert("Database not available.");
-      setLoadingKtpData(false);
-      return;
-    }
-    try {
-      await db.collection('ktpBudget').doc(String(data.year)).set(data);
-      setKtpBudget(data);
-      setIsBudgetEditModalOpen(false);
-      alert("Budget updated successfully!");
-    } catch (error) {
-      console.error("Error saving KTP budget:", error);
-      alert("Failed to save budget data.");
-    }
-    setLoadingKtpData(false);
-  };
-  
-  const KtpContentPlaceholder = ({ tabId }: { tabId: string }) => {
-    const tab = ktpNavLinks.find(l => l.id === tabId);
-    return (
-      <div className="text-center py-20">
-        <h3 className="text-xl font-bold text-slate-700">Content Coming Soon</h3>
-        <p className="text-slate-500 mt-2">The "{tab?.label}" section is under construction.</p>
-      </div>
-    );
-  };
-
-  if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin h-10 w-10 text-church-500" /></div>;
-  if (!fellowship) return <Navigate to="/worship" replace />;
-
-  const renderKtpTabContent = () => {
-    if (loadingKtpData && (ktpActiveTab === 'circular' || ktpActiveTab === 'sub-committees' || ktpActiveTab === 'project-budget')) {
-        return <div className="text-center py-20"><Loader className="animate-spin h-8 w-8 text-cyan-500 mx-auto" /></div>;
-    }
-
-    switch(ktpActiveTab) {
-        case 'circular':
-            return ktpHruaitute ? 
-                   <KTPHruaituteView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
-                   <KTPDataMissing title="Hruaitute Details" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
-        case 'sub-committees': 
-            return ktpHruaitute ?
-                   <KTPSubCommitteesView data={ktpHruaitute} onEdit={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} /> :
-                   <KTPDataMissing title="Sub-Committees" onSetup={() => setIsHruaituteEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_DATA.year} />;
-        case 'project-budget':
-            return ktpBudget ?
-                   <KTPBudgetView data={ktpBudget} onEdit={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} /> :
-                   <KTPDataMissing title="Project & Budget" onSetup={() => setIsBudgetEditModalOpen(true)} isAdmin={isAdmin} year={INITIAL_KTP_2026_BUDGET.year} />;
-        case 'history':
-            return <KTPHistoryView isAdmin={isAdmin} />;
-        case 'gallery':
-            return <KTPGalleryView isAdmin={isAdmin} />;
-        case 'productions':
-            return <KTPProductionsView isAdmin={isAdmin} />;
-        case 'whoswho':
-            return <KTPWhosWhoView isAdmin={isAdmin} />;
-        case 'members':
-            return <KtpContentPlaceholder tabId={ktpActiveTab} />; // Member list can be complex, leaving as placeholder or can be simple list
-        default:
-            return <KtpContentPlaceholder tabId={ktpActiveTab} />;
-    }
+                  {kpvmActiveTab === 'nitin-inkhawm' && (
+                      <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                          <StatsTable 
+                              title="Kristian Chhungkua (Nitin Inkhawm)"
+                              collectionName="kpvmNitinInkhawm"
+                              isAdmin={isAdmin}
+                              columns={[
+                                  { key: 'year', label: 'Year', type: 'number' },
+                                  { key: 'totalHouses', label: 'In zat', type: 'number' },
+                                  { key: 'performers', label: 'Inkhawm thei zat', type: 'number' },
+                                  { key: 'percentage', label: '%', type: 'text' }
+                              ]}
+                          />
+                      </div>
+                  )}
+              </div>
+          </div>
+      );
   }
 
+  // --- KTP Render (Generic Fallback) ---
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={`relative ${isKTP ? 'bg-cyan-800' : 'bg-church-900'} text-white py-20`}>
-        <div className="absolute inset-0 overflow-hidden">
-          <img 
-            src={fellowship.image} 
-            alt={fellowship.name} 
-            className="w-full h-full object-cover opacity-20"
-          />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {isKTP ? (
-            <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-24 w-24 mb-6 rounded-full shadow-lg bg-white/10 p-1" />
-          ) : fellowship.acronym ? (
-            <span className={`inline-block py-1 px-3 rounded-full ${isKTP ? 'bg-cyan-500' : 'bg-church-500'} text-white text-sm font-bold tracking-wide mb-4`}>
-              {fellowship.acronym}
-            </span>
-          ) : null}
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">{fellowship.name}</h1>
-          <p className="text-xl text-slate-200 max-w-2xl mx-auto leading-relaxed">
-            {fellowship.description}
-          </p>
-        </div>
-      </div>
-
-      {isKTP ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-8 overflow-x-auto">
-            <nav className="flex">
-              {ktpNavLinks.map(link => (
-                <button
-                  key={link.id}
-                  onClick={() => setKtpActiveTab(link.id)}
-                  className={`flex items-center gap-2 px-5 py-4 font-semibold text-sm whitespace-nowrap border-b-2 transition-colors duration-200 ${
-                    ktpActiveTab === link.id
-                      ? 'border-cyan-500 text-cyan-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                  }`}
-                >
-                  <link.icon size={16} />
-                  {link.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 min-h-[300px]">
-             {renderKtpTabContent()}
-          </div>
-        </div>
-      ) : (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Leadership & Schedule</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-church-50 text-church-600 rounded-lg">
-                  <Users size={24} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Leader</h3>
-                  <p className="text-slate-600 mt-1">{fellowship.leader}</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-                  <Clock size={24} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Regular Meeting</h3>
-                  <p className="text-slate-600 mt-1">{fellowship.schedule}</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 pt-8 border-t border-slate-100">
-               <h3 className="font-bold text-slate-900 mb-4 flex items-center">
-                 <Calendar className="mr-2 text-church-500" size={20} /> Upcoming Activities
-               </h3>
-               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 text-center text-slate-500 italic">
-                 No specific activities scheduled for this week. Please check Announcements for updates.
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {isHruaituteEditModalOpen && <KTPHruaituteEditModal data={ktpHruaitute || INITIAL_KTP_2026_DATA} onClose={() => setIsHruaituteEditModalOpen(false)} onSave={handleSaveKtpData} />}
-      {isBudgetEditModalOpen && <KTPBudgetEditModal data={ktpBudget || INITIAL_KTP_2026_BUDGET} onClose={() => setIsBudgetEditModalOpen(false)} onSave={handleSaveKtpBudget} />}
-    </div>
-  );
-};
-
-// --- Helper Functions and Components ---
-
-const formatWhatsAppLink = (phone: string) => {
-    const cleaned = phone.replace(/[^0-9]/g, '');
-    if (cleaned.length === 10) return `https://wa.me/91${cleaned}`;
-    if (cleaned.startsWith('91') && cleaned.length === 12) return `https://wa.me/${cleaned}`;
-    return `https://wa.me/${cleaned}`;
-};
-
-// --- New Admin Components ---
-
-const KTPHistoryView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-    const [historyText, setHistoryText] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState('');
-
-    useEffect(() => {
-        const fetchHistory = async () => {
-            if (db?.collection) {
-                try {
-                    const doc = await db.collection('ktpContent').doc('history').get();
-                    if (doc.exists) setHistoryText(doc.data()?.text || '');
-                } catch (e) { console.error(e); }
-            }
-            setLoading(false);
-        };
-        fetchHistory();
-    }, []);
-
-    const handleSave = async () => {
-        if (db?.collection) {
-            await db.collection('ktpContent').doc('history').set({ text: editText }, { merge: true });
-            setHistoryText(editText);
-            setIsEditing(false);
-        }
-    };
-
-    if (loading) return <div className="text-center p-8"><Loader className="animate-spin mx-auto text-cyan-600"/></div>;
-
-    return (
-        <div className="relative">
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 className="text-2xl font-bold text-slate-800">Our History</h3>
-                {isAdmin && <button onClick={() => { setEditText(historyText); setIsEditing(true); }} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Edit size={14}/> Edit</button>}
-            </div>
-            {isEditing ? (
-                <div className="space-y-4">
-                    <textarea className="w-full h-96 p-4 border rounded-lg focus:ring-2 focus:ring-cyan-500 font-serif leading-relaxed" value={editText} onChange={e => setEditText(e.target.value)} />
-                    <div className="flex gap-2 justify-end">
-                        <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded hover:bg-slate-50">Cancel</button>
-                        <button onClick={handleSave} className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700">Save</button>
+    <div className="bg-slate-50 min-h-screen">
+        <div className="bg-church-900 text-white py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="w-32 h-32 bg-white p-2 rounded-full shadow-xl shrink-0">
+                        <img src={fellowship.image} alt="Logo" className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <div className="text-center md:text-left">
+                        <h1 className="text-4xl font-serif font-bold mb-2">{fellowship.name}</h1>
+                        <p className="text-church-200 text-lg max-w-2xl">{fellowship.description}</p>
                     </div>
                 </div>
-            ) : (
-                <div className="prose max-w-none text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">
-                    {historyText || <p className="italic text-slate-400 text-center py-10">History has not been added yet.</p>}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const KTPGalleryView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-    const [images, setImages] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isAdding, setIsAdding] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const fileRef = useRef<HTMLInputElement>(null);
-    const [newImage, setNewImage] = useState({ url: '', caption: '' });
-
-    const fetchImages = async () => {
-        setLoading(true);
-        if (db?.collection) {
-            const snap = await db.collection('ktpGallery').orderBy('createdAt', 'desc').get();
-            setImages(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchImages(); }, []);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.success) setNewImage(prev => ({ ...prev, url: data.data.url }));
-        } catch (err) { alert('Upload failed'); }
-        setUploading(false);
-    };
-
-    const handleSave = async () => {
-        if (!newImage.url) return;
-        await db.collection('ktpGallery').add({ ...newImage, createdAt: new Date().toISOString() });
-        setIsAdding(false);
-        setNewImage({ url: '', caption: '' });
-        fetchImages();
-    };
-
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Delete this photo?')) {
-            await db.collection('ktpGallery').doc(id).delete();
-            fetchImages();
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 className="text-2xl font-bold text-slate-800">Picture Gallery</h3>
-                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Photo</button>}
             </div>
-            
-            {isAdding && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
-                        <h4 className="font-bold mb-4">Add New Photo</h4>
-                        <div className="space-y-3">
-                            <div className="flex gap-2">
-                                <input className="flex-1 border p-2 rounded" placeholder="Image URL" value={newImage.url} onChange={e => setNewImage({...newImage, url: e.target.value})} />
-                                <button onClick={() => fileRef.current?.click()} className="bg-slate-100 p-2 rounded border hover:bg-slate-200">{uploading ? <Loader className="animate-spin" size={20}/> : <Upload size={20}/>}</button>
-                                <input type="file" ref={fileRef} className="hidden" onChange={handleUpload} accept="image/*"/>
-                            </div>
-                            <input className="w-full border p-2 rounded" placeholder="Caption" value={newImage.caption} onChange={e => setNewImage({...newImage, caption: e.target.value})} />
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
-                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {images.map(img => (
-                        <div key={img.id} className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden shadow-sm">
-                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            {img.caption && <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white text-xs p-2 truncate">{img.caption}</div>}
-                            {isAdmin && <button onClick={() => handleDelete(img.id)} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
-                        </div>
-                    ))}
-                    {images.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No photos added yet.</div>}
-                </div>
-            )}
         </div>
-    );
-};
-
-const KTPProductionsView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-    const [videos, setVideos] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isAdding, setIsAdding] = useState(false);
-    const [newVideo, setNewVideo] = useState({ title: '', url: '', desc: '' });
-
-    const fetchVideos = async () => {
-        setLoading(true);
-        if (db?.collection) {
-            const snap = await db.collection('ktpProductions').orderBy('createdAt', 'desc').get();
-            setVideos(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchVideos(); }, []);
-
-    const getYouTubeId = (url: string) => {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
-
-    const handleSave = async () => {
-        if (!newVideo.url || !newVideo.title) return;
-        await db.collection('ktpProductions').add({ ...newVideo, createdAt: new Date().toISOString() });
-        setIsAdding(false);
-        setNewVideo({ title: '', url: '', desc: '' });
-        fetchVideos();
-    };
-
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Delete video?')) {
-            await db.collection('ktpProductions').doc(id).delete();
-            fetchVideos();
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 className="text-2xl font-bold text-slate-800">Productions</h3>
-                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Video</button>}
-            </div>
-
-            {isAdding && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
-                        <h4 className="font-bold mb-4">Add Production</h4>
-                        <div className="space-y-3">
-                            <input className="w-full border p-2 rounded" placeholder="Title" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
-                            <input className="w-full border p-2 rounded" placeholder="YouTube URL" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} />
-                            <textarea className="w-full border p-2 rounded" placeholder="Description" value={newVideo.desc} onChange={e => setNewVideo({...newVideo, desc: e.target.value})} />
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
-                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map(video => {
-                        const vidId = getYouTubeId(video.url);
-                        return (
-                            <div key={video.id} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
-                                <div className="aspect-video bg-slate-900 relative">
-                                    {vidId ? (
-                                        <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${vidId}`} title={video.title} frameBorder="0" allowFullScreen></iframe>
-                                    ) : <div className="w-full h-full flex items-center justify-center text-white"><Video/></div>}
-                                    {isAdmin && <button onClick={() => handleDelete(video.id)} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition z-10"><Trash2 size={14}/></button>}
-                                </div>
-                                <div className="p-4">
-                                    <h4 className="font-bold text-lg text-slate-800 line-clamp-1">{video.title}</h4>
-                                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{video.desc}</p>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {videos.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No productions added yet.</div>}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const KTPWhosWhoView: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-    const [profiles, setProfiles] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isAdding, setIsAdding] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const fileRef = useRef<HTMLInputElement>(null);
-    const [form, setForm] = useState({ name: '', role: '', desc: '', imageUrl: '' });
-
-    const fetchProfiles = async () => {
-        setLoading(true);
-        if (db?.collection) {
-            const snap = await db.collection('ktpWhosWho').orderBy('createdAt', 'desc').get();
-            setProfiles(snap.docs.map((d:any) => ({ id: d.id, ...d.data() })));
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchProfiles(); }, []);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.success) setForm(prev => ({ ...prev, imageUrl: data.data.url }));
-        } catch (err) { alert('Upload failed'); }
-        setUploading(false);
-    };
-
-    const handleSave = async () => {
-        if (!form.name) return;
-        await db.collection('ktpWhosWho').add({ ...form, createdAt: new Date().toISOString() });
-        setIsAdding(false);
-        setForm({ name: '', role: '', desc: '', imageUrl: '' });
-        fetchProfiles();
-    };
-
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Delete profile?')) {
-            await db.collection('ktpWhosWho').doc(id).delete();
-            fetchProfiles();
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 className="text-2xl font-bold text-slate-800">Who's Who</h3>
-                {isAdmin && <button onClick={() => setIsAdding(true)} className="text-xs font-bold text-white bg-cyan-600 px-3 py-1.5 rounded-full flex items-center gap-1"><Plus size={14}/> Add Profile</button>}
-            </div>
-
-            {isAdding && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
-                        <h4 className="font-bold mb-4">Add Profile</h4>
-                        <div className="space-y-3">
-                            <input className="w-full border p-2 rounded" placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-                            <input className="w-full border p-2 rounded" placeholder="Role / Achievement" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
-                            <div className="flex gap-2">
-                                <input className="flex-1 border p-2 rounded" placeholder="Image URL" value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} />
-                                <button onClick={() => fileRef.current?.click()} className="bg-slate-100 p-2 rounded border hover:bg-slate-200">{uploading ? <Loader className="animate-spin" size={20}/> : <Upload size={20}/>}</button>
-                                <input type="file" ref={fileRef} className="hidden" onChange={handleUpload} accept="image/*"/>
-                            </div>
-                            <textarea className="w-full border p-2 rounded" placeholder="Description / Bio" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} />
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 border rounded">Cancel</button>
-                                <button onClick={handleSave} className="px-3 py-1.5 bg-cyan-600 text-white rounded">Save</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {loading ? <div className="text-center py-10"><Loader className="animate-spin mx-auto text-cyan-500"/></div> : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {profiles.map(p => (
-                        <div key={p.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col items-center text-center relative group hover:shadow-md transition">
-                            {isAdmin && <button onClick={() => handleDelete(p.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"><Trash2 size={16}/></button>}
-                            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-slate-200 border-4 border-white shadow-md">
-                                {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={40}/></div>}
-                            </div>
-                            <h4 className="font-bold text-lg text-slate-900">{p.name}</h4>
-                            <p className="text-sm text-cyan-600 font-semibold mb-2 uppercase tracking-wide">{p.role}</p>
-                            <p className="text-sm text-slate-500">{p.desc}</p>
-                        </div>
-                    ))}
-                    {profiles.length === 0 && <div className="col-span-full text-center py-10 text-slate-400 italic">No profiles added yet.</div>}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const KTPBudgetView: React.FC<{ data: KTPBudget, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => {
-  const calculateTotal = (items: BudgetItem[]) => {
-    return items.reduce((sum, item) => sum + parseFloat(item.amount.replace(/,/g, '') || '0'), 0);
-  };
-
-  const totalIncome = calculateTotal(data.income);
-  const totalExpenditure = calculateTotal(data.expenditure);
-
-  const formatCurrency = (value: number) => {
-    return `₹ ${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-  
-  const BudgetSection: React.FC<{ title: string; items: BudgetItem[], total: number; colorClass: string; }> = ({ title, items, total, colorClass }) => (
-    <div>
-      <h3 className={`text-xl font-bold mb-4 border-b-2 pb-2 ${colorClass}`}>{title}</h3>
-      <table className="w-full text-sm">
-        <tbody>
-          {items.map((entry) => (
-            <tr key={entry.id} className="border-b border-slate-100 last:border-b-0">
-              <td className="py-2.5 px-2 text-slate-700">{entry.item}</td>
-              <td className="py-2.5 px-2 text-right font-mono text-slate-800">{parseFloat(entry.amount).toLocaleString('en-IN')} /-</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="font-bold bg-slate-50">
-            <td className="py-3 px-2">Total</td>
-            <td className="py-3 px-2 text-right font-mono text-lg">{formatCurrency(total)}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  );
-
-  return (
-    <div>
-       <div className="flex justify-between items-start mb-8 pb-4 border-b">
-         <div>
-            <h2 className="text-2xl font-bold text-slate-800">2026 BUDGET & PROJECT RUAHMANNA</h2>
-            <p className="text-slate-500">Bethel Branch KTP</p>
-         </div>
-         {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
-       </div>
-      <div className="grid md:grid-cols-2 gap-12">
-        <BudgetSection title="BUDGET HEAD" items={data.income} total={totalIncome} colorClass="border-green-500 text-green-700" />
-        <BudgetSection title="SUM HMANNA TURTE" items={data.expenditure} total={totalExpenditure} colorClass="border-red-500 text-red-700" />
-      </div>
-    </div>
-  );
-};
-
-const KTPHruaituteView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
-    <div>
-        <div className="flex justify-between items-start mb-6 pb-4 border-b">
-            <div className="flex items-center gap-4">
-                <img src={ktpLogoUrl} alt="KTP Logo" className="h-16 w-16 rounded-full shadow-md bg-white p-1" />
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800">KTP HRUAITUTE {data.year}</h2>
-                    <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
-                </div>
-            </div>
-            {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
-        </div>
-
-        <Section title="Office Bearers">
-            {data.leaders.map(p => <PersonCard key={p.id} person={p} formatWhatsAppLink={formatWhatsAppLink} />)}
-        </Section>
-        <Section title="Committee Members">
-            {data.committeeMembers.map(p => <PersonCard key={p.id} person={p} formatWhatsAppLink={formatWhatsAppLink} />)}
-        </Section>
-        <Section title="Kohhran Committee Aiawhte & Ex-Officio">
-            {data.exOfficioMembers.map(p => <PersonCard key={p.id} person={p} formatWhatsAppLink={formatWhatsAppLink} />)}
-        </Section>
         
-        {data.groupLeaders && data.groupLeaders.length > 0 && (
-            <Section title="Group Hruaitute">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-1 md:col-span-2 lg:col-span-3">
-                    {data.groupLeaders.map(group => <GroupCard key={group.id} group={group} />)}
-                </div>
-            </Section>
-        )}
-    </div>
-);
-
-const KTPSubCommitteesView: React.FC<{ data: KTPHruaitute, onEdit: () => void, isAdmin: boolean }> = ({ data, onEdit, isAdmin }) => (
-    <div>
-        <div className="flex justify-between items-start mb-6 pb-4 border-b">
-            <div className="flex items-center gap-4">
-                <img src={ktpLogoUrl} alt="KTP Logo" className="h-16 w-16 rounded-full shadow-md bg-white p-1" />
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800">KTP SUB-COMMITTEES {data.year}</h2>
-                    <p className="text-slate-500">Kristian Ṭhalai Pawl, Bethel Branch</p>
-                </div>
-            </div>
-            {isAdmin && <button onClick={onEdit} className="flex items-center gap-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-full transition shadow-md"><Edit size={14} /> Edit</button>}
-        </div>
-
-        {data.subCommittees && data.subCommittees.length > 0 ? (
-             <Section title="Sub-Committees">
-                {data.subCommittees.map(sub => <SubCommitteeCard key={sub.id} subcommittee={sub} />)}
-            </Section>
-        ) : (
-            <div className="text-center py-10 text-slate-500">No sub-committees defined yet.</div>
-        )}
-    </div>
-);
-
-
-const Section: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
-    <div className="mb-8">
-        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{title}</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {children}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+             <div className="bg-white p-8 rounded-xl shadow-sm">
+                 <h2 className="text-2xl font-bold text-slate-800 mb-4">About {fellowship.acronym || fellowship.name}</h2>
+                 <p className="text-slate-600 leading-relaxed mb-6">{fellowship.description}</p>
+                 <div className="grid md:grid-cols-2 gap-6">
+                     <div className="p-4 border rounded-lg">
+                         <h3 className="font-bold text-slate-700">Leader</h3>
+                         <p>{fellowship.leader}</p>
+                     </div>
+                     <div className="p-4 border rounded-lg">
+                         <h3 className="font-bold text-slate-700">Schedule</h3>
+                         <p>{fellowship.schedule}</p>
+                     </div>
+                 </div>
+                 {isKTP && <p className="mt-8 text-center text-slate-500 italic">KTP Specific content goes here.</p>}
+             </div>
         </div>
     </div>
-);
-
-const PersonCard: React.FC<{ person: KTPMember, formatWhatsAppLink: (phone: string) => string }> = ({ person, formatWhatsAppLink }) => (
-    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-        <p className="font-bold text-slate-900">{person.name}</p>
-        {person.role && <p className="text-xs text-cyan-600 font-semibold">{person.role}</p>}
-        {person.phone && person.phone !== 'N/A' && (
-             <a href={formatWhatsAppLink(person.phone)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-slate-500 mt-1 hover:text-green-600 transition">
-                <Phone size={12} /> {person.phone}
-            </a>
-        )}
-    </div>
-);
-
-const GroupCard: React.FC<{ group: KTPGroup }> = ({ group }) => (
-    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">Group: {group.groupName}</h4>
-        <ul className="space-y-1.5">
-            {group.members.map(member => (
-                <li key={member.id} className="text-sm flex justify-between">
-                    <span className="text-slate-600">{member.role}:</span>
-                    <span className="font-semibold text-slate-900 text-right">{member.name}</span>
-                </li>
-            ))}
-        </ul>
-    </div>
-);
-
-const SubCommitteeCard: React.FC<{ subcommittee: KTPSubCommittee }> = ({ subcommittee }) => {
-    const mainRoles = ['Chairman', 'Secretary', 'Conductor', 'Asst. Conductor'];
-    const leaders = subcommittee.members.filter(m => m.role && mainRoles.includes(m.role));
-    const members = subcommittee.members.filter(m => !m.role || !mainRoles.includes(m.role));
-    
-    return (
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="font-bold text-cyan-800 border-b border-slate-200 pb-2 mb-2">{subcommittee.name}</h4>
-            <ul className="space-y-1.5 mb-3">
-                {leaders.map(member => (
-                    <li key={member.id} className="text-sm flex items-baseline gap-1"> 
-                        <span className="text-slate-600 whitespace-nowrap">{member.role}:</span> 
-                        <span className="font-semibold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">{member.name}</span> 
-                    </li>
-                ))}
-            </ul>
-            {members.length > 0 && (
-                 <>
-                    <h5 className="text-xs font-bold text-slate-400">Members:</h5>
-                    <div className="text-sm font-medium text-slate-800 mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                        {members.map(m => <span key={m.id}>{m.name}</span>)}
-                    </div>
-                 </>
-            )}
-        </div>
-    );
+  );
 };
-
-const KTPDataMissing: React.FC<{ title: string, onSetup: () => void, isAdmin: boolean, year: number }> = ({ title, onSetup, isAdmin, year }) => (
-    <div className="text-center py-20">
-        <img src={ktpLogoUrl} alt="KTP Logo" className="mx-auto h-20 w-20 mb-6 opacity-50" />
-        <h3 className="text-xl font-bold text-slate-700">{title} Not Available</h3>
-        <p className="text-slate-500 mt-2">Information for {year} has not been added yet.</p>
-        {isAdmin && (
-            <button onClick={onSetup} className="mt-6 flex items-center mx-auto gap-2 text-sm font-bold text-white bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-full transition shadow-md">
-                <PlusCircle size={16} /> Setup {year} {title}
-            </button>
-        )}
-    </div>
-);
-
-const KTPHruaituteEditModal: React.FC<{ data: KTPHruaitute, onClose: () => void, onSave: (data: KTPHruaitute) => Promise<void> }> = ({ data, onClose, onSave }) => {
-    const [formData, setFormData] = useState<KTPHruaitute>(JSON.parse(JSON.stringify(data))); // Deep copy
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleMemberChange = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', index: number, field: keyof KTPMember, value: string) => {
-        const list = formData[listName] as KTPMember[];
-        const newList = [...list];
-        (newList[index] as any)[field] = value;
-        setFormData({ ...formData, [listName]: newList });
-    };
-    
-    const addMember = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers') => {
-        const list = formData[listName] as KTPMember[];
-        const newList = [...list, { id: `new-${Date.now()}`, name: '', phone: '', role: listName !== 'committeeMembers' ? 'New Role' : '' }];
-        setFormData({ ...formData, [listName]: newList });
-    };
-
-    const removeMember = (listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', id: string) => {
-        const list = formData[listName] as KTPMember[];
-        const newList = list.filter(m => m.id !== id);
-        setFormData({ ...formData, [listName]: newList });
-    };
-    
-    const handleGroupChange = (groupIndex: number, field: keyof KTPGroup, value: string) => {
-        const newGroups = [...(formData.groupLeaders || [])];
-        (newGroups[groupIndex] as any)[field] = value;
-        setFormData({ ...formData, groupLeaders: newGroups });
-    };
-
-    const handleGroupMemberChange = (groupIndex: number, memberIndex: number, field: keyof KTPMember, value: string) => {
-        const newGroups = [...(formData.groupLeaders || [])];
-        const newMembers = [...newGroups[groupIndex].members];
-        (newMembers[memberIndex] as any)[field] = value;
-        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
-        setFormData({ ...formData, groupLeaders: newGroups });
-    };
-    
-    const addGroup = () => {
-        const newGroup: KTPGroup = { id: `new-group-${Date.now()}`, groupName: 'New Group', members: [] };
-        setFormData({ ...formData, groupLeaders: [...(formData.groupLeaders || []), newGroup] });
-    };
-
-    const removeGroup = (groupId: string) => {
-        const newGroups = (formData.groupLeaders || []).filter(g => g.id !== groupId);
-        setFormData({ ...formData, groupLeaders: newGroups });
-    };
-    
-    const addGroupMember = (groupIndex: number) => {
-        const newGroups = [...(formData.groupLeaders || [])];
-        const newMembers = [...newGroups[groupIndex].members, { id: `new-member-${Date.now()}`, name: '', role: 'New Role', phone: '' }];
-        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
-        setFormData({ ...formData, groupLeaders: newGroups });
-    };
-
-    const removeGroupMember = (groupIndex: number, memberId: string) => {
-        const newGroups = [...(formData.groupLeaders || [])];
-        const newMembers = newGroups[groupIndex].members.filter(m => m.id !== memberId);
-        newGroups[groupIndex] = { ...newGroups[groupIndex], members: newMembers };
-        setFormData({ ...formData, groupLeaders: newGroups });
-    };
-
-    const handleSubCommitteeChange = (index: number, value: string) => {
-        const newSubs = [...(formData.subCommittees || [])];
-        newSubs[index].name = value;
-        setFormData({ ...formData, subCommittees: newSubs });
-    };
-
-    const handleSubCommitteeMemberChange = (subIndex: number, memberIndex: number, field: keyof KTPMember, value: string) => {
-        const newSubs = [...(formData.subCommittees || [])];
-        (newSubs[subIndex].members[memberIndex] as any)[field] = value;
-        setFormData({ ...formData, subCommittees: newSubs });
-    };
-
-    const addSubCommittee = () => {
-        const newSub: KTPSubCommittee = { id: `new-sub-${Date.now()}`, name: 'New Sub-Committee', members: [] };
-        setFormData({ ...formData, subCommittees: [...(formData.subCommittees || []), newSub] });
-    };
-
-    const removeSubCommittee = (id: string) => {
-        const newSubs = (formData.subCommittees || []).filter(s => s.id !== id);
-        setFormData({ ...formData, subCommittees: newSubs });
-    };
-
-    const addSubCommitteeMember = (subIndex: number) => {
-        const newSubs = [...(formData.subCommittees || [])];
-        newSubs[subIndex].members.push({ id: `new-sub-member-${Date.now()}`, name: '', role: '' });
-        setFormData({ ...formData, subCommittees: newSubs });
-    };
-
-    const removeSubCommitteeMember = (subIndex: number, memberId: string) => {
-        const newSubs = [...(formData.subCommittees || [])];
-        newSubs[subIndex].members = newSubs[subIndex].members.filter(m => m.id !== memberId);
-        setFormData({ ...formData, subCommittees: newSubs });
-    };
-
-
-    const handleSaveClick = async () => {
-        setIsSaving(true);
-        await onSave(formData);
-        setIsSaving(false);
-    };
-
-    const MemberRow: React.FC<{listName: 'leaders' | 'committeeMembers' | 'exOfficioMembers', member: KTPMember, index: number, hasRole: boolean}> = ({listName, member, index, hasRole}) => (
-        <div className="grid grid-cols-12 gap-2 items-center">
-            {hasRole && <input className="col-span-3 border p-2 text-sm rounded" placeholder="Role" value={member.role || ''} onChange={e => handleMemberChange(listName, index, 'role', e.target.value)} />}
-            <input className={hasRole ? "col-span-4" : "col-span-7"} placeholder="Name" value={member.name} onChange={e => handleMemberChange(listName, index, 'name', e.target.value)} />
-            <input className="col-span-4" placeholder="Phone" value={member.phone || ''} onChange={e => handleMemberChange(listName, index, 'phone', e.target.value)} />
-            <button type="button" onClick={() => removeMember(listName, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-        </div>
-    );
-    
-    return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Edit KTP Hruaitute {formData.year}</h3><button onClick={onClose}><X/></button></div>
-                <div className="p-6 space-y-6 overflow-y-auto">
-                    <div>
-                        <h4 className="font-bold mb-2">Office Bearers</h4>
-                        <div className="space-y-2">{formData.leaders.map((p, i) => <MemberRow key={p.id} listName="leaders" member={p} index={i} hasRole={true}/>)}</div>
-                    </div>
-                    <div>
-                        <h4 className="font-bold mb-2">Committee Members</h4>
-                        <div className="space-y-2">{formData.committeeMembers.map((p, i) => <MemberRow key={p.id} listName="committeeMembers" member={p} index={i} hasRole={false}/>)}</div>
-                        <button type="button" onClick={() => addMember('committeeMembers')} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><PlusCircle size={14}/> Add Committee Member</button>
-                    </div>
-                    <div>
-                        <h4 className="font-bold mb-2">Ex-Officio Members</h4>
-                        <div className="space-y-2">{formData.exOfficioMembers.map((p, i) => <MemberRow key={p.id} listName="exOfficioMembers" member={p} index={i} hasRole={true}/>)}</div>
-                        <button type="button" onClick={() => addMember('exOfficioMembers')} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><PlusCircle size={14}/> Add Ex-Officio</button>
-                    </div>
-                    <div className="border-t pt-4">
-                         <h4 className="font-bold mb-2">Group Hruaitute</h4>
-                         <div className="space-y-4">
-                             {(formData.groupLeaders || []).map((group, groupIndex) => (
-                                <div key={group.id} className="p-4 border rounded-lg bg-slate-50 space-y-3">
-                                    <div className="flex items-center gap-2">
-                                       <input className="font-bold text-lg w-full border-b bg-transparent" value={group.groupName} onChange={(e) => handleGroupChange(groupIndex, 'groupName', e.target.value)} />
-                                       <button type="button" onClick={() => removeGroup(group.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-                                    </div>
-                                    <div className="space-y-2">
-                                       {group.members.map((member, memberIndex) => (
-                                          <div key={member.id} className="grid grid-cols-12 gap-2 items-center">
-                                              <input className="col-span-4 border p-2 text-sm rounded" placeholder="Role" value={member.role || ''} onChange={e => handleGroupMemberChange(groupIndex, memberIndex, 'role', e.target.value)} />
-                                              <input className="col-span-7" placeholder="Name" value={member.name} onChange={e => handleGroupMemberChange(groupIndex, memberIndex, 'name', e.target.value)} />
-                                              <button type="button" onClick={() => removeGroupMember(groupIndex, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-                                          </div>
-                                       ))}
-                                    </div>
-                                    <button type="button" onClick={() => addGroupMember(groupIndex)} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><UserPlus size={14}/> Add Member</button>
-                                </div>
-                             ))}
-                         </div>
-                         <button type="button" onClick={addGroup} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition shadow-sm mt-4 flex items-center gap-1"><Plus size={16}/> Add Group</button>
-                    </div>
-                     <div className="border-t pt-4">
-                         <h4 className="font-bold mb-2">Sub-Committees</h4>
-                         <div className="space-y-4">
-                             {(formData.subCommittees || []).map((sub, subIndex) => (
-                                <div key={sub.id} className="p-4 border rounded-lg bg-slate-50 space-y-3">
-                                    <div className="flex items-center gap-2">
-                                       <input className="font-bold text-lg w-full border-b bg-transparent" value={sub.name} onChange={(e) => handleSubCommitteeChange(subIndex, e.target.value)} />
-                                       <button type="button" onClick={() => removeSubCommittee(sub.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-                                    </div>
-                                    <div className="space-y-2">
-                                       {sub.members.map((member, memberIndex) => (
-                                          <div key={member.id} className="grid grid-cols-12 gap-2 items-center">
-                                              <input className="col-span-4 border p-2 text-sm rounded" placeholder="Role (Optional)" value={member.role || ''} onChange={e => handleSubCommitteeMemberChange(subIndex, memberIndex, 'role', e.target.value)} />
-                                              <input className="col-span-7" placeholder="Name" value={member.name} onChange={e => handleSubCommitteeMemberChange(subIndex, memberIndex, 'name', e.target.value)} />
-                                              <button type="button" onClick={() => removeSubCommitteeMember(subIndex, member.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-                                          </div>
-                                       ))}
-                                    </div>
-                                    <button type="button" onClick={() => addSubCommitteeMember(subIndex)} className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1"><UserPlus size={14}/> Add Member</button>
-                                </div>
-                             ))}
-                         </div>
-                         <button type="button" onClick={addSubCommittee} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-full transition shadow-sm mt-4 flex items-center gap-1"><Plus size={16}/> Add Sub-Committee</button>
-                    </div>
-                </div>
-                <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">
-                    <button onClick={onClose} className="px-4 py-2 border rounded">Cancel</button>
-                    <button onClick={handleSaveClick} className="px-4 py-2 bg-cyan-600 text-white rounded flex items-center disabled:opacity-50" disabled={isSaving}>
-                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const KTPBudgetEditModal: React.FC<{ data: KTPBudget, onClose: () => void, onSave: (data: KTPBudget) => Promise<void> }> = ({ data, onClose, onSave }) => {
-    const [formData, setFormData] = useState<KTPBudget>(JSON.parse(JSON.stringify(data)));
-    const [isSaving, setIsSaving] = useState(false);
-    
-    const handleItemChange = (listName: 'income' | 'expenditure', index: number, field: 'item' | 'amount', value: string) => {
-        const list = formData[listName];
-        const newList = [...list];
-        newList[index] = { ...newList[index], [field]: value };
-        setFormData({ ...formData, [listName]: newList });
-    };
-
-    const addItem = (listName: 'income' | 'expenditure') => {
-        const list = formData[listName];
-        const newItem: BudgetItem = { id: `new-${Date.now()}`, item: '', amount: '' };
-        setFormData({ ...formData, [listName]: [...list, newItem] });
-    };
-    
-    const removeItem = (listName: 'income' | 'expenditure', id: string) => {
-        const list = formData[listName];
-        setFormData({ ...formData, [listName]: list.filter(item => item.id !== id) });
-    };
-
-    const handleSaveClick = async () => {
-        setIsSaving(true);
-        await onSave(formData);
-        setIsSaving(false);
-    };
-
-    const BudgetItemRow: React.FC<{ listName: 'income' | 'expenditure', item: BudgetItem, index: number }> = ({ listName, item, index }) => (
-        <div className="grid grid-cols-12 gap-2 items-center">
-            <input className="col-span-7 border p-2 text-sm rounded" placeholder="Item Name" value={item.item} onChange={e => handleItemChange(listName, index, 'item', e.target.value)} />
-            <input type="number" className="col-span-4 border p-2 text-sm rounded" placeholder="Amount" value={item.amount} onChange={e => handleItemChange(listName, index, 'amount', e.target.value)} />
-            <button type="button" onClick={() => removeItem(listName, item.id)} className="col-span-1 text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16} /></button>
-        </div>
-    );
-    
-    return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Edit KTP Budget {formData.year}</h3><button onClick={onClose}><X/></button></div>
-                <div className="p-6 grid md:grid-cols-2 gap-6 overflow-y-auto">
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                           <h4 className="font-bold">BUDGET HEAD (Income)</h4>
-                           <button type="button" onClick={() => addItem('income')} className="text-xs text-blue-600 font-bold flex items-center gap-1"><PlusCircle size={14}/> Add Item</button>
-                        </div>
-                        <div className="space-y-2">{formData.income.map((p, i) => <BudgetItemRow key={p.id} listName="income" item={p} index={i} />)}</div>
-                    </div>
-                     <div>
-                        <div className="flex justify-between items-center mb-2">
-                           <h4 className="font-bold">SUM HMANNA TURTE (Expenditure)</h4>
-                           <button type="button" onClick={() => addItem('expenditure')} className="text-xs text-blue-600 font-bold flex items-center gap-1"><PlusCircle size={14}/> Add Item</button>
-                        </div>
-                        <div className="space-y-2">{formData.expenditure.map((p, i) => <BudgetItemRow key={p.id} listName="expenditure" item={p} index={i} />)}</div>
-                    </div>
-                </div>
-                <div className="p-4 bg-slate-50 flex justify-end space-x-2 mt-auto">
-                    <button onClick={onClose} className="px-4 py-2 border rounded">Cancel</button>
-                    <button onClick={handleSaveClick} className="px-4 py-2 bg-cyan-600 text-white rounded flex items-center disabled:opacity-50" disabled={isSaving}>
-                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
 export default Fellowship;
