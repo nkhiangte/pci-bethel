@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, 
   Edit, Save, X, Trash2, Plus, DollarSign, Table as TableIcon,
-  Download, FileUp, FileDown, TrendingUp
+  Download, FileUp, FileDown, TrendingUp, Phone, MessageCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -21,11 +21,24 @@ const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined }> = ({ data 
   const MemberList: React.FC<{ title: string; members: KTPMember[] }> = ({ title, members }) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
       <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">{title}</h3>
-      <ul className="space-y-3">
+      <ul className="space-y-1">
         {members.map((member, index) => (
-          <li key={index} className="flex justify-between items-center text-sm">
-            <span className="font-semibold text-slate-700">{member.name}</span>
-            <span className="text-slate-500">{member.role}</span>
+          <li key={index} className="flex flex-col sm:flex-row justify-between sm:items-center text-sm gap-2 py-3 border-b border-slate-100 last:border-b-0">
+            <div>
+              <p className="font-semibold text-slate-800">{member.name}</p>
+              <p className="text-slate-500">{member.role}</p>
+            </div>
+            {member.phone && (
+              <div className="flex items-center gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0">
+                <span className="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded">{member.phone}</span>
+                <a href={`tel:${member.phone.replace(/\s+/g, '')}`} className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition" title={`Call ${member.name}`}>
+                  <Phone size={16} />
+                </a>
+                <a href={`https://wa.me/91${member.phone.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 transition" title={`WhatsApp ${member.name}`}>
+                  <MessageCircle size={16} />
+                </a>
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -49,11 +62,23 @@ const KtpSubCommittees: React.FC<{ data: KTPSubCommittee[] | undefined }> = ({ d
       {data.map((committee) => (
         <div key={committee.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
           <h3 className="text-xl font-bold text-slate-900 mb-4">{committee.name}</h3>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
             {committee.members.map((member, index) => (
-              <li key={index} className="flex justify-between items-baseline text-sm border-b border-slate-100 py-2">
-                <span className="font-semibold text-slate-700">{member.name}</span>
-                <span className="text-slate-500 text-xs">{member.role}</span>
+              <li key={index} className="flex justify-between items-center text-sm border-b border-slate-100 py-3 gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-700 truncate">{member.name}</p>
+                  <p className="text-slate-500 text-xs truncate">{member.role}</p>
+                </div>
+                {member.phone && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <a href={`tel:${member.phone.replace(/\s+/g, '')}`} className="p-1.5 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition" title={`Call ${member.name}`}>
+                      <Phone size={12} />
+                    </a>
+                    <a href={`https://wa.me/91${member.phone.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 transition" title={`WhatsApp ${member.name}`}>
+                      <MessageCircle size={12} />
+                    </a>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
