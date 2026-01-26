@@ -2,21 +2,160 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { Ministry, KTPHruaitute, KTPBudget, KTPMember, KTPSubCommittee, BudgetItem } from '../types';
+import { Ministry, KTPHruaitute, KTPBudget, KTPMember, KTPGroup, KTPSubCommittee, BudgetItem } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, 
   Edit, Save, X, Trash2, Plus, DollarSign, Table as TableIcon,
-  Download, FileUp, FileDown, TrendingUp, Phone, MessageCircle
+  Download, FileUp, FileDown, TrendingUp, Phone, MessageCircle, AlertTriangle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // --- KTP SPECIFIC COMPONENTS ---
 
-const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined }> = ({ data }) => {
+const GroupEditModal: React.FC<{
+  group: Partial<KTPGroup> | null;
+  onSave: (groupData: KTPGroup) => void;
+  onClose: () => void;
+  isLoading: boolean;
+}> = ({ group, onSave, onClose, isLoading }) => {
+  const [groupData, setGroupData] = useState<Partial<KTPGroup>>({ id: '', groupName: '', members: [] });
+
+  useEffect(() => {
+    if (group) {
+      setGroupData({ ...group, members: group.members ? [...group.members] : [] });
+    }
+  }, [group]);
+
+  const handleMemberChange = (index: number, field: keyof KTPMember, value: string) => {
+    const updatedMembers = [...(groupData.members || [])];
+    updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+    setGroupData({ ...groupData, members: updatedMembers });
+  };
+
+  const addMember = () => {
+    const newMember: KTPMember = { id: `mem_${Date.now()}`, name: '', role: '', phone: '' };
+    setGroupData({ ...groupData, members: [...(groupData.members || []), newMember] });
+  };
+  
+  const removeMember = (index: number) => {
+    const updatedMembers = (groupData.members || []).filter((_, i) => i !== index);
+    setGroupData({ ...groupData, members: updatedMembers });
+  };
+
+  const handleSave = () => {
+    onSave(groupData as KTPGroup);
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
+          <h3 className="text-xl font-bold">{groupData.id ? 'Edit Group' : 'Add New Group'}</h3>
+          <button onClick={onClose}><X size={20}/></button>
+        </div>
+        <div className="p-6 space-y-4 overflow-y-auto">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Group Name</label>
+            <input 
+              className="w-full border p-2 rounded-lg" 
+              value={groupData.groupName || ''}
+              onChange={e => setGroupData({ ...groupData, groupName: e.target.value })}
+              placeholder="e.g., Matea Group"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Members</label>
+            <div className="space-y-3">
+              {(groupData.members || []).map((member, index) => (
+                <div key={member.id || index} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-lg border">
+                  <input className="border p-2 rounded-md text-sm" placeholder="Name" value={member.name} onChange={e => handleMemberChange(index, 'name', e.target.value)} />
+                  <input className="border p-2 rounded-md text-sm" placeholder="Role" value={member.role} onChange={e => handleMemberChange(index, 'role', e.target.value)} />
+                  <div className="flex gap-2">
+                    <input className="flex-1 border p-2 rounded-md text-sm" placeholder="Phone" value={member.phone} onChange={e => handleMemberChange(index, 'phone', e.target.value)} />
+                    <button onClick={() => removeMember(index)} className="p-2 text-red-500 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={addMember} className="mt-3 text-sm font-bold text-church-600 flex items-center gap-1 hover:underline">
+              <Plus size={14}/> Add Member
+            </button>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-100 flex justify-end gap-3 rounded-b-xl">
+          <button onClick={onClose} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg flex items-center">
+            {isLoading ? <Loader className="animate-spin mr-2" size={16}/> : <Save size={16} className="mr-2"/>} Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined, isAdmin: boolean, onUpdate: () => void }> = ({ data, isAdmin, onUpdate }) => {
   if (!data) return <div className="p-8 bg-white rounded-xl shadow-sm text-center"><Loader className="animate-spin mx-auto"/></div>;
+
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Partial<KTPGroup> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleAddNewGroup = () => {
+    setEditingGroup({ id: '', groupName: '', members: [] });
+    setIsGroupModalOpen(true);
+  };
+
+  const handleEditGroup = (group: KTPGroup) => {
+    setEditingGroup(group);
+    setIsGroupModalOpen(true);
+  };
+
+  const handleSaveGroup = async (groupData: KTPGroup) => {
+    if (!db) return;
+    setIsSaving(true);
+    try {
+        const docRef = db.collection('ktpLeaders').doc(String(data.year));
+        const doc = await docRef.get();
+        const currentData = doc.data() as KTPHruaitute;
+        let updatedGroups = [...(currentData.groupLeaders || [])];
+
+        if (groupData.id) { // Update existing
+            const index = updatedGroups.findIndex(g => g.id === groupData.id);
+            if (index > -1) updatedGroups[index] = groupData;
+        } else { // Add new
+            updatedGroups.push({ ...groupData, id: `group_${Date.now()}` });
+        }
+        
+        await docRef.update({ groupLeaders: updatedGroups });
+        setIsGroupModalOpen(false);
+        onUpdate();
+    } catch (e) {
+        console.error(e);
+        alert("Failed to save group.");
+    }
+    setIsSaving(false);
+  };
+  
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!db || !window.confirm("Are you sure you want to delete this group?")) return;
+    setIsSaving(true);
+    try {
+        const docRef = db.collection('ktpLeaders').doc(String(data.year));
+        const doc = await docRef.get();
+        const currentData = doc.data() as KTPHruaitute;
+        const updatedGroups = (currentData.groupLeaders || []).filter(g => g.id !== groupId);
+
+        await docRef.update({ groupLeaders: updatedGroups });
+        onUpdate();
+    } catch(e) {
+        console.error(e);
+        alert("Failed to delete group.");
+    }
+    setIsSaving(false);
+  };
 
   const MemberList: React.FC<{ title: string; members: KTPMember[] }> = ({ title, members }) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -44,12 +183,70 @@ const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined }> = ({ data 
       </ul>
     </div>
   );
-
+  
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {data.leaders && <MemberList title="Office Bearers" members={data.leaders} />}
       {data.committeeMembers && <MemberList title="Committee Members" members={data.committeeMembers} />}
       {data.exOfficioMembers && <MemberList title="Ex-Officio Members" members={data.exOfficioMembers} />}
+      
+      {/* Group Office Bearers Section */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 className="text-lg font-bold text-slate-800">Group Office Bearers</h3>
+            {isAdmin && (
+                <button onClick={handleAddNewGroup} className="flex items-center px-3 py-1.5 bg-church-600 text-white text-xs font-bold rounded-lg hover:bg-church-700">
+                    <Plus size={14} className="mr-1"/> Add Group
+                </button>
+            )}
+        </div>
+        {(!data.groupLeaders || data.groupLeaders.length === 0) ? (
+            <p className="text-center text-slate-500 italic py-8">No group data available.</p>
+        ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+                {(data.groupLeaders || []).map((group) => (
+                    <div key={group.id} className="bg-slate-50/70 p-4 rounded-lg border border-slate-200 group relative">
+                        {isAdmin && (
+                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleEditGroup(group)} className="p-1.5 bg-white text-blue-600 rounded-full shadow"><Edit size={12}/></button>
+                                <button onClick={() => handleDeleteGroup(group.id)} className="p-1.5 bg-white text-red-600 rounded-full shadow"><Trash2 size={12}/></button>
+                            </div>
+                        )}
+                        <h4 className="font-bold text-church-800 mb-3">{group.groupName}</h4>
+                        <ul className="space-y-3">
+                            {group.members.map((member, index) => (
+                                <li key={index} className="flex justify-between items-center text-sm">
+                                    <div>
+                                        <p className="font-semibold text-slate-700">{member.name}</p>
+                                        <p className="text-slate-500 text-xs">{member.role}</p>
+                                    </div>
+                                    {member.phone && (
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <a href={`tel:${member.phone.replace(/\s+/g, '')}`} className="p-1.5 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition" title={`Call ${member.name}`}>
+                                            <Phone size={12} />
+                                            </a>
+                                            <a href={`https://wa.me/91${member.phone.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 transition" title={`WhatsApp ${member.name}`}>
+                                            <MessageCircle size={12} />
+                                            </a>
+                                        </div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+            </div>
+        )}
+      </div>
+      
+      {isGroupModalOpen && (
+        <GroupEditModal 
+            group={editingGroup}
+            onClose={() => setIsGroupModalOpen(false)}
+            onSave={handleSaveGroup}
+            isLoading={isSaving}
+        />
+      )}
     </div>
   );
 };
@@ -427,6 +624,17 @@ const Fellowship: React.FC = () => {
     { id: 'nitin-inkhawm', label: 'Kristian Chhungkua', icon: Users },
   ];
 
+  const fetchKtpData = useCallback(async () => {
+      if (!db?.collection) return;
+      try {
+        const leadersDoc = await db.collection('ktpLeaders').doc('2026').get();
+        if (leadersDoc.exists) setKtpHruaitute(leadersDoc.data() as KTPHruaitute);
+
+        const budgetDoc = await db.collection('ktpBudget').doc('2026').get();
+        if (budgetDoc.exists) setKtpBudget(budgetDoc.data() as KTPBudget);
+      } catch (e) { console.error("Error fetching KTP data:", e); }
+  }, []);
+
   useEffect(() => {
     if (!id) return;
     const fetchFellowship = async () => {
@@ -457,19 +665,10 @@ const Fellowship: React.FC = () => {
   }, [id, language]);
   
   useEffect(() => {
-    if (isKTP && db?.collection) {
-      const fetchKtpData = async () => {
-        try {
-          const leadersDoc = await db.collection('ktpLeaders').doc('2026').get();
-          if (leadersDoc.exists) setKtpHruaitute(leadersDoc.data() as KTPHruaitute);
-
-          const budgetDoc = await db.collection('ktpBudget').doc('2026').get();
-          if (budgetDoc.exists) setKtpBudget(budgetDoc.data() as KTPBudget);
-        } catch (e) { console.error("Error fetching KTP data:", e); }
-      };
+    if (isKTP) {
       fetchKtpData();
     }
-  }, [isKTP]);
+  }, [isKTP, fetchKtpData]);
 
 
   if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500" /></div>;
@@ -607,7 +806,7 @@ const Fellowship: React.FC = () => {
               </div>
 
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                 {ktpActiveTab === 'circular' && <KtpLeaders data={ktpHruaitute} />}
+                 {ktpActiveTab === 'circular' && <KtpLeaders data={ktpHruaitute} isAdmin={isAdmin} onUpdate={fetchKtpData} />}
                  {ktpActiveTab === 'sub-committees' && <KtpSubCommittees data={ktpHruaitute?.subCommittees} />}
                  {ktpActiveTab === 'project-budget' && <KtpBudgetComponent data={ktpBudget} />}
                  {ktpActiveTab === 'members' && <div className="p-8 bg-white rounded-xl shadow-sm">Member List content goes here...</div>}
