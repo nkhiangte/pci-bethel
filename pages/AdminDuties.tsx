@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
-import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical } from 'lucide-react';
+import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -12,6 +12,7 @@ const AdminDuties: React.FC = () => {
   const [duties, setDuties] = useState<WeeklyDuty | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchDuties();
@@ -94,6 +95,48 @@ const AdminDuties: React.FC = () => {
       setSaving(false);
   };
 
+  const generateShareText = () => {
+      if (!duties) return '';
+      
+      return `*CHAMPHAI BETHEL KOHHRAN*
+*Inkhawm leh Rawngbawltu Ruatna*
+_${duties.month} | ${duties.weekRange}_
+
+🎵 *Zai Hruaitu:* ${duties.zaiHruaitu}
+🎹 *Keyboard:* ${duties.pianoTumtu}
+🎤 *Hla Hriltu:* ${duties.hlaHriltu}
+🔊 *Light & Sound:* ${duties.lightAndSoundDuty}
+🌸 *Pangpar:* ${duties.pangparKhawitu}
+
+*PATHIANNI CHAWHNU*
+${duties.servicePrograms.morning.map(p => `${p.label}: ${p.value}`).join('\n')}
+
+*PATHIANNI ZAN*
+${duties.servicePrograms.evening.map(p => `${p.label}: ${p.value}`).join('\n')}
+
+*THAWHLALWM CHHIARTU*
+${duties.thawhlawmChiartute.join(', ')}
+
+*USHERS*
+${duties.ushers.join(', ')}
+
+_Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
+  };
+
+  const handleCopyText = () => {
+      const text = generateShareText();
+      navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+      });
+  };
+
+  const handleOpenSMS = () => {
+      const text = generateShareText();
+      // Basic SMS link (formatting support varies by device)
+      window.location.href = `sms:?body=${encodeURIComponent(text)}`;
+  };
+
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied</div>;
   if (loading || !duties) return <div className="p-20 text-center"><Loader className="animate-spin mx-auto text-church-500"/></div>;
 
@@ -101,14 +144,22 @@ const AdminDuties: React.FC = () => {
       <div className="bg-slate-50 min-h-screen py-12">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Header */}
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                   <div>
                       <Link to="/admin" className="text-slate-500 hover:text-church-600 flex items-center mb-2"><ArrowLeft size={16} className="mr-1"/> Dashboard</Link>
                       <h1 className="text-3xl font-serif font-bold text-church-900">Weekly Duties Manager</h1>
                   </div>
-                  <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-church-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-church-700 transition disabled:opacity-50">
-                      {saving ? <Loader className="animate-spin" size={20}/> : <Save size={20}/>} Save Changes
-                  </button>
+                  <div className="flex gap-2">
+                      <button onClick={handleOpenSMS} className="flex items-center gap-2 bg-white text-slate-700 px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition text-sm font-bold shadow-sm">
+                          <Share2 size={16}/> SMS App
+                      </button>
+                      <button onClick={handleCopyText} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition text-sm font-bold shadow-sm">
+                          {copied ? <Check size={16}/> : <Copy size={16}/>} {copied ? 'Copied!' : 'Copy for WhatsApp'}
+                      </button>
+                      <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-church-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-church-700 transition disabled:opacity-50">
+                          {saving ? <Loader className="animate-spin" size={20}/> : <Save size={20}/>} Save
+                      </button>
+                  </div>
               </div>
 
               <div className="space-y-8">
