@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
-import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check } from 'lucide-react';
+import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check, MessageCircle, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDuties: React.FC = () => {
@@ -95,6 +95,24 @@ const AdminDuties: React.FC = () => {
       setSaving(false);
   };
 
+  // --- Notification Logic ---
+
+  const sendIndividualWhatsApp = (name: string, role: string) => {
+      if (!duties || !name || !name.trim()) return;
+      
+      const message = `*Chibai ${name.trim()}*,
+
+Bethel Kohhranah *${duties.month}* thla (${duties.weekRange}) chhung hian *${role}* chanvo i chang a.
+
+Lalpan a rawngbawlnaah malsawm che rawh se.
+
+- Secretary, Bethel Kohhran`;
+
+      // Use window.open to trigger the deep link
+      const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+  };
+
   const generateShareText = () => {
       if (!duties) return '';
       
@@ -133,9 +151,50 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
 
   const handleOpenSMS = () => {
       const text = generateShareText();
-      // Basic SMS link (formatting support varies by device)
       window.location.href = `sms:?body=${encodeURIComponent(text)}`;
   };
+
+  // Reusable Input Component with Notify Button
+  const DutyField = ({ label, fieldKey }: { label: string, fieldKey: keyof WeeklyDuty }) => (
+      <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{label}</label>
+          <div className="flex gap-2">
+              <input 
+                  className="flex-1 border p-3 rounded-lg text-slate-800" 
+                  value={duties?.[fieldKey] as string || ''} 
+                  onChange={e => handleFieldChange(fieldKey, e.target.value)} 
+              />
+              <button 
+                  onClick={() => sendIndividualWhatsApp(duties?.[fieldKey] as string, label)}
+                  className="p-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition border border-green-200"
+                  title={`Send WhatsApp to ${label}`}
+              >
+                  <MessageCircle size={20} />
+              </button>
+          </div>
+      </div>
+  );
+
+  // Reusable Component for Array Notifications
+  const NotifyList = ({ names, role }: { names: string[], role: string }) => (
+    <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Send size={10} /> Notify Individual {role}
+        </p>
+        <div className="flex flex-wrap gap-2">
+            {names.map((name, i) => (
+                <button 
+                    key={i}
+                    onClick={() => sendIndividualWhatsApp(name, role)}
+                    className="flex items-center gap-1.5 bg-white text-slate-600 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-200 border border-slate-200 transition shadow-sm"
+                >
+                    {name} <MessageCircle size={12} className="opacity-50" />
+                </button>
+            ))}
+            {names.length === 0 && <span className="text-xs text-slate-400 italic">No names added yet.</span>}
+        </div>
+    </div>
+  );
 
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied</div>;
   if (loading || !duties) return <div className="p-20 text-center"><Loader className="animate-spin mx-auto text-church-500"/></div>;
@@ -183,26 +242,11 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                       <h3 className="text-lg font-bold text-slate-800 mb-4">Duty Assignees</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Zai Hruaitu</label>
-                              <input className="w-full border p-3 rounded-lg" value={duties.zaiHruaitu} onChange={e => handleFieldChange('zaiHruaitu', e.target.value)} />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hla Hriltu</label>
-                              <input className="w-full border p-3 rounded-lg" value={duties.hlaHriltu} onChange={e => handleFieldChange('hlaHriltu', e.target.value)} />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Piano Tumtu</label>
-                              <input className="w-full border p-3 rounded-lg" value={duties.pianoTumtu} onChange={e => handleFieldChange('pianoTumtu', e.target.value)} />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Light & Sound</label>
-                              <input className="w-full border p-3 rounded-lg" value={duties.lightAndSoundDuty} onChange={e => handleFieldChange('lightAndSoundDuty', e.target.value)} />
-                          </div>
-                          <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Biak In Pangpar</label>
-                              <input className="w-full border p-3 rounded-lg" value={duties.pangparKhawitu || ''} onChange={e => handleFieldChange('pangparKhawitu', e.target.value)} />
-                          </div>
+                          <DutyField label="Zai Hruaitu" fieldKey="zaiHruaitu" />
+                          <DutyField label="Hla Hriltu" fieldKey="hlaHriltu" />
+                          <DutyField label="Piano Tumtu" fieldKey="pianoTumtu" />
+                          <DutyField label="Light & Sound" fieldKey="lightAndSoundDuty" />
+                          <DutyField label="Biak In Pangpar" fieldKey="pangparKhawitu" />
                       </div>
                   </div>
 
@@ -211,18 +255,20 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                           <label className="block text-sm font-bold text-slate-700 mb-2">Thawhlawm Chhiartute (One per line)</label>
                           <textarea 
-                              className="w-full border p-3 rounded-lg h-40" 
+                              className="w-full border p-3 rounded-lg h-40 font-mono text-sm" 
                               value={duties.thawhlawmChiartute.join('\n')} 
                               onChange={e => handleArrayChange('thawhlawmChiartute', e.target.value)} 
                           />
+                          <NotifyList names={duties.thawhlawmChiartute} role="Thawhlawm Chhiartu" />
                       </div>
                       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                           <label className="block text-sm font-bold text-slate-700 mb-2">Ushers (One per line)</label>
                           <textarea 
-                              className="w-full border p-3 rounded-lg h-40" 
+                              className="w-full border p-3 rounded-lg h-40 font-mono text-sm" 
                               value={duties.ushers.join('\n')} 
                               onChange={e => handleArrayChange('ushers', e.target.value)} 
                           />
+                          <NotifyList names={duties.ushers} role="Usher" />
                       </div>
                   </div>
 
@@ -241,7 +287,12 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                   <div key={idx} className="flex gap-4 items-center">
                                       <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label (e.g. Tantu)" value={item.label} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'label', e.target.value)} />
-                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'value', e.target.value)} />
+                                      <div className="flex-1 flex gap-2">
+                                          <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'value', e.target.value)} />
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                              <MessageCircle size={16} />
+                                          </button>
+                                      </div>
                                       <button onClick={() => removeProgramField('sundaySchool', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
                                   </div>
                               ))}
@@ -259,7 +310,12 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                   <div key={idx} className="flex gap-4 items-center">
                                       <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('morning', idx, 'label', e.target.value)} />
-                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('morning', idx, 'value', e.target.value)} />
+                                      <div className="flex-1 flex gap-2">
+                                          <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('morning', idx, 'value', e.target.value)} />
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                              <MessageCircle size={16} />
+                                          </button>
+                                      </div>
                                       <button onClick={() => removeProgramField('morning', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
                                   </div>
                               ))}
@@ -277,7 +333,12 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                   <div key={idx} className="flex gap-4 items-center">
                                       <div className="cursor-move text-slate-300"><GripVertical size={16}/></div>
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('evening', idx, 'label', e.target.value)} />
-                                      <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('evening', idx, 'value', e.target.value)} />
+                                      <div className="flex-1 flex gap-2">
+                                          <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('evening', idx, 'value', e.target.value)} />
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                              <MessageCircle size={16} />
+                                          </button>
+                                      </div>
                                       <button onClick={() => removeProgramField('evening', idx)} className="text-red-400 hover:text-red-600"><Trash size={16}/></button>
                                   </div>
                               ))}
