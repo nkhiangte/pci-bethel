@@ -182,21 +182,13 @@ const About: React.FC = () => {
   // Merge current DB content with default translations for the modal
   const getMergedContent = (): Partial<AboutPageContent> => ({
       en_title: content.en_title || translations.en.about.title,
-      mizo_title: content.mizo_title || translations.mizo.about.title,
       en_subtitle: content.en_subtitle || translations.en.about.subtitle,
-      mizo_subtitle: content.mizo_subtitle || translations.mizo.about.subtitle,
       en_historyTitle: content.en_historyTitle || translations.en.about.historyTitle,
-      mizo_historyTitle: content.mizo_historyTitle || translations.mizo.about.historyTitle,
       en_historyText: content.en_historyText || translations.en.about.historyText,
-      mizo_historyText: content.mizo_historyText || translations.mizo.about.historyText,
       en_missionTitle: content.en_missionTitle || translations.en.about.missionTitle,
-      mizo_missionTitle: content.mizo_missionTitle || translations.mizo.about.missionTitle,
       en_missionText: content.en_missionText || translations.en.about.missionText,
-      mizo_missionText: content.mizo_missionText || translations.mizo.about.missionText,
       en_faithTitle: content.en_faithTitle || translations.en.about.faithTitle,
-      mizo_faithTitle: content.mizo_faithTitle || translations.mizo.about.faithTitle,
       en_faithText: content.en_faithText || translations.en.about.faithText,
-      mizo_faithText: content.mizo_faithText || translations.mizo.about.faithText,
       stats_families: content.stats_families || 440,
       stats_members: content.stats_members || 2094,
       stats_sundayschool: content.stats_sundayschool || 1773,
@@ -595,30 +587,18 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                 </div>
                 <div className="p-6 space-y-6 overflow-y-auto">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        {/* English Column */}
+                    <div className="grid md:grid-cols-1 gap-6">
+                        {/* English Column Only */}
                         <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
                             <h4 className="font-bold text-center text-slate-600">English Content</h4>
                             <FormField label="Title" name="en_title" />
                             <FormField label="Subtitle" name="en_subtitle" />
-                            <FormField label="History Title (Kan Chanchin)" name="en_historyTitle" />
+                            <FormField label="History Title" name="en_historyTitle" />
                             <FormField label="History Text" name="en_historyText" isTextarea />
                             <FormField label="Mission Title" name="en_missionTitle" />
                             <FormField label="Mission Text" name="en_missionText" isTextarea />
                             <FormField label="Faith Title" name="en_faithTitle" />
                             <FormField label="Faith Text" name="en_faithText" isTextarea />
-                        </div>
-                        {/* Mizo Column */}
-                        <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
-                            <h4 className="font-bold text-center text-slate-600">Mizo Content</h4>
-                            <FormField label="Title" name="mizo_title" />
-                            <FormField label="Subtitle" name="mizo_subtitle" />
-                            <FormField label="History Title (Kan Chanchin)" name="mizo_historyTitle" />
-                            <FormField label="History Text" name="mizo_historyText" isTextarea />
-                            <FormField label="Mission Title" name="mizo_missionTitle" />
-                            <FormField label="Mission Text" name="mizo_missionText" isTextarea />
-                            <FormField label="Faith Title" name="mizo_faithTitle" />
-                            <FormField label="Faith Text" name="mizo_faithText" isTextarea />
                         </div>
                     </div>
                     {/* Statistics Section */}

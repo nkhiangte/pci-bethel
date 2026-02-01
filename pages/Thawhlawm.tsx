@@ -414,7 +414,7 @@ const Thawhlawm: React.FC = () => {
 
                             {/* Upa Bial Field */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Upa Bial</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">District (Bial)</label>
                                 <div className="relative">
                                     <select 
                                         name="bial"
@@ -432,7 +432,7 @@ const Thawhlawm: React.FC = () => {
 
                             {/* Name Field (Dropdown) */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Hming (Full Name)</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
                                 <div className="relative">
                                     <select 
                                         name="name"

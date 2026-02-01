@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Globe, User, LogOut, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const location = useLocation();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { currentUser, userProfile, isAdmin } = useAuth();
 
   const navLinks = [
@@ -47,7 +47,7 @@ const Navbar: React.FC = () => {
       ]
     },
     { 
-      name: 'Thawhlawm Thawhna', 
+      name: 'Contributions', 
       path: '#',
       children: [
         { name: 'Pathian Ram', path: '/thawhlawm?category=pathian-ram' },
@@ -65,11 +65,6 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path));
-
-
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'mizo' : 'en');
-  };
 
   const toggleMobileMenu = (name: string) => {
     setMobileExpanded(prev => prev === name ? null : name);
@@ -171,15 +166,6 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-             {/* Language Switcher Desktop/Mobile */}
-            <button 
-              onClick={toggleLanguage}
-              className="flex items-center space-x-1 px-3 py-1 bg-church-800 rounded-full hover:bg-church-700 transition text-sm font-medium border border-church-700"
-            >
-              <Globe size={14} />
-              <span>{language === 'en' ? 'EN' : 'MZ'}</span>
-            </button>
-
             <div className="hidden lg:block">
               {currentUser ? (
                 <div className="flex items-center space-x-3">

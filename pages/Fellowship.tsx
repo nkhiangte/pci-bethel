@@ -302,7 +302,7 @@ const KtpBudgetComponent: React.FC<{ data: KTPBudget | null | undefined }> = ({ 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Income */}
           <div>
-            <h3 className="text-lg font-bold text-green-700 mb-4 flex items-center gap-2"><TrendingUp size={20}/> Sum hmuhna tura ruahman (Income)</h3>
+            <h3 className="text-lg font-bold text-green-700 mb-4 flex items-center gap-2"><TrendingUp size={20}/> Estimated Income</h3>
             <div className="space-y-2 text-sm">
               {data.income.map((item) => (
                 <div key={item.id} className="flex justify-between p-2 rounded hover:bg-green-50">
@@ -318,7 +318,7 @@ const KtpBudgetComponent: React.FC<{ data: KTPBudget | null | undefined }> = ({ 
           </div>
           {/* Expenditure */}
           <div>
-            <h3 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2"><FileDown size={20}/> Sum hmanna tura ruahman (Expenditure)</h3>
+            <h3 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2"><FileDown size={20}/> Estimated Expenditure</h3>
             <div className="space-y-2 text-sm">
               {data.expenditure.map((item) => (
                 <div key={item.id} className="flex justify-between p-2 rounded hover:bg-red-50">
@@ -739,8 +739,8 @@ const Fellowship: React.FC = () => {
                               isAdmin={isAdmin}
                               columns={[
                                   { key: 'year', label: 'Year', type: 'number' },
-                                  { key: 'totalFamilies', label: 'Chhungkaw zat', type: 'number' },
-                                  { key: 'donors', label: 'Tham thei zat', type: 'number' },
+                                  { key: 'totalFamilies', label: 'Total Families', type: 'number' },
+                                  { key: 'donors', label: 'Donors', type: 'number' },
                                   { key: 'percentage', label: '%', type: 'text' },
                                   { key: 'weight', label: 'Weight (kg)', type: 'text' },
                                   { key: 'amount', label: 'Amount (₹)', type: 'text' }
@@ -757,8 +757,8 @@ const Fellowship: React.FC = () => {
                               isAdmin={isAdmin}
                               columns={[
                                   { key: 'year', label: 'Year', type: 'number' },
-                                  { key: 'totalHouses', label: 'In zat', type: 'number' },
-                                  { key: 'performers', label: 'Inkhawm thei zat', type: 'number' },
+                                  { key: 'totalHouses', label: 'Total Households', type: 'number' },
+                                  { key: 'performers', label: 'Attendees', type: 'number' },
                                   { key: 'percentage', label: '%', type: 'text' }
                               ]}
                           />

@@ -215,14 +215,14 @@ const Home: React.FC = () => {
             <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-church-900 text-white p-6 flex items-center gap-3">
                     <ClipboardList size={22} className="text-church-400" />
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">Tun thla rawngbawltute</h4>
+                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">Ministers for this Month</h4>
                 </div>
                 
                 <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
                     <div className="md:col-span-4 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
                             <Users size={16} className="text-church-600" />
-                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Thawhlawm chhiartute</h5>
+                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Offering Counters</h5>
                         </div>
                         <div className="divide-y divide-slate-50">
                             {weeklyDuty.thawhlawmChiartute?.map((name, i) => (
@@ -254,22 +254,22 @@ const Home: React.FC = () => {
             <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
                     <Radio size={22} className="text-church-700" />
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Tun kar rawngbawltute</h4>
+                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Ministers for this Week</h4>
                 </div>
                 <div className="p-8 space-y-6">
                     <div className="grid grid-cols-1 gap-y-6">
                         <div className="group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zai Hruaitu</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Worship Leader</label>
                             <p className="text-sm font-black text-slate-800 group-hover:text-church-700 transition-colors">{weeklyDuty.zaiHruaitu || '-'}</p>
                             <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Piano</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Pianist</label>
                                 <p className="text-sm font-black text-slate-800">{weeklyDuty.pianoTumtu || '-'}</p>
                             </div>
                             <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hla Hriltu</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Song Conductor</label>
                                 <p className="text-sm font-black text-slate-800">{weeklyDuty.hlaHriltu || '-'}</p>
                             </div>
                         </div>
@@ -280,7 +280,7 @@ const Home: React.FC = () => {
                         </div>
                         <div>
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
-                                <Music size={10} className="text-church-400"/> Biak In Pangpar
+                                <Music size={10} className="text-church-400"/> Floral Decoration
                             </label>
                             <p className="text-sm font-bold text-slate-700 bg-church-50/50 p-2 rounded-lg border border-church-100 text-center">{weeklyDuty.pangparKhawitu || '-'}</p>
                         </div>

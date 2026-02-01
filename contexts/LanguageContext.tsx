@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { translations, Language } from '../translations';
 
@@ -10,12 +11,13 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('mizo');
+  // Default and force 'en'
+  const [language] = useState<Language>('en');
 
   const value = {
     language,
-    setLanguage,
-    t: translations[language],
+    setLanguage: () => {}, // Disable switching
+    t: translations['en'],
   };
 
   return (

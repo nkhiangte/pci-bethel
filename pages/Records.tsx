@@ -109,10 +109,10 @@ const Records: React.FC = () => {
     const targetFolderIdRef = useRef<string | null>(null);
 
     const categoryCards = [
-        { id: 'baptism', title: 'Baptisma Record', sub: 'Hming & Ni chhinchhiahte', icon: Droplet, defaultImg: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
-        { id: 'wedding', title: 'Inneihna Record', sub: 'Inneih hriatpuina hrang hrang', icon: Heart, defaultImg: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
-        { id: 'death', title: 'Thihna Record', sub: 'Mithi chhinchhiahna leh thlan', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
-        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial leh Inkhawmpui Liante', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
+        { id: 'baptism', title: 'Baptisma Record', sub: 'Names & Dates Recorded', icon: Droplet, defaultImg: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
+        { id: 'wedding', title: 'Inneihna Record', sub: 'Marriage Registrations', icon: Heart, defaultImg: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
+        { id: 'death', title: 'Thihna Record', sub: 'Death Records & Cemetery', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
+        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial & General Conferences', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
         { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent, defaultImg: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80&w=800' },
         { id: 'pemDawnsawn', title: 'Pem Dawnsawn', sub: 'Incoming Transfer Records', icon: UserPlus, defaultImg: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?auto=format&fit=crop&q=80&w=800' },
     ];
@@ -648,7 +648,7 @@ const Records: React.FC = () => {
         switch (tab) {
             case 'baptism': return "Search Name, Parents, Year, Minister...";
             case 'wedding': return "Search Couple, Year, Minister...";
-            case 'death': return "Search Name, Chhungte, Year, Minister...";
+            case 'death': return "Search Name, Family, Year, Minister...";
             case 'inkhawmpui': return "Search Event, Year, Speaker...";
             case 'gospelCamping': return "Search Team, Speaker, Year...";
             case 'pemDawnsawn': return "Search Family Name, Previous Church...";
