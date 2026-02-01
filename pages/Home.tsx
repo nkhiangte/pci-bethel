@@ -136,12 +136,6 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-16 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      {/* Verse of the Day */}
-      <section className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center shadow-sm">
-        <h3 className="text-xs font-black text-yellow-600 uppercase tracking-[0.2em] mb-4">{t.home.verseOfTheDay}</h3>
-        {renderVerseContent()}
-      </section>
-
       {/* --- NEWS SECTION --- */}
       <section>
         <div className="flex items-center justify-between mb-6">
@@ -380,6 +374,12 @@ const Home: React.FC = () => {
                View All Leaders & Profiles <ChevronRight size={16} className="ml-2" />
             </Link>
          </div>
+      </section>
+
+      {/* Verse of the Day */}
+      <section className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center shadow-sm">
+        <h3 className="text-xs font-black text-yellow-600 uppercase tracking-[0.2em] mb-4">{t.home.verseOfTheDay}</h3>
+        {renderVerseContent()}
       </section>
 
       {/* --- MODALS --- */}
