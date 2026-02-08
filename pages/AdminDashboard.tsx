@@ -2,13 +2,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send } from 'lucide-react';
 import { db } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 
 const AdminDashboard: React.FC = () => {
   const { isAdmin, currentUser } = useAuth();
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  
+  // Notification State
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifBody, setNotifBody] = useState('');
+  const [sendingNotif, setSendingNotif] = useState(false);
 
   if (!currentUser) return <Navigate to="/login" />;
   if (!isAdmin) return (
@@ -71,6 +76,36 @@ const AdminDashboard: React.FC = () => {
     setMaintenanceLoading(false);
   };
 
+  const handleSendNotification = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!notifTitle || !notifBody) return;
+      
+      setSendingNotif(true);
+      
+      // SIMULATION OF SENDING LOGIC
+      // In a real Android app setup:
+      // 1. You would call a Firebase Cloud Function here (e.g., https://.../sendBroadcast)
+      // 2. The Cloud Function uses the Firebase Admin SDK to send the message to the 'all' topic.
+      
+      setTimeout(() => {
+          setSendingNotif(false);
+          alert(`
+SUCCESS (SIMULATED)
+
+This message would be sent to all Android App users via Firebase Cloud Messaging (FCM).
+
+Title: ${notifTitle}
+Body: ${notifBody}
+
+To make this live:
+1. Wrap this app using Capacitor.
+2. Deploy a Firebase Cloud Function to handle the actual broadcast.
+          `);
+          setNotifTitle('');
+          setNotifBody('');
+      }, 1500);
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,6 +129,46 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mt-12">
+                
+                {/* App Broadcast Panel */}
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                        <Radio className="mr-2 text-red-500" /> App Broadcast (Android)
+                    </h3>
+                    <div className="bg-red-50 p-4 rounded-lg mb-6 border border-red-100">
+                        <p className="text-xs text-red-800 font-medium">
+                            This feature requires the app to be installed on users' phones (via Play Store/APK) and Firebase Cloud Messaging configured.
+                        </p>
+                    </div>
+                    <form onSubmit={handleSendNotification} className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Notification Title</label>
+                            <input 
+                                className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none"
+                                placeholder="e.g. Inkhawm Programme Thlak"
+                                value={notifTitle}
+                                onChange={e => setNotifTitle(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Message Body</label>
+                            <textarea 
+                                className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500 outline-none h-24 resize-none"
+                                placeholder="e.g. Vawiin zan inkhawmah..."
+                                value={notifBody}
+                                onChange={e => setNotifBody(e.target.value)}
+                            />
+                        </div>
+                        <button 
+                            type="submit"
+                            disabled={sendingNotif || !notifTitle || !notifBody}
+                            className="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition flex items-center justify-center disabled:opacity-50"
+                        >
+                            {sendingNotif ? 'Sending...' : <><Send size={18} className="mr-2" /> Send Broadcast</>}
+                        </button>
+                    </form>
+                </div>
+
                 {/* System Maintenance */}
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center">

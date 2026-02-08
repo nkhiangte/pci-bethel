@@ -195,6 +195,22 @@ export interface SundaySchoolDepartment {
   students: number;
 }
 
+export interface SSWeeklyReport {
+  id?: string;
+  date: string;
+  deptId: string;
+  zirtirtu: {
+    kal: number;
+    kallo: number;
+    thawhlawm: number;
+  };
+  zirtu: {
+    kal: number;
+    kallo: number;
+    thawhlawm: number;
+  };
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
