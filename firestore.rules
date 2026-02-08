@@ -153,6 +153,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /sundaySchoolWeeklyReports/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Fix for Thawhlawm submission
     match /thawhlawm/{docId} {
       allow read: if isAdmin();
