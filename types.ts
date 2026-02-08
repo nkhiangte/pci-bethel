@@ -195,10 +195,7 @@ export interface SundaySchoolDepartment {
   students: number;
 }
 
-export interface SSWeeklyReport {
-  id?: string;
-  date: string;
-  deptId: string;
+export interface SSReportSegment {
   zirtirtu: {
     kal: number;
     kallo: number;
@@ -209,6 +206,13 @@ export interface SSWeeklyReport {
     kallo: number;
     thawhlawm: number;
   };
+}
+
+export interface SSWeeklyReport {
+  id?: string;
+  date: string;
+  naupang: SSReportSegment;
+  puitling: SSReportSegment;
 }
 
 export interface UserProfile {

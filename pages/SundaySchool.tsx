@@ -4,11 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { SundaySchoolDepartment, SSWeeklyReport } from '../types';
+import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment } from '../types';
 import { 
   Users, UserCheck, Edit, Save, X, Loader, Database, 
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
-  ChevronRight, BarChart3, TrendingUp 
+  ChevronRight, TrendingUp, Sparkles, BookOpen
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -22,6 +22,11 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
     { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
     { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 }
 ];
+
+const EMPTY_SEGMENT: SSReportSegment = {
+    zirtirtu: { kal: 0, kallo: 0, thawhlawm: 0 },
+    zirtu: { kal: 0, kallo: 0, thawhlawm: 0 }
+};
 
 const SundaySchool: React.FC = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -83,7 +88,6 @@ const SundaySchool: React.FC = () => {
     if (!db?.collection) return;
     setLoadingReports(true);
     try {
-        // Fetch collective reports (no dept filter)
         const snapshot = await db.collection('sundaySchoolWeeklyReports')
             .orderBy('date', 'desc')
             .limit(20)
@@ -141,9 +145,8 @@ const SundaySchool: React.FC = () => {
   const handleAddReport = () => {
       setEditingReport({
           date: new Date().toISOString().split('T')[0],
-          deptId: 'collective',
-          zirtirtu: { kal: 0, kallo: 0, thawhlawm: 0 },
-          zirtu: { kal: 0, kallo: 0, thawhlawm: 0 }
+          naupang: JSON.parse(JSON.stringify(EMPTY_SEGMENT)),
+          puitling: JSON.parse(JSON.stringify(EMPTY_SEGMENT))
       });
       setIsReportModalOpen(true);
   };
@@ -241,7 +244,7 @@ const SundaySchool: React.FC = () => {
 
   return (
       <div className="py-12 bg-slate-50 min-h-screen">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-8">
                   <Link to="/" className="text-sm font-bold text-slate-500 hover:text-church-600 mb-4 inline-block">&larr; Back to Home</Link>
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -250,7 +253,7 @@ const SundaySchool: React.FC = () => {
                               {isReportView ? 'Sunday School Weekly Reports' : `${currentDept?.name} Department`}
                           </h1>
                           <p className="text-slate-500 mt-1 text-lg font-medium">
-                              {isReportView ? 'Collective reports of all Sunday School departments.' : (currentDept?.description || 'Sunday School department details.')}
+                              {isReportView ? 'Breakdown of Naupang and Puitling department reports.' : (currentDept?.description || 'Sunday School department details.')}
                           </p>
                       </div>
                   </div>
@@ -352,16 +355,21 @@ const SundaySchool: React.FC = () => {
                       </div>
                   </div>
               ) : (
-                  /* WEEKLY REPORT VIEW (Collective) */
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                      <div className="flex justify-between items-center bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-                          <div>
-                              <h3 className="text-2xl font-serif font-black text-slate-800">Collective Weekly Reports</h3>
-                              <p className="text-slate-500 font-medium mt-1">Summary of all Sunday School departments.</p>
+                  /* WEEKLY REPORT VIEW (Collective with Naupang/Puitling Breakdown) */
+                  <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                      <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                          <div className="flex items-center gap-4">
+                              <div className="p-4 bg-church-50 rounded-2xl text-church-600 shadow-inner">
+                                  <ClipboardList size={32} />
+                              </div>
+                              <div>
+                                  <h3 className="text-2xl font-serif font-black text-slate-800">Weekly Reports</h3>
+                                  <p className="text-slate-500 font-medium">Naupang & Puitling Department Summaries</p>
+                              </div>
                           </div>
                           {isAdmin && (
                               <button onClick={handleAddReport} className="flex items-center gap-2 px-6 py-3 bg-church-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-church-700 transition shadow-lg shadow-church-100 scale-100 active:scale-95">
-                                  <Plus size={18}/> New Entry
+                                  <Plus size={18}/> New Weekly Entry
                               </button>
                           )}
                       </div>
@@ -369,64 +377,83 @@ const SundaySchool: React.FC = () => {
                       {loadingReports ? (
                           <div className="py-24 text-center"><Loader className="animate-spin mx-auto text-church-500" size={40} /></div>
                       ) : reports.length === 0 ? (
-                          <div className="bg-white py-24 rounded-[2.5rem] text-center border border-dashed border-slate-200 shadow-sm">
-                              <ClipboardList className="mx-auto text-slate-200 mb-6" size={64} />
+                          <div className="bg-white py-24 rounded-[3rem] text-center border border-dashed border-slate-200 shadow-sm">
+                              <BookOpen className="mx-auto text-slate-200 mb-6" size={64} />
                               <h4 className="text-xl font-bold text-slate-400">No Reports Found</h4>
                               <p className="text-slate-400 text-sm mt-1 max-w-xs mx-auto">Weekly collective records haven't been entered yet.</p>
                           </div>
                       ) : (
-                          <div className="space-y-10">
+                          <div className="space-y-16">
                               {reports.map((report) => (
-                                  <div key={report.id} className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden group">
-                                      <div className="bg-slate-900 text-white px-8 py-5 flex justify-between items-center">
-                                          <div className="flex items-center gap-4">
-                                              <div className="bg-church-500 p-2.5 rounded-xl shadow-lg">
-                                                <Calendar size={20} className="text-white" />
+                                  <div key={report.id} className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden group">
+                                      <div className="bg-slate-900 text-white px-10 py-6 flex justify-between items-center border-b border-slate-800">
+                                          <div className="flex items-center gap-5">
+                                              <div className="bg-church-500 p-3 rounded-xl shadow-lg ring-4 ring-church-500/20">
+                                                <Calendar size={22} className="text-white" />
                                               </div>
                                               <div>
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Sunday's Report</p>
-                                                <span className="font-serif font-bold text-lg">{new Date(report.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Sunday Service Report</p>
+                                                <span className="font-serif font-black text-xl md:text-2xl">{new Date(report.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                               </div>
                                           </div>
                                           {isAdmin && (
                                               <div className="flex gap-2">
-                                                  <button onClick={() => { setEditingReport(report); setIsReportModalOpen(true); }} className="p-2.5 bg-white/5 hover:bg-white/15 rounded-xl transition text-slate-400 hover:text-white" title="Edit"><Edit size={18}/></button>
-                                                  <button onClick={() => handleDeleteReport(report.id!)} className="p-2.5 bg-red-500/10 hover:bg-red-500/30 rounded-xl transition text-red-400 hover:text-red-300" title="Delete"><Trash size={18}/></button>
+                                                  <button onClick={() => { setEditingReport(report); setIsReportModalOpen(true); }} className="p-3 bg-white/5 hover:bg-white/15 rounded-xl transition text-slate-400 hover:text-white border border-white/10" title="Edit"><Edit size={18}/></button>
+                                                  <button onClick={() => handleDeleteReport(report.id!)} className="p-3 bg-red-500/10 hover:bg-red-500/30 rounded-xl transition text-red-400 hover:text-red-300 border border-red-500/10" title="Delete"><Trash size={18}/></button>
                                               </div>
                                           )}
                                       </div>
                                       
-                                      <div className="overflow-x-auto">
-                                          <table className="w-full text-left">
-                                              <thead>
-                                                  <tr className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.25em] border-b border-slate-100">
-                                                      <th className="px-8 py-5">Hming / Role</th>
-                                                      <th className="px-8 py-5 text-center">Kal Zat</th>
-                                                      <th className="px-8 py-5 text-center">Kal lo Zat</th>
-                                                      <th className="px-8 py-5 text-right">Thawhlawm</th>
-                                                  </tr>
-                                              </thead>
-                                              <tbody className="divide-y divide-slate-50">
-                                                  <tr className="hover:bg-slate-50/50 transition-colors">
-                                                      <td className="px-8 py-5 font-black text-slate-700">Zirtirtu</td>
-                                                      <td className="px-8 py-5 text-center text-slate-600 font-bold">{report.zirtirtu.kal}</td>
-                                                      <td className="px-8 py-5 text-center text-slate-400 font-medium">{report.zirtirtu.kallo}</td>
-                                                      <td className="px-8 py-5 text-right font-mono font-black text-slate-800">₹ {report.zirtirtu.thawhlawm.toLocaleString()}</td>
-                                                  </tr>
-                                                  <tr className="hover:bg-slate-50/50 transition-colors">
-                                                      <td className="px-8 py-5 font-black text-slate-700">Zirtu</td>
-                                                      <td className="px-8 py-5 text-center text-slate-600 font-bold">{report.zirtu.kal}</td>
-                                                      <td className="px-8 py-5 text-center text-slate-400 font-medium">{report.zirtu.kallo}</td>
-                                                      <td className="px-8 py-5 text-right font-mono font-black text-slate-800">₹ {report.zirtu.thawhlawm.toLocaleString()}</td>
-                                                  </tr>
-                                                  <tr className="bg-church-50/50 border-t-2 border-church-100">
-                                                      <td className="px-8 py-6 text-church-900 font-black uppercase text-xs tracking-widest">Total</td>
-                                                      <td className="px-8 py-6 text-center text-church-900 font-black text-lg">{report.zirtirtu.kal + report.zirtu.kal}</td>
-                                                      <td className="px-8 py-6 text-center text-church-400 font-bold">{report.zirtirtu.kallo + report.zirtu.kallo}</td>
-                                                      <td className="px-8 py-6 text-right font-mono text-church-900 text-2xl font-black">₹ {(report.zirtirtu.thawhlawm + report.zirtu.thawhlawm).toLocaleString()}</td>
-                                                  </tr>
-                                              </tbody>
-                                          </table>
+                                      <div className="p-2 md:p-8 space-y-10">
+                                          {/* Naupang Section */}
+                                          <div className="overflow-hidden rounded-2xl border border-green-100 bg-green-50/20">
+                                              <div className="bg-green-100/50 px-6 py-3 border-b border-green-100 flex items-center gap-2">
+                                                  <Sparkles className="text-green-600" size={16} />
+                                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-green-700">Naupang Department Report</h4>
+                                              </div>
+                                              <ReportTable segment={report.naupang} theme="green" />
+                                          </div>
+
+                                          {/* Puitling Section */}
+                                          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/20">
+                                              <div className="bg-slate-100/50 px-6 py-3 border-b border-slate-100 flex items-center gap-2">
+                                                  <Users className="text-slate-600" size={16} />
+                                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-700">Puitling Department Report</h4>
+                                              </div>
+                                              <ReportTable segment={report.puitling} theme="slate" />
+                                          </div>
+
+                                          {/* Summary Section */}
+                                          <div className="mt-8 bg-church-900 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden group">
+                                              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110"></div>
+                                              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                                  <div className="flex items-center gap-5">
+                                                      <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10 text-white">
+                                                          <TrendingUp size={32} />
+                                                      </div>
+                                                      <div>
+                                                          <h4 className="text-[10px] font-black text-church-300 uppercase tracking-[0.3em] mb-1">Weekly Collective Summary</h4>
+                                                          <p className="text-white text-2xl font-serif font-bold">Total Kohhran Report</p>
+                                                      </div>
+                                                  </div>
+                                                  <div className="grid grid-cols-2 md:flex md:items-center gap-12 text-white">
+                                                      <div className="text-right md:text-left">
+                                                          <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Attendance</p>
+                                                          <p className="text-4xl font-black">{
+                                                              (report.naupang.zirtirtu.kal + report.naupang.zirtu.kal) + 
+                                                              (report.puitling.zirtirtu.kal + report.puitling.zirtu.kal)
+                                                          }</p>
+                                                      </div>
+                                                      <div className="text-right">
+                                                          <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Offering</p>
+                                                          <p className="text-4xl font-black font-mono text-church-100">₹ {
+                                                              (report.naupang.zirtirtu.thawhlawm + report.naupang.zirtu.thawhlawm + 
+                                                               report.puitling.zirtirtu.thawhlawm + report.puitling.zirtu.thawhlawm).toLocaleString()
+                                                          }</p>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
                                       </div>
                                   </div>
                               ))}
@@ -468,80 +495,70 @@ const SundaySchool: React.FC = () => {
               </div>
           )}
 
-          {/* Weekly Report Entry Modal */}
+          {/* Weekly Report Entry Modal - Categorized */}
           {isReportModalOpen && editingReport && (
               <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-                  <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                  <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                       <div className="p-8 border-b bg-church-50 flex justify-between items-center">
                           <div>
-                              <h3 className="text-2xl font-serif font-black text-church-900 leading-tight">{editingReport.id ? 'Edit Report' : 'Enter Weekly Report'}</h3>
-                              <p className="text-slate-500 text-sm font-medium">Sunday School Collective Report</p>
+                              <h3 className="text-2xl font-serif font-black text-church-900 leading-tight">{editingReport.id ? 'Edit Report' : 'New Weekly Entry'}</h3>
+                              <p className="text-slate-500 text-sm font-medium">Sunday School Breakdown Report</p>
                           </div>
                           <button onClick={() => setIsReportModalOpen(false)} className="p-2.5 hover:bg-white rounded-full transition text-slate-400"><X size={24}/></button>
                       </div>
                       
-                      <div className="p-8 overflow-y-auto space-y-8 max-h-[70vh]">
-                          <div className="max-w-xs">
+                      <div className="p-8 overflow-y-auto space-y-12 max-h-[70vh] bg-slate-50/50">
+                          <div className="max-w-xs mx-auto text-center">
                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Sunday's Date</label>
                               <div className="relative">
                                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-church-500" size={18} />
                                   <input 
                                       type="date" 
-                                      className="w-full border border-slate-200 pl-10 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50"
+                                      className="w-full border border-slate-200 pl-10 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-white shadow-sm"
                                       value={editingReport.date}
                                       onChange={e => setEditingReport({...editingReport, date: e.target.value})}
                                   />
                               </div>
                           </div>
 
-                          <div className="grid md:grid-cols-2 gap-8">
-                              {/* Zirtirtu Data */}
-                              <div className="space-y-4 p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
-                                  <h4 className="font-black text-blue-900 uppercase text-[10px] tracking-[0.2em] mb-4 border-b border-blue-100 pb-2">Zirtirtu (Teachers)</h4>
-                                  <div className="space-y-4">
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-blue-600 mb-1">Kal Zat (Present)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-bold focus:bg-white transition-colors" value={editingReport.zirtirtu?.kal} onChange={e => setEditingReport({...editingReport, zirtirtu: {...editingReport.zirtirtu!, kal: parseInt(e.target.value) || 0}})} />
-                                      </div>
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-blue-600 mb-1">Kal lo Zat (Absent)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-bold focus:bg-white transition-colors" value={editingReport.zirtirtu?.kallo} onChange={e => setEditingReport({...editingReport, zirtirtu: {...editingReport.zirtirtu!, kallo: parseInt(e.target.value) || 0}})} />
-                                      </div>
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-blue-600 mb-1">Thawhlawm (₹)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-black font-mono focus:bg-white transition-colors" value={editingReport.zirtirtu?.thawhlawm} onChange={e => setEditingReport({...editingReport, zirtirtu: {...editingReport.zirtirtu!, thawhlawm: parseFloat(e.target.value) || 0}})} />
-                                      </div>
+                          <div className="grid md:grid-cols-2 gap-12">
+                              {/* Naupang Data Entry */}
+                              <div className="space-y-6">
+                                  <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-1.5 h-6 bg-green-500 rounded-full"></div>
+                                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Naupang Report</h4>
                                   </div>
+                                  <ReportEntrySection segment={editingReport.naupang!} onChange={(s) => setEditingReport({...editingReport, naupang: s})} theme="green" />
                               </div>
 
-                              {/* Zirtu Data */}
-                              <div className="space-y-4 p-6 bg-green-50/50 rounded-2xl border border-green-100">
-                                  <h4 className="font-black text-green-900 uppercase text-[10px] tracking-[0.2em] mb-4 border-b border-green-100 pb-2">Zirtu (Students)</h4>
-                                  <div className="space-y-4">
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-green-600 mb-1">Kal Zat (Present)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-bold focus:bg-white transition-colors" value={editingReport.zirtu?.kal} onChange={e => setEditingReport({...editingReport, zirtu: {...editingReport.zirtu!, kal: parseInt(e.target.value) || 0}})} />
-                                      </div>
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-green-600 mb-1">Kal lo Zat (Absent)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-bold focus:bg-white transition-colors" value={editingReport.zirtu?.kallo} onChange={e => setEditingReport({...editingReport, zirtu: {...editingReport.zirtu!, kallo: parseInt(e.target.value) || 0}})} />
-                                      </div>
-                                      <div>
-                                          <label className="block text-[10px] font-bold text-green-600 mb-1">Thawhlawm (₹)</label>
-                                          <input type="number" className="w-full border-blue-200 border rounded-xl p-2.5 font-black font-mono focus:bg-white transition-colors" value={editingReport.zirtu?.thawhlawm} onChange={e => setEditingReport({...editingReport, zirtu: {...editingReport.zirtu!, thawhlawm: parseFloat(e.target.value) || 0}})} />
-                                      </div>
+                              {/* Puitling Data Entry */}
+                              <div className="space-y-6">
+                                  <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
+                                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Puitling Report</h4>
                                   </div>
+                                  <ReportEntrySection segment={editingReport.puitling!} onChange={(s) => setEditingReport({...editingReport, puitling: s})} theme="blue" />
                               </div>
                           </div>
 
-                          <div className="p-6 bg-church-900 text-white rounded-3xl flex justify-between items-center shadow-xl">
+                          <div className="p-8 bg-church-900 text-white rounded-[2rem] flex justify-between items-center shadow-2xl">
                               <div className="flex flex-col">
-                                  <span className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Collection</span>
-                                  <span className="text-4xl font-black font-mono">₹ {((editingReport.zirtirtu?.thawhlawm || 0) + (editingReport.zirtu?.thawhlawm || 0)).toLocaleString()}</span>
+                                  <span className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Collective Grand Total</span>
+                                  <span className="text-4xl font-black font-mono">₹ {
+                                      (
+                                          (editingReport.naupang?.zirtirtu.thawhlawm || 0) + (editingReport.naupang?.zirtu.thawhlawm || 0) +
+                                          (editingReport.puitling?.zirtirtu.thawhlawm || 0) + (editingReport.puitling?.zirtu.thawhlawm || 0)
+                                      ).toLocaleString()
+                                  }</span>
                               </div>
                               <div className="text-right">
                                   <span className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Attendance</span>
-                                  <p className="text-3xl font-black">{((editingReport.zirtirtu?.kal || 0) + (editingReport.zirtu?.kal || 0))}</p>
+                                  <p className="text-3xl font-black">{
+                                      (
+                                          (editingReport.naupang?.zirtirtu.kal || 0) + (editingReport.naupang?.zirtu.kal || 0) +
+                                          (editingReport.puitling?.zirtirtu.kal || 0) + (editingReport.puitling?.zirtu.kal || 0)
+                                      )
+                                  }</p>
                               </div>
                           </div>
                       </div>
@@ -549,7 +566,7 @@ const SundaySchool: React.FC = () => {
                       <div className="p-8 bg-slate-50 border-t flex justify-end gap-3">
                           <button onClick={() => setIsReportModalOpen(false)} className="px-6 py-3 border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-white transition">Cancel</button>
                           <button onClick={handleSaveReport} className="px-8 py-3 bg-church-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-church-700 flex items-center transition">
-                             <Save size={18} className="mr-2" /> Save Report
+                             <Save size={18} className="mr-2" /> Finalize Report
                           </button>
                       </div>
                   </div>
@@ -557,6 +574,106 @@ const SundaySchool: React.FC = () => {
           )}
       </div>
   );
+};
+
+// Reusable Sub-components
+const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ segment, theme }) => {
+    const isGreen = theme === 'green';
+    const textTheme = isGreen ? 'text-green-800' : 'text-slate-800';
+    const borderTheme = isGreen ? 'border-green-100' : 'border-slate-100';
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-white/50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-100">
+                        <th className="px-6 py-3">Hming / Role</th>
+                        <th className="px-6 py-3 text-center">Kal Zat</th>
+                        <th className="px-6 py-3 text-center">Kal lo Zat</th>
+                        <th className="px-6 py-3 text-right">Thawhlawm</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                    <tr className="hover:bg-white/40 transition-colors">
+                        <td className={`px-6 py-4 font-bold ${textTheme}`}>Zirtirtu</td>
+                        <td className="px-6 py-4 text-center text-slate-600 font-bold">{segment.zirtirtu.kal}</td>
+                        <td className="px-6 py-4 text-center text-slate-400 font-medium">{segment.zirtirtu.kallo}</td>
+                        <td className={`px-6 py-4 text-right font-mono font-bold ${textTheme}`}>₹ {segment.zirtirtu.thawhlawm.toLocaleString()}</td>
+                    </tr>
+                    <tr className="hover:bg-white/40 transition-colors">
+                        <td className={`px-6 py-4 font-bold ${textTheme}`}>Zirtu</td>
+                        <td className="px-6 py-4 text-center text-slate-600 font-bold">{segment.zirtu.kal}</td>
+                        <td className="px-6 py-4 text-center text-slate-400 font-medium">{segment.zirtu.kallo}</td>
+                        <td className={`px-6 py-4 text-right font-mono font-bold ${textTheme}`}>₹ {segment.zirtu.thawhlawm.toLocaleString()}</td>
+                    </tr>
+                    <tr className="bg-white/60 font-black">
+                        <td className={`px-6 py-4 text-[10px] uppercase tracking-widest ${textTheme}`}>Total</td>
+                        <td className={`px-6 py-4 text-center text-lg ${textTheme}`}>{segment.zirtirtu.kal + segment.zirtu.kal}</td>
+                        <td className="px-6 py-4 text-center text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
+                        <td className={`px-6 py-4 text-right font-mono text-xl ${textTheme}`}>₹ {(segment.zirtirtu.thawhlawm + segment.zirtu.thawhlawm).toLocaleString()}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+const ReportEntrySection: React.FC<{ 
+    segment: SSReportSegment; 
+    onChange: (s: SSReportSegment) => void; 
+    theme: 'green' | 'blue' 
+}> = ({ segment, onChange, theme }) => {
+    const isGreen = theme === 'green';
+    const bgClass = isGreen ? 'bg-green-50/50 border-green-100' : 'bg-blue-50/50 border-blue-100';
+    const labelClass = isGreen ? 'text-green-600' : 'text-blue-600';
+    const inputClass = isGreen ? 'border-green-200' : 'border-blue-200';
+
+    const update = (role: 'zirtirtu' | 'zirtu', field: string, value: number) => {
+        const updated = JSON.parse(JSON.stringify(segment));
+        updated[role][field] = value;
+        onChange(updated);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Zirtirtu */}
+            <div className={`p-6 rounded-2xl border ${bgClass}`}>
+                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 border-b pb-2 ${labelClass}`}>Zirtirtu (Teachers)</h5>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal Zat</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtirtu.kal} onChange={e => update('zirtirtu', 'kal', parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal lo Zat</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtirtu.kallo} onChange={e => update('zirtirtu', 'kallo', parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Thawhlawm (₹)</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-black font-mono ${inputClass}`} value={segment.zirtirtu.thawhlawm} onChange={e => update('zirtirtu', 'thawhlawm', parseFloat(e.target.value) || 0)} />
+                    </div>
+                </div>
+            </div>
+            {/* Zirtu */}
+            <div className={`p-6 rounded-2xl border ${bgClass}`}>
+                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 border-b pb-2 ${labelClass}`}>Zirtu (Students)</h5>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal Zat</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtu.kal} onChange={e => update('zirtu', 'kal', parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal lo Zat</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtu.kallo} onChange={e => update('zirtu', 'kallo', parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Thawhlawm (₹)</label>
+                        <input type="number" className={`w-full border rounded-xl p-2 font-black font-mono ${inputClass}`} value={segment.zirtu.thawhlawm} onChange={e => update('zirtu', 'thawhlawm', parseFloat(e.target.value) || 0)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default SundaySchool;
