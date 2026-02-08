@@ -8,7 +8,7 @@ import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment } from '../type
 import { 
   Users, UserCheck, Edit, Save, X, Loader, Database, 
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
-  ChevronRight, TrendingUp, Sparkles, BookOpen
+  ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -24,8 +24,9 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
 ];
 
 const EMPTY_SEGMENT: SSReportSegment = {
-    zirtirtu: { kal: 0, kallo: 0, thawhlawm: 0 },
-    zirtu: { kal: 0, kallo: 0, thawhlawm: 0 }
+    zirtirtu: { kal: 0, kallo: 0 },
+    zirtu: { kal: 0, kallo: 0 },
+    thawhlawm: 0
 };
 
 const SundaySchool: React.FC = () => {
@@ -85,7 +86,7 @@ const SundaySchool: React.FC = () => {
   }, [getDeptName]);
 
   const fetchReports = useCallback(async () => {
-    if (!db?.collection) return;
+    if (!db || !db.collection) return;
     setLoadingReports(true);
     try {
         const snapshot = await db.collection('sundaySchoolWeeklyReports')
@@ -95,8 +96,11 @@ const SundaySchool: React.FC = () => {
         
         const fetchedReports = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as SSWeeklyReport[];
         setReports(fetchedReports);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error fetching reports:", error);
+        if (error.message?.includes('permissions')) {
+            console.error("DEBUG: Firebase Permission Denied on fetch. Check rules for collection 'sundaySchoolWeeklyReports'.");
+        }
     }
     setLoadingReports(false);
   }, []);
@@ -152,7 +156,10 @@ const SundaySchool: React.FC = () => {
   };
 
   const handleSaveReport = async () => {
-      if (!db || !db.collection || !editingReport.date) return;
+      if (!db || !db.collection || !editingReport.date) {
+          alert("Please select a date.");
+          return;
+      }
       try {
           const docRef = editingReport.id 
               ? db.collection('sundaySchoolWeeklyReports').doc(editingReport.id)
@@ -161,19 +168,24 @@ const SundaySchool: React.FC = () => {
           await docRef.set(editingReport, { merge: true });
           setIsReportModalOpen(false);
           fetchReports();
-      } catch (error) {
+      } catch (error: any) {
           console.error("Error saving report:", error);
-          alert("Failed to save report.");
+          if (error.message?.includes('permissions')) {
+             alert("Insufficient permissions. You must be an administrator to save reports.");
+          } else {
+             alert("Failed to save report: " + error.message);
+          }
       }
   };
 
   const handleDeleteReport = async (id: string) => {
-      if (!window.confirm("Delete this report?")) return;
+      if (!db || !db.collection || !window.confirm("Delete this report?")) return;
       try {
           await db.collection('sundaySchoolWeeklyReports').doc(id).delete();
           fetchReports();
       } catch (error) {
           console.error(error);
+          alert("Failed to delete report.");
       }
   };
 
@@ -447,8 +459,7 @@ const SundaySchool: React.FC = () => {
                                                       <div className="text-right">
                                                           <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Offering</p>
                                                           <p className="text-4xl font-black font-mono text-church-100">₹ {
-                                                              (report.naupang.zirtirtu.thawhlawm + report.naupang.zirtu.thawhlawm + 
-                                                               report.puitling.zirtirtu.thawhlawm + report.puitling.zirtu.thawhlawm).toLocaleString()
+                                                              (report.naupang.thawhlawm + report.puitling.thawhlawm).toLocaleString()
                                                           }</p>
                                                       </div>
                                                   </div>
@@ -545,10 +556,7 @@ const SundaySchool: React.FC = () => {
                               <div className="flex flex-col">
                                   <span className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Collective Grand Total</span>
                                   <span className="text-4xl font-black font-mono">₹ {
-                                      (
-                                          (editingReport.naupang?.zirtirtu.thawhlawm || 0) + (editingReport.naupang?.zirtu.thawhlawm || 0) +
-                                          (editingReport.puitling?.zirtirtu.thawhlawm || 0) + (editingReport.puitling?.zirtu.thawhlawm || 0)
-                                      ).toLocaleString()
+                                      ((editingReport.naupang?.thawhlawm || 0) + (editingReport.puitling?.thawhlawm || 0)).toLocaleString()
                                   }</span>
                               </div>
                               <div className="text-right">
@@ -580,7 +588,6 @@ const SundaySchool: React.FC = () => {
 const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ segment, theme }) => {
     const isGreen = theme === 'green';
     const textTheme = isGreen ? 'text-green-800' : 'text-slate-800';
-    const borderTheme = isGreen ? 'border-green-100' : 'border-slate-100';
 
     return (
         <div className="overflow-x-auto">
@@ -590,7 +597,7 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
                         <th className="px-6 py-3">Hming / Role</th>
                         <th className="px-6 py-3 text-center">Kal Zat</th>
                         <th className="px-6 py-3 text-center">Kal lo Zat</th>
-                        <th className="px-6 py-3 text-right">Thawhlawm</th>
+                        <th className="px-6 py-3 text-right"></th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -598,19 +605,24 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
                         <td className={`px-6 py-4 font-bold ${textTheme}`}>Zirtirtu</td>
                         <td className="px-6 py-4 text-center text-slate-600 font-bold">{segment.zirtirtu.kal}</td>
                         <td className="px-6 py-4 text-center text-slate-400 font-medium">{segment.zirtirtu.kallo}</td>
-                        <td className={`px-6 py-4 text-right font-mono font-bold ${textTheme}`}>₹ {segment.zirtirtu.thawhlawm.toLocaleString()}</td>
+                        <td className="px-6 py-4"></td>
                     </tr>
                     <tr className="hover:bg-white/40 transition-colors">
                         <td className={`px-6 py-4 font-bold ${textTheme}`}>Zirtu</td>
                         <td className="px-6 py-4 text-center text-slate-600 font-bold">{segment.zirtu.kal}</td>
                         <td className="px-6 py-4 text-center text-slate-400 font-medium">{segment.zirtu.kallo}</td>
-                        <td className={`px-6 py-4 text-right font-mono font-bold ${textTheme}`}>₹ {segment.zirtu.thawhlawm.toLocaleString()}</td>
+                        <td className="px-6 py-4"></td>
                     </tr>
-                    <tr className="bg-white/60 font-black">
-                        <td className={`px-6 py-4 text-[10px] uppercase tracking-widest ${textTheme}`}>Total</td>
+                    <tr className="bg-white/60 font-black border-t-2 border-slate-100">
+                        <td className={`px-6 py-4 text-[10px] uppercase tracking-widest ${textTheme}`}>Total Attendance</td>
                         <td className={`px-6 py-4 text-center text-lg ${textTheme}`}>{segment.zirtirtu.kal + segment.zirtu.kal}</td>
                         <td className="px-6 py-4 text-center text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
-                        <td className={`px-6 py-4 text-right font-mono text-xl ${textTheme}`}>₹ {(segment.zirtirtu.thawhlawm + segment.zirtu.thawhlawm).toLocaleString()}</td>
+                        <td className={`px-6 py-4 text-right font-mono text-xl ${textTheme}`}>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">Thawhlawm</span>
+                                <span>₹ {segment.thawhlawm.toLocaleString()}</span>
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -634,6 +646,10 @@ const ReportEntrySection: React.FC<{
         onChange(updated);
     };
 
+    const updateThawhlawm = (value: number) => {
+        onChange({ ...segment, thawhlawm: value });
+    };
+
     return (
         <div className="space-y-6">
             {/* Zirtirtu */}
@@ -647,10 +663,6 @@ const ReportEntrySection: React.FC<{
                     <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal lo Zat</label>
                         <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtirtu.kallo} onChange={e => update('zirtirtu', 'kallo', parseInt(e.target.value) || 0)} />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Thawhlawm (₹)</label>
-                        <input type="number" className={`w-full border rounded-xl p-2 font-black font-mono ${inputClass}`} value={segment.zirtirtu.thawhlawm} onChange={e => update('zirtirtu', 'thawhlawm', parseFloat(e.target.value) || 0)} />
                     </div>
                 </div>
             </div>
@@ -666,10 +678,23 @@ const ReportEntrySection: React.FC<{
                         <label className="block text-[10px] font-bold text-slate-400 mb-1">Kal lo Zat</label>
                         <input type="number" className={`w-full border rounded-xl p-2 font-bold ${inputClass}`} value={segment.zirtu.kallo} onChange={e => update('zirtu', 'kallo', parseInt(e.target.value) || 0)} />
                     </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Thawhlawm (₹)</label>
-                        <input type="number" className={`w-full border rounded-xl p-2 font-black font-mono ${inputClass}`} value={segment.zirtu.thawhlawm} onChange={e => update('zirtu', 'thawhlawm', parseFloat(e.target.value) || 0)} />
-                    </div>
+                </div>
+            </div>
+            {/* Thawhlawm (Combined) */}
+            <div className={`p-6 rounded-2xl border ${bgClass} shadow-inner`}>
+                <div className="flex items-center gap-2 mb-4">
+                    <Wallet size={16} className={labelClass} />
+                    <h5 className={`text-[10px] font-black uppercase tracking-widest ${labelClass}`}>Department Thawhlawm</h5>
+                </div>
+                <div>
+                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">Amount (₹)</label>
+                    <input 
+                        type="number" 
+                        className={`w-full border rounded-xl p-3 font-black font-mono text-xl ${inputClass} focus:bg-white transition-colors`} 
+                        value={segment.thawhlawm} 
+                        onChange={e => updateThawhlawm(parseFloat(e.target.value) || 0)} 
+                        placeholder="0"
+                    />
                 </div>
             </div>
         </div>

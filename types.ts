@@ -199,13 +199,12 @@ export interface SSReportSegment {
   zirtirtu: {
     kal: number;
     kallo: number;
-    thawhlawm: number;
   };
   zirtu: {
     kal: number;
     kallo: number;
-    thawhlawm: number;
   };
+  thawhlawm: number;
 }
 
 export interface SSWeeklyReport {

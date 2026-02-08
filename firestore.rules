@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -153,6 +152,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Rule for Sunday School Weekly Reports
     match /sundaySchoolWeeklyReports/{docId} {
       allow read: if true;
       allow write: if isAdmin();
