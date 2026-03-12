@@ -468,6 +468,9 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   },
 ];
 
+// Type for the active tab per committee
+type CommitteeTab = 'members' | 'activities';
+
 const Departments: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
@@ -478,6 +481,9 @@ const Departments: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCommitteeId, setExpandedCommitteeId] = useState<string | null>(null);
+
+  // Track the active tab for each expanded committee
+  const [activeTabs, setActiveTabs] = useState<Record<string, CommitteeTab>>({});
 
   // State for Modals
   const [isCommitteeModalOpen, setIsCommitteeModalOpen] = useState(false);
@@ -761,7 +767,6 @@ const Departments: React.FC = () => {
     setLoading(false);
   };
 
-
   const openCommitteeModal = (committee: Partial<Committee> | null) => {
     setEditingCommittee(committee || { name: '', icon: 'Users', description: '', members: [] });
     setIsCommitteeModalOpen(true);
@@ -777,7 +782,19 @@ const Departments: React.FC = () => {
       setIsActivityModalOpen(true);
   };
 
-  const toggleExpand = (id: string) => setExpandedCommitteeId(prev => prev === id ? null : id);
+  // Toggle expand and default to 'members' tab on first open
+  const toggleExpand = (id: string) => {
+    setExpandedCommitteeId(prev => {
+      if (prev === id) return null;
+      // Set default tab to 'members' if not already chosen for this committee
+      setActiveTabs(tabs => ({ ...tabs, [id]: tabs[id] || 'members' }));
+      return id;
+    });
+  };
+
+  const setActiveTab = (committeeId: string, tab: CommitteeTab) => {
+    setActiveTabs(prev => ({ ...prev, [committeeId]: tab }));
+  };
 
   const filteredCommittees = committees.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -836,9 +853,11 @@ const Departments: React.FC = () => {
                  const Icon = ICON_MAP[c.icon] || Users;
                  const isExpanded = expandedCommitteeId === c.id;
                  const colorClass = ICON_COLORS[c.icon] || 'from-church-600 to-church-800 text-white border-church-400';
+                 const currentTab: CommitteeTab = activeTabs[c.id] || 'members';
                  
                  return (
                    <div key={c.id} className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'shadow-lg ring-1 ring-church-200 border-church-300' : 'shadow-sm border-slate-200 hover:shadow-md'}`}>
+                     {/* Committee Header — click to expand/collapse */}
                      <div onClick={() => toggleExpand(c.id)} className="p-6 flex items-center justify-between cursor-pointer bg-white relative">
                         <div className="flex items-center">
                             {/* 3D Realistic Rotating Medallion Container */}
@@ -892,71 +911,125 @@ const Departments: React.FC = () => {
                         )}
                      </div>
 
+                     {/* Expanded Panel */}
                      {isExpanded && (
-                         <div className="border-t border-slate-100 bg-slate-50/70 p-6 animate-in slide-in-from-top-2 duration-200">
+                         <div className="border-t border-slate-100 animate-in slide-in-from-top-2 duration-200">
+
+                            {/* Description strip */}
                             {c.description && (
-                                <div className="mb-6 pb-4 border-b border-slate-100">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.common.description}</h4>
-                                    <p className="text-sm text-slate-700">{c.description}</p>
+                                <div className="px-6 pt-4 pb-3 bg-slate-50/70 border-b border-slate-100">
+                                    <p className="text-sm text-slate-600">{c.description}</p>
                                 </div>
                             )}
 
-                            <div className="flex justify-between items-center mb-3">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Members</h4>
-                                {isAdmin && !isOfflineMode && (
-                                  <button onClick={() => openMemberModal(c.id)} className="text-xs font-semibold text-church-600 bg-church-100 px-2 py-1 rounded-md hover:bg-church-200">+ Add</button>
-                                )}
+                            {/* ── Tab Bar ── */}
+                            <div className="flex border-b border-slate-200 bg-white">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setActiveTab(c.id, 'members'); }}
+                                    className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors focus:outline-none ${
+                                        currentTab === 'members'
+                                            ? 'text-church-700 border-b-2 border-church-600 bg-church-50/60'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <Users size={14} />
+                                        Committee Members
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setActiveTab(c.id, 'activities'); }}
+                                    className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors focus:outline-none ${
+                                        currentTab === 'activities'
+                                            ? 'text-church-700 border-b-2 border-church-600 bg-church-50/60'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <ClipboardCheck size={14} />
+                                        Activities
+                                    </span>
+                                </button>
                             </div>
-                            {!c.members || c.members.length === 0 ? (
-                                <p className="text-sm text-slate-500 italic">No members listed.</p>
-                            ) : (
-                                <ul className="space-y-3">
-                                    {c.members.map((member) => (
-                                        <li key={member.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-baseline text-sm">
-                                            <span className="font-semibold text-slate-800 flex items-center">{member.name}</span>
-                                            <div className="flex items-baseline">
-                                                <span className="text-slate-500 text-xs sm:text-sm mr-2">{member.role}</span>
-                                                {isAdmin && !isOfflineMode && (
-                                                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
-                                                    <button onClick={() => openMemberModal(c.id, member)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
-                                                    <button onClick={() => handleDeleteMember(c.id, member.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
-                                                  </div>
-                                                )}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
 
-                            <div className="flex justify-between items-center mt-6 mb-3">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Activities</h4>
-                                {isAdmin && !isOfflineMode && (
-                                  <button onClick={() => openActivityModal(c.id)} className="text-xs font-semibold text-church-600 bg-church-100 px-2 py-1 rounded-md hover:bg-church-200">+ Add</button>
+                            {/* ── Tab Content ── */}
+                            <div className="bg-slate-50/70 p-6">
+
+                                {/* Members Tab */}
+                                {currentTab === 'members' && (
+                                    <>
+                                        {isAdmin && !isOfflineMode && (
+                                            <div className="flex justify-end mb-3">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); openMemberModal(c.id); }}
+                                                    className="text-xs font-semibold text-church-600 bg-church-100 px-3 py-1.5 rounded-md hover:bg-church-200 flex items-center gap-1"
+                                                >
+                                                    <Plus size={12} /> Add Member
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!c.members || c.members.length === 0 ? (
+                                            <p className="text-sm text-slate-500 italic text-center py-4">No members listed.</p>
+                                        ) : (
+                                            <ul className="space-y-3">
+                                                {c.members.map((member) => (
+                                                    <li key={member.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-baseline text-sm">
+                                                        <span className="font-semibold text-slate-800 flex items-center">{member.name}</span>
+                                                        <div className="flex items-baseline">
+                                                            <span className="text-slate-500 text-xs sm:text-sm mr-2">{member.role}</span>
+                                                            {isAdmin && !isOfflineMode && (
+                                                              <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
+                                                                <button onClick={() => openMemberModal(c.id, member)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
+                                                                <button onClick={() => handleDeleteMember(c.id, member.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                                                              </div>
+                                                            )}
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Activities Tab */}
+                                {currentTab === 'activities' && (
+                                    <>
+                                        {isAdmin && !isOfflineMode && (
+                                            <div className="flex justify-end mb-3">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); openActivityModal(c.id); }}
+                                                    className="text-xs font-semibold text-church-600 bg-church-100 px-3 py-1.5 rounded-md hover:bg-church-200 flex items-center gap-1"
+                                                >
+                                                    <Plus size={12} /> Add Activity
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!c.activities || c.activities.length === 0 ? (
+                                            <p className="text-sm text-slate-500 italic text-center py-4">No activities listed.</p>
+                                        ) : (
+                                            <ul className="space-y-4">
+                                                {c.activities.map((activity) => (
+                                                    <li key={activity.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-semibold text-slate-800">{activity.title}</span>
+                                                                {activity.date && <span className="text-xs text-slate-500">{activity.date}</span>}
+                                                            </div>
+                                                            <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
+                                                        </div>
+                                                        {isAdmin && !isOfflineMode && (
+                                                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition ml-4 mt-2 sm:mt-0">
+                                                                <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
+                                                                <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                                                            </div>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </>
                                 )}
                             </div>
-                            {!c.activities || c.activities.length === 0 ? (
-                                <p className="text-sm text-slate-500 italic">No activities listed.</p>
-                            ) : (
-                                <ul className="space-y-4">
-                                    {c.activities.map((activity) => (
-                                        <li key={activity.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-semibold text-slate-800">{activity.title}</span>
-                                                    {activity.date && <span className="text-xs text-slate-500">{activity.date}</span>}
-                                                </div>
-                                                <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
-                                            </div>
-                                            {isAdmin && !isOfflineMode && (
-                                                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition ml-4 mt-2 sm:mt-0">
-                                                    <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
-                                                    <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
-                                                </div>
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
                          </div>
                      )}
                    </div>
