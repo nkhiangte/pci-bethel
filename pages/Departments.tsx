@@ -4,10 +4,11 @@ import {
   BookOpen, DollarSign, Globe, Home, Users, Coffee, Heart, Music, 
   Smile, Library, Book, Box, Newspaper, FileText, UserPlus, Clock, 
   ClipboardCheck, Handshake, ChevronDown, ChevronUp, Search, Loader, 
-  AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database, ArrowUp, ArrowDown
+  AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database, ArrowUp, ArrowDown,
+  Image as ImageIcon, Upload, ZoomIn
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db } from '../services/firebase';
+import { db, storage } from '../services/firebase';
 import { Committee, CommitteeMember } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -469,7 +470,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
 ];
 
 // Type for the active tab per committee
-type CommitteeTab = 'members' | 'activities';
+type CommitteeTab = 'members' | 'activities' | 'images';
 
 const Departments: React.FC = () => {
   const { t } = useLanguage();
@@ -494,6 +495,12 @@ const Departments: React.FC = () => {
 
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [editingActivityInfo, setEditingActivityInfo] = useState<{ committeeId: string; activity?: any } | null>(null);
+
+  // Image upload state
+  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null); // committeeId
+  const [imageUploadProgress, setImageUploadProgress] = useState<number>(0);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // State for reordering
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
@@ -727,6 +734,114 @@ const Departments: React.FC = () => {
     }
   };
 
+  // ── Image helpers ────────────────────────────────────────────────
+  /** Compress an image file to ≤ maxBytes using canvas, returning a Blob */
+  const compressImage = (file: File, maxBytes = 200 * 1024): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX_DIM = 1600;
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Binary-search quality to stay under maxBytes
+        let lo = 0.1, hi = 0.95, quality = 0.8;
+        const tryQuality = (q: number): Promise<Blob> =>
+          new Promise(res =>
+            canvas.toBlob(b => res(b!), 'image/jpeg', q)
+          );
+
+        const iterate = async (): Promise<Blob> => {
+          const blob = await tryQuality(quality);
+          if (blob.size <= maxBytes || hi - lo < 0.02) return blob;
+          hi = quality;
+          quality = (lo + hi) / 2;
+          return iterate();
+        };
+        iterate().then(resolve).catch(reject);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
+  const handleImageUpload = async (committeeId: string, file: File) => {
+    if (!db || !storage) return;
+    setUploadingImageFor(committeeId);
+    setImageUploadProgress(0);
+    try {
+      const compressed = await compressImage(file);
+      setImageUploadProgress(30);
+
+      const filename = `committees/${committeeId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const ref = storage.ref(filename);
+      const task = ref.put(compressed, { contentType: 'image/jpeg' });
+
+      await new Promise<void>((resolve, reject) => {
+        task.on(
+          'state_changed',
+          snap => {
+            const pct = 30 + Math.round((snap.bytesTransferred / snap.totalBytes) * 60);
+            setImageUploadProgress(pct);
+          },
+          reject,
+          resolve
+        );
+      });
+
+      const downloadURL: string = await ref.getDownloadURL();
+      setImageUploadProgress(95);
+
+      // Save URL to Firestore
+      const committeeRef = db.collection('committees').doc(committeeId);
+      const doc = await committeeRef.get();
+      const existing = (doc.data() as any)?.images || [];
+      const images = [...existing, { id: Date.now().toString(), url: downloadURL, filename }];
+      await committeeRef.update({ images });
+
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, images } : c));
+      setImageUploadProgress(100);
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Upload failed. Make sure Firebase Storage is enabled and rules allow writes.');
+    } finally {
+      setTimeout(() => {
+        setUploadingImageFor(null);
+        setImageUploadProgress(0);
+      }, 800);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteImage = async (committeeId: string, image: { id: string; url: string; filename?: string }) => {
+    if (!db || !window.confirm('Delete this image?')) return;
+    try {
+      // Remove from Storage if filename is known
+      if (storage && image.filename) {
+        try { await storage.ref(image.filename).delete(); } catch (_) { /* already gone */ }
+      }
+      // Remove from Firestore
+      const committeeRef = db.collection('committees').doc(committeeId);
+      const doc = await committeeRef.get();
+      const images = ((doc.data() as any)?.images || []).filter((i: any) => i.id !== image.id);
+      await committeeRef.update({ images });
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, images } : c));
+    } catch (err) {
+      console.error('Delete image failed:', err);
+    }
+  };
+  // ────────────────────────────────────────────────────────────────
+
   const handleMoveCommittee = (id: string, direction: 'up' | 'down') => {
     if (searchTerm) return; // Disable reordering when filtering
     
@@ -950,9 +1065,25 @@ const Departments: React.FC = () => {
                                         Activities
                                     </span>
                                 </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setActiveTab(c.id, 'images'); }}
+                                    className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors focus:outline-none ${
+                                        currentTab === 'images'
+                                            ? 'text-church-700 border-b-2 border-church-600 bg-church-50/60'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <ImageIcon size={14} />
+                                        Images
+                                        {((c as any).images?.length ?? 0) > 0 && (
+                                            <span className="bg-church-100 text-church-700 text-xs rounded-full px-1.5 py-0.5 leading-none font-bold">
+                                                {(c as any).images.length}
+                                            </span>
+                                        )}
+                                    </span>
+                                </button>
                             </div>
-
-                            {/* ── Tab Content ── */}
                             <div className="bg-slate-50/70 p-6">
 
                                 {/* Members Tab */}
@@ -1029,6 +1160,93 @@ const Departments: React.FC = () => {
                                         )}
                                     </>
                                 )}
+
+                                {/* Images Tab */}
+                                {currentTab === 'images' && (
+                                    <div>
+                                        {/* Upload area — admin only */}
+                                        {isAdmin && !isOfflineMode && (
+                                            <div className="mb-4">
+                                                <input
+                                                    ref={imageInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    id={`img-upload-${c.id}`}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handleImageUpload(c.id, file);
+                                                    }}
+                                                />
+                                                <label
+                                                    htmlFor={`img-upload-${c.id}`}
+                                                    className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl p-5 cursor-pointer transition-colors ${
+                                                        uploadingImageFor === c.id
+                                                            ? 'border-church-400 bg-church-50 cursor-not-allowed'
+                                                            : 'border-slate-300 hover:border-church-400 hover:bg-church-50/40'
+                                                    }`}
+                                                >
+                                                    {uploadingImageFor === c.id ? (
+                                                        <>
+                                                            <Loader size={22} className="animate-spin text-church-500 mb-2" />
+                                                            <p className="text-sm text-church-600 font-medium">Compressing & uploading…</p>
+                                                            <div className="w-full mt-3 bg-slate-200 rounded-full h-1.5">
+                                                                <div
+                                                                    className="bg-church-500 h-1.5 rounded-full transition-all duration-300"
+                                                                    style={{ width: `${imageUploadProgress}%` }}
+                                                                />
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 mt-1">{imageUploadProgress}%</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Upload size={22} className="text-slate-400 mb-2" />
+                                                            <p className="text-sm font-medium text-slate-600">Click to upload image</p>
+                                                            <p className="text-xs text-slate-400 mt-0.5">Auto-compressed to ≤ 200 KB · JPEG · PNG · WEBP</p>
+                                                        </>
+                                                    )}
+                                                </label>
+                                            </div>
+                                        )}
+
+                                        {/* Image grid */}
+                                        {!(c as any).images?.length ? (
+                                            <p className="text-sm text-slate-500 italic text-center py-4">No images uploaded yet.</p>
+                                        ) : (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                {((c as any).images as { id: string; url: string; filename?: string }[]).map((img) => (
+                                                    <div key={img.id} className="group relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-sm">
+                                                        <img
+                                                            src={img.url}
+                                                            alt=""
+                                                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                                        />
+                                                        {/* Hover overlay */}
+                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                                            <button
+                                                                onClick={() => setLightboxImage(img.url)}
+                                                                className="p-1.5 bg-white/90 rounded-full text-slate-700 hover:bg-white shadow"
+                                                                title="View full size"
+                                                            >
+                                                                <ZoomIn size={16} />
+                                                            </button>
+                                                            {isAdmin && !isOfflineMode && (
+                                                                <button
+                                                                    onClick={() => handleDeleteImage(c.id, img)}
+                                                                    className="p-1.5 bg-red-500/90 rounded-full text-white hover:bg-red-600 shadow"
+                                                                    title="Delete image"
+                                                                >
+                                                                    <Trash size={16} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                             </div>
                          </div>
                      )}
@@ -1135,6 +1353,27 @@ const Departments: React.FC = () => {
             </div>
           </form>
         </div>
+      </div>
+    )}
+
+    {/* ── Lightbox ── */}
+    {lightboxImage && (
+      <div
+        className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4"
+        onClick={() => setLightboxImage(null)}
+      >
+        <button
+          className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition"
+          onClick={() => setLightboxImage(null)}
+        >
+          <X size={22} />
+        </button>
+        <img
+          src={lightboxImage}
+          alt="Full size"
+          className="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
     )}
     </>
