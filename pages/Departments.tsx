@@ -496,11 +496,16 @@ const Departments: React.FC = () => {
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [editingActivityInfo, setEditingActivityInfo] = useState<{ committeeId: string; activity?: any } | null>(null);
 
-  // Image upload state
-  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null); // committeeId
+  // Committee image upload state
+  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null);
   const [imageUploadProgress, setImageUploadProgress] = useState<number>(0);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Activity image upload state (key = `${committeeId}__${activityId}`)
+  const [uploadingActivityImage, setUploadingActivityImage] = useState<string | null>(null);
+  const [activityImageProgress, setActivityImageProgress] = useState<number>(0);
+  const activityImageInputRef = useRef<HTMLInputElement>(null);
 
   // State for reordering
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
@@ -840,6 +845,74 @@ const Departments: React.FC = () => {
       console.error('Delete image failed:', err);
     }
   };
+
+  const handleActivityImageUpload = async (committeeId: string, activityId: string, file: File) => {
+    if (!db || !storage) return;
+    const key = `${committeeId}__${activityId}`;
+    setUploadingActivityImage(key);
+    setActivityImageProgress(0);
+    try {
+      const compressed = await compressImage(file);
+      setActivityImageProgress(30);
+
+      const filename = `committees/${committeeId}/activities/${activityId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const ref = storage.ref(filename);
+      const task = ref.put(compressed, { contentType: 'image/jpeg' });
+
+      await new Promise<void>((resolve, reject) => {
+        task.on('state_changed',
+          snap => {
+            const pct = 30 + Math.round((snap.bytesTransferred / snap.totalBytes) * 60);
+            setActivityImageProgress(pct);
+          },
+          reject, resolve
+        );
+      });
+
+      const downloadURL: string = await ref.getDownloadURL();
+      setActivityImageProgress(95);
+
+      // Update the specific activity's images array inside Firestore
+      const committeeRef = db.collection('committees').doc(committeeId);
+      const doc = await committeeRef.get();
+      const committeeData = doc.data() as any;
+      const activities = (committeeData.activities || []).map((a: any) =>
+        a.id === activityId
+          ? { ...a, images: [...(a.images || []), { id: Date.now().toString(), url: downloadURL, filename }] }
+          : a
+      );
+      await committeeRef.update({ activities });
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, activities } : c));
+      setActivityImageProgress(100);
+    } catch (err) {
+      console.error('Activity image upload failed:', err);
+      alert('Upload failed. Make sure Firebase Storage is enabled.');
+    } finally {
+      setTimeout(() => { setUploadingActivityImage(null); setActivityImageProgress(0); }, 800);
+      if (activityImageInputRef.current) activityImageInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteActivityImage = async (committeeId: string, activityId: string, image: { id: string; url: string; filename?: string }) => {
+    if (!db || !window.confirm('Delete this image?')) return;
+    try {
+      if (storage && image.filename) {
+        try { await storage.ref(image.filename).delete(); } catch (_) {}
+      }
+      const committeeRef = db.collection('committees').doc(committeeId);
+      const doc = await committeeRef.get();
+      const committeeData = doc.data() as any;
+      const activities = (committeeData.activities || []).map((a: any) =>
+        a.id === activityId
+          ? { ...a, images: (a.images || []).filter((i: any) => i.id !== image.id) }
+          : a
+      );
+      await committeeRef.update({ activities });
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, activities } : c));
+    } catch (err) {
+      console.error('Delete activity image failed:', err);
+    }
+  };
   // ────────────────────────────────────────────────────────────────
 
   const handleMoveCommittee = (id: string, direction: 'up' | 'down') => {
@@ -1140,18 +1213,85 @@ const Departments: React.FC = () => {
                                         ) : (
                                             <ul className="space-y-4">
                                                 {c.activities.map((activity) => (
-                                                    <li key={activity.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="font-semibold text-slate-800">{activity.title}</span>
-                                                                {activity.date && <span className="text-xs text-slate-500">{activity.date}</span>}
+                                                    <li key={activity.id} className="group flex flex-col text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                                        {/* Header row: title, date, admin actions */}
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <span className="font-semibold text-slate-800">{activity.title}</span>
+                                                                    {activity.date && <span className="text-xs text-slate-400">{activity.date}</span>}
+                                                                </div>
+                                                                <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
                                                             </div>
-                                                            <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
+                                                            {isAdmin && !isOfflineMode && (
+                                                                <div className="flex space-x-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                                                                    <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
+                                                                    <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        {isAdmin && !isOfflineMode && (
-                                                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition ml-4 mt-2 sm:mt-0">
-                                                                <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
-                                                                <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+
+                                                        {/* Activity images grid */}
+                                                        {(activity.images?.length > 0 || (isAdmin && !isOfflineMode)) && (
+                                                            <div className="mt-3 pt-3 border-t border-slate-100">
+                                                                {activity.images?.length > 0 && (
+                                                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                                                        {activity.images.map((img: { id: string; url: string; filename?: string }) => (
+                                                                            <div key={img.id} className="relative aspect-square rounded-md overflow-hidden bg-slate-100 group/img">
+                                                                                <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-200 group-hover/img:scale-105" />
+                                                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover/img:opacity-100">
+                                                                                    <button
+                                                                                        onClick={() => setLightboxImage(img.url)}
+                                                                                        className="p-1 bg-white/90 rounded-full text-slate-700 hover:bg-white shadow"
+                                                                                    >
+                                                                                        <ZoomIn size={13} />
+                                                                                    </button>
+                                                                                    {isAdmin && !isOfflineMode && (
+                                                                                        <button
+                                                                                            onClick={() => handleDeleteActivityImage(c.id, activity.id!, img)}
+                                                                                            className="p-1 bg-red-500/90 rounded-full text-white hover:bg-red-600 shadow"
+                                                                                        >
+                                                                                            <Trash size={13} />
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Admin upload button */}
+                                                                {isAdmin && !isOfflineMode && (
+                                                                    <div>
+                                                                        <input
+                                                                            ref={activityImageInputRef}
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            className="hidden"
+                                                                            id={`act-img-${c.id}-${activity.id}`}
+                                                                            onChange={(e) => {
+                                                                                const file = e.target.files?.[0];
+                                                                                if (file) handleActivityImageUpload(c.id, activity.id!, file);
+                                                                            }}
+                                                                        />
+                                                                        {uploadingActivityImage === `${c.id}__${activity.id}` ? (
+                                                                            <div className="flex items-center gap-2 mt-1">
+                                                                                <Loader size={13} className="animate-spin text-church-500 shrink-0" />
+                                                                                <div className="flex-1 bg-slate-200 rounded-full h-1.5">
+                                                                                    <div className="bg-church-500 h-1.5 rounded-full transition-all" style={{ width: `${activityImageProgress}%` }} />
+                                                                                </div>
+                                                                                <span className="text-xs text-slate-500">{activityImageProgress}%</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <label
+                                                                                htmlFor={`act-img-${c.id}-${activity.id}`}
+                                                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-church-600 bg-church-50 hover:bg-church-100 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors border border-church-200"
+                                                                            >
+                                                                                <Upload size={12} /> Add Image
+                                                                            </label>
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </li>
