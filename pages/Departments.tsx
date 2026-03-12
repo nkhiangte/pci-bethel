@@ -1199,8 +1199,8 @@ const Departments: React.FC = () => {
                                                               </div>
                                                             )}
                                                         </div>
-                                                    </li>;
-                                                })}
+                                                    </li>
+                                                ))}
                                             </ul>
                                         )}
                                     </>
@@ -1306,7 +1306,7 @@ const Departments: React.FC = () => {
                                                                 )}
                                                             </div>
                                                         )}
-                                                    </li>;
+                                                    </li>
                                                 })}
                                             </ul>
                                         )}
