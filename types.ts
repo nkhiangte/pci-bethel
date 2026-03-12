@@ -344,11 +344,19 @@ export interface CommitteeMember {
   phone?: string;
 }
 
+export interface CommitteeActivity {
+  id: string;
+  title: string;
+  description: string;
+  date?: string;
+}
+
 export interface Committee {
   id: string;
   name: string;
   icon: string;
   description?: string;
   members: CommitteeMember[];
+  activities?: CommitteeActivity[];
   order?: number;
 }
