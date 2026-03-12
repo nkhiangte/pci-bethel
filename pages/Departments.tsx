@@ -10,6 +10,17 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { db, storage } from '../services/firebase';
 import { Committee, CommitteeMember } from '../types';
+
+// Extend the activity type locally to support per-activity images
+interface ActivityImage { id: string; url: string; filename?: string; }
+interface ActivityWithImages {
+  id?: string;
+  title: string;
+  description: string;
+  date?: string;
+  images?: ActivityImage[];
+  [key: string]: any;
+}
 import { useAuth } from '../contexts/AuthContext';
 
 // Map string names to actual components
@@ -1188,8 +1199,8 @@ const Departments: React.FC = () => {
                                                               </div>
                                                             )}
                                                         </div>
-                                                    </li>
-                                                ))}
+                                                    </li>;
+                                                })}
                                             </ul>
                                         )}
                                     </>
@@ -1212,31 +1223,32 @@ const Departments: React.FC = () => {
                                             <p className="text-sm text-slate-500 italic text-center py-4">No activities listed.</p>
                                         ) : (
                                             <ul className="space-y-4">
-                                                {c.activities.map((activity) => (
-                                                    <li key={activity.id} className="group flex flex-col text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                                                {c.activities.map((activity) => {
+                                                    const act = activity as ActivityWithImages;
+                                                    return <li key={act.id} className="group flex flex-col text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
                                                         {/* Header row: title, date, admin actions */}
                                                         <div className="flex items-start justify-between gap-2">
                                                             <div className="flex-1">
                                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                                    <span className="font-semibold text-slate-800">{activity.title}</span>
-                                                                    {activity.date && <span className="text-xs text-slate-400">{activity.date}</span>}
+                                                                    <span className="font-semibold text-slate-800">{act.title}</span>
+                                                                    {act.date && <span className="text-xs text-slate-400">{act.date}</span>}
                                                                 </div>
-                                                                <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
+                                                                <p className="text-slate-600 mt-1 text-sm">{act.description}</p>
                                                             </div>
                                                             {isAdmin && !isOfflineMode && (
                                                                 <div className="flex space-x-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
-                                                                    <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
-                                                                    <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                                                                    <button onClick={() => openActivityModal(c.id, act)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
+                                                                    <button onClick={() => handleDeleteActivity(c.id, act.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
                                                                 </div>
                                                             )}
                                                         </div>
 
                                                         {/* Activity images grid */}
-                                                        {(activity.images?.length > 0 || (isAdmin && !isOfflineMode)) && (
+                                                        {((act.images?.length ?? 0) > 0 || (isAdmin && !isOfflineMode)) && (
                                                             <div className="mt-3 pt-3 border-t border-slate-100">
-                                                                {activity.images?.length > 0 && (
+                                                                {(act.images?.length ?? 0) > 0 && (
                                                                     <div className="grid grid-cols-3 gap-2 mb-2">
-                                                                        {activity.images.map((img: { id: string; url: string; filename?: string }) => (
+                                                                        {act.images!.map((img: ActivityImage) => (
                                                                             <div key={img.id} className="relative aspect-square rounded-md overflow-hidden bg-slate-100 group/img">
                                                                                 <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-200 group-hover/img:scale-105" />
                                                                                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover/img:opacity-100">
@@ -1248,7 +1260,7 @@ const Departments: React.FC = () => {
                                                                                     </button>
                                                                                     {isAdmin && !isOfflineMode && (
                                                                                         <button
-                                                                                            onClick={() => handleDeleteActivityImage(c.id, activity.id!, img)}
+                                                                                            onClick={() => handleDeleteActivityImage(c.id, act.id!, img)}
                                                                                             className="p-1 bg-red-500/90 rounded-full text-white hover:bg-red-600 shadow"
                                                                                         >
                                                                                             <Trash size={13} />
@@ -1268,13 +1280,13 @@ const Departments: React.FC = () => {
                                                                             type="file"
                                                                             accept="image/*"
                                                                             className="hidden"
-                                                                            id={`act-img-${c.id}-${activity.id}`}
+                                                                            id={`act-img-${c.id}-${act.id}`}
                                                                             onChange={(e) => {
                                                                                 const file = e.target.files?.[0];
-                                                                                if (file) handleActivityImageUpload(c.id, activity.id!, file);
+                                                                                if (file) handleActivityImageUpload(c.id, act.id!, file);
                                                                             }}
                                                                         />
-                                                                        {uploadingActivityImage === `${c.id}__${activity.id}` ? (
+                                                                        {uploadingActivityImage === `${c.id}__${act.id}` ? (
                                                                             <div className="flex items-center gap-2 mt-1">
                                                                                 <Loader size={13} className="animate-spin text-church-500 shrink-0" />
                                                                                 <div className="flex-1 bg-slate-200 rounded-full h-1.5">
@@ -1284,7 +1296,7 @@ const Departments: React.FC = () => {
                                                                             </div>
                                                                         ) : (
                                                                             <label
-                                                                                htmlFor={`act-img-${c.id}-${activity.id}`}
+                                                                                htmlFor={`act-img-${c.id}-${act.id}`}
                                                                                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-church-600 bg-church-50 hover:bg-church-100 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors border border-church-200"
                                                                             >
                                                                                 <Upload size={12} /> Add Image
@@ -1294,8 +1306,8 @@ const Departments: React.FC = () => {
                                                                 )}
                                                             </div>
                                                         )}
-                                                    </li>
-                                                ))}
+                                                    </li>;
+                                                })}
                                             </ul>
                                         )}
                                     </>
