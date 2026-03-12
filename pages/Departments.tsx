@@ -486,6 +486,9 @@ const Departments: React.FC = () => {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMemberInfo, setEditingMemberInfo] = useState<{ committeeId: string; member?: CommitteeMember } | null>(null);
 
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [editingActivityInfo, setEditingActivityInfo] = useState<{ committeeId: string; activity?: any } | null>(null);
+
   // State for reordering
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   const initialOrderRef = useRef<string[]>([]);
@@ -668,6 +671,56 @@ const Departments: React.FC = () => {
     }
   };
 
+  const handleSaveActivity = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!db || !editingActivityInfo?.committeeId || !editingActivityInfo.activity) return;
+
+    setLoading(true);
+    const { committeeId, activity } = editingActivityInfo;
+    
+    try {
+        const committeeRef = db.collection('committees').doc(committeeId);
+        const doc = await committeeRef.get();
+        if (!doc.exists) throw new Error("Committee not found");
+
+        const committeeData = doc.data() as Committee;
+        let activities = committeeData.activities || [];
+
+        if (activity.id) { // Editing
+            activities = activities.map(a => a.id === activity.id ? activity : a);
+        } else { // Adding
+            const newActivity = { ...activity, id: Date.now().toString() };
+            activities.push(newActivity);
+        }
+        
+        await committeeRef.update({ activities });
+        
+        setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, activities } : c));
+        
+        setIsActivityModalOpen(false);
+    } catch (error) {
+        console.error("Error saving activity:", error);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteActivity = async (committeeId: string, activityId: string) => {
+    if (!db || !window.confirm("Delete this activity?")) return;
+    try {
+        const committeeRef = db.collection('committees').doc(committeeId);
+        const doc = await committeeRef.get();
+        if (!doc.exists) throw new Error("Committee not found");
+
+        const committeeData = doc.data() as Committee;
+        const activities = (committeeData.activities || []).filter(a => a.id !== activityId);
+        
+        await committeeRef.update({ activities });
+        setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, activities } : c));
+    } catch (error) {
+        console.error("Error deleting activity:", error);
+    }
+  };
+
   const handleMoveCommittee = (id: string, direction: 'up' | 'down') => {
     if (searchTerm) return; // Disable reordering when filtering
     
@@ -719,6 +772,10 @@ const Departments: React.FC = () => {
       setIsMemberModalOpen(true);
   };
 
+  const openActivityModal = (committeeId: string, activity?: any) => {
+      setEditingActivityInfo({ committeeId, activity: activity || { title: '', description: '', date: '' } });
+      setIsActivityModalOpen(true);
+  };
 
   const toggleExpand = (id: string) => setExpandedCommitteeId(prev => prev === id ? null : id);
 
@@ -870,6 +927,36 @@ const Departments: React.FC = () => {
                                     ))}
                                 </ul>
                             )}
+
+                            <div className="flex justify-between items-center mt-6 mb-3">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Activities</h4>
+                                {isAdmin && !isOfflineMode && (
+                                  <button onClick={() => openActivityModal(c.id)} className="text-xs font-semibold text-church-600 bg-church-100 px-2 py-1 rounded-md hover:bg-church-200">+ Add</button>
+                                )}
+                            </div>
+                            {!c.activities || c.activities.length === 0 ? (
+                                <p className="text-sm text-slate-500 italic">No activities listed.</p>
+                            ) : (
+                                <ul className="space-y-4">
+                                    {c.activities.map((activity) => (
+                                        <li key={activity.id} className="group flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-semibold text-slate-800">{activity.title}</span>
+                                                    {activity.date && <span className="text-xs text-slate-500">{activity.date}</span>}
+                                                </div>
+                                                <p className="text-slate-600 mt-1 text-sm">{activity.description}</p>
+                                            </div>
+                                            {isAdmin && !isOfflineMode && (
+                                                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition ml-4 mt-2 sm:mt-0">
+                                                    <button onClick={() => openActivityModal(c.id, activity)} className="p-1 text-church-600 hover:bg-church-50 rounded"><Edit size={14} /></button>
+                                                    <button onClick={() => handleDeleteActivity(c.id, activity.id!)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                          </div>
                      )}
                    </div>
@@ -940,6 +1027,37 @@ const Departments: React.FC = () => {
             </div>
             <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
               <button type="button" onClick={() => setIsMemberModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
+              <button type="submit" disabled={loading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">{loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {/* Activity Modal */}
+    {isActivityModalOpen && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+          <form onSubmit={handleSaveActivity}>
+             <div className="p-6">
+              <h3 className="text-lg font-bold mb-4">{editingActivityInfo?.activity?.id ? 'Edit Activity' : 'Add Activity'}</h3>
+              <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                    <input required className="w-full border border-slate-300 rounded p-2" value={editingActivityInfo?.activity?.title || ''} onChange={e => setEditingActivityInfo({...editingActivityInfo, activity: { ...editingActivityInfo?.activity, title: e.target.value }})} placeholder="e.g., Annual Retreat" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Date (Optional)</label>
+                    <input type="text" className="w-full border border-slate-300 rounded p-2" value={editingActivityInfo?.activity?.date || ''} onChange={e => setEditingActivityInfo({...editingActivityInfo, activity: { ...editingActivityInfo?.activity, date: e.target.value }})} placeholder="e.g., October 15, 2026" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                    <textarea required className="w-full border border-slate-300 rounded p-2 h-24" value={editingActivityInfo?.activity?.description || ''} onChange={e => setEditingActivityInfo({...editingActivityInfo, activity: { ...editingActivityInfo?.activity, description: e.target.value }})} placeholder="Details about the activity..."></textarea>
+                  </div>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
+              <button type="button" onClick={() => setIsActivityModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
               <button type="submit" disabled={loading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">{loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save</button>
             </div>
           </form>
