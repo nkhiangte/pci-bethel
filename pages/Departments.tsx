@@ -8,11 +8,13 @@ import {
   Image as ImageIcon, Upload, ZoomIn
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db, storage } from '../services/firebase';
+import { db } from '../services/firebase';
+
+const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 import { Committee, CommitteeMember } from '../types';
 
 // Extend the activity type locally to support per-activity images
-interface ActivityImage { id: string; url: string; filename?: string; }
+interface ActivityImage { id: string; url: string; }
 interface ActivityWithImages {
   id?: string;
   title: string;
@@ -752,101 +754,47 @@ const Departments: React.FC = () => {
 
   // ── Image helpers ────────────────────────────────────────────────
   /** Compress an image file to ≤ maxBytes using canvas, returning a Blob */
-  const compressImage = (file: File, maxBytes = 200 * 1024): Promise<Blob> =>
-    new Promise((resolve, reject) => {
-      const img = new window.Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const MAX_DIM = 1600;
-        let { width, height } = img;
-        if (width > MAX_DIM || height > MAX_DIM) {
-          const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Binary-search quality to stay under maxBytes
-        let lo = 0.1, hi = 0.95, quality = 0.8;
-        const tryQuality = (q: number): Promise<Blob> =>
-          new Promise(res =>
-            canvas.toBlob(b => res(b!), 'image/jpeg', q)
-          );
-
-        const iterate = async (): Promise<Blob> => {
-          const blob = await tryQuality(quality);
-          if (blob.size <= maxBytes || hi - lo < 0.02) return blob;
-          hi = quality;
-          quality = (lo + hi) / 2;
-          return iterate();
-        };
-        iterate().then(resolve).catch(reject);
-      };
-      img.onerror = reject;
-      img.src = url;
+  // ── imgbb upload helpers ──────────────────────────────────────────
+  const uploadToImgbb = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData,
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error?.message || 'ImgBB upload failed');
+    return result.data.url as string;
+  };
 
   const handleImageUpload = async (committeeId: string, file: File) => {
-    if (!db || !storage) return;
+    if (!db) return;
     setUploadingImageFor(committeeId);
-    setImageUploadProgress(0);
+    setImageUploadProgress(30);
     try {
-      const compressed = await compressImage(file);
-      setImageUploadProgress(30);
+      const downloadURL = await uploadToImgbb(file);
+      setImageUploadProgress(80);
 
-      const filename = `committees/${committeeId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const ref = storage.ref(filename);
-      const task = ref.put(compressed, { contentType: 'image/jpeg' });
-
-      await new Promise<void>((resolve, reject) => {
-        task.on(
-          'state_changed',
-          snap => {
-            const pct = 30 + Math.round((snap.bytesTransferred / snap.totalBytes) * 60);
-            setImageUploadProgress(pct);
-          },
-          reject,
-          resolve
-        );
-      });
-
-      const downloadURL: string = await ref.getDownloadURL();
-      setImageUploadProgress(95);
-
-      // Save URL to Firestore
       const committeeRef = db.collection('committees').doc(committeeId);
       const doc = await committeeRef.get();
       const existing = (doc.data() as any)?.images || [];
-      const images = [...existing, { id: Date.now().toString(), url: downloadURL, filename }];
+      const images = [...existing, { id: Date.now().toString(), url: downloadURL }];
       await committeeRef.update({ images });
 
       setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, images } : c));
       setImageUploadProgress(100);
     } catch (err) {
       console.error('Image upload failed:', err);
-      alert('Upload failed. Make sure Firebase Storage is enabled and rules allow writes.');
+      alert('Upload failed. Please try again.');
     } finally {
-      setTimeout(() => {
-        setUploadingImageFor(null);
-        setImageUploadProgress(0);
-      }, 800);
+      setTimeout(() => { setUploadingImageFor(null); setImageUploadProgress(0); }, 800);
       if (imageInputRef.current) imageInputRef.current.value = '';
     }
   };
 
-  const handleDeleteImage = async (committeeId: string, image: { id: string; url: string; filename?: string }) => {
+  const handleDeleteImage = async (committeeId: string, image: { id: string; url: string }) => {
     if (!db || !window.confirm('Delete this image?')) return;
     try {
-      // Remove from Storage if filename is known
-      if (storage && image.filename) {
-        try { await storage.ref(image.filename).delete(); } catch (_) { /* already gone */ }
-      }
-      // Remove from Firestore
       const committeeRef = db.collection('committees').doc(committeeId);
       const doc = await committeeRef.get();
       const images = ((doc.data() as any)?.images || []).filter((i: any) => i.id !== image.id);
@@ -858,38 +806,20 @@ const Departments: React.FC = () => {
   };
 
   const handleActivityImageUpload = async (committeeId: string, activityId: string, file: File) => {
-    if (!db || !storage) return;
+    if (!db) return;
     const key = `${committeeId}__${activityId}`;
     setUploadingActivityImage(key);
-    setActivityImageProgress(0);
+    setActivityImageProgress(30);
     try {
-      const compressed = await compressImage(file);
-      setActivityImageProgress(30);
+      const downloadURL = await uploadToImgbb(file);
+      setActivityImageProgress(80);
 
-      const filename = `committees/${committeeId}/activities/${activityId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const ref = storage.ref(filename);
-      const task = ref.put(compressed, { contentType: 'image/jpeg' });
-
-      await new Promise<void>((resolve, reject) => {
-        task.on('state_changed',
-          snap => {
-            const pct = 30 + Math.round((snap.bytesTransferred / snap.totalBytes) * 60);
-            setActivityImageProgress(pct);
-          },
-          reject, resolve
-        );
-      });
-
-      const downloadURL: string = await ref.getDownloadURL();
-      setActivityImageProgress(95);
-
-      // Update the specific activity's images array inside Firestore
       const committeeRef = db.collection('committees').doc(committeeId);
       const doc = await committeeRef.get();
       const committeeData = doc.data() as any;
       const activities = (committeeData.activities || []).map((a: any) =>
         a.id === activityId
-          ? { ...a, images: [...(a.images || []), { id: Date.now().toString(), url: downloadURL, filename }] }
+          ? { ...a, images: [...(a.images || []), { id: Date.now().toString(), url: downloadURL }] }
           : a
       );
       await committeeRef.update({ activities });
@@ -897,19 +827,16 @@ const Departments: React.FC = () => {
       setActivityImageProgress(100);
     } catch (err) {
       console.error('Activity image upload failed:', err);
-      alert('Upload failed. Make sure Firebase Storage is enabled.');
+      alert('Upload failed. Please try again.');
     } finally {
       setTimeout(() => { setUploadingActivityImage(null); setActivityImageProgress(0); }, 800);
       if (activityImageInputRef.current) activityImageInputRef.current.value = '';
     }
   };
 
-  const handleDeleteActivityImage = async (committeeId: string, activityId: string, image: { id: string; url: string; filename?: string }) => {
+  const handleDeleteActivityImage = async (committeeId: string, activityId: string, image: { id: string; url: string }) => {
     if (!db || !window.confirm('Delete this image?')) return;
     try {
-      if (storage && image.filename) {
-        try { await storage.ref(image.filename).delete(); } catch (_) {}
-      }
       const committeeRef = db.collection('committees').doc(committeeId);
       const doc = await committeeRef.get();
       const committeeData = doc.data() as any;
@@ -1366,7 +1293,7 @@ const Departments: React.FC = () => {
                                             <p className="text-sm text-slate-500 italic text-center py-4">No images uploaded yet.</p>
                                         ) : (
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                {((c as any).images as { id: string; url: string; filename?: string }[]).map((img) => (
+                                                {((c as any).images as { id: string; url: string }[]).map((img) => (
                                                     <div key={img.id} className="group relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-sm">
                                                         <img
                                                             src={img.url}
