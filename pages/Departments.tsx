@@ -7,7 +7,7 @@ import {
   Upload, Download, File, FileSpreadsheet, Trash2, BarChart2
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db, storage } from '../services/firebase';
+import { db } from '../services/firebase';
 import { Committee, CommitteeMember } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -241,25 +241,29 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
       return;
     }
 
-    setUploading(true);
-    try {
-      const ext = isPdf ? 'pdf' : 'xlsx';
-      const storagePath = `committee-reports/${committeeId}/${Date.now()}_${file.name}`;
-      const storageRef = storage.ref(storagePath);
-      await storageRef.put(file);
-      const downloadURL: string = await storageRef.getDownloadURL();
+    // Check file size — Firestore doc limit is 1MB, base64 inflates ~33%
+    // So max safe raw file size is ~750KB
+    if (file.size > 750 * 1024) {
+      alert(`File is ${(file.size / 1024).toFixed(0)}KB. Please keep files under 750KB so they fit in the database. Try compressing the PDF first.`);
+      return;
+    }
 
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
       setForm(prev => ({
         ...prev,
-        fileUrl: downloadURL,
+        fileUrl: reader.result as string,
         fileType: isPdf ? 'pdf' : 'excel',
         name: prev.name || file.name.replace(/\.[^/.]+$/, ''),
       }));
-    } catch (err) {
-      console.error('Firebase Storage upload failed:', err);
-      alert('File upload to storage failed. Please try again.');
-    }
-    setUploading(false);
+      setUploading(false);
+    };
+    reader.onerror = () => {
+      alert('Failed to read file. Please try again.');
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -664,8 +668,22 @@ const Departments: React.FC = () => {
                 if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
                 return a.name.localeCompare(b.name);
             });
-            setCommittees(fetchedData);
-            initialOrderRef.current = fetchedData.map(c => c.id);
+
+            // Fetch reports subcollection for each committee
+            const fetchedWithReports = await Promise.all(
+              fetchedData.map(async (committee) => {
+                try {
+                  const reportsSnap = await db.collection('committees').doc(committee.id).collection('committeeReports').get();
+                  const reports: CommitteeReport[] = reportsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+                  return { ...committee, reports };
+                } catch {
+                  return { ...committee, reports: [] };
+                }
+              })
+            );
+
+            setCommittees(fetchedWithReports as any);
+            initialOrderRef.current = fetchedWithReports.map(c => c.id);
             setIsOfflineMode(false);
         } else {
             setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
@@ -777,29 +795,32 @@ const Departments: React.FC = () => {
 
   // ── Save report ─────────────────────────────────────────────────────────────
 
+  // ── Save report — stored in subcollection to avoid 1MB committee doc limit ──
+
   const handleSaveReport = async (committeeId: string, report: CommitteeReport) => {
     if (!db) return;
     setLoading(true);
     try {
-        const committeeRef = db.collection('committees').doc(committeeId);
-        const doc = await committeeRef.get();
-        if (!doc.exists) throw new Error("Committee not found");
-        const committeeData = doc.data() as any;
-        let reports: CommitteeReport[] = committeeData.reports || [];
+      const reportsRef = db.collection('committees').doc(committeeId).collection('committeeReports');
 
-        if (editingReportInfo.report?.id) {
-          reports = reports.map(r => r.id === report.id ? report : r);
-        } else {
-          reports.push(report);
-        }
+      if (editingReportInfo.report?.id) {
+        // Update existing
+        await reportsRef.doc(report.id).set(report);
+      } else {
+        // Add new — use report.id as doc ID
+        await reportsRef.doc(report.id).set(report);
+      }
 
-        await committeeRef.update({ reports });
-        setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, reports } as any : c));
-        setIsReportModalOpen(false);
-        setEditingReportInfo({ committeeId: '' });
+      // Refresh reports for this committee in local state
+      const snap = await reportsRef.get();
+      const reports: CommitteeReport[] = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, reports } as any : c));
+
+      setIsReportModalOpen(false);
+      setEditingReportInfo({ committeeId: '' });
     } catch (error) {
-        console.error("Error saving report:", error);
-        alert("Failed to save report metadata. Please try again.");
+      console.error("Error saving report:", error);
+      alert("Failed to save report. Please try again.");
     }
     setLoading(false);
   };
@@ -807,12 +828,12 @@ const Departments: React.FC = () => {
   const handleDeleteReport = async (committeeId: string, reportId: string) => {
     if (!db || !window.confirm("Delete this report?")) return;
     try {
-        const committeeRef = db.collection('committees').doc(committeeId);
-        const doc = await committeeRef.get();
-        if (!doc.exists) throw new Error("Committee not found");
-        const reports = ((doc.data() as any).reports || []).filter((r: CommitteeReport) => r.id !== reportId);
-        await committeeRef.update({ reports });
-        setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, reports } as any : c));
+      await db.collection('committees').doc(committeeId).collection('committeeReports').doc(reportId).delete();
+      setCommittees(prev => prev.map(c => {
+        if (c.id !== committeeId) return c;
+        const reports = ((c as any).reports || []).filter((r: CommitteeReport) => r.id !== reportId);
+        return { ...c, reports } as any;
+      }));
     } catch (error) { console.error("Error deleting report:", error); }
   };
 
