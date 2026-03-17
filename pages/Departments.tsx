@@ -7,7 +7,7 @@ import {
   Upload, Download, File, FileSpreadsheet, Trash2, BarChart2
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db } from '../services/firebase';
+import { db, storage } from '../services/firebase';
 import { Committee, CommitteeMember } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -229,8 +229,6 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Convert file to base64 data-URL for simple storage in Firestore
-  // (For production, swap this out with Firebase Storage upload)
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -244,17 +242,24 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
     }
 
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
+    try {
+      const ext = isPdf ? 'pdf' : 'xlsx';
+      const storagePath = `committee-reports/${committeeId}/${Date.now()}_${file.name}`;
+      const storageRef = storage.ref(storagePath);
+      await storageRef.put(file);
+      const downloadURL: string = await storageRef.getDownloadURL();
+
       setForm(prev => ({
         ...prev,
-        fileUrl: reader.result as string,
+        fileUrl: downloadURL,
         fileType: isPdf ? 'pdf' : 'excel',
-        name: prev.name || file.name.replace(/\.[^/.]+$/, ''), // use filename as default name
+        name: prev.name || file.name.replace(/\.[^/.]+$/, ''),
       }));
-      setUploading(false);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Firebase Storage upload failed:', err);
+      alert('File upload to storage failed. Please try again.');
+    }
+    setUploading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -794,7 +799,7 @@ const Departments: React.FC = () => {
         setEditingReportInfo({ committeeId: '' });
     } catch (error) {
         console.error("Error saving report:", error);
-        alert("Failed to save report. Note: large files may exceed Firestore's 1MB document limit. For production, integrate Firebase Storage.");
+        alert("Failed to save report metadata. Please try again.");
     }
     setLoading(false);
   };
