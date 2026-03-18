@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -109,12 +108,12 @@ const Records: React.FC = () => {
     const targetFolderIdRef = useRef<string | null>(null);
 
     const categoryCards = [
-        { id: 'baptism', title: 'Baptisma Record', sub: 'Names & Dates Recorded', icon: Droplet, defaultImg: 'https://images.unsplash.com/photo-1544131232-026c28f09673?auto=format&fit=crop&q=80&w=800' },
-        { id: 'wedding', title: 'Inneihna Record', sub: 'Marriage Registrations', icon: Heart, defaultImg: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800' },
-        { id: 'death', title: 'Thihna Record', sub: 'Death Records & Cemetery', icon: Church, defaultImg: 'https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?auto=format&fit=crop&q=80&w=800' },
-        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial & General Conferences', icon: Users, defaultImg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800' },
-        { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent, defaultImg: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80&w=800' },
-        { id: 'pemDawnsawn', title: 'Pem Dawnsawn', sub: 'Incoming Transfer Records', icon: UserPlus, defaultImg: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?auto=format&fit=crop&q=80&w=800' },
+        { id: 'baptism', title: 'Baptisma Record', sub: 'Names & Dates Recorded', icon: Droplet },
+        { id: 'wedding', title: 'Inneihna Record', sub: 'Marriage Registrations', icon: Heart },
+        { id: 'death', title: 'Thihna Record', sub: 'Death Records & Cemetery', icon: Church },
+        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial & General Conferences', icon: Users },
+        { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent },
+        { id: 'pemDawnsawn', title: 'Pem Dawnsawn', sub: 'Incoming Transfer Records', icon: UserPlus },
     ];
 
     // Fetch Folder Images
@@ -672,14 +671,20 @@ const Records: React.FC = () => {
                 </div>
                 <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {categoryCards.map((card) => {
-                        const bgImage = folderImages[card.id] || card.defaultImg;
+                        const bgImage = folderImages[card.id];
                         const isUploading = uploadingFolderId === card.id;
 
                         return (
                             <div key={card.id} className="relative group">
                                 <button onClick={() => handleSelectCategory(card.id as RecordType)} className="w-full relative aspect-[1.2/1] rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-300 shadow-2xl">
-                                    <img src={bgImage} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
+                                    {bgImage ? (
+                                        <>
+                                            <img src={bgImage} alt={card.title} className="absolute inset-0 w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.7] transition-all" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1a] via-transparent to-transparent opacity-80"></div>
+                                        </>
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 to-[#1c142b]"></div>
+                                    )}
                                     <div className="absolute top-6 right-6 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform"><card.icon size={22} className="text-white fill-current" /></div>
                                     <div className="absolute bottom-8 left-8 text-left">
                                         <h3 className="text-2xl font-serif font-black text-white leading-tight mb-2">{card.title}</h3>
