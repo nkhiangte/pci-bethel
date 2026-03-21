@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
@@ -23,7 +22,6 @@ const Home: React.FC = () => {
   
   const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay(language);
 
-  // --- Home Admin & Modal States ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Partial<Staff>>({});
   const [targetCollection, setTargetCollection] = useState<'pastors' | 'elders' | 'proPastors'>('pastors');
@@ -31,7 +29,6 @@ const Home: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [selectedLeader, setSelectedLeader] = useState<Staff | null>(null);
 
-  // --- Data Fetching ---
   const fetchData = useCallback(async () => {
     if (!db || !db.collection) {
         setPastors(staticPastors);
@@ -39,7 +36,6 @@ const Home: React.FC = () => {
         setElders(staticElders);
         return;
     }
-
     try {
         const dutyDoc = await db.collection('weeklyDuties').doc('current').get();
         if (dutyDoc.exists) setWeeklyDuty(dutyDoc.data() as WeeklyDuty);
@@ -57,7 +53,6 @@ const Home: React.FC = () => {
         setPastors(await fetchStaff('pastors') || staticPastors);
         setProPastors(await fetchStaff('proPastors') || staticProPastors);
         setElders(await fetchStaff('elders') || staticElders);
-
     } catch (e) {
         console.error("Error fetching homepage data:", e);
         setPastors(staticPastors);
@@ -67,11 +62,8 @@ const Home: React.FC = () => {
     }
   }, [staticPastors, staticProPastors, staticElders, staticDuty]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData, language]);
+  useEffect(() => { fetchData(); }, [fetchData, language]);
 
-  // --- Staff Admin Handlers (Existing Home logic) ---
   const handleAddNew = (collection: 'pastors' | 'elders' | 'proPastors') => {
     let defaultRole = collection === 'elders' ? 'Upa' : collection === 'proPastors' ? 'Pro Pastor' : 'Pastor';
     setEditingStaff({ name: '', role: defaultRole, imageUrl: '', description: '', biography: '' });
@@ -134,257 +126,273 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-16 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      {/* --- NEWS SECTION --- */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.newsTitle}</h2>
-          <Link to="/announcements" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
-            {t.home.viewAll} <ArrowRight size={16} className="ml-1"/>
-          </Link>
-        </div>
-        
-        {latestNews.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-6">
-            {latestNews.map((item) => (
-                <Link key={item.id} to="/announcements" className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col h-full">
-                    {item.imageUrls && item.imageUrls.length > 0 ? (
-                        <div className="h-40 bg-slate-200 overflow-hidden relative">
-                            <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
-                                {item.category}
-                            </div>
-                        </div>
-                    ) : item.imageUrl ? (
-                        <div className="h-40 bg-slate-200 overflow-hidden relative">
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
-                                {item.category}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="h-20 bg-church-50 flex items-center justify-center border-b border-church-100">
-                             <div className="text-[10px] font-bold text-church-400 uppercase tracking-wider">{item.category}</div>
-                        </div>
-                    )}
-                    <div className="p-6 flex-1 flex flex-col">
-                        <p className="text-xs font-bold text-slate-400 mb-2">{item.date}</p>
-                        <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{item.title}</h3>
-                        <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed flex-1">{item.content}</p>
-                        <div className="mt-4 flex items-center text-xs font-bold text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                            Read More <ChevronRight size={12} className="ml-1"/>
-                        </div>
-                    </div>
-                </Link>
-            ))}
-            </div>
-        ) : (
-            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-                <p className="text-slate-500 italic">No recent announcements.</p>
-            </div>
-        )}
-      </section>
+    <div>
 
-      {/* --- WEEKLY DUTY SECTION --- */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-            <div>
-                <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-serif font-bold text-slate-900">Inkhawm & Rawngbawlna</h2>
-                    {isAdmin && (
-                        <Link to="/admin/duties" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title="Edit Weekly Duties">
-                            <Edit size={18} />
-                        </Link>
-                    )}
-                </div>
-                <p className="text-slate-500 text-sm mt-1">{weeklyDuty.weekRange}</p>
-            </div>
-            <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
-                View Full Schedule <ArrowRight size={16} className="ml-1"/>
+      {/* ── HERO BANNER (fixed background, does not scroll) ── */}
+      <div className="relative w-full" style={{ height: '420px' }}>
+        {/* Fixed background layer */}
+        <div
+          className="absolute inset-0 w-full h-full"
+          style={{
+            backgroundImage: 'url(https://i.ibb.co/V06hg04Q/WEBBAN.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        />
+        {/* Subtle gradient overlay so content below reads cleanly */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-white/60" />
+      </div>
+
+      {/* ── MAIN CONTENT (sits on top, scrolls normally) ── */}
+      <div className="space-y-16 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* --- NEWS SECTION --- */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.newsTitle}</h2>
+            <Link to="/announcements" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
+              {t.home.viewAll} <ArrowRight size={16} className="ml-1"/>
             </Link>
-        </div>
+          </div>
+          
+          {latestNews.length > 0 ? (
+              <div className="grid md:grid-cols-3 gap-6">
+              {latestNews.map((item) => (
+                  <Link key={item.id} to="/announcements" className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col h-full">
+                      {item.imageUrls && item.imageUrls.length > 0 ? (
+                          <div className="h-40 bg-slate-200 overflow-hidden relative">
+                              <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
+                                  {item.category}
+                              </div>
+                          </div>
+                      ) : item.imageUrl ? (
+                          <div className="h-40 bg-slate-200 overflow-hidden relative">
+                              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
+                                  {item.category}
+                              </div>
+                          </div>
+                      ) : (
+                          <div className="h-20 bg-church-50 flex items-center justify-center border-b border-church-100">
+                               <div className="text-[10px] font-bold text-church-400 uppercase tracking-wider">{item.category}</div>
+                          </div>
+                      )}
+                      <div className="p-6 flex-1 flex flex-col">
+                          <p className="text-xs font-bold text-slate-400 mb-2">{item.date}</p>
+                          <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{item.title}</h3>
+                          <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed flex-1">{item.content}</p>
+                          <div className="mt-4 flex items-center text-xs font-bold text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                              Read More <ChevronRight size={12} className="ml-1"/>
+                          </div>
+                      </div>
+                  </Link>
+              ))}
+              </div>
+          ) : (
+              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+                  <p className="text-slate-500 italic">No recent announcements.</p>
+              </div>
+          )}
+        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
-                <div className="bg-church-900 text-white p-6 flex items-center gap-3">
-                    <ClipboardList size={22} className="text-church-400" />
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">Ministers for this Month</h4>
-                </div>
-                
-                <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
-                    <div className="md:col-span-4 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
-                            <Users size={16} className="text-church-600" />
-                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Offering Counters</h5>
-                        </div>
-                        <div className="divide-y divide-slate-50">
-                            {weeklyDuty.thawhlawmChiartute?.map((name, i) => (
-                                <div key={i} className="flex items-center gap-3 py-1.5 group">
-                                    <div className="w-1 h-1 rounded-full bg-church-300 group-hover:bg-church-600 transition-colors"></div>
-                                    <span className="text-sm font-bold text-slate-700">{name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+        {/* --- WEEKLY DUTY SECTION --- */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+              <div>
+                  <div className="flex items-center gap-3">
+                      <h2 className="text-2xl font-serif font-bold text-slate-900">Inkhawm & Rawngbawlna</h2>
+                      {isAdmin && (
+                          <Link to="/admin/duties" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title="Edit Weekly Duties">
+                              <Edit size={18} />
+                          </Link>
+                      )}
+                  </div>
+                  <p className="text-slate-500 text-sm mt-1">{weeklyDuty.weekRange}</p>
+              </div>
+              <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
+                  View Full Schedule <ArrowRight size={16} className="ml-1"/>
+              </Link>
+          </div>
 
-                    <div className="md:col-span-8 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
-                            <UserCircle size={16} className="text-church-600" />
-                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Ushers (Male & Female)</h5>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
-                            {weeklyDuty.ushers?.map((name, i) => (
-                                <div key={i} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 group hover:bg-slate-50 transition-colors px-1">
-                                    <span className="text-[9px] font-black text-church-300 group-hover:text-church-600">#</span>
-                                    <span className="text-[12px] font-bold text-slate-600 truncate">{name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-church-900 text-white p-6 flex items-center gap-3">
+                      <ClipboardList size={22} className="text-church-400" />
+                      <h4 className="text-sm font-black uppercase tracking-[0.2em]">Ministers for this Month</h4>
+                  </div>
+                  <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
+                      <div className="md:col-span-4 space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
+                              <Users size={16} className="text-church-600" />
+                              <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Offering Counters</h5>
+                          </div>
+                          <div className="divide-y divide-slate-50">
+                              {weeklyDuty.thawhlawmChiartute?.map((name, i) => (
+                                  <div key={i} className="flex items-center gap-3 py-1.5 group">
+                                      <div className="w-1 h-1 rounded-full bg-church-300 group-hover:bg-church-600 transition-colors"></div>
+                                      <span className="text-sm font-bold text-slate-700">{name}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                      <div className="md:col-span-8 space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
+                              <UserCircle size={16} className="text-church-600" />
+                              <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Ushers (Male & Female)</h5>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
+                              {weeklyDuty.ushers?.map((name, i) => (
+                                  <div key={i} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 group hover:bg-slate-50 transition-colors px-1">
+                                      <span className="text-[9px] font-black text-church-300 group-hover:text-church-600">#</span>
+                                      <span className="text-[12px] font-bold text-slate-600 truncate">{name}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
+              </div>
 
-            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
-                <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
-                    <Radio size={22} className="text-church-700" />
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Ministers for this Week</h4>
-                </div>
-                <div className="p-8 space-y-6">
-                    <div className="grid grid-cols-1 gap-y-6">
-                        <div className="group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Worship Leader</label>
-                            <p className="text-sm font-black text-slate-800 group-hover:text-church-700 transition-colors">{weeklyDuty.zaiHruaitu || '-'}</p>
-                            <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Pianist</label>
-                                <p className="text-sm font-black text-slate-800">{weeklyDuty.pianoTumtu || '-'}</p>
-                            </div>
-                            <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Song Conductor</label>
-                                <p className="text-sm font-black text-slate-800">{weeklyDuty.hlaHriltu || '-'}</p>
-                            </div>
-                        </div>
-                        <div className="group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Light & Sound</label>
-                            <p className="text-sm font-black text-slate-800">{weeklyDuty.lightAndSoundDuty || '-'}</p>
-                            <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
-                        </div>
-                        <div>
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
-                                <Music size={10} className="text-church-400"/> Floral Decoration
-                            </label>
-                            <p className="text-sm font-bold text-slate-700 bg-church-50/50 p-2 rounded-lg border border-church-100 text-center">{weeklyDuty.pangparKhawitu || '-'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </section>
+              <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
+                      <Radio size={22} className="text-church-700" />
+                      <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Ministers for this Week</h4>
+                  </div>
+                  <div className="p-8 space-y-6">
+                      <div className="grid grid-cols-1 gap-y-6">
+                          <div className="group">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Worship Leader</label>
+                              <p className="text-sm font-black text-slate-800 group-hover:text-church-700 transition-colors">{weeklyDuty.zaiHruaitu || '-'}</p>
+                              <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Pianist</label>
+                                  <p className="text-sm font-black text-slate-800">{weeklyDuty.pianoTumtu || '-'}</p>
+                              </div>
+                              <div>
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Song Conductor</label>
+                                  <p className="text-sm font-black text-slate-800">{weeklyDuty.hlaHriltu || '-'}</p>
+                              </div>
+                          </div>
+                          <div className="group">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Light & Sound</label>
+                              <p className="text-sm font-black text-slate-800">{weeklyDuty.lightAndSoundDuty || '-'}</p>
+                              <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
+                          </div>
+                          <div>
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
+                                  <Music size={10} className="text-church-400"/> Floral Decoration
+                              </label>
+                              <p className="text-sm font-bold text-slate-700 bg-church-50/50 p-2 rounded-lg border border-church-100 text-center">{weeklyDuty.pangparKhawitu || '-'}</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </section>
 
-      {/* --- LEADERS SECTION --- */}
-      <section className="bg-gradient-to-b from-transparent to-slate-50/50 rounded-[3rem] py-8">
-         <div className="text-center mb-10 relative">
-            <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.puipate}</h2>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Click for individual biography</p>
-            <div className="h-1 w-20 bg-church-500 mx-auto mt-3 rounded-full"></div>
-         </div>
-         
-         {/* Pastors & Pro Pastors */}
-         <div className="mb-12">
-             <div className="flex justify-center gap-8 flex-wrap relative">
-                {isAdmin && (
-                    <div className="absolute right-0 top-0 flex flex-col gap-2 z-10 md:flex-row">
-                        <button onClick={() => handleAddNew('pastors')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center shadow-sm">
-                            <Plus size={12} className="mr-1"/> Add Pastor
-                        </button>
-                        <button onClick={() => handleAddNew('proPastors')} className="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full hover:bg-blue-700 flex items-center shadow-sm">
-                            <Plus size={12} className="mr-1"/> Add Pro-Pastor
-                        </button>
-                    </div>
-                )}
-                {allPastoralLeaders.length === 0 ? (
-                    <p className="text-slate-500 italic">No pastor data available.</p>
-                ) : (
-                    allPastoralLeaders.map(p => (
-                    <div key={p.id} className="text-center group relative cursor-pointer" onClick={() => setSelectedLeader(p)}>
-                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto mb-4 relative bg-slate-200">
-                            <img 
-                                src={p.imageUrl} 
-                                alt={p.name} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                style={{
-                                    objectPosition: `${p.imagePositionX ?? 50}% ${p.imagePositionY ?? 0}%`,
-                                    transform: `scale(${p.imageScale ?? 1})`
-                                }}
-                            />
-                        </div>
-                        <h3 className="font-bold text-lg text-slate-900">{p.name}</h3>
-                        <p className="text-sm text-church-600 font-medium uppercase tracking-wider">{p.role}</p>
-                        {isAdmin && (
-                            <button onClick={(e) => handleEditClick(e, p, p.collection)} className="absolute top-0 right-0 p-1.5 bg-white text-church-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Edit size={14} />
-                            </button>
-                        )}
-                    </div>
-                    ))
-                )}
-             </div>
-         </div>
+        {/* --- LEADERS SECTION --- */}
+        <section className="bg-gradient-to-b from-transparent to-slate-50/50 rounded-[3rem] py-8">
+           <div className="text-center mb-10 relative">
+              <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.puipate}</h2>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Click for individual biography</p>
+              <div className="h-1 w-20 bg-church-500 mx-auto mt-3 rounded-full"></div>
+           </div>
+           
+           <div className="mb-12">
+               <div className="flex justify-center gap-8 flex-wrap relative">
+                  {isAdmin && (
+                      <div className="absolute right-0 top-0 flex flex-col gap-2 z-10 md:flex-row">
+                          <button onClick={() => handleAddNew('pastors')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center shadow-sm">
+                              <Plus size={12} className="mr-1"/> Add Pastor
+                          </button>
+                          <button onClick={() => handleAddNew('proPastors')} className="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full hover:bg-blue-700 flex items-center shadow-sm">
+                              <Plus size={12} className="mr-1"/> Add Pro-Pastor
+                          </button>
+                      </div>
+                  )}
+                  {allPastoralLeaders.length === 0 ? (
+                      <p className="text-slate-500 italic">No pastor data available.</p>
+                  ) : (
+                      allPastoralLeaders.map(p => (
+                      <div key={p.id} className="text-center group relative cursor-pointer" onClick={() => setSelectedLeader(p)}>
+                          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto mb-4 relative bg-slate-200">
+                              <img 
+                                  src={p.imageUrl} 
+                                  alt={p.name} 
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                  style={{
+                                      objectPosition: `${p.imagePositionX ?? 50}% ${p.imagePositionY ?? 0}%`,
+                                      transform: `scale(${p.imageScale ?? 1})`
+                                  }}
+                              />
+                          </div>
+                          <h3 className="font-bold text-lg text-slate-900">{p.name}</h3>
+                          <p className="text-sm text-church-600 font-medium uppercase tracking-wider">{p.role}</p>
+                          {isAdmin && (
+                              <button onClick={(e) => handleEditClick(e, p, p.collection)} className="absolute top-0 right-0 p-1.5 bg-white text-church-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Edit size={14} />
+                              </button>
+                          )}
+                      </div>
+                      ))
+                  )}
+               </div>
+           </div>
 
-         {/* Elders Grid */}
-         <div className="relative">
-             {isAdmin && (
-                <div className="text-center mb-6">
-                    <button onClick={() => handleAddNew('elders')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center mx-auto shadow-sm">
-                        <Plus size={12} className="mr-1"/> Add Elder
-                    </button>
-                </div>
-             )}
-             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
-                {elders.map(e => (
-                <div key={e.id} className="text-center group cursor-pointer relative" onClick={() => setSelectedLeader(e)}>
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto mb-3 bg-slate-200">
-                        <img 
-                            src={e.imageUrl} 
-                            alt={e.name} 
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-                            style={{
-                                objectPosition: `${e.imagePositionX ?? 50}% ${e.imagePositionY ?? 0}%`,
-                                transform: `scale(${e.imageScale ?? 1})`
-                            }}
-                        />
-                    </div>
-                    <h4 className="font-bold text-sm text-slate-800 leading-tight group-hover:text-church-700 transition-colors">{e.name}</h4>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">{e.role}</p>
-                    {isAdmin && (
-                        <button onClick={(event) => handleEditClick(event, e, 'elders')} className="absolute top-0 right-4 p-1 bg-white text-church-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Edit size={12} />
-                        </button>
-                    )}
-                </div>
-                ))}
-             </div>
-         </div>
-         
-         <div className="text-center mt-12">
-            <Link to="/about" className="inline-flex items-center px-6 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-church-700 transition shadow-sm">
-               View All Leaders & Profiles <ChevronRight size={16} className="ml-2" />
-            </Link>
-         </div>
-      </section>
+           <div className="relative">
+               {isAdmin && (
+                  <div className="text-center mb-6">
+                      <button onClick={() => handleAddNew('elders')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center mx-auto shadow-sm">
+                          <Plus size={12} className="mr-1"/> Add Elder
+                      </button>
+                  </div>
+               )}
+               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
+                  {elders.map(e => (
+                  <div key={e.id} className="text-center group cursor-pointer relative" onClick={() => setSelectedLeader(e)}>
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto mb-3 bg-slate-200">
+                          <img 
+                              src={e.imageUrl} 
+                              alt={e.name} 
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+                              style={{
+                                  objectPosition: `${e.imagePositionX ?? 50}% ${e.imagePositionY ?? 0}%`,
+                                  transform: `scale(${e.imageScale ?? 1})`
+                              }}
+                          />
+                      </div>
+                      <h4 className="font-bold text-sm text-slate-800 leading-tight group-hover:text-church-700 transition-colors">{e.name}</h4>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">{e.role}</p>
+                      {isAdmin && (
+                          <button onClick={(event) => handleEditClick(event, e, 'elders')} className="absolute top-0 right-4 p-1 bg-white text-church-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Edit size={12} />
+                          </button>
+                      )}
+                  </div>
+                  ))}
+               </div>
+           </div>
+           
+           <div className="text-center mt-12">
+              <Link to="/about" className="inline-flex items-center px-6 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-church-700 transition shadow-sm">
+                 View All Leaders & Profiles <ChevronRight size={16} className="ml-2" />
+              </Link>
+           </div>
+        </section>
 
-      {/* Verse of the Day */}
-      <section className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center shadow-sm">
-        <h3 className="text-xs font-black text-yellow-600 uppercase tracking-[0.2em] mb-4">{t.home.verseOfTheDay}</h3>
-        {renderVerseContent()}
-      </section>
+        {/* Verse of the Day */}
+        <section className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center shadow-sm">
+          <h3 className="text-xs font-black text-yellow-600 uppercase tracking-[0.2em] mb-4">{t.home.verseOfTheDay}</h3>
+          {renderVerseContent()}
+        </section>
+
+      </div>
 
       {/* --- MODALS --- */}
 
-      {/* Staff Edit Modal */}
       {isEditModalOpen && (
           <StaffEditModal
             staff={editingStaff}
@@ -398,11 +406,9 @@ const Home: React.FC = () => {
           />
       )}
 
-      {/* Biography Theater */}
       {selectedLeader && (
         <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedLeader(null)}>
             <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-                {/* (Profile Content Truncated for brevity - same as existing) */}
                 <div className="relative min-h-[14rem] md:min-h-[16rem] shrink-0 bg-church-900 text-white flex items-end overflow-hidden">
                     <img src={selectedLeader.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Profile BG" style={{ objectPosition: `${selectedLeader.imagePositionX ?? 50}% ${selectedLeader.imagePositionY ?? 0}%` }}/>
                     <div className="absolute inset-0 bg-gradient-to-t from-church-900 via-church-900/60 to-transparent"></div>
