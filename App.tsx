@@ -36,7 +36,20 @@ const App: React.FC = () => {
       <AuthProvider>
         <HashRouter>
           <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
-            <Navbar />
+
+            {/* Banner is the background of the navbar — fixed so it never moves on scroll */}
+            <div
+              className="sticky top-0 z-50"
+              style={{
+                backgroundImage: 'url(https://i.ibb.co/V06hg04Q/WEBBAN.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center top',
+                backgroundRepeat: 'no-repeat',
+              }}
+            >
+              <Navbar />
+            </div>
+
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
