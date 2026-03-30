@@ -266,19 +266,44 @@ export interface KTPBudget {
 export interface KTPYearlyReport {
   id: string;
   year: number;
-  officeBearers: KTPMember[];
-  statistics: {
-    totalMembers: number;
-    male: number;
-    female: number;
-    [key: string]: any;
-  };
-  ministries: {
-    id: string;
+  officeBearers: {
+    role: string;
     name: string;
-    description: string;
-    achievements?: string;
   }[];
+  statistics: {
+    // Member Inchhiarna
+    mipa: number;
+    hmeichhia: number;
+    total: number;
+    branchComtMemberZat: number;
+    branchComtNeihTawhZat: number;
+    kristianThalaiCopy: number;
+    missionaryChawmZat: number;
+    groupZat: number;
+    groupBudget: number;
+    groupIntihsiakna: string;
+    subComtZat: number;
+    // Rawngbawlna
+    inhlawhHnatlangNeihZat: number;
+    hlaZirZat: number;
+    hlaRemZat: number;
+    branchProject: string;
+    missionaryChawmna: string;
+    // Finance
+    openingBalance: number;
+    expenditure: number;
+    totalBalance: number;
+    // INKHAWM
+    inkhawmPercentage: string;
+    inkhawmNeihZat: number;
+    inkhawmPercent: string;
+    inkhawmAverage: number;
+    fellowshipNeihZat: number;
+    fellowshipPercent: string;
+    fellowshipAverage: number;
+    // Report Tuldang
+    reportTuldang: string;
+  };
   createdAt: string;
 }
 

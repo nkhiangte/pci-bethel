@@ -182,17 +182,56 @@
     },
     "KTPYearlyReport": {
       "title": "KTP Yearly Report",
-      "description": "Annual report containing office bearers, statistics, and ministries",
+      "description": "Annual report containing office bearers and detailed statistics",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "year": { "type": "integer" },
-        "officeBearers": { "type": "array", "items": { "type": "object" } },
-        "statistics": { "type": "object" },
-        "ministries": { "type": "array", "items": { "type": "object" } },
+        "officeBearers": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          } 
+        },
+        "statistics": { 
+          "type": "object",
+          "properties": {
+            "mipa": { "type": "integer" },
+            "hmeichhia": { "type": "integer" },
+            "total": { "type": "integer" },
+            "branchComtMemberZat": { "type": "integer" },
+            "branchComtNeihTawhZat": { "type": "integer" },
+            "kristianThalaiCopy": { "type": "integer" },
+            "missionaryChawmZat": { "type": "integer" },
+            "groupZat": { "type": "integer" },
+            "groupBudget": { "type": "number" },
+            "groupIntihsiakna": { "type": "string" },
+            "subComtZat": { "type": "integer" },
+            "inhlawhHnatlangNeihZat": { "type": "integer" },
+            "hlaZirZat": { "type": "integer" },
+            "hlaRemZat": { "type": "integer" },
+            "branchProject": { "type": "string" },
+            "missionaryChawmna": { "type": "string" },
+            "openingBalance": { "type": "number" },
+            "expenditure": { "type": "number" },
+            "totalBalance": { "type": "number" },
+            "inkhawmPercentage": { "type": "string" },
+            "inkhawmNeihZat": { "type": "integer" },
+            "inkhawmPercent": { "type": "string" },
+            "inkhawmAverage": { "type": "number" },
+            "fellowshipNeihZat": { "type": "integer" },
+            "fellowshipPercent": { "type": "string" },
+            "fellowshipAverage": { "type": "number" },
+            "reportTuldang": { "type": "string" }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["year", "officeBearers", "statistics", "ministries"]
+      "required": ["year", "officeBearers", "statistics"]
     },
     "Resource": {
       "title": "Resource",

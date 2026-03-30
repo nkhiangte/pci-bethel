@@ -49,11 +49,13 @@ const MinutesArchives: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
     setLoading(true);
     if (!db?.collection) { setLoading(false); return; }
     try {
-      const snap = await db.collection('ktpMinutesArchives').orderBy('year', 'desc').get();
+      const snap = await db.collection('ktpMinutesArchives').get();
       const docs: MinutesYear[] = snap.docs.map(d => ({
         id: d.id,
         ...(d.data() as Omit<MinutesYear, 'id'>),
       }));
+      // Sort manually in memory
+      docs.sort((a, b) => b.year.localeCompare(a.year));
       setYears(docs);
       // Keep selected year in sync
       if (selectedYear) {
@@ -414,6 +416,15 @@ const MinutesArchives: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
 // YEARLY REPORTS COMPONENT
 // ─────────────────────────────────────────────────────────────
 
+const PERMANENT_ROLES = [
+  'Leader',
+  'Asst. Leader',
+  'Secretary',
+  'Asst. Secretary',
+  'Treasurer',
+  'Finance Secretary'
+];
+
 interface YearlyReportModalProps {
   report: Partial<KTPYearlyReport> | null;
   onSave: (reportData: KTPYearlyReport) => void;
@@ -424,35 +435,69 @@ interface YearlyReportModalProps {
 const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, onClose, isLoading }) => {
   const [reportData, setReportData] = useState<Partial<KTPYearlyReport>>({
     year: new Date().getFullYear(),
-    officeBearers: [],
-    statistics: { totalMembers: 0, male: 0, female: 0 },
-    ministries: []
+    officeBearers: PERMANENT_ROLES.map(role => ({ role, name: '' })),
+    statistics: {
+      mipa: 0, hmeichhia: 0, total: 0,
+      branchComtMemberZat: 0, branchComtNeihTawhZat: 0,
+      kristianThalaiCopy: 0, missionaryChawmZat: 0,
+      groupZat: 4, groupBudget: 0, groupIntihsiakna: '',
+      subComtZat: 6,
+      inhlawhHnatlangNeihZat: 0, hlaZirZat: 0, hlaRemZat: 0,
+      branchProject: '', missionaryChawmna: '',
+      openingBalance: 0, expenditure: 0, totalBalance: 0,
+      inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
+      fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
+      reportTuldang: ''
+    }
   });
 
   useEffect(() => {
     if (report) {
       setReportData({
         ...report,
-        officeBearers: report.officeBearers ? [...report.officeBearers] : [],
-        statistics: report.statistics ? { ...report.statistics } : { totalMembers: 0, male: 0, female: 0 },
-        ministries: report.ministries ? [...report.ministries] : []
+        officeBearers: report.officeBearers ? [...report.officeBearers] : PERMANENT_ROLES.map(role => ({ role, name: '' })),
+        statistics: report.statistics ? { ...report.statistics } : {
+          mipa: 0, hmeichhia: 0, total: 0,
+          branchComtMemberZat: 0, branchComtNeihTawhZat: 0,
+          kristianThalaiCopy: 0, missionaryChawmZat: 0,
+          groupZat: 4, groupBudget: 0, groupIntihsiakna: '',
+          subComtZat: 6,
+          inhlawhHnatlangNeihZat: 0, hlaZirZat: 0, hlaRemZat: 0,
+          branchProject: '', missionaryChawmna: '',
+          openingBalance: 0, expenditure: 0, totalBalance: 0,
+          inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
+          fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
+          reportTuldang: ''
+        }
       });
     }
   }, [report]);
 
-  const handleAddOB = () => {
-    const newOB: KTPMember = { id: `ob_${Date.now()}`, name: '', role: '' };
-    setReportData({ ...reportData, officeBearers: [...(reportData.officeBearers || []), newOB] });
-  };
-
-  const handleAddMinistry = () => {
-    const newMin = { id: `min_${Date.now()}`, name: '', description: '', achievements: '' };
-    setReportData({ ...reportData, ministries: [...(reportData.ministries || []), newMin] });
-  };
-
   const handleSave = () => {
     onSave(reportData as KTPYearlyReport);
   };
+
+  const updateStat = (key: keyof KTPYearlyReport['statistics'], value: any) => {
+    setReportData({
+      ...reportData,
+      statistics: {
+        ...reportData.statistics!,
+        [key]: value
+      }
+    });
+  };
+
+  const StatField = ({ label, value, onChange, type = "number" }: { label: string, value: any, onChange: (val: any) => void, type?: string }) => (
+    <div>
+      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>
+      <input 
+        type={type}
+        className="w-full border p-2 rounded-lg text-sm" 
+        value={value ?? ''}
+        onChange={e => onChange(type === "number" ? (parseFloat(e.target.value) || 0) : e.target.value)}
+      />
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -461,138 +506,105 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
           <h3 className="text-xl font-bold">{reportData.id ? 'Edit Yearly Report' : 'Add Yearly Report'}</h3>
           <button onClick={onClose}><X size={20}/></button>
         </div>
-        <div className="p-6 space-y-6 overflow-y-auto">
+        <div className="p-6 space-y-8 overflow-y-auto">
+          {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Year</label>
-              <input 
-                type="number"
-                className="w-full border p-2 rounded-lg" 
-                value={reportData.year || ''}
-                onChange={e => setReportData({ ...reportData, year: parseInt(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Total Members</label>
-              <input 
-                type="number"
-                className="w-full border p-2 rounded-lg" 
-                value={reportData.statistics?.totalMembers || 0}
-                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, totalMembers: parseInt(e.target.value) } })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Male</label>
-              <input 
-                type="number"
-                className="w-full border p-2 rounded-lg" 
-                value={reportData.statistics?.male || 0}
-                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, male: parseInt(e.target.value) } })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Female</label>
-              <input 
-                type="number"
-                className="w-full border p-2 rounded-lg" 
-                value={reportData.statistics?.female || 0}
-                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, female: parseInt(e.target.value) } })}
-              />
-            </div>
+            <StatField label="Year" value={reportData.year} onChange={val => setReportData({ ...reportData, year: val })} />
           </div>
 
+          {/* Office Bearers */}
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="font-bold text-slate-800">Office Bearers</h4>
-              <button onClick={handleAddOB} className="text-xs font-bold text-church-600 flex items-center gap-1 hover:underline">
-                <Plus size={14}/> Add OB
-              </button>
-            </div>
-            <div className="space-y-2">
-              {reportData.officeBearers?.map((ob, idx) => (
-                <div key={ob.id} className="flex gap-2">
-                  <input 
-                    placeholder="Name" 
-                    className="flex-1 border p-2 rounded-lg text-sm" 
-                    value={ob.name} 
-                    onChange={e => {
-                      const obs = [...reportData.officeBearers!];
-                      obs[idx].name = e.target.value;
-                      setReportData({ ...reportData, officeBearers: obs });
-                    }}
-                  />
-                  <input 
-                    placeholder="Role" 
-                    className="flex-1 border p-2 rounded-lg text-sm" 
-                    value={ob.role} 
-                    onChange={e => {
-                      const obs = [...reportData.officeBearers!];
-                      obs[idx].role = e.target.value;
-                      setReportData({ ...reportData, officeBearers: obs });
-                    }}
-                  />
-                  <button 
-                    onClick={() => setReportData({ ...reportData, officeBearers: reportData.officeBearers!.filter((_, i) => i !== idx) })}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="font-bold text-slate-800">Ministries & Achievements</h4>
-              <button onClick={handleAddMinistry} className="text-xs font-bold text-church-600 flex items-center gap-1 hover:underline">
-                <Plus size={14}/> Add Ministry
-              </button>
-            </div>
-            <div className="space-y-4">
-              {reportData.ministries?.map((min, idx) => (
-                <div key={min.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                  <div className="flex gap-2">
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Office Bearers</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {PERMANENT_ROLES.map((role, idx) => {
+                const ob = reportData.officeBearers?.find(o => o.role === role) || { role, name: '' };
+                return (
+                  <div key={role} className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase">{role}</label>
                     <input 
-                      placeholder="Ministry Name" 
-                      className="flex-1 border p-2 rounded-lg text-sm font-bold" 
-                      value={min.name} 
+                      placeholder="Name" 
+                      className="border p-2 rounded-lg text-sm" 
+                      value={ob.name} 
                       onChange={e => {
-                        const mins = [...reportData.ministries!];
-                        mins[idx].name = e.target.value;
-                        setReportData({ ...reportData, ministries: mins });
+                        const obs = [...(reportData.officeBearers || [])];
+                        const existingIdx = obs.findIndex(o => o.role === role);
+                        if (existingIdx >= 0) {
+                          obs[existingIdx].name = e.target.value;
+                        } else {
+                          obs.push({ role, name: e.target.value });
+                        }
+                        setReportData({ ...reportData, officeBearers: obs });
                       }}
                     />
-                    <button 
-                      onClick={() => setReportData({ ...reportData, ministries: reportData.ministries!.filter((_, i) => i !== idx) })}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </div>
-                  <textarea 
-                    placeholder="Description" 
-                    className="w-full border p-2 rounded-lg text-sm h-20" 
-                    value={min.description}
-                    onChange={e => {
-                      const mins = [...reportData.ministries!];
-                      mins[idx].description = e.target.value;
-                      setReportData({ ...reportData, ministries: mins });
-                    }}
-                  />
-                  <textarea 
-                    placeholder="Achievements" 
-                    className="w-full border p-2 rounded-lg text-sm h-20" 
-                    value={min.achievements}
-                    onChange={e => {
-                      const mins = [...reportData.ministries!];
-                      mins[idx].achievements = e.target.value;
-                      setReportData({ ...reportData, ministries: mins });
-                    }}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
+          </div>
+
+          {/* Member Inchhiarna */}
+          <div>
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Member Inchhiarna</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatField label="Mipa" value={reportData.statistics?.mipa} onChange={val => updateStat('mipa', val)} />
+              <StatField label="Hmeichhia" value={reportData.statistics?.hmeichhia} onChange={val => updateStat('hmeichhia', val)} />
+              <StatField label="Total" value={reportData.statistics?.total} onChange={val => updateStat('total', val)} />
+              <StatField label="Branch Comt Member zat" value={reportData.statistics?.branchComtMemberZat} onChange={val => updateStat('branchComtMemberZat', val)} />
+              <StatField label="Branch Comt neih tawh zat" value={reportData.statistics?.branchComtNeihTawhZat} onChange={val => updateStat('branchComtNeihTawhZat', val)} />
+              <StatField label="Kristian thalai copy" value={reportData.statistics?.kristianThalaiCopy} onChange={val => updateStat('kristianThalaiCopy', val)} />
+              <StatField label="Missionary Chawmzat" value={reportData.statistics?.missionaryChawmZat} onChange={val => updateStat('missionaryChawmZat', val)} />
+              <StatField label="Group zat" value={reportData.statistics?.groupZat} onChange={val => updateStat('groupZat', val)} />
+              <StatField label="Group Budget" value={reportData.statistics?.groupBudget} onChange={val => updateStat('groupBudget', val)} />
+              <StatField label="Group intihsiakna" value={reportData.statistics?.groupIntihsiakna} onChange={val => updateStat('groupIntihsiakna', val)} type="text" />
+              <StatField label="Sub-Comt. zat" value={reportData.statistics?.subComtZat} onChange={val => updateStat('subComtZat', val)} />
+            </div>
+          </div>
+
+          {/* Rawngbawlna */}
+          <div>
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Rawngbawlna</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatField label="Inhlawh hnatlang neih zat" value={reportData.statistics?.inhlawhHnatlangNeihZat} onChange={val => updateStat('inhlawhHnatlangNeihZat', val)} />
+              <StatField label="Hla zir zat" value={reportData.statistics?.hlaZirZat} onChange={val => updateStat('hlaZirZat', val)} />
+              <StatField label="Hla rem zat" value={reportData.statistics?.hlaRemZat} onChange={val => updateStat('hlaRemZat', val)} />
+              <StatField label="Branch Project" value={reportData.statistics?.branchProject} onChange={val => updateStat('branchProject', val)} type="text" />
+              <StatField label="Missionary chawmna" value={reportData.statistics?.missionaryChawmna} onChange={val => updateStat('missionaryChawmna', val)} type="text" />
+            </div>
+          </div>
+
+          {/* Finance */}
+          <div>
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Finance</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatField label="Opening Balance" value={reportData.statistics?.openingBalance} onChange={val => updateStat('openingBalance', val)} />
+              <StatField label="Expenditure" value={reportData.statistics?.expenditure} onChange={val => updateStat('expenditure', val)} />
+              <StatField label="Total Balance" value={reportData.statistics?.totalBalance} onChange={val => updateStat('totalBalance', val)} />
+            </div>
+          </div>
+
+          {/* INKHAWM */}
+          <div>
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">INKHAWM</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatField label="Inkhawm Percentage" value={reportData.statistics?.inkhawmPercentage} onChange={val => updateStat('inkhawmPercentage', val)} type="text" />
+              <StatField label="Inkhawm neih zat" value={reportData.statistics?.inkhawmNeihZat} onChange={val => updateStat('inkhawmNeihZat', val)} />
+              <StatField label="Inkhawm %" value={reportData.statistics?.inkhawmPercent} onChange={val => updateStat('inkhawmPercent', val)} type="text" />
+              <StatField label="Average" value={reportData.statistics?.inkhawmAverage} onChange={val => updateStat('inkhawmAverage', val)} />
+              <StatField label="Fellowship Neih zat" value={reportData.statistics?.fellowshipNeihZat} onChange={val => updateStat('fellowshipNeihZat', val)} />
+              <StatField label="Fellowship %" value={reportData.statistics?.fellowshipPercent} onChange={val => updateStat('fellowshipPercent', val)} type="text" />
+              <StatField label="Average" value={reportData.statistics?.fellowshipAverage} onChange={val => updateStat('fellowshipAverage', val)} />
+            </div>
+          </div>
+
+          {/* Report Tuldang */}
+          <div>
+            <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Report Tuldang</h4>
+            <textarea 
+              className="w-full border p-3 rounded-lg text-sm h-32" 
+              value={reportData.statistics?.reportTuldang || ''}
+              onChange={e => updateStat('reportTuldang', e.target.value)}
+              placeholder="Enter other reports here..."
+            />
           </div>
         </div>
         <div className="p-4 bg-slate-100 flex justify-end gap-3 rounded-b-xl">
@@ -618,8 +630,10 @@ const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
     setLoading(true);
     if (!db?.collection) { setLoading(false); return; }
     try {
-      const snap = await db.collection('ktpYearlyReports').orderBy('year', 'desc').get();
+      const snap = await db.collection('ktpYearlyReports').get();
       const docs = snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as KTPYearlyReport));
+      // Sort manually in memory for now
+      docs.sort((a, b) => b.year - a.year);
       setReports(docs);
       if (docs.length > 0 && !selectedReport) setSelectedReport(docs[0]);
       else if (selectedReport) {
@@ -726,18 +740,75 @@ const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-slate-50 p-4 rounded-xl text-center">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Members</p>
-                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.totalMembers}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Mipa</p>
+                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.mipa}</p>
                   </div>
-                  <div className="bg-blue-50 p-4 rounded-xl text-center">
-                    <p className="text-xs font-bold text-blue-400 uppercase mb-1">Male</p>
-                    <p className="text-2xl font-black text-blue-700">{selectedReport.statistics.male}</p>
+                  <div className="bg-slate-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Hmeichhia</p>
+                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.hmeichhia}</p>
                   </div>
-                  <div className="bg-pink-50 p-4 rounded-xl text-center">
-                    <p className="text-xs font-bold text-pink-400 uppercase mb-1">Female</p>
-                    <p className="text-2xl font-black text-pink-700">{selectedReport.statistics.female}</p>
+                  <div className="bg-church-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-church-400 uppercase mb-1">Total</p>
+                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.total}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Inkhawm %</p>
+                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.inkhawmPercentage}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistics Details */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Member Inchhiarna */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Member Inchhiarna</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Branch Comt Member zat</span><span className="font-bold">{selectedReport.statistics.branchComtMemberZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Branch Comt neih tawh zat</span><span className="font-bold">{selectedReport.statistics.branchComtNeihTawhZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Kristian thalai copy</span><span className="font-bold">{selectedReport.statistics.kristianThalaiCopy}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Missionary Chawmzat</span><span className="font-bold">{selectedReport.statistics.missionaryChawmZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Group zat</span><span className="font-bold">{selectedReport.statistics.groupZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Group Budget</span><span className="font-bold">₹{selectedReport.statistics.groupBudget}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Group intihsiakna</span><span className="font-bold">{selectedReport.statistics.groupIntihsiakna}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Sub-Comt. zat</span><span className="font-bold">{selectedReport.statistics.subComtZat}</span></div>
+                  </div>
+                </div>
+
+                {/* Rawngbawlna */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Rawngbawlna</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Inhlawh hnatlang neih zat</span><span className="font-bold">{selectedReport.statistics.inhlawhHnatlangNeihZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Hla zir zat</span><span className="font-bold">{selectedReport.statistics.hlaZirZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Hla rem zat</span><span className="font-bold">{selectedReport.statistics.hlaRemZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Branch Project</span><span className="font-bold">{selectedReport.statistics.branchProject}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Missionary chawmna</span><span className="font-bold">{selectedReport.statistics.missionaryChawmna}</span></div>
+                  </div>
+                </div>
+
+                {/* Finance */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Finance</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Opening Balance</span><span className="font-bold text-green-600">₹{selectedReport.statistics.openingBalance}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Expenditure</span><span className="font-bold text-red-600">₹{selectedReport.statistics.expenditure}</span></div>
+                    <div className="flex justify-between text-sm border-t pt-2"><span className="font-bold">Total Balance</span><span className="font-black text-church-700">₹{selectedReport.statistics.totalBalance}</span></div>
+                  </div>
+                </div>
+
+                {/* INKHAWM */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">INKHAWM</h3>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Inkhawm neih zat</span><span className="font-bold">{selectedReport.statistics.inkhawmNeihZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Inkhawm %</span><span className="font-bold">{selectedReport.statistics.inkhawmPercent}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Average</span><span className="font-bold">{selectedReport.statistics.inkhawmAverage}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Fellowship Neih zat</span><span className="font-bold">{selectedReport.statistics.fellowshipNeihZat}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Fellowship %</span><span className="font-bold">{selectedReport.statistics.fellowshipPercent}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Average</span><span className="font-bold">{selectedReport.statistics.fellowshipAverage}</span></div>
                   </div>
                 </div>
               </div>
@@ -758,32 +829,15 @@ const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
                 </div>
               </div>
 
-              {/* Ministries & Achievements */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 px-2">
-                  <TrendingUp size={20} className="text-church-600" />
-                  Ministries & Achievements
-                </h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {selectedReport.ministries.map((min, i) => (
-                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                      <h4 className="text-lg font-bold text-church-700 mb-2">{min.name}</h4>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-xs font-bold text-slate-400 uppercase mb-1">Description</p>
-                          <p className="text-slate-600 text-sm leading-relaxed">{min.description}</p>
-                        </div>
-                        {min.achievements && (
-                          <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100">
-                            <p className="text-xs font-bold text-yellow-700 uppercase mb-1">Key Achievements</p>
-                            <p className="text-slate-700 text-sm italic leading-relaxed">{min.achievements}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              {/* Report Tuldang */}
+              {selectedReport.statistics.reportTuldang && (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Report Tuldang</h3>
+                  <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">
+                    {selectedReport.statistics.reportTuldang}
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
