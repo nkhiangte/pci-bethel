@@ -93,6 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Hardcoded check for specific email to ensure access even if DB fetch fails
   const isUserAdmin = 
     (currentUser?.email === 'nkhiangte@gmail.com') || 
+    (currentUser?.email === 'kohhranb@gmail.com') || 
     userProfile?.role === 'admin' || 
     String(userProfile?.isAdmin) === 'true' || 
     userProfile?.isAdmin === true;

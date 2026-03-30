@@ -1,0 +1,385 @@
+{
+  "entities": {
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Church announcements and news",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "category": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "imageUrls": { "type": "array", "items": { "type": "string" } },
+        "imageCaptions": { "type": "array", "items": { "type": "string" } },
+        "videoUrl": { "type": "string" },
+        "videoUrls": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "date", "content"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Church events and worship services",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string" },
+        "isCancelled": { "type": "boolean" },
+        "isRecurringTemplate": { "type": "boolean" },
+        "dayOfWeek": { "type": "integer" },
+        "program": { "type": "object" }
+      },
+      "required": ["title", "date", "time"]
+    },
+    "Sermon": {
+      "title": "Sermon",
+      "description": "Recorded sermons",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "preacher": { "type": "string" },
+        "scripture": { "type": "string" },
+        "description": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "videoUrl": { "type": "string" }
+      },
+      "required": ["title", "date", "preacher"]
+    },
+    "Ministry": {
+      "title": "Ministry",
+      "description": "Church ministries and fellowships",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "acronym": { "type": "string" },
+        "description": { "type": "string" },
+        "leader": { "type": "string" },
+        "schedule": { "type": "string" },
+        "image": { "type": "string" }
+      },
+      "required": ["name", "description", "leader", "schedule", "image"]
+    },
+    "Staff": {
+      "title": "Staff",
+      "description": "Church staff and leaders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "period": { "type": "string" },
+        "description": { "type": "string" },
+        "order": { "type": "integer" },
+        "biography": { "type": "string" },
+        "qualification": { "type": "string" },
+        "phoneNumber": { "type": "string" }
+      },
+      "required": ["name", "role", "imageUrl"]
+    },
+    "WeeklyDuty": {
+      "title": "Weekly Duty",
+      "description": "Weekly assignments for church members",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "month": { "type": "string" },
+        "weekRange": { "type": "string" },
+        "zaiHruaitu": { "type": "string" },
+        "pianoTumtu": { "type": "string" },
+        "hlaHriltu": { "type": "string" },
+        "lightAndSoundDuty": { "type": "string" },
+        "pangparKhawitu": { "type": "string" },
+        "thawhlawmChiartute": { "type": "array", "items": { "type": "string" } },
+        "ushers": { "type": "array", "items": { "type": "string" } },
+        "servicePrograms": { "type": "object" }
+      },
+      "required": ["month", "weekRange"]
+    },
+    "ChurchRecord": {
+      "title": "Church Record",
+      "description": "Baptism, Wedding, Death, and other records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["baptism", "wedding", "death", "inkhawmpui", "gospelCamping", "pemDawnsawn"] },
+        "name": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "minister": { "type": "string" }
+      },
+      "required": ["type"]
+    },
+    "SundaySchoolDepartment": {
+      "title": "Sunday School Department",
+      "description": "Details about Sunday School departments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "leader": { "type": "string" },
+        "teachers": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "students": { "type": "integer" }
+      },
+      "required": ["name", "leader", "teachers"]
+    },
+    "SundaySchoolReport": {
+      "title": "Sunday School Report",
+      "description": "Weekly Sunday School attendance and collection reports",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "naupang": { "type": "object" },
+        "puitling": { "type": "object" }
+      },
+      "required": ["date"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account details and roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "member"] },
+        "isAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
+    "KTPHruaitute": {
+      "title": "KTP Leaders",
+      "description": "KTP leadership for a specific year",
+      "type": "object",
+      "properties": {
+        "year": { "type": "integer" },
+        "leaders": { "type": "array", "items": { "type": "object" } },
+        "committeeMembers": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["year"]
+    },
+    "KTPBudget": {
+      "title": "KTP Budget",
+      "description": "KTP income and expenditure for a year",
+      "type": "object",
+      "properties": {
+        "year": { "type": "integer" },
+        "income": { "type": "array", "items": { "type": "object" } },
+        "expenditure": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["year"]
+    },
+    "KTPYearlyReport": {
+      "title": "KTP Yearly Report",
+      "description": "Annual report containing office bearers, statistics, and ministries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "year": { "type": "integer" },
+        "officeBearers": { "type": "array", "items": { "type": "object" } },
+        "statistics": { "type": "object" },
+        "ministries": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["year", "officeBearers", "statistics", "ministries"]
+    },
+    "Resource": {
+      "title": "Resource",
+      "description": "Downloadable church resources",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Bulletin", "Report", "Form", "Article"] },
+        "date": { "type": "string", "format": "date" },
+        "downloadUrl": { "type": "string" },
+        "fileSize": { "type": "string" }
+      },
+      "required": ["title", "category", "date", "downloadUrl"]
+    },
+    "GalleryItem": {
+      "title": "Gallery Item",
+      "description": "Images for the church gallery",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string", "enum": ["Committees", "Kohhran Chetna", "Kohhran Hunpui"] },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["title", "imageUrl", "category", "date"]
+    },
+    "ArchiveEntry": {
+      "title": "Archive Entry",
+      "description": "Archived documents and history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" }
+      },
+      "required": ["title", "date", "category", "link"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Articles and written sermons",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "category": { "type": "string", "enum": ["Article", "Sermon"] },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "views": { "type": "integer" }
+      },
+      "required": ["title", "author", "date", "category", "content"]
+    },
+    "Missionary": {
+      "title": "Missionary",
+      "description": "Details of missionaries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "qualification": { "type": "string" },
+        "field": { "type": "string" },
+        "period": { "type": "string" },
+        "bio": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Committee": {
+      "title": "Committee",
+      "description": "Church committees and their members",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "description": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "object" } },
+        "order": { "type": "integer" }
+      },
+      "required": ["name", "icon", "members"]
+    },
+    "Contribution": {
+      "title": "Contribution",
+      "description": "Online Thawhlawm payments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "bial": { "type": "string" },
+        "month": { "type": "string" },
+        "year": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "screenshotUrl": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "amounts": { "type": "object" }
+      },
+      "required": ["name", "totalAmount", "status", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Collection of church announcements"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Collection of church events"
+    },
+    "/sermons/{sermonId}": {
+      "schema": "Sermon",
+      "description": "Collection of recorded sermons"
+    },
+    "/ministries/{ministryId}": {
+      "schema": "Ministry",
+      "description": "Collection of church ministries"
+    },
+    "/staff/{staffId}": {
+      "schema": "Staff",
+      "description": "Collection of church staff and leaders"
+    },
+    "/weeklyDuties/{dutyId}": {
+      "schema": "WeeklyDuty",
+      "description": "Collection of weekly duties"
+    },
+    "/records/{recordId}": {
+      "schema": "ChurchRecord",
+      "description": "Collection of church records"
+    },
+    "/sundaySchoolDepartments/{deptId}": {
+      "schema": "SundaySchoolDepartment",
+      "description": "Collection of Sunday School departments"
+    },
+    "/sundaySchoolReports/{reportId}": {
+      "schema": "SundaySchoolReport",
+      "description": "Collection of Sunday School weekly reports"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles"
+    },
+    "/ktpHruaitute/{yearId}": {
+      "schema": "KTPHruaitute",
+      "description": "Collection of KTP leadership records"
+    },
+    "/ktpBudget/{yearId}": {
+      "schema": "KTPBudget",
+      "description": "Collection of KTP budget records"
+    },
+    "/ktpYearlyReports/{reportId}": {
+      "schema": "KTPYearlyReport",
+      "description": "Collection of KTP annual reports"
+    },
+    "/resources/{resourceId}": {
+      "schema": "Resource",
+      "description": "Collection of church resources"
+    },
+    "/gallery/{itemId}": {
+      "schema": "GalleryItem",
+      "description": "Collection of gallery items"
+    },
+    "/archives/{entryId}": {
+      "schema": "ArchiveEntry",
+      "description": "Collection of archive entries"
+    },
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of articles and written sermons"
+    },
+    "/missionaries/{missionaryId}": {
+      "schema": "Missionary",
+      "description": "Collection of missionaries"
+    },
+    "/committees/{committeeId}": {
+      "schema": "Committee",
+      "description": "Collection of church committees"
+    },
+    "/thawhlawm/{contributionId}": {
+      "schema": "Contribution",
+      "description": "Collection of online contributions"
+    }
+  }
+}

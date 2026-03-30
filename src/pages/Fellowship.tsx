@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { Ministry, KTPHruaitute, KTPBudget, KTPMember, KTPGroup, KTPSubCommittee, BudgetItem } from '../types';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -9,49 +9,609 @@ import {
   Clock, Users, Calendar, Loader, Home, Book, List, History, Camera, Video, UserSquare, 
   Edit, Save, X, Trash2, Plus, DollarSign, Table as TableIcon,
   Download, FileUp, FileDown, TrendingUp, Phone, MessageCircle, AlertTriangle,
-  FileText, Image as ImageIcon, Paperclip, ChevronRight, ChevronDown, BarChart2
+  FileText, ChevronRight, FolderOpen, Eye, Archive
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
-type ReportBlockType = 'text' | 'image' | 'file';
+// ─────────────────────────────────────────────────────────────
+// MINUTES ARCHIVES COMPONENT
+// ─────────────────────────────────────────────────────────────
 
-interface ReportBlock {
+interface MinutesPdf {
   id: string;
-  type: ReportBlockType;
-  /** text block */
-  content?: string;
-  /** image block */
-  imageUrl?: string;
-  imageCaption?: string;
-  /** file block */
-  fileName?: string;
-  fileUrl?: string;
-  fileSize?: string;
-  order: number;
+  name: string;
+  url: string;
+  uploadedAt: string; // ISO string
+  storagePath: string;
 }
 
-interface YearlyReport {
-  id: string;          // Firestore doc id, e.g. "2024"
+interface MinutesYear {
+  id: string;       // doc id = the year string e.g. "2024"
   year: string;
-  title?: string;
-  summary?: string;
-  blocks: ReportBlock[];
-  createdAt?: number;
-  updatedAt?: number;
+  pdfs: MinutesPdf[];
 }
 
-// ─────────────────────────────────────────────
-// KTP YEARLY REPORTS COMPONENT
-// ─────────────────────────────────────────────
-const KtpYearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-  const [reports, setReports] = useState<YearlyReport[]>([]);
+const MinutesArchives: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+  const [years, setYears] = useState<MinutesYear[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState<YearlyReport | null>(null);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [editingReport, setEditingReport] = useState<Partial<YearlyReport> | null>(null);
+  const [selectedYear, setSelectedYear] = useState<MinutesYear | null>(null);
+  const [addingYear, setAddingYear] = useState(false);
+  const [newYearInput, setNewYearInput] = useState('');
+  const [yearError, setYearError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<MinutesPdf | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Fetch all year documents ──────────────────────────────
+  const fetchYears = useCallback(async () => {
+    setLoading(true);
+    if (!db?.collection) { setLoading(false); return; }
+    try {
+      const snap = await db.collection('ktpMinutesArchives').orderBy('year', 'desc').get();
+      const docs: MinutesYear[] = snap.docs.map(d => ({
+        id: d.id,
+        ...(d.data() as Omit<MinutesYear, 'id'>),
+      }));
+      setYears(docs);
+      // Keep selected year in sync
+      if (selectedYear) {
+        const updated = docs.find(d => d.id === selectedYear.id);
+        setSelectedYear(updated ?? null);
+      }
+    } catch (e) {
+      console.error('Failed to fetch minutes archives:', e);
+    }
+    setLoading(false);
+  }, [selectedYear?.id]);
+
+  useEffect(() => { fetchYears(); }, []);
+
+  // ── Add Year ──────────────────────────────────────────────
+  const handleAddYear = async () => {
+    const yr = newYearInput.trim();
+    if (!yr || !/^\d{4}$/.test(yr)) { setYearError('Please enter a valid 4-digit year.'); return; }
+    if (years.some(y => y.year === yr)) { setYearError('This year already exists.'); return; }
+    setYearError('');
+    try {
+      const newDoc: Omit<MinutesYear, 'id'> = { year: yr, pdfs: [] };
+      await db.collection('ktpMinutesArchives').doc(yr).set(newDoc);
+      setNewYearInput('');
+      setAddingYear(false);
+      await fetchYears();
+    } catch (e) {
+      alert('Failed to add year.');
+    }
+  };
+
+  // ── Delete Year ───────────────────────────────────────────
+  const handleDeleteYear = async (yearDoc: MinutesYear) => {
+    if (!window.confirm(`Delete the entire year ${yearDoc.year} and all its PDFs? This cannot be undone.`)) return;
+    try {
+      // Delete files from storage
+      const storage = (await import('../services/firebase')).storage;
+      if (storage && yearDoc.pdfs?.length) {
+        for (const pdf of yearDoc.pdfs) {
+          try {
+            await storage.ref(pdf.storagePath).delete();
+          } catch (_) { /* ignore missing files */ }
+        }
+      }
+      await db.collection('ktpMinutesArchives').doc(yearDoc.id).delete();
+      if (selectedYear?.id === yearDoc.id) setSelectedYear(null);
+      await fetchYears();
+    } catch (e) {
+      alert('Failed to delete year.');
+    }
+  };
+
+  // ── Upload PDF ────────────────────────────────────────────
+  const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedYear || !e.target.files?.length) return;
+    const file = e.target.files[0];
+    if (file.type !== 'application/pdf') { alert('Only PDF files are allowed.'); return; }
+
+    setUploading(true);
+    setUploadProgress('Uploading…');
+
+    try {
+      const storage = (await import('../services/firebase')).storage;
+      if (!storage) throw new Error('Storage not available');
+
+      const storagePath = `ktpMinutes/${selectedYear.year}/${Date.now()}_${file.name}`;
+      const ref = storage.ref(storagePath);
+      await ref.put(file);
+      const url = await ref.getDownloadURL();
+
+      const newPdf: MinutesPdf = {
+        id: `pdf_${Date.now()}`,
+        name: file.name,
+        url,
+        storagePath,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      const docRef = db.collection('ktpMinutesArchives').doc(selectedYear.year);
+      const snap = await docRef.get();
+      const existing: MinutesPdf[] = (snap.data() as MinutesYear)?.pdfs ?? [];
+      await docRef.update({ pdfs: [...existing, newPdf] });
+
+      setUploadProgress('');
+      await fetchYears();
+    } catch (err) {
+      console.error(err);
+      alert('Upload failed. Make sure Firebase Storage is configured.');
+      setUploadProgress('');
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // ── Delete PDF ────────────────────────────────────────────
+  const handleDeletePdf = async (pdf: MinutesPdf) => {
+    if (!selectedYear || !window.confirm(`Delete "${pdf.name}"?`)) return;
+    setDeletingId(pdf.id);
+    try {
+      const storage = (await import('../services/firebase')).storage;
+      if (storage) {
+        try { await storage.ref(pdf.storagePath).delete(); } catch (_) {}
+      }
+      const docRef = db.collection('ktpMinutesArchives').doc(selectedYear.year);
+      const snap = await docRef.get();
+      const existing: MinutesPdf[] = (snap.data() as MinutesYear)?.pdfs ?? [];
+      await docRef.update({ pdfs: existing.filter(p => p.id !== pdf.id) });
+      await fetchYears();
+    } catch (e) {
+      alert('Failed to delete PDF.');
+    }
+    setDeletingId(null);
+  };
+
+  // ── Format date ───────────────────────────────────────────
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  // ── PDF Viewer Modal ──────────────────────────────────────
+  const PdfViewerModal: React.FC<{ pdf: MinutesPdf; onClose: () => void }> = ({ pdf, onClose }) => (
+    <div className="fixed inset-0 z-50 bg-black/70 flex flex-col backdrop-blur-sm">
+      <div className="bg-church-900 text-white px-6 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <FileText size={18} className="text-yellow-400 shrink-0" />
+          <span className="font-semibold truncate">{pdf.name}</span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href={pdf.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 text-church-900 rounded-lg text-sm font-bold hover:bg-yellow-300"
+          >
+            <Download size={14} /> Download
+          </a>
+          <button onClick={onClose} className="p-1.5 hover:bg-church-700 rounded-lg">
+            <X size={20} />
+          </button>
+        </div>
+      </div>
+      <iframe
+        src={`${pdf.url}#toolbar=1`}
+        className="flex-1 w-full border-none"
+        title={pdf.name}
+      />
+    </div>
+  );
+
+  // ─────────────────────────── RENDER ──────────────────────
+  return (
+    <div className="animate-in fade-in duration-300">
+      {/* PDF Viewer Modal */}
+      {viewingPdf && <PdfViewerModal pdf={viewingPdf} onClose={() => setViewingPdf(null)} />}
+
+      <div className="flex gap-6">
+        {/* ── Left Panel: Year List ─────────────────────── */}
+        <div className="w-52 shrink-0 space-y-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Years</h3>
+            {isAdmin && (
+              <button
+                onClick={() => setAddingYear(true)}
+                className="p-1 rounded-lg bg-church-600 text-white hover:bg-church-700"
+                title="Add Year"
+              >
+                <Plus size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Add year inline input */}
+          {addingYear && isAdmin && (
+            <div className="mb-2">
+              <input
+                autoFocus
+                type="number"
+                placeholder="e.g. 2024"
+                value={newYearInput}
+                onChange={e => { setNewYearInput(e.target.value); setYearError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddYear(); if (e.key === 'Escape') setAddingYear(false); }}
+                className="w-full border border-church-400 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-church-500 outline-none"
+              />
+              {yearError && <p className="text-red-500 text-xs mt-1">{yearError}</p>}
+              <div className="flex gap-1 mt-1.5">
+                <button
+                  onClick={handleAddYear}
+                  className="flex-1 py-1 bg-church-600 text-white text-xs font-bold rounded-lg hover:bg-church-700"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => { setAddingYear(false); setYearError(''); setNewYearInput(''); }}
+                  className="flex-1 py-1 border text-xs rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex justify-center py-8"><Loader className="animate-spin text-church-500" size={20} /></div>
+          ) : years.length === 0 ? (
+            <p className="text-slate-400 text-sm italic text-center py-6">No years yet.</p>
+          ) : (
+            years.map(yr => (
+              <div
+                key={yr.id}
+                className={`group flex items-center justify-between rounded-xl px-3 py-2.5 cursor-pointer transition-all ${
+                  selectedYear?.id === yr.id
+                    ? 'bg-church-600 text-white shadow'
+                    : 'hover:bg-slate-100 text-slate-700'
+                }`}
+                onClick={() => setSelectedYear(yr)}
+              >
+                <div className="flex items-center gap-2">
+                  <FolderOpen size={15} className={selectedYear?.id === yr.id ? 'text-yellow-300' : 'text-church-400'} />
+                  <span className="font-bold text-sm">{yr.year}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                    selectedYear?.id === yr.id ? 'bg-church-500 text-white' : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    {yr.pdfs?.length ?? 0}
+                  </span>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={e => { e.stopPropagation(); handleDeleteYear(yr); }}
+                    className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity ${
+                      selectedYear?.id === yr.id ? 'text-red-300 hover:text-red-100' : 'text-red-400 hover:text-red-600'
+                    }`}
+                    title="Delete year"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* ── Right Panel: PDF List ─────────────────────── */}
+        <div className="flex-1 min-w-0">
+          {!selectedYear ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+              <Archive size={40} className="mb-3 opacity-40" />
+              <p className="font-semibold">Select a year to view minutes</p>
+              {isAdmin && <p className="text-sm mt-1">Or add a new year using the + button</p>}
+            </div>
+          ) : (
+            <div>
+              {/* Year header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="bg-church-600 text-white rounded-xl p-2">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800">{selectedYear.year} Minutes</h3>
+                    <p className="text-slate-400 text-sm">{selectedYear.pdfs?.length ?? 0} document{(selectedYear.pdfs?.length ?? 0) !== 1 ? 's' : ''}</p>
+                  </div>
+                </div>
+                {isAdmin && (
+                  <div>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl font-bold text-sm hover:bg-church-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {uploading ? (
+                        <><Loader className="animate-spin" size={15} /> {uploadProgress}</>
+                      ) : (
+                        <><FileUp size={15} /> Upload PDF</>
+                      )}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleUploadPdf}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* PDF list */}
+              {!selectedYear.pdfs || selectedYear.pdfs.length === 0 ? (
+                <div className="h-48 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
+                  <FileText size={32} className="mb-2 opacity-40" />
+                  <p className="font-medium">No documents yet</p>
+                  {isAdmin && <p className="text-sm mt-1">Click "Upload PDF" to add minutes</p>}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedYear.pdfs.map((pdf, idx) => (
+                    <div
+                      key={pdf.id}
+                      className="flex items-center gap-4 bg-white border border-slate-100 rounded-xl px-4 py-3 hover:shadow-sm transition-shadow group"
+                    >
+                      {/* Index */}
+                      <div className="w-7 h-7 rounded-full bg-church-50 text-church-700 flex items-center justify-center text-xs font-bold shrink-0">
+                        {idx + 1}
+                      </div>
+                      {/* File icon */}
+                      <div className="p-2 bg-red-50 rounded-lg shrink-0">
+                        <FileText size={18} className="text-red-500" />
+                      </div>
+                      {/* Name + date */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-800 truncate text-sm">{pdf.name}</p>
+                        <p className="text-slate-400 text-xs">Uploaded {formatDate(pdf.uploadedAt)}</p>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => setViewingPdf(pdf)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-church-50 text-church-700 rounded-lg text-xs font-bold hover:bg-church-100 transition"
+                          title="View PDF"
+                        >
+                          <Eye size={13} /> View
+                        </button>
+                        <a
+                          href={pdf.url}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-100 transition"
+                          title="Download"
+                        >
+                          <Download size={13} /> Download
+                        </a>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeletePdf(pdf)}
+                            disabled={deletingId === pdf.id}
+                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                            title="Delete"
+                          >
+                            {deletingId === pdf.id ? <Loader className="animate-spin" size={14} /> : <Trash2 size={14} />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// YEARLY REPORTS COMPONENT
+// ─────────────────────────────────────────────────────────────
+
+interface YearlyReportModalProps {
+  report: Partial<KTPYearlyReport> | null;
+  onSave: (reportData: KTPYearlyReport) => void;
+  onClose: () => void;
+  isLoading: boolean;
+}
+
+const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, onClose, isLoading }) => {
+  const [reportData, setReportData] = useState<Partial<KTPYearlyReport>>({
+    year: new Date().getFullYear(),
+    officeBearers: [],
+    statistics: { totalMembers: 0, male: 0, female: 0 },
+    ministries: []
+  });
+
+  useEffect(() => {
+    if (report) {
+      setReportData({
+        ...report,
+        officeBearers: report.officeBearers ? [...report.officeBearers] : [],
+        statistics: report.statistics ? { ...report.statistics } : { totalMembers: 0, male: 0, female: 0 },
+        ministries: report.ministries ? [...report.ministries] : []
+      });
+    }
+  }, [report]);
+
+  const handleAddOB = () => {
+    const newOB: KTPMember = { id: `ob_${Date.now()}`, name: '', role: '' };
+    setReportData({ ...reportData, officeBearers: [...(reportData.officeBearers || []), newOB] });
+  };
+
+  const handleAddMinistry = () => {
+    const newMin = { id: `min_${Date.now()}`, name: '', description: '', achievements: '' };
+    setReportData({ ...reportData, ministries: [...(reportData.ministries || []), newMin] });
+  };
+
+  const handleSave = () => {
+    onSave(reportData as KTPYearlyReport);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
+          <h3 className="text-xl font-bold">{reportData.id ? 'Edit Yearly Report' : 'Add Yearly Report'}</h3>
+          <button onClick={onClose}><X size={20}/></button>
+        </div>
+        <div className="p-6 space-y-6 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Year</label>
+              <input 
+                type="number"
+                className="w-full border p-2 rounded-lg" 
+                value={reportData.year || ''}
+                onChange={e => setReportData({ ...reportData, year: parseInt(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Total Members</label>
+              <input 
+                type="number"
+                className="w-full border p-2 rounded-lg" 
+                value={reportData.statistics?.totalMembers || 0}
+                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, totalMembers: parseInt(e.target.value) } })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Male</label>
+              <input 
+                type="number"
+                className="w-full border p-2 rounded-lg" 
+                value={reportData.statistics?.male || 0}
+                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, male: parseInt(e.target.value) } })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Female</label>
+              <input 
+                type="number"
+                className="w-full border p-2 rounded-lg" 
+                value={reportData.statistics?.female || 0}
+                onChange={e => setReportData({ ...reportData, statistics: { ...reportData.statistics!, female: parseInt(e.target.value) } })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-bold text-slate-800">Office Bearers</h4>
+              <button onClick={handleAddOB} className="text-xs font-bold text-church-600 flex items-center gap-1 hover:underline">
+                <Plus size={14}/> Add OB
+              </button>
+            </div>
+            <div className="space-y-2">
+              {reportData.officeBearers?.map((ob, idx) => (
+                <div key={ob.id} className="flex gap-2">
+                  <input 
+                    placeholder="Name" 
+                    className="flex-1 border p-2 rounded-lg text-sm" 
+                    value={ob.name} 
+                    onChange={e => {
+                      const obs = [...reportData.officeBearers!];
+                      obs[idx].name = e.target.value;
+                      setReportData({ ...reportData, officeBearers: obs });
+                    }}
+                  />
+                  <input 
+                    placeholder="Role" 
+                    className="flex-1 border p-2 rounded-lg text-sm" 
+                    value={ob.role} 
+                    onChange={e => {
+                      const obs = [...reportData.officeBearers!];
+                      obs[idx].role = e.target.value;
+                      setReportData({ ...reportData, officeBearers: obs });
+                    }}
+                  />
+                  <button 
+                    onClick={() => setReportData({ ...reportData, officeBearers: reportData.officeBearers!.filter((_, i) => i !== idx) })}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-bold text-slate-800">Ministries & Achievements</h4>
+              <button onClick={handleAddMinistry} className="text-xs font-bold text-church-600 flex items-center gap-1 hover:underline">
+                <Plus size={14}/> Add Ministry
+              </button>
+            </div>
+            <div className="space-y-4">
+              {reportData.ministries?.map((min, idx) => (
+                <div key={min.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                  <div className="flex gap-2">
+                    <input 
+                      placeholder="Ministry Name" 
+                      className="flex-1 border p-2 rounded-lg text-sm font-bold" 
+                      value={min.name} 
+                      onChange={e => {
+                        const mins = [...reportData.ministries!];
+                        mins[idx].name = e.target.value;
+                        setReportData({ ...reportData, ministries: mins });
+                      }}
+                    />
+                    <button 
+                      onClick={() => setReportData({ ...reportData, ministries: reportData.ministries!.filter((_, i) => i !== idx) })}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <textarea 
+                    placeholder="Description" 
+                    className="w-full border p-2 rounded-lg text-sm h-20" 
+                    value={min.description}
+                    onChange={e => {
+                      const mins = [...reportData.ministries!];
+                      mins[idx].description = e.target.value;
+                      setReportData({ ...reportData, ministries: mins });
+                    }}
+                  />
+                  <textarea 
+                    placeholder="Achievements" 
+                    className="w-full border p-2 rounded-lg text-sm h-20" 
+                    value={min.achievements}
+                    onChange={e => {
+                      const mins = [...reportData.ministries!];
+                      mins[idx].achievements = e.target.value;
+                      setReportData({ ...reportData, ministries: mins });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-100 flex justify-end gap-3 rounded-b-xl">
+          <button onClick={onClose} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg flex items-center font-bold">
+            {isLoading ? <Loader className="animate-spin mr-2" size={16}/> : <Save size={16} className="mr-2"/>} Save Report
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
+  const [reports, setReports] = useState<KTPYearlyReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<KTPYearlyReport | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<KTPYearlyReport | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const fetchReports = useCallback(async () => {
@@ -59,547 +619,242 @@ const KtpYearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
     if (!db?.collection) { setLoading(false); return; }
     try {
       const snap = await db.collection('ktpYearlyReports').orderBy('year', 'desc').get();
-      const items: YearlyReport[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as YearlyReport));
-      setReports(items);
-      if (items.length > 0 && !selectedReport) setSelectedReport(items[0]);
-    } catch (e) { console.error(e); }
+      const docs = snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as KTPYearlyReport));
+      setReports(docs);
+      if (docs.length > 0 && !selectedReport) setSelectedReport(docs[0]);
+      else if (selectedReport) {
+        const updated = docs.find((d: any) => d.id === selectedReport.id);
+        setSelectedReport(updated || (docs.length > 0 ? docs[0] : null));
+      }
+    } catch (e) {
+      console.error('Error fetching yearly reports:', e);
+      handleFirestoreError(e, OperationType.GET, 'ktpYearlyReports');
+    }
     setLoading(false);
-  }, []);
+  }, [selectedReport]);
 
-  useEffect(() => { fetchReports(); }, [fetchReports]);
+  useEffect(() => { fetchReports(); }, []);
 
-  const openNewReport = () => {
-    setEditingReport({ year: '', title: '', summary: '', blocks: [] });
-    setIsReportModalOpen(true);
-  };
-
-  const openEditReport = (report: YearlyReport) => {
-    setEditingReport({ ...report, blocks: [...(report.blocks || [])] });
-    setIsReportModalOpen(true);
-  };
-
-  const handleDeleteReport = async (id: string) => {
-    if (!db || !window.confirm('Delete this yearly report?')) return;
-    await db.collection('ktpYearlyReports').doc(id).delete();
-    setSelectedReport(null);
-    fetchReports();
-  };
-
-  const handleSaveReport = async (data: Partial<YearlyReport>) => {
+  const handleSaveReport = async (reportData: KTPYearlyReport) => {
     if (!db) return;
     setIsSaving(true);
     try {
-      const payload = {
-        year: data.year || '',
-        title: data.title || '',
-        summary: data.summary || '',
-        blocks: (data.blocks || []).map((b, i) => ({ ...b, order: i })),
-        updatedAt: Date.now(),
-      };
-      if (data.id) {
-        await db.collection('ktpYearlyReports').doc(data.id).set(payload, { merge: true });
+      const { id, ...data } = reportData;
+      if (id) {
+        await db.collection('ktpYearlyReports').doc(id).set({ ...data, createdAt: data.createdAt || new Date().toISOString() }, { merge: true });
       } else {
-        await db.collection('ktpYearlyReports').add({ ...payload, createdAt: Date.now() });
+        await db.collection('ktpYearlyReports').add({ ...data, createdAt: new Date().toISOString() });
       }
-      setIsReportModalOpen(false);
+      setIsModalOpen(false);
       fetchReports();
-    } catch (e) { alert('Failed to save report.'); }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save report.");
+    }
     setIsSaving(false);
   };
 
-  // ── Report viewer ──────────────────────────────
-  const ReportViewer: React.FC<{ report: YearlyReport }> = ({ report }) => (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-church-900 text-white rounded-xl p-6">
-        <p className="text-church-300 text-sm font-bold uppercase tracking-widest mb-1">{report.year}</p>
-        <h2 className="text-2xl font-serif font-bold">{report.title || `${report.year} Annual Report`}</h2>
-        {report.summary && <p className="text-church-200 mt-2 text-sm leading-relaxed">{report.summary}</p>}
-      </div>
+  const handleDeleteReport = async (id: string) => {
+    if (!db || !window.confirm("Delete this report?")) return;
+    try {
+      await db.collection('ktpYearlyReports').doc(id).delete();
+      if (selectedReport?.id === id) setSelectedReport(null);
+      fetchReports();
+    } catch (e) { console.error(e); }
+  };
 
-      {(!report.blocks || report.blocks.length === 0) && (
-        <div className="bg-white rounded-xl border border-slate-100 p-12 text-center text-slate-400 italic">
-          No content added yet.
-        </div>
-      )}
-
-      {(report.blocks || [])
-        .slice()
-        .sort((a, b) => a.order - b.order)
-        .map(block => {
-          if (block.type === 'text') return (
-            <div key={block.id} className="bg-white rounded-xl border border-slate-100 p-6">
-              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{block.content}</p>
-            </div>
-          );
-          if (block.type === 'image') return (
-            <div key={block.id} className="bg-white rounded-xl border border-slate-100 overflow-hidden">
-              <img src={block.imageUrl} alt={block.imageCaption || ''} className="w-full object-cover max-h-96" />
-              {block.imageCaption && (
-                <p className="text-xs text-slate-500 italic p-3 text-center">{block.imageCaption}</p>
-              )}
-            </div>
-          );
-          if (block.type === 'file') return (
-            <div key={block.id} className="bg-white rounded-xl border border-slate-100 p-4 flex items-center gap-4">
-              <div className="p-3 bg-church-50 rounded-lg text-church-600"><Paperclip size={22}/></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 truncate">{block.fileName}</p>
-                {block.fileSize && <p className="text-xs text-slate-400">{block.fileSize}</p>}
-              </div>
-              <a
-                href={block.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-church-600 text-white text-sm font-bold rounded-lg hover:bg-church-700 shrink-0"
-              >
-                <Download size={14}/> Download
-              </a>
-            </div>
-          );
-          return null;
-        })}
-    </div>
-  );
-
-  // ── Main layout ────────────────────────────────
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Yearly Reports</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Annual reports and records of KTP</p>
-        </div>
-        {isAdmin && (
-          <button
-            onClick={openNewReport}
-            className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold text-sm"
-          >
-            <Plus size={16} className="mr-2"/> Add Report
-          </button>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="p-12 text-center"><Loader className="animate-spin mx-auto text-church-500"/></div>
-      ) : reports.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-100 p-12 text-center text-slate-400 italic">
-          No reports yet.{isAdmin && ' Click "Add Report" to create one.'}
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar: year list */}
-          <div className="lg:w-56 shrink-0">
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 bg-slate-50">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Years</p>
-              </div>
-              <ul className="divide-y divide-slate-100">
-                {reports.map(r => (
-                  <li key={r.id}>
-                    <button
-                      onClick={() => setSelectedReport(r)}
-                      className={`w-full text-left px-4 py-3 flex items-center justify-between text-sm font-semibold transition-colors ${
-                        selectedReport?.id === r.id
-                          ? 'bg-church-50 text-church-700'
-                          : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span>{r.year}</span>
-                      <div className="flex items-center gap-1">
-                        {isAdmin && (
-                          <>
-                            <span
-                              onClick={e => { e.stopPropagation(); openEditReport(r); }}
-                              className="p-1 rounded hover:bg-blue-100 text-blue-500 cursor-pointer"
-                              title="Edit"
-                            >
-                              <Edit size={12}/>
-                            </span>
-                            <span
-                              onClick={e => { e.stopPropagation(); handleDeleteReport(r.id); }}
-                              className="p-1 rounded hover:bg-red-100 text-red-500 cursor-pointer"
-                              title="Delete"
-                            >
-                              <Trash2 size={12}/>
-                            </span>
-                          </>
-                        )}
-                        <ChevronRight size={14} className={selectedReport?.id === r.id ? 'text-church-500' : 'text-slate-300'}/>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <div className="animate-in fade-in duration-300">
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Year Selector */}
+        <div className="w-full md:w-48 shrink-0 space-y-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Years</h3>
+            {isAdmin && (
+              <button 
+                onClick={() => { setEditingReport(null); setIsModalOpen(true); }}
+                className="p-1 rounded-lg bg-church-600 text-white hover:bg-church-700"
+              >
+                <Plus size={14} />
+              </button>
+            )}
           </div>
-
-          {/* Content area */}
-          <div className="flex-1 min-w-0">
-            {selectedReport ? (
-              <ReportViewer report={selectedReport} />
+          <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
+            {loading ? (
+              <div className="flex justify-center py-4 w-full"><Loader className="animate-spin text-church-500" size={20} /></div>
+            ) : reports.length === 0 ? (
+              <p className="text-slate-400 text-xs italic text-center py-4 w-full">No reports.</p>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-100 p-12 text-center text-slate-400 italic">
-                Select a year to view its report.
-              </div>
+              reports.map(report => (
+                <button
+                  key={report.id}
+                  onClick={() => setSelectedReport(report)}
+                  className={`flex items-center justify-between rounded-xl px-4 py-2.5 transition-all whitespace-nowrap ${
+                    selectedReport?.id === report.id
+                      ? 'bg-church-600 text-white shadow-md'
+                      : 'bg-white border border-slate-100 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="font-bold">{report.year}</span>
+                  {isAdmin && selectedReport?.id === report.id && (
+                    <div className="flex gap-1 ml-2">
+                      <button onClick={(e) => { e.stopPropagation(); setEditingReport(report); setIsModalOpen(true); }} className="p-1 hover:bg-church-500 rounded text-white"><Edit size={12}/></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }} className="p-1 hover:bg-church-500 rounded text-white"><Trash2 size={12}/></button>
+                    </div>
+                  )}
+                </button>
+              ))
             )}
           </div>
         </div>
-      )}
 
-      {/* Edit / Create Modal */}
-      {isReportModalOpen && editingReport !== null && (
-        <ReportEditorModal
+        {/* Report Content */}
+        <div className="flex-1 min-w-0">
+          {!selectedReport ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 bg-white rounded-2xl border border-slate-100">
+              <FileText size={40} className="mb-3 opacity-20" />
+              <p className="font-semibold">Select a year to view the report</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Header Card */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">Yearly Report {selectedReport.year}</h2>
+                  <div className="bg-church-50 text-church-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    Annual Summary
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Members</p>
+                    <p className="text-2xl font-black text-church-700">{selectedReport.statistics.totalMembers}</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-blue-400 uppercase mb-1">Male</p>
+                    <p className="text-2xl font-black text-blue-700">{selectedReport.statistics.male}</p>
+                  </div>
+                  <div className="bg-pink-50 p-4 rounded-xl text-center">
+                    <p className="text-xs font-bold text-pink-400 uppercase mb-1">Female</p>
+                    <p className="text-2xl font-black text-pink-700">{selectedReport.statistics.female}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Office Bearers */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <UserSquare size={20} className="text-church-600" />
+                  Office Bearers
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {selectedReport.officeBearers.map((ob, i) => (
+                    <div key={i} className="flex flex-col p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-xs font-bold text-slate-400 uppercase">{ob.role}</span>
+                      <span className="font-bold text-slate-800">{ob.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ministries & Achievements */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 px-2">
+                  <TrendingUp size={20} className="text-church-600" />
+                  Ministries & Achievements
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {selectedReport.ministries.map((min, i) => (
+                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                      <h4 className="text-lg font-bold text-church-700 mb-2">{min.name}</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase mb-1">Description</p>
+                          <p className="text-slate-600 text-sm leading-relaxed">{min.description}</p>
+                        </div>
+                        {min.achievements && (
+                          <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100">
+                            <p className="text-xs font-bold text-yellow-700 uppercase mb-1">Key Achievements</p>
+                            <p className="text-slate-700 text-sm italic leading-relaxed">{min.achievements}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isModalOpen && (
+        <YearlyReportModal 
           report={editingReport}
+          onClose={() => setIsModalOpen(false)}
           onSave={handleSaveReport}
-          onClose={() => setIsReportModalOpen(false)}
-          isSaving={isSaving}
+          isLoading={isSaving}
         />
       )}
     </div>
   );
 };
 
-// ─────────────────────────────────────────────
-// REPORT EDITOR MODAL
-// ─────────────────────────────────────────────
-const ReportEditorModal: React.FC<{
-  report: Partial<YearlyReport>;
-  onSave: (data: Partial<YearlyReport>) => void;
-  onClose: () => void;
-  isSaving: boolean;
-}> = ({ report, onSave, onClose, isSaving }) => {
-  const [data, setData] = useState<Partial<YearlyReport>>({
-    ...report,
-    blocks: [...(report.blocks || [])],
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
+// ─────────────────────────────────────────────────────────────
+// KTP HISTORY COMPONENT (wraps sub-pages)
+// ─────────────────────────────────────────────────────────────
 
-  // ── Block helpers ──────────────────────────────
-  const addBlock = (type: ReportBlockType) => {
-    const newBlock: ReportBlock = {
-      id: `blk_${Date.now()}`,
-      type,
-      order: (data.blocks || []).length,
-      content: type === 'text' ? '' : undefined,
-      imageUrl: type === 'image' ? '' : undefined,
-      imageCaption: type === 'image' ? '' : undefined,
-      fileName: type === 'file' ? '' : undefined,
-      fileUrl: type === 'file' ? '' : undefined,
-      fileSize: type === 'file' ? '' : undefined,
-    };
-    setData(prev => ({ ...prev, blocks: [...(prev.blocks || []), newBlock] }));
-  };
-
-  const updateBlock = (id: string, patch: Partial<ReportBlock>) => {
-    setData(prev => ({
-      ...prev,
-      blocks: (prev.blocks || []).map(b => b.id === id ? { ...b, ...patch } : b),
-    }));
-  };
-
-  const removeBlock = (id: string) => {
-    setData(prev => ({ ...prev, blocks: (prev.blocks || []).filter(b => b.id !== id) }));
-  };
-
-  const moveBlock = (id: string, dir: 'up' | 'down') => {
-    const blocks = [...(data.blocks || [])];
-    const idx = blocks.findIndex(b => b.id === id);
-    if (dir === 'up' && idx > 0) [blocks[idx], blocks[idx - 1]] = [blocks[idx - 1], blocks[idx]];
-    if (dir === 'down' && idx < blocks.length - 1) [blocks[idx], blocks[idx + 1]] = [blocks[idx + 1], blocks[idx]];
-    setData(prev => ({ ...prev, blocks }));
-  };
-
-  // ── File upload handler (base64 for demo / replace with Firebase Storage) ──
-  const handleFileUpload = async (blockId: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      updateBlock(blockId, {
-        fileUrl: url,
-        fileName: file.name,
-        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // ── Image upload handler ────────────────────────
-  const handleImageUpload = async (blockId: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateBlock(blockId, { imageUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // ── Block renderer ─────────────────────────────
-  const BlockEditor: React.FC<{ block: ReportBlock; index: number; total: number }> = ({ block, index, total }) => {
-    const imgRef = useRef<HTMLInputElement>(null);
-    const fileRef = useRef<HTMLInputElement>(null);
-
-    return (
-      <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
-        {/* Block header */}
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-            {block.type === 'text' && <><FileText size={13}/> Text Block</>}
-            {block.type === 'image' && <><ImageIcon size={13}/> Image Block</>}
-            {block.type === 'file' && <><Paperclip size={13}/> File / Attachment Block</>}
-          </div>
-          <div className="flex items-center gap-1">
-            <button disabled={index === 0} onClick={() => moveBlock(block.id, 'up')}
-              className="px-1.5 py-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 text-xs font-bold">▲</button>
-            <button disabled={index === total - 1} onClick={() => moveBlock(block.id, 'down')}
-              className="px-1.5 py-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 text-xs font-bold">▼</button>
-            <button onClick={() => removeBlock(block.id)} className="p-1 text-red-400 hover:text-red-600 ml-1"><Trash2 size={14}/></button>
-          </div>
-        </div>
-
-        {/* Block content editor */}
-        <div className="p-4">
-          {block.type === 'text' && (
-            <textarea
-              className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-church-400 outline-none resize-y min-h-[100px]"
-              placeholder="Enter text content here..."
-              value={block.content || ''}
-              onChange={e => updateBlock(block.id, { content: e.target.value })}
-            />
-          )}
-
-          {block.type === 'image' && (
-            <div className="space-y-3">
-              {block.imageUrl ? (
-                <div className="relative rounded-lg overflow-hidden border border-slate-200">
-                  <img src={block.imageUrl} alt="preview" className="w-full max-h-48 object-cover"/>
-                  <button
-                    onClick={() => updateBlock(block.id, { imageUrl: '' })}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full shadow hover:bg-red-600"
-                  ><X size={12}/></button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => imgRef.current?.click()}
-                  className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-colors"
-                >
-                  <ImageIcon size={28} className="mx-auto text-slate-400 mb-2"/>
-                  <p className="text-sm text-slate-500 font-medium">Click to upload an image</p>
-                  <p className="text-xs text-slate-400 mt-1">or paste a URL below</p>
-                </div>
-              )}
-              <input ref={imgRef} type="file" accept="image/*" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(block.id, f); }}/>
-              <input
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                placeholder="Or paste image URL..."
-                value={block.imageUrl || ''}
-                onChange={e => updateBlock(block.id, { imageUrl: e.target.value })}
-              />
-              <input
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                placeholder="Caption (optional)"
-                value={block.imageCaption || ''}
-                onChange={e => updateBlock(block.id, { imageCaption: e.target.value })}
-              />
-            </div>
-          )}
-
-          {block.type === 'file' && (
-            <div className="space-y-3">
-              {block.fileUrl && block.fileName ? (
-                <div className="flex items-center gap-3 p-3 bg-church-50 rounded-lg border border-church-200">
-                  <Paperclip size={18} className="text-church-600 shrink-0"/>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{block.fileName}</p>
-                    {block.fileSize && <p className="text-xs text-slate-400">{block.fileSize}</p>}
-                  </div>
-                  <button onClick={() => updateBlock(block.id, { fileUrl: '', fileName: '', fileSize: '' })}
-                    className="p-1 text-red-400 hover:text-red-600"><X size={14}/></button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-colors"
-                >
-                  <Paperclip size={28} className="mx-auto text-slate-400 mb-2"/>
-                  <p className="text-sm text-slate-500 font-medium">Click to upload a file</p>
-                  <p className="text-xs text-slate-400 mt-1">PDF, DOCX, XLSX, etc.</p>
-                </div>
-              )}
-              <input ref={fileRef} type="file" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(block.id, f); }}/>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  className="border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                  placeholder="File name (optional override)"
-                  value={block.fileName || ''}
-                  onChange={e => updateBlock(block.id, { fileName: e.target.value })}
-                />
-                <input
-                  className="border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                  placeholder="Or paste file URL..."
-                  value={block.fileUrl || ''}
-                  onChange={e => updateBlock(block.id, { fileUrl: e.target.value })}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const blocks = data.blocks || [];
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
-        {/* Modal header */}
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-          <h3 className="text-lg font-bold text-slate-800">
-            {data.id ? `Edit Report — ${data.year}` : 'New Yearly Report'}
-          </h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-200 rounded-lg"><X size={18}/></button>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-5">
-          {/* Meta fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Year *</label>
-              <input
-                type="number"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                placeholder="e.g. 2024"
-                value={data.year || ''}
-                onChange={e => setData(prev => ({ ...prev, year: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Report Title</label>
-              <input
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none"
-                placeholder="e.g. 2024 Annual Report"
-                value={data.title || ''}
-                onChange={e => setData(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Summary / Introduction</label>
-            <textarea
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-church-400 outline-none resize-y min-h-[72px]"
-              placeholder="Brief summary shown at the top of the report..."
-              value={data.summary || ''}
-              onChange={e => setData(prev => ({ ...prev, summary: e.target.value }))}
-            />
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-slate-100"/>
-
-          {/* Content blocks */}
-          <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Content Blocks</p>
-            <div className="space-y-3">
-              {blocks.map((block, i) => (
-                <BlockEditor key={block.id} block={block} index={i} total={blocks.length}/>
-              ))}
-            </div>
-          </div>
-
-          {/* Add block buttons */}
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button
-              onClick={() => addBlock('text')}
-              className="flex items-center gap-1.5 px-3 py-2 border-2 border-dashed border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:border-church-400 hover:text-church-700 hover:bg-church-50 transition-colors"
-            >
-              <FileText size={14}/> Add Text
-            </button>
-            <button
-              onClick={() => addBlock('image')}
-              className="flex items-center gap-1.5 px-3 py-2 border-2 border-dashed border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:border-church-400 hover:text-church-700 hover:bg-church-50 transition-colors"
-            >
-              <ImageIcon size={14}/> Add Image
-            </button>
-            <button
-              onClick={() => addBlock('file')}
-              className="flex items-center gap-1.5 px-3 py-2 border-2 border-dashed border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:border-church-400 hover:text-church-700 hover:bg-church-50 transition-colors"
-            >
-              <Paperclip size={14}/> Add File / Attachment
-            </button>
-          </div>
-        </div>
-
-        {/* Modal footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 border border-slate-200 rounded-lg text-sm hover:bg-slate-100">Cancel</button>
-          <button
-            onClick={() => onSave(data)}
-            disabled={!data.year || isSaving}
-            className="flex items-center px-6 py-2 bg-church-600 text-white rounded-lg text-sm font-bold hover:bg-church-700 disabled:opacity-60"
-          >
-            {isSaving ? <Loader className="animate-spin mr-2" size={16}/> : <Save size={16} className="mr-2"/>}
-            Save Report
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// KTP HISTORY WRAPPER (History tab now has sub-tabs)
-// ─────────────────────────────────────────────
 const KtpHistory: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
-  const [historyTab, setHistoryTab] = useState<'overview' | 'yearly-reports'>('overview');
+  const historySubPages = [
+    { id: 'overview', label: 'Overview', icon: History },
+    { id: 'minutes', label: 'Minutes Archives', icon: Archive },
+    { id: 'yearly-reports', label: 'Yearly Reports', icon: FileText },
+  ];
+  const [activeSub, setActiveSub] = useState('overview');
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Sub-tab navigation */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="flex border-b border-slate-100">
-          <button
-            onClick={() => setHistoryTab('overview')}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-colors border-b-2 ${
-              historyTab === 'overview'
-                ? 'border-church-600 text-church-700 bg-church-50/40'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <History size={16}/> Overview
-          </button>
-          <button
-            onClick={() => setHistoryTab('yearly-reports')}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-colors border-b-2 ${
-              historyTab === 'yearly-reports'
-                ? 'border-church-600 text-church-700 bg-church-50/40'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <BarChart2 size={16}/> Yearly Reports
-          </button>
+      {/* Sub-page navigation */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="flex border-b border-slate-100 overflow-x-auto no-scrollbar">
+          {historySubPages.map(page => (
+            <button
+              key={page.id}
+              onClick={() => setActiveSub(page.id)}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-colors whitespace-nowrap ${
+                activeSub === page.id
+                  ? 'border-b-2 border-church-600 text-church-700 bg-church-50/50'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <page.icon size={16} />
+              {page.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6">
+          {activeSub === 'overview' && (
+            <div className="text-slate-500 italic text-center py-12">
+              History overview content goes here…
+            </div>
+          )}
+          {activeSub === 'minutes' && (
+            <MinutesArchives isAdmin={isAdmin} />
+          )}
+          {activeSub === 'yearly-reports' && (
+            <YearlyReports isAdmin={isAdmin} />
+          )}
         </div>
       </div>
-
-      {historyTab === 'overview' && (
-        <div className="p-8 bg-white rounded-xl shadow-sm border border-slate-100">
-          <p className="text-slate-500 italic">History overview content goes here...</p>
-        </div>
-      )}
-
-      {historyTab === 'yearly-reports' && (
-        <KtpYearlyReports isAdmin={isAdmin}/>
-      )}
     </div>
   );
 };
 
-
-// ─────────────────────────────────────────────
-// ALL EXISTING COMPONENTS (UNCHANGED)
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// KTP SPECIFIC COMPONENTS (unchanged)
+// ─────────────────────────────────────────────────────────────
 
 const GroupEditModal: React.FC<{
   group: Partial<KTPGroup> | null;
@@ -733,7 +988,6 @@ const KtpLeaders: React.FC<{ data: KTPHruaitute | null | undefined, isAdmin: boo
         const doc = await docRef.get();
         const currentData = doc.data() as KTPHruaitute;
         const updatedGroups = (currentData.groupLeaders || []).filter(g => g.id !== groupId);
-
         await docRef.update({ groupLeaders: updatedGroups });
         onUpdate();
     } catch(e) {
@@ -926,6 +1180,10 @@ const KtpBudgetComponent: React.FC<{ data: KTPBudget | null | undefined }> = ({ 
     );
 };
 
+// ─────────────────────────────────────────────────────────────
+// GENERIC STATS TABLE
+// ─────────────────────────────────────────────────────────────
+
 interface StatsTableProps {
   title: string;
   collectionName: string;
@@ -943,10 +1201,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    if (!db || !db.collection) {
-        setLoading(false);
-        return;
-    }
+    if (!db || !db.collection) { setLoading(false); return; }
     try {
       const snapshot = await db.collection(collectionName).get();
       const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -958,9 +1213,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
     setLoading(false);
   }, [collectionName]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSave = async () => {
     if (!db || !db.collection) return;
@@ -983,9 +1236,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
     try {
       await db.collection(collectionName).doc(id).delete();
       fetchData();
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleExport = () => {
@@ -1016,15 +1267,11 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer);
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-      
       const batch = db.batch();
       const ref = db.collection(collectionName);
-
       jsonData.forEach((row: any) => {
         const docData: any = {};
-        columns.forEach(col => {
-           docData[col.key] = row[col.label] !== undefined ? String(row[col.label]) : "";
-        });
+        columns.forEach(col => { docData[col.key] = row[col.label] !== undefined ? String(row[col.label]) : ""; });
         if (docData.year) {
             if (collectionName === 'kpvmBuhfaitham' && docData.donors && docData.totalFamilies) {
                 const pct = (parseFloat(docData.donors) / parseFloat(docData.totalFamilies)) * 100;
@@ -1033,12 +1280,10 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
                 const pct = (parseFloat(docData.performers) / parseFloat(docData.totalHouses)) * 100;
                 docData.percentage = pct.toFixed(2);
             }
-
             const newDoc = ref.doc();
             batch.set(newDoc, docData);
         }
       });
-
       await batch.commit();
       alert("Import successful!");
       fetchData();
@@ -1166,9 +1411,10 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
   );
 };
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // MAIN FELLOWSHIP COMPONENT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+
 const Fellowship: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { language } = useLanguage();
@@ -1205,7 +1451,6 @@ const Fellowship: React.FC = () => {
       try {
         const leadersDoc = await db.collection('ktpLeaders').doc('2026').get();
         if (leadersDoc.exists) setKtpHruaitute(leadersDoc.data() as KTPHruaitute);
-
         const budgetDoc = await db.collection('ktpBudget').doc('2026').get();
         if (budgetDoc.exists) setKtpBudget(budgetDoc.data() as KTPBudget);
       } catch (e) { console.error("Error fetching KTP data:", e); }
@@ -1219,20 +1464,16 @@ const Fellowship: React.FC = () => {
             setFellowship(staticFellowship || null);
             return;
         }
-
         try {
             const docRef = db.collection('ministries').doc(id);
             const docSnap = await docRef.get();
-
             if (docSnap.exists) {
                 setFellowship({ ...docSnap.data(), id: docSnap.id } as Ministry);
             } else {
-                console.warn(`Ministry with id ${id} not found in Firestore.`);
                 const staticFellowship = getConstants(language).ministries.find(m => m.id === id);
                 setFellowship(staticFellowship || null);
             }
         } catch (error) {
-            console.error("Error fetching fellowship:", error);
             const staticFellowship = getConstants(language).ministries.find(m => m.id === id);
             setFellowship(staticFellowship || null);
         }
@@ -1241,16 +1482,13 @@ const Fellowship: React.FC = () => {
   }, [id, language]);
   
   useEffect(() => {
-    if (isKTP) {
-      fetchKtpData();
-    }
+    if (isKTP) fetchKtpData();
   }, [isKTP, fetchKtpData]);
-
 
   if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500" /></div>;
   if (fellowship === null) return <Navigate to="/" />;
 
-  // --- KPVM Specific Render ---
+  // ── KPVM Render ───────────────────────────────────────────
   if (isKPVM) {
       return (
           <div className="bg-slate-50 min-h-screen pb-12">
@@ -1304,7 +1542,6 @@ const Fellowship: React.FC = () => {
                           </div>
                       </div>
                   )}
-
                   {kpvmActiveTab === 'buhfaitham' && (
                       <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                           <StatsTable 
@@ -1322,7 +1559,6 @@ const Fellowship: React.FC = () => {
                           />
                       </div>
                   )}
-
                   {kpvmActiveTab === 'nitin-inkhawm' && (
                       <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                           <StatsTable 
@@ -1343,7 +1579,7 @@ const Fellowship: React.FC = () => {
       );
   }
   
-  // --- KTP Specific Render ---
+  // ── KTP Render ────────────────────────────────────────────
   if (isKTP) {
      return (
         <div className="bg-slate-50 min-h-screen pb-12">
@@ -1384,7 +1620,7 @@ const Fellowship: React.FC = () => {
                  {ktpActiveTab === 'sub-committees' && <KtpSubCommittees data={ktpHruaitute?.subCommittees} />}
                  {ktpActiveTab === 'project-budget' && <KtpBudgetComponent data={ktpBudget} />}
                  {ktpActiveTab === 'members' && <div className="p-8 bg-white rounded-xl shadow-sm">Member List content goes here...</div>}
-                 {/* ↓ Our History now renders the KtpHistory wrapper with Yearly Reports sub-tab */}
+                 {/* ↓ History tab now renders KtpHistory with sub-pages */}
                  {ktpActiveTab === 'history' && <KtpHistory isAdmin={isAdmin} />}
                  {ktpActiveTab === 'gallery' && <div className="p-8 bg-white rounded-xl shadow-sm">Gallery content goes here...</div>}
                  {ktpActiveTab === 'productions' && <div className="p-8 bg-white rounded-xl shadow-sm">Productions content goes here...</div>}
@@ -1394,7 +1630,7 @@ const Fellowship: React.FC = () => {
      );
   }
 
-  // --- Generic Fallback Render ---
+  // ── Generic Fallback Render ───────────────────────────────
   return (
     <div className="bg-slate-50 min-h-screen">
         <div className="bg-church-900 text-white py-12">

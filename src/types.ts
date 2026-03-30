@@ -263,6 +263,25 @@ export interface KTPBudget {
   expenditure: BudgetItem[];
 }
 
+export interface KTPYearlyReport {
+  id: string;
+  year: number;
+  officeBearers: KTPMember[];
+  statistics: {
+    totalMembers: number;
+    male: number;
+    female: number;
+    [key: string]: any;
+  };
+  ministries: {
+    id: string;
+    name: string;
+    description: string;
+    achievements?: string;
+  }[];
+  createdAt: string;
+}
+
 export interface Resource {
   id: string;
   title: string;

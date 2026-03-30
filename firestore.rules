@@ -1,199 +1,91 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===============================
-    // Admin check function
-    // ===============================
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (required)
+    //   - role: string (required, 'admin'|'member')
+    //   - isAdmin: bool (optional)
+    //   - createdAt: string (required)
+    //
+    // Collection: announcements, events, sermons, ministries, staff, weeklyDuties, 
+    //             records, sundaySchoolDepartments, sundaySchoolReports, ktpHruaitute, 
+    //             ktpBudget, resources, gallery, archives, articles, missionaries, 
+    //             committees, thawhlawm
+    // [Standard fields as defined in firebase-blueprint.json]
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'nkhiangte@gmail.com' || 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-        ))
-      );
+      return isAuthenticated() &&
+        (
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          ((request.auth.token.email == "kohhranb@gmail.com" || request.auth.token.email == "nkhiangte@gmail.com") && request.auth.token.email_verified == true)
+        );
     }
 
-    // ===============================
-    // Publicly readable collections
-    // (write access: admin only for most)
-    // ===============================
-
-    match /announcements/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
-    match /articles/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
     }
 
-    match /archives/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.displayName is string && data.displayName.size() > 0 &&
+             data.role in ['admin', 'member'];
     }
 
-    // Fix for "Error fetching families"
-    match /bialMembers/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /committees/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Rule for 'elders' collection: Publicly readable, admin-writable
-    match /elders/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Rule for 'pastors' collection: Publicly readable, admin-writable
-    match /pastors/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Rule for 'proPastors' collection:
-    // Publicly readable. Admins can create, update, AND DELETE.
-    match /proPastors/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /events/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /gallery/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /inkhawmChanvo/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /upaBials/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /ktpBudget/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /ktpLeaders/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // New KTP Collections
-    match /ktpContent/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /ktpGallery/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /ktpProductions/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /ktpWhosWho/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Kohhran Hmeichhia Collections
-    match /kpvmBuhfaitham/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /kpvmNitinInkhawm/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /ministries/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Added missionaries collection
-    match /missionaries/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Unified collection for all record types: baptism, wedding, death, inkhawmpui
-    match /records/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /resources/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /sundaySchoolDepartments/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Rule for Sunday School Weekly Reports
-    match /sundaySchoolWeeklyReports/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Rule for SS Teachers Profiles
-    match /ss_teachers/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Fix for Thawhlawm submission
-    match /thawhlawm/{docId} {
-      allow read: if isAdmin();
-      allow create: if true;
-      allow update: if isAdmin();
-    }
-
-    match /weeklyDuties/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Settings collection (Contact info, etc.)
-    match /settings/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // ===============================
-    // User profiles
-    // ===============================
+    // ===============================================================
+    // Rules
+    // ===============================================================
 
     match /users/{userId} {
-      // Any authenticated user can read their own profile or profiles of others
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    (isOwner(userId) && request.resource.data.role == 'member' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
 
-      // Users can edit their own profile
-      // Admins can edit any profile
-      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    match /ktpYearlyReports/{reportId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /{collectionName}/{docId} {
+      allow read: if true; // Publicly readable church info
+      allow write: if isAdmin();
+    }
+
+    match /thawhlawm/{docId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
   }
 }
