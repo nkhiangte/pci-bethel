@@ -227,6 +227,14 @@
             "fellowshipNeihZat": { "type": "integer" },
             "fellowshipPercent": { "type": "string" },
             "fellowshipAverage": { "type": "number" },
+            "sumTuakDanTlangpui": { "type": "string" },
+            "missionaryChhuakTharZat": { "type": "integer" },
+            "evangelismCell": { "type": "string" },
+            "bialChhungBranchIntlawhtawn": { "type": "string" },
+            "bialPawnAtangTlawhtu": { "type": "string" },
+            "bialPawnahRawngbawlna": { "type": "string" },
+            "memberThi": { "type": "integer" },
+            "memberInnei": { "type": "integer" },
             "reportTuldang": { "type": "string" }
           }
         },

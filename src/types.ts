@@ -302,6 +302,15 @@ export interface KTPYearlyReport {
     fellowshipNeihZat: number;
     fellowshipPercent: string;
     fellowshipAverage: number;
+    // Other Reports
+    sumTuakDanTlangpui: string;
+    missionaryChhuakTharZat: number;
+    evangelismCell: string;
+    bialChhungBranchIntlawhtawn: string;
+    bialPawnAtangTlawhtu: string;
+    bialPawnahRawngbawlna: string;
+    memberThi: number;
+    memberInnei: number;
     // Report Tuldang
     reportTuldang: string;
   };

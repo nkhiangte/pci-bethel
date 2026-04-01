@@ -459,6 +459,9 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
       openingBalance: 0, income: 0, expenditure: 0, totalBalance: 0,
       inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
       fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
+      sumTuakDanTlangpui: '', missionaryChhuakTharZat: 0, evangelismCell: 'No',
+      bialChhungBranchIntlawhtawn: '', bialPawnAtangTlawhtu: '', bialPawnahRawngbawlna: '',
+      memberThi: 0, memberInnei: 0,
       reportTuldang: ''
     }
   });
@@ -479,6 +482,9 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
           openingBalance: 0, income: 0, expenditure: 0, totalBalance: 0,
           inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
           fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
+          sumTuakDanTlangpui: '', missionaryChhuakTharZat: 0, evangelismCell: 'No',
+          bialChhungBranchIntlawhtawn: '', bialPawnAtangTlawhtu: '', bialPawnahRawngbawlna: '',
+          memberThi: 0, memberInnei: 0,
           reportTuldang: ''
         }
       });
@@ -600,6 +606,26 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
           {/* Report Tuldang */}
           <div>
             <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Report Tuldang</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <StatField label="Sum tuak dan tlangpui" value={reportData.statistics?.sumTuakDanTlangpui} onChange={val => updateStat('sumTuakDanTlangpui', val)} type="text" />
+              <StatField label="Missionary-a chhuak thar zat" value={reportData.statistics?.missionaryChhuakTharZat} onChange={val => updateStat('missionaryChhuakTharZat', val)} />
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Evangelism Cell</label>
+                <select 
+                  className="w-full border p-2 rounded-lg text-sm" 
+                  value={reportData.statistics?.evangelismCell || 'No'}
+                  onChange={e => updateStat('evangelismCell', e.target.value)}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <StatField label="Bial chhung Branch intlawhtawn" value={reportData.statistics?.bialChhungBranchIntlawhtawn} onChange={val => updateStat('bialChhungBranchIntlawhtawn', val)} type="text" />
+              <StatField label="Bial pawn atang tlawhtu" value={reportData.statistics?.bialPawnAtangTlawhtu} onChange={val => updateStat('bialPawnAtangTlawhtu', val)} type="text" />
+              <StatField label="Bial pawnah rawngbawlna" value={reportData.statistics?.bialPawnahRawngbawlna} onChange={val => updateStat('bialPawnahRawngbawlna', val)} type="text" />
+              <StatField label="Member thi" value={reportData.statistics?.memberThi} onChange={val => updateStat('memberThi', val)} />
+              <StatField label="Member Innei" value={reportData.statistics?.memberInnei} onChange={val => updateStat('memberInnei', val)} />
+            </div>
             <textarea 
               className="w-full border p-3 rounded-lg text-sm h-32" 
               value={reportData.statistics?.reportTuldang || ''}
@@ -831,15 +857,27 @@ const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
                 </div>
               </div>
 
-              {/* Report Tuldang */}
-              {selectedReport.statistics.reportTuldang && (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                {/* Report Tuldang */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
                   <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Report Tuldang</h3>
-                  <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">
-                    {selectedReport.statistics.reportTuldang}
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Sum tuak dan tlangpui</span><span className="font-bold">{selectedReport.statistics.sumTuakDanTlangpui}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Missionary-a chhuak thar zat</span><span className="font-bold">{selectedReport.statistics.missionaryChhuakTharZat}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Evangelism Cell</span><span className="font-bold">{selectedReport.statistics.evangelismCell}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Bial chhung Branch intlawhtawn</span><span className="font-bold">{selectedReport.statistics.bialChhungBranchIntlawhtawn}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Bial pawn atang tlawhtu</span><span className="font-bold">{selectedReport.statistics.bialPawnAtangTlawhtu}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Bial pawnah rawngbawlna</span><span className="font-bold">{selectedReport.statistics.bialPawnahRawngbawlna}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Member thi</span><span className="font-bold">{selectedReport.statistics.memberThi}</span></div>
+                    <div className="flex flex-col"><span className="text-xs font-bold text-slate-400 uppercase">Member Innei</span><span className="font-bold">{selectedReport.statistics.memberInnei}</span></div>
+                  </div>
+                  {selectedReport.statistics.reportTuldang && (
+                    <div className="mt-4 pt-4 border-t">
+                      <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">
+                        {selectedReport.statistics.reportTuldang}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
             </div>
           )}
         </div>
