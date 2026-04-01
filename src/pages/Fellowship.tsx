@@ -432,6 +432,18 @@ interface YearlyReportModalProps {
   isLoading: boolean;
 }
 
+const StatField = ({ label, value, onChange, type = "number" }: { label: string, value: any, onChange: (val: any) => void, type?: string }) => (
+  <div>
+    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>
+    <input 
+      type={type}
+      className="w-full border p-2 rounded-lg text-sm" 
+      value={value ?? ''}
+      onChange={e => onChange(type === "number" ? (parseFloat(e.target.value) || 0) : e.target.value)}
+    />
+  </div>
+);
+
 const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, onClose, isLoading }) => {
   const [reportData, setReportData] = useState<Partial<KTPYearlyReport>>({
     year: new Date().getFullYear(),
@@ -486,18 +498,6 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
       }
     });
   };
-
-  const StatField = ({ label, value, onChange, type = "number" }: { label: string, value: any, onChange: (val: any) => void, type?: string }) => (
-    <div>
-      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>
-      <input 
-        type={type}
-        className="w-full border p-2 rounded-lg text-sm" 
-        value={value ?? ''}
-        onChange={e => onChange(type === "number" ? (parseFloat(e.target.value) || 0) : e.target.value)}
-      />
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
