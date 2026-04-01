@@ -444,7 +444,7 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
       subComtZat: 6,
       inhlawhHnatlangNeihZat: 0, hlaZirZat: 0, hlaRemZat: 0,
       branchProject: '', missionaryChawmna: '',
-      openingBalance: 0, expenditure: 0, totalBalance: 0,
+      openingBalance: 0, income: 0, expenditure: 0, totalBalance: 0,
       inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
       fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
       reportTuldang: ''
@@ -464,7 +464,7 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
           subComtZat: 6,
           inhlawhHnatlangNeihZat: 0, hlaZirZat: 0, hlaRemZat: 0,
           branchProject: '', missionaryChawmna: '',
-          openingBalance: 0, expenditure: 0, totalBalance: 0,
+          openingBalance: 0, income: 0, expenditure: 0, totalBalance: 0,
           inkhawmPercentage: '', inkhawmNeihZat: 0, inkhawmPercent: '', inkhawmAverage: 0,
           fellowshipNeihZat: 0, fellowshipPercent: '', fellowshipAverage: 0,
           reportTuldang: ''
@@ -575,8 +575,9 @@ const YearlyReportModal: React.FC<YearlyReportModalProps> = ({ report, onSave, o
           {/* Finance */}
           <div>
             <h4 className="font-bold text-slate-800 mb-3 pb-1 border-b">Finance</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatField label="Opening Balance" value={reportData.statistics?.openingBalance} onChange={val => updateStat('openingBalance', val)} />
+              <StatField label="Income" value={reportData.statistics?.income} onChange={val => updateStat('income', val)} />
               <StatField label="Expenditure" value={reportData.statistics?.expenditure} onChange={val => updateStat('expenditure', val)} />
               <StatField label="Total Balance" value={reportData.statistics?.totalBalance} onChange={val => updateStat('totalBalance', val)} />
             </div>
@@ -793,7 +794,8 @@ const YearlyReports: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Finance</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">Opening Balance</span><span className="font-bold text-green-600">₹{selectedReport.statistics.openingBalance}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Opening Balance</span><span className="font-bold text-slate-600">₹{selectedReport.statistics.openingBalance}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Income</span><span className="font-bold text-green-600">₹{selectedReport.statistics.income}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-slate-500">Expenditure</span><span className="font-bold text-red-600">₹{selectedReport.statistics.expenditure}</span></div>
                     <div className="flex justify-between text-sm border-t pt-2"><span className="font-bold">Total Balance</span><span className="font-black text-church-700">₹{selectedReport.statistics.totalBalance}</span></div>
                   </div>

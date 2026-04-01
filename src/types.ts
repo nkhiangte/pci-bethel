@@ -291,6 +291,7 @@ export interface KTPYearlyReport {
     missionaryChawmna: string;
     // Finance
     openingBalance: number;
+    income: number;
     expenditure: number;
     totalBalance: number;
     // INKHAWM

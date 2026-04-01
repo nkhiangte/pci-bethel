@@ -217,6 +217,7 @@
             "branchProject": { "type": "string" },
             "missionaryChawmna": { "type": "string" },
             "openingBalance": { "type": "number" },
+            "income": { "type": "number" },
             "expenditure": { "type": "number" },
             "totalBalance": { "type": "number" },
             "inkhawmPercentage": { "type": "string" },
