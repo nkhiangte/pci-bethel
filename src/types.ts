@@ -181,6 +181,20 @@ export interface PemDawnsawnRecord {
   previousChurch: string;
 }
 
+export interface MinutesPdf {
+  id: string;
+  name: string;
+  url: string;
+  storagePath: string;
+  uploadedAt: string;
+}
+
+export interface MinutesYear {
+  id: string;
+  year: string;
+  pdfs: MinutesPdf[];
+}
+
 export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord | GospelCampingRecord | PemDawnsawnRecord;
 
 export interface SundaySchoolDepartment {

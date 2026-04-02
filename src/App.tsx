@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
@@ -11,6 +11,18 @@ import Departments from './pages/Departments';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Fellowship from './pages/Fellowship';
+import KtpLayout from './pages/KTP/KtpLayout';
+import KtpLeaders from './pages/KTP/KtpLeaders';
+import KtpSubCommittees from './pages/KTP/KtpSubCommittees';
+import KtpBudget from './pages/KTP/KtpBudget';
+import KtpMembers from './pages/KTP/KtpMembers';
+import KtpHistory from './pages/KTP/KtpHistory';
+import KtpHistoryOverview from './pages/KTP/KtpHistoryOverview';
+import KtpMinutesArchives from './pages/KTP/KtpMinutesArchives';
+import KtpYearlyReports from './pages/KTP/KtpYearlyReports';
+import KtpGallery from './pages/KTP/KtpGallery';
+import KtpProductions from './pages/KTP/KtpProductions';
+import KtpWhosWho from './pages/KTP/KtpWhosWho';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
@@ -64,6 +76,23 @@ const App: React.FC = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/fellowship/:id" element={<Fellowship />} />
+          
+          {/* KTP Routes */}
+          <Route path="/ktp" element={<KtpLayout />}>
+            <Route index element={<Navigate to="/ktp/leaders" replace />} />
+            <Route path="leaders" element={<KtpLeaders />} />
+            <Route path="sub-committees" element={<KtpSubCommittees />} />
+            <Route path="project-budget" element={<KtpBudget />} />
+            <Route path="members" element={<KtpMembers />} />
+            <Route path="history" element={<KtpHistory />}>
+              <Route index element={<KtpHistoryOverview />} />
+              <Route path="minutes" element={<KtpMinutesArchives />} />
+              <Route path="yearly-reports" element={<KtpYearlyReports />} />
+            </Route>
+            <Route path="gallery" element={<KtpGallery />} />
+            <Route path="productions" element={<KtpProductions />} />
+            <Route path="whoswho" element={<KtpWhosWho />} />
+          </Route>
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/gallery/*" element={<Gallery />} />
                 <Route path="/admin" element={<AdminDashboard />} />

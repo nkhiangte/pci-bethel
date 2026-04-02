@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
       path: '#',
       children: [
         { name: 'Kohhran Hmeichhia', path: '/fellowship/kpvm' },
-        { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/fellowship/ktp' },
+        { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
         { name: 'Kohhran Pavalai Pawl (KPP)', path: '/fellowship/pavlai' },
       ]
     },
