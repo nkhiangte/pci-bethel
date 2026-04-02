@@ -1,19 +1,24 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { History, Archive, FileText } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const KtpHistory: React.FC = () => {
+  const { isAdmin } = useAuth();
+  
   const historySubPages = [
     { id: 'overview', path: '/ktp/history', label: 'Overview', icon: History, end: true },
-    { id: 'minutes', path: '/ktp/history/minutes', label: 'Minutes Archives', icon: Archive },
+    { id: 'minutes', path: '/ktp/history/minutes', label: 'Minutes Archives', icon: Archive, adminOnly: true },
     { id: 'yearly-reports', path: '/ktp/history/yearly-reports', label: 'Yearly Reports', icon: FileText },
   ];
+
+  const visiblePages = historySubPages.filter(page => !page.adminOnly || isAdmin);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="flex border-b border-slate-100 overflow-x-auto no-scrollbar">
-          {historySubPages.map(page => (
+          {visiblePages.map(page => (
             <NavLink
               key={page.id}
               to={page.path}

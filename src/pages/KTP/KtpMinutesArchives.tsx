@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
 import { 
   FolderOpen, FileText, Plus, Trash2, Loader, Archive, 
   FileUp, FileDown, Eye, Download, X 
@@ -9,6 +10,11 @@ import { MinutesYear, MinutesPdf } from '../../types';
 
 const MinutesArchives: React.FC = () => {
   const { isAdmin } = useAuth();
+  
+  // Redirect if not an admin
+  if (!isAdmin) {
+    return <Navigate to="/ktp/history" replace />;
+  }
   const [years, setYears] = useState<MinutesYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<MinutesYear | null>(null);
