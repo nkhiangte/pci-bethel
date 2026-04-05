@@ -343,16 +343,18 @@ export interface Resource {
 export interface GalleryFolder {
   id: string;
   name: string;
-  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos';
   date: string;
   description?: string;
+  parentId?: string;
 }
 
 export interface GalleryItem {
   id: string;
   title: string;
-  imageUrl: string;
-  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
+  imageUrl?: string;
+  videoUrl?: string;
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos';
   folderId?: string;
   date: string;
   order?: number;

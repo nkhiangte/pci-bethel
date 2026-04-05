@@ -17,7 +17,10 @@ import {
   Upload,
   CheckCircle2,
   GripVertical,
-  Edit2
+  Edit2,
+  Play,
+  Youtube,
+  FolderPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -39,15 +42,22 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface SortablePhotoProps {
+const getYouTubeId = (url: string | undefined) => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+interface SortableGalleryItemProps {
   item: GalleryItem;
   isAdmin: boolean;
   onDelete: (id: string, e: React.MouseEvent) => void;
   onEdit: (item: GalleryItem) => void;
-  onPreview: (url: string) => void;
+  onPreview: (item: GalleryItem) => void;
 }
 
-const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, onEdit, onPreview }) => {
+const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin, onDelete, onEdit, onPreview }) => {
   const {
     attributes,
     listeners,
@@ -64,6 +74,9 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, 
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const videoId = item.videoUrl ? getYouTubeId(item.videoUrl) : null;
+  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : item.imageUrl;
+
   return (
     <div
       ref={setNodeRef}
@@ -71,15 +84,22 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, 
       className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
     >
       <div 
-        className="aspect-square overflow-hidden cursor-pointer"
-        onClick={() => onPreview(item.imageUrl)}
+        className="aspect-square overflow-hidden cursor-pointer relative"
+        onClick={() => onPreview(item)}
       >
         <img 
-          src={item.imageUrl} 
+          src={thumbnailUrl} 
           alt={item.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />
+        {item.videoUrl && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play size={24} className="text-church-600 ml-1" fill="currentColor" />
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-4 flex justify-between items-start">
         <div>
@@ -105,14 +125,14 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, 
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(item); }}
             className="p-2 bg-white/90 text-church-600 rounded-full shadow-md hover:bg-church-50 transition"
-            title="Edit Caption"
+            title="Edit Details"
           >
             <Edit2 size={16} />
           </button>
           <button 
             onClick={(e) => onDelete(item.id, e)}
             className="p-2 bg-white/90 text-red-500 rounded-full shadow-md hover:bg-red-50 transition"
-            title="Delete Photo"
+            title="Delete Item"
           >
             <Trash2 size={16} />
           </button>
@@ -136,6 +156,7 @@ const Gallery: React.FC = () => {
     { name: 'Committees', path: 'committees', label: 'Committees' },
     { name: 'Kohhran Chetna', path: 'kohhran-chetna', label: 'Kohhran Chetna' },
     { name: 'Kohhran Hunpui', path: 'kohhran-hunpui', label: 'Kohhran Hunpui' },
+    { name: 'Videos', path: 'videos', label: 'Videos' },
   ];
   
   const currentCategory = categories.find(c => c.path === currentCategoryPath)?.label as GalleryFolder['category'] | undefined;
@@ -144,10 +165,12 @@ const Gallery: React.FC = () => {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentFolder, setCurrentFolder] = useState<GalleryFolder | null>(null);
+  const [parentFolders, setParentFolders] = useState<GalleryFolder[]>([]);
   
   // Modal states
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [itemType, setItemType] = useState<'photo' | 'video'>('photo');
   const [isEditingItem, setIsEditingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -156,8 +179,8 @@ const Gallery: React.FC = () => {
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   
   const [folderForm, setFolderForm] = useState<Partial<GalleryFolder>>({ name: '', date: new Date().toISOString().split('T')[0] });
-  const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', videoUrl: '', date: new Date().toISOString().split('T')[0] });
+  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -191,8 +214,23 @@ const Gallery: React.FC = () => {
             if (currentFolderId) {
                 const folder = folderData.find((f: any) => f.id === currentFolderId);
                 setCurrentFolder(folder || null);
+                
+                // Build breadcrumbs for nested folders
+                const parents: GalleryFolder[] = [];
+                let current = folder;
+                while (current && current.parentId) {
+                  const parent = folderData.find((f: any) => f.id === current.parentId);
+                  if (parent) {
+                    parents.unshift(parent);
+                    current = parent;
+                  } else {
+                    break;
+                  }
+                }
+                setParentFolders(parents);
             } else {
                 setCurrentFolder(null);
+                setParentFolders([]);
             }
         }, (error: any) => {
             console.error("Error fetching folders:", error);
@@ -240,7 +278,8 @@ const Gallery: React.FC = () => {
     try {
         await db.collection('gallery_folders').add({
             ...folderForm,
-            category: currentCategory
+            category: currentCategory,
+            parentId: currentFolderId || null
         });
         setIsAddingFolder(false);
         setFolderForm({ name: '', date: new Date().toISOString().split('T')[0] });
@@ -272,58 +311,70 @@ const Gallery: React.FC = () => {
 
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemForm.title || !currentCategory || (selectedFiles.length === 0 && !itemForm.imageUrl)) return;
+    if (!itemForm.title || !currentCategory) return;
     
+    if (itemType === 'photo' && selectedFiles.length === 0 && !itemForm.imageUrl) return;
+    if (itemType === 'video' && !itemForm.videoUrl) return;
+
     setUploading(true);
     setUploadProgress(0);
 
     try {
-        const totalFiles = selectedFiles.length;
-        let completedFiles = 0;
-
-        for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            const storagePath = `gallery/${currentCategoryPath}/${fileName}`;
-            const storageRef = storage.ref().child(storagePath);
-            
-            const uploadTask = storageRef.put(file);
-            
-            const downloadUrl = await new Promise<string>((resolve, reject) => {
-                uploadTask.on(
-                    'state_changed',
-                    (snapshot) => {
-                        const fileProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        const overallProgress = ((completedFiles * 100) + fileProgress) / totalFiles;
-                        setUploadProgress(overallProgress);
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        const url = await uploadTask.snapshot.ref.getDownloadURL();
-                        resolve(url);
-                    }
-                );
-            });
-
-            // Use current items length + i as order
-            const order = items.length + i;
-
+        if (itemType === 'video') {
             await db.collection('gallery').add({
                 ...itemForm,
-                title: totalFiles > 1 ? `${itemForm.title} (${i + 1})` : itemForm.title,
-                imageUrl: downloadUrl,
                 category: currentCategory,
                 folderId: currentFolderId || null,
-                order: order
+                order: items.length
             });
+        } else {
+            const totalFiles = selectedFiles.length;
+            let completedFiles = 0;
 
-            completedFiles++;
-            setUploadProgress((completedFiles / totalFiles) * 100);
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const storagePath = `gallery/${currentCategoryPath}/${fileName}`;
+                const storageRef = storage.ref().child(storagePath);
+                
+                const uploadTask = storageRef.put(file);
+                
+                const downloadUrl = await new Promise<string>((resolve, reject) => {
+                    uploadTask.on(
+                        'state_changed',
+                        (snapshot) => {
+                            const fileProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            const overallProgress = ((completedFiles * 100) + fileProgress) / totalFiles;
+                            setUploadProgress(overallProgress);
+                        },
+                        (error) => reject(error),
+                        async () => {
+                            const url = await uploadTask.snapshot.ref.getDownloadURL();
+                            resolve(url);
+                        }
+                    );
+                });
+
+                // Use current items length + i as order
+                const order = items.length + i;
+
+                await db.collection('gallery').add({
+                    ...itemForm,
+                    title: totalFiles > 1 ? `${itemForm.title} (${i + 1})` : itemForm.title,
+                    imageUrl: downloadUrl,
+                    category: currentCategory,
+                    folderId: currentFolderId || null,
+                    order: order
+                });
+
+                completedFiles++;
+                setUploadProgress((completedFiles / totalFiles) * 100);
+            }
         }
 
         setIsAddingItem(false);
-        setItemForm({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
+        setItemForm({ title: '', imageUrl: '', videoUrl: '', date: new Date().toISOString().split('T')[0] });
         setSelectedFiles([]);
         setFilePreviews([]);
         setUploadProgress(0);
@@ -366,7 +417,8 @@ const Gallery: React.FC = () => {
     try {
         await db.collection('gallery').doc(editingItem.id).update({
             title: editingItem.title,
-            date: editingItem.date
+            date: editingItem.date,
+            videoUrl: editingItem.videoUrl || null
         });
         setIsEditingItem(false);
         setEditingItem(null);
@@ -444,6 +496,14 @@ const Gallery: React.FC = () => {
                 </Link>
               </>
             )}
+            {parentFolders.map((pf) => (
+              <React.Fragment key={pf.id}>
+                <ChevronRight size={14} className="text-slate-400" />
+                <Link to={`/gallery/${currentCategoryPath}/${pf.id}`} className="hover:text-church-600 transition">
+                  {pf.name}
+                </Link>
+              </React.Fragment>
+            ))}
             {currentFolder && (
               <>
                 <ChevronRight size={14} className="text-slate-400" />
@@ -498,19 +558,20 @@ const Gallery: React.FC = () => {
               
               {isAdmin && (
                 <div className="flex space-x-2">
-                  {!currentFolderId && (
-                    <button 
-                      onClick={() => setIsAddingFolder(true)}
-                      className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
-                    >
-                      <Plus size={18} className="mr-2" /> New Folder
-                    </button>
-                  )}
                   <button 
-                    onClick={() => setIsAddingItem(true)}
+                    onClick={() => setIsAddingFolder(true)}
+                    className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
+                  >
+                    <FolderPlus size={18} className="mr-2" /> New Folder
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setItemType(currentCategory === 'Videos' ? 'video' : 'photo');
+                      setIsAddingItem(true);
+                    }}
                     className="flex items-center px-4 py-2 bg-white text-church-600 border border-church-200 rounded-lg hover:bg-church-50 transition shadow-sm"
                   >
-                    <Plus size={18} className="mr-2" /> Add Photo
+                    <Plus size={18} className="mr-2" /> {currentCategory === 'Videos' ? 'Add Video' : 'Add Photo'}
                   </button>
                 </div>
               )}
@@ -523,41 +584,39 @@ const Gallery: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* Folders (only shown if no folder is selected) */}
-                {!currentFolderId && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
-                    {folders.map((folder) => (
-                      <Link 
-                        key={folder.id}
-                        to={`/gallery/${currentCategoryPath}/${folder.id}`}
-                        className="group relative bg-white p-4 rounded-xl border border-slate-200 hover:border-church-300 hover:shadow-md transition-all text-center"
-                      >
-                        <div className="mb-3 flex justify-center">
-                          <Folder size={48} className="text-amber-400 group-hover:scale-110 transition-transform" fill="currentColor" fillOpacity={0.2} />
-                        </div>
-                        <h4 className="font-bold text-slate-800 truncate">{folder.name}</h4>
-                        <p className="text-xs text-slate-500 mt-1">{folder.date}</p>
-                        
-                        {isAdmin && (
-                          <button 
-                            onClick={(e) => handleDeleteFolder(folder.id, e)}
-                            className="absolute top-2 right-2 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded-full transition"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </Link>
-                    ))}
-                    
-                    {folders.length === 0 && (
-                      <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                        <Folder size={48} className="mx-auto text-slate-300 mb-3" />
-                        <p className="text-slate-500">No folders created yet.</p>
-                        {isAdmin && <p className="text-sm text-church-600 mt-2">Click "New Folder" to get started.</p>}
+                {/* Folders */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
+                  {folders.filter(f => f.parentId === (currentFolderId || null)).map((folder) => (
+                    <Link 
+                      key={folder.id}
+                      to={`/gallery/${currentCategoryPath}/${folder.id}`}
+                      className="group relative bg-white p-4 rounded-xl border border-slate-200 hover:border-church-300 hover:shadow-md transition-all text-center"
+                    >
+                      <div className="mb-3 flex justify-center">
+                        <Folder size={48} className="text-amber-400 group-hover:scale-110 transition-transform" fill="currentColor" fillOpacity={0.2} />
                       </div>
-                    )}
-                  </div>
-                )}
+                      <h4 className="font-bold text-slate-800 truncate">{folder.name}</h4>
+                      <p className="text-xs text-slate-500 mt-1">{folder.date}</p>
+                      
+                      {isAdmin && (
+                        <button 
+                          onClick={(e) => handleDeleteFolder(folder.id, e)}
+                          className="absolute top-2 right-2 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded-full transition"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </Link>
+                  ))}
+                  
+                  {folders.filter(f => f.parentId === (currentFolderId || null)).length === 0 && !currentFolderId && (
+                    <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
+                      <Folder size={48} className="mx-auto text-slate-300 mb-3" />
+                      <p className="text-slate-500">No folders created yet.</p>
+                      {isAdmin && <p className="text-sm text-church-600 mt-2">Click "New Folder" to get started.</p>}
+                    </div>
+                  )}
+                </div>
 
                 {/* Items (Photos) */}
                 <DndContext
@@ -571,7 +630,7 @@ const Gallery: React.FC = () => {
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {items.map((item) => (
-                        <SortablePhoto
+                        <SortableGalleryItem
                           key={item.id}
                           item={item}
                           isAdmin={isAdmin}
@@ -580,15 +639,15 @@ const Gallery: React.FC = () => {
                             setEditingItem(item);
                             setIsEditingItem(true);
                           }}
-                          onPreview={setSelectedImage}
+                          onPreview={setSelectedItem}
                         />
                       ))}
                       
                       {items.length === 0 && (
                         <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                          <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />
-                          <p className="text-slate-500">No photos in this {currentFolderId ? 'folder' : 'category'} yet.</p>
-                          {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add Photo" to upload images.</p>}
+                          {currentCategory === 'Videos' ? <Youtube size={48} className="mx-auto text-slate-300 mb-3" /> : <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />}
+                          <p className="text-slate-500">No {currentCategory === 'Videos' ? 'videos' : 'photos'} in this {currentFolderId ? 'folder' : 'category'} yet.</p>
+                          {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add {currentCategory === 'Videos' ? 'Video' : 'Photo'}" to upload content.</p>}
                         </div>
                       )}
                     </div>
@@ -612,19 +671,21 @@ const Gallery: React.FC = () => {
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-900 text-white">
-                <h3 className="text-xl font-bold">Edit Photo Details</h3>
+                <h3 className="text-xl font-bold">Edit Details</h3>
                 <button onClick={() => setIsEditingItem(false)} className="text-white/70 hover:text-white transition">
                   <X size={24} />
                 </button>
               </div>
               <form onSubmit={handleUpdateItem} className="p-6 space-y-4">
-                <div className="flex justify-center mb-4">
-                  <img 
-                    src={editingItem.imageUrl} 
-                    alt="Preview" 
-                    className="h-32 w-32 object-cover rounded-lg shadow-sm"
-                  />
-                </div>
+                {editingItem.imageUrl && (
+                  <div className="flex justify-center mb-4">
+                    <img 
+                      src={editingItem.imageUrl} 
+                      alt="Preview" 
+                      className="h-32 w-32 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Caption / Title</label>
                   <input 
@@ -633,9 +694,21 @@ const Gallery: React.FC = () => {
                     value={editingItem.title}
                     onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none transition"
-                    placeholder="Enter photo caption"
+                    placeholder="Enter caption"
                   />
                 </div>
+                {editingItem.videoUrl !== undefined && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">YouTube URL</label>
+                    <input 
+                      type="url" 
+                      value={editingItem.videoUrl || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none transition"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
                   <input 
@@ -743,94 +816,130 @@ const Gallery: React.FC = () => {
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-900 text-white">
-                <h3 className="text-xl font-bold">Add New Photo</h3>
+                <h3 className="text-xl font-bold">Add New {itemType === 'photo' ? 'Photo' : 'Video'}</h3>
                 <button onClick={() => setIsAddingItem(false)} className="text-white/70 hover:text-white transition">
                   <X size={24} />
                 </button>
               </div>
+              
+              <div className="flex border-b border-slate-100">
+                <button 
+                  onClick={() => setItemType('photo')}
+                  className={`flex-1 py-3 text-sm font-bold transition ${itemType === 'photo' ? 'text-church-600 border-b-2 border-church-600 bg-church-50/50' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Photo
+                </button>
+                <button 
+                  onClick={() => setItemType('video')}
+                  className={`flex-1 py-3 text-sm font-bold transition ${itemType === 'video' ? 'text-church-600 border-b-2 border-church-600 bg-church-50/50' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Video
+                </button>
+              </div>
+
               <form onSubmit={handleSaveItem} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Photo Title</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
                   <input 
                     required
                     type="text"
                     disabled={uploading}
                     className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
-                    placeholder="e.g. Group Photo"
+                    placeholder={`e.g. ${itemType === 'photo' ? 'Group Photo' : 'Worship Video'}`}
                     value={itemForm.title}
                     onChange={e => setItemForm({...itemForm, title: e.target.value})}
                   />
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photos</label>
-                  <div className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
-                    {filePreviews.length > 0 ? (
-                      <div className="w-full space-y-4">
-                        <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2">
-                          {filePreviews.map((preview, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden group">
-                              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                              <button 
-                                type="button"
-                                onClick={() => handleRemoveFile(idx)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                {itemType === 'photo' ? (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photos</label>
+                    <div className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
+                      {filePreviews.length > 0 ? (
+                        <div className="w-full space-y-4">
+                          <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2">
+                            {filePreviews.map((preview, idx) => (
+                              <div key={idx} className="relative aspect-square rounded-lg overflow-hidden group">
+                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                <button 
+                                  type="button"
+                                  onClick={() => handleRemoveFile(idx)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                  disabled={uploading}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-center">
+                            <label className="cursor-pointer text-sm font-bold text-church-600 hover:text-church-500">
+                              Add more photos
+                              <input 
+                                type="file" 
+                                className="sr-only" 
+                                multiple
+                                accept="image/*"
+                                onChange={handleFileChange}
                                 disabled={uploading}
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
+                              />
+                            </label>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <label className="cursor-pointer text-sm font-bold text-church-600 hover:text-church-500">
-                            Add more photos
-                            <input 
-                              type="file" 
-                              className="sr-only" 
-                              multiple
-                              accept="image/*"
-                              onChange={handleFileChange}
-                              disabled={uploading}
-                            />
-                          </label>
+                      ) : (
+                        <div className="space-y-1 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-slate-400" />
+                          <div className="flex text-sm text-slate-600">
+                            <label className="relative cursor-pointer bg-white rounded-md font-medium text-church-600 hover:text-church-500 focus-within:outline-none">
+                              <span>Upload files</span>
+                              <input 
+                                type="file" 
+                                className="sr-only" 
+                                multiple
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                disabled={uploading}
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB each</p>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-slate-400" />
-                        <div className="flex text-sm text-slate-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-church-600 hover:text-church-500 focus-within:outline-none">
-                            <span>Upload files</span>
-                            <input 
-                              type="file" 
-                              className="sr-only" 
-                              multiple
-                              accept="image/*"
-                              onChange={handleFileChange}
-                              disabled={uploading}
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
+                      )}
+                      
+                      {uploading && (
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-4 z-10">
+                          <Loader2 className="animate-spin text-church-600 mb-2" size={32} />
+                          <div className="w-full max-w-[200px] bg-slate-200 rounded-full h-2 mb-1">
+                            <div 
+                              className="bg-church-600 h-2 rounded-full transition-all duration-300" 
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs font-bold text-church-700">{Math.round(uploadProgress)}% Uploading...</p>
                         </div>
-                        <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB each</p>
-                      </div>
-                    )}
-                    
-                    {uploading && (
-                      <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-4 z-10">
-                        <Loader2 className="animate-spin text-church-600 mb-2" size={32} />
-                        <div className="w-full max-w-[200px] bg-slate-200 rounded-full h-2 mb-1">
-                          <div 
-                            className="bg-church-600 h-2 rounded-full transition-all duration-300" 
-                            style={{ width: `${uploadProgress}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs font-bold text-church-700">{Math.round(uploadProgress)}% Uploading...</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">YouTube Video URL</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Youtube size={18} className="text-slate-400" />
+                      </div>
+                      <input 
+                        required
+                        type="url"
+                        className="w-full border border-slate-300 rounded-lg pl-10 pr-3 py-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={itemForm.videoUrl}
+                        onChange={e => setItemForm({...itemForm, videoUrl: e.target.value})}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Paste the full YouTube link here.</p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
@@ -854,7 +963,7 @@ const Gallery: React.FC = () => {
                   </button>
                   <button 
                     type="submit"
-                    disabled={uploading || (selectedFiles.length === 0 && !itemForm.imageUrl)}
+                    disabled={uploading || (itemType === 'photo' && selectedFiles.length === 0 && !itemForm.imageUrl) || (itemType === 'video' && !itemForm.videoUrl)}
                     className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploading ? (
@@ -864,7 +973,7 @@ const Gallery: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <Save size={18} className="mr-2" /> Add Photo
+                        <Save size={18} className="mr-2" /> {itemType === 'photo' ? 'Add Photo' : 'Add Video'}
                       </>
                     )}
                   </button>
@@ -874,31 +983,52 @@ const Gallery: React.FC = () => {
           </div>
         )}
 
-        {/* Image Preview Modal */}
-        {selectedImage && (
+        {/* Preview Modal */}
+        {selectedItem && (
           <div 
             className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-            onClick={() => setSelectedImage(null)}
+            onClick={() => setSelectedItem(null)}
           >
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
+              className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center"
               onClick={e => e.stopPropagation()}
             >
-              <img 
-                src={selectedImage} 
-                alt="Preview" 
-                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-                referrerPolicy="no-referrer"
-              />
               <button 
-                onClick={() => setSelectedImage(null)}
+                onClick={() => setSelectedItem(null)}
                 className="absolute -top-12 right-0 text-white hover:text-church-300 transition"
               >
                 <X size={32} />
               </button>
+              
+              {selectedItem.videoUrl ? (
+                <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYouTubeId(selectedItem.videoUrl)}?autoplay=1`}
+                    title={selectedItem.title}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              ) : (
+                <img 
+                  src={selectedItem.imageUrl} 
+                  alt={selectedItem.title}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              
+              <div className="mt-6 text-center text-white">
+                <h3 className="text-2xl font-bold">{selectedItem.title}</h3>
+                <p className="text-white/60 mt-1 flex items-center justify-center">
+                  <Calendar size={16} className="mr-2" />
+                  {selectedItem.date}
+                </p>
+              </div>
             </motion.div>
           </div>
         )}
