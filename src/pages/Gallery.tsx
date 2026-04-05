@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GalleryItem, GalleryFolder } from '../types';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus, 
@@ -58,9 +58,11 @@ const Gallery: React.FC = () => {
     // Fetch folders for this category
     const unsubscribeFolders = db.collection('gallery_folders')
         .where('category', '==', currentCategory)
-        .orderBy('date', 'desc')
         .onSnapshot((snapshot: any) => {
             const folderData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+            // Sort in memory to avoid index requirement
+            folderData.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+            
             setFolders(folderData);
             
             if (currentFolderId) {
@@ -71,6 +73,7 @@ const Gallery: React.FC = () => {
             }
         }, (error: any) => {
             console.error("Error fetching folders:", error);
+            handleFirestoreError(error, OperationType.GET, 'gallery_folders');
             setLoading(false);
         });
 
@@ -83,11 +86,16 @@ const Gallery: React.FC = () => {
         query = query.where('folderId', '==', null);
     }
     
-    const unsubscribeItems = query.orderBy('date', 'desc').onSnapshot((snapshot: any) => {
-        setItems(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
+    const unsubscribeItems = query.onSnapshot((snapshot: any) => {
+        const itemData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        // Sort in memory to avoid index requirement
+        itemData.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+        
+        setItems(itemData);
         setLoading(false);
     }, (error: any) => {
         console.error("Error fetching items:", error);
+        handleFirestoreError(error, OperationType.GET, 'gallery');
         setLoading(false);
     });
 
@@ -110,6 +118,7 @@ const Gallery: React.FC = () => {
         setFolderForm({ name: '', date: new Date().toISOString().split('T')[0] });
     } catch (error) {
         console.error("Error adding folder:", error);
+        handleFirestoreError(error, OperationType.CREATE, 'gallery_folders');
     }
   };
 
@@ -127,6 +136,7 @@ const Gallery: React.FC = () => {
         setItemForm({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
     } catch (error) {
         console.error("Error adding item:", error);
+        handleFirestoreError(error, OperationType.CREATE, 'gallery');
     }
   };
 
@@ -147,6 +157,7 @@ const Gallery: React.FC = () => {
         if (currentFolderId === id) navigate(`/gallery/${currentCategoryPath}`);
     } catch (error) {
         console.error("Error deleting folder:", error);
+        handleFirestoreError(error, OperationType.DELETE, `gallery_folders/${id}`);
     }
   };
 
@@ -157,6 +168,7 @@ const Gallery: React.FC = () => {
         await db.collection('gallery').doc(id).delete();
     } catch (error) {
         console.error("Error deleting item:", error);
+        handleFirestoreError(error, OperationType.DELETE, `gallery/${id}`);
     }
   };
 

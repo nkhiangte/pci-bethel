@@ -18,8 +18,8 @@ service cloud.firestore {
     //
     // Collection: announcements, events, sermons, ministries, staff, weeklyDuties, 
     //             records, sundaySchoolDepartments, sundaySchoolReports, ktpHruaitute, 
-    //             ktpBudget, resources, gallery, archives, articles, missionaries, 
-    //             committees, thawhlawm
+    //             ktpBudget, resources, gallery, gallery_folders, archives, articles, 
+    //             missionaries, committees, thawhlawm
     // [Standard fields as defined in firebase-blueprint.json]
     //
     // ===============================================================
@@ -89,6 +89,16 @@ service cloud.firestore {
 
     match /ktpBudget/{docId} {
       allow read, get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /gallery_folders/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
