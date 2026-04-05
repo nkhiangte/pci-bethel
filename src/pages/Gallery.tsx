@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Upload,
   CheckCircle2,
-  GripVertical
+  GripVertical,
+  Edit2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -42,10 +43,11 @@ interface SortablePhotoProps {
   item: GalleryItem;
   isAdmin: boolean;
   onDelete: (id: string, e: React.MouseEvent) => void;
+  onEdit: (item: GalleryItem) => void;
   onPreview: (url: string) => void;
 }
 
-const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, onPreview }) => {
+const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, onEdit, onPreview }) => {
   const {
     attributes,
     listeners,
@@ -99,12 +101,22 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, 
       </div>
       
       {isAdmin && (
-        <button 
-          onClick={(e) => onDelete(item.id, e)}
-          className="absolute top-2 right-2 p-2 bg-white/90 text-red-500 rounded-full shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-50 transition"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+            className="p-2 bg-white/90 text-church-600 rounded-full shadow-md hover:bg-church-50 transition"
+            title="Edit Caption"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button 
+            onClick={(e) => onDelete(item.id, e)}
+            className="p-2 bg-white/90 text-red-500 rounded-full shadow-md hover:bg-red-50 transition"
+            title="Delete Photo"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -136,6 +148,8 @@ const Gallery: React.FC = () => {
   // Modal states
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -345,6 +359,23 @@ const Gallery: React.FC = () => {
     }
   };
 
+  const handleUpdateItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem || !editingItem.title) return;
+    
+    try {
+        await db.collection('gallery').doc(editingItem.id).update({
+            title: editingItem.title,
+            date: editingItem.date
+        });
+        setIsEditingItem(false);
+        setEditingItem(null);
+    } catch (error) {
+        console.error("Error updating item:", error);
+        handleFirestoreError(error, OperationType.UPDATE, `gallery/${editingItem.id}`);
+    }
+  };
+
   const handleDeleteFolder = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -545,6 +576,10 @@ const Gallery: React.FC = () => {
                           item={item}
                           isAdmin={isAdmin}
                           onDelete={handleDeleteItem}
+                          onEdit={(item) => {
+                            setEditingItem(item);
+                            setIsEditingItem(true);
+                          }}
                           onPreview={setSelectedImage}
                         />
                       ))}
@@ -567,6 +602,71 @@ const Gallery: React.FC = () => {
 
       {/* Modals */}
       <AnimatePresence>
+        {/* Edit Item Modal */}
+        {isEditingItem && editingItem && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-900 text-white">
+                <h3 className="text-xl font-bold">Edit Photo Details</h3>
+                <button onClick={() => setIsEditingItem(false)} className="text-white/70 hover:text-white transition">
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleUpdateItem} className="p-6 space-y-4">
+                <div className="flex justify-center mb-4">
+                  <img 
+                    src={editingItem.imageUrl} 
+                    alt="Preview" 
+                    className="h-32 w-32 object-cover rounded-lg shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Caption / Title</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editingItem.title}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none transition"
+                    placeholder="Enter photo caption"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={editingItem.date}
+                    onChange={(e) => setEditingItem({ ...editingItem, date: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+                
+                <div className="flex space-x-3 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditingItem(false)}
+                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md"
+                  >
+                    <Save size={20} className="mr-2" /> Save Changes
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
         {/* Add Folder Modal */}
         {isAddingFolder && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
