@@ -65,7 +65,7 @@ export const translations = {
       faithTitle: 'Our Faith',
       faithText: 'We believe in...',
       shepherdsTitle: 'Our Shepherds',
-      statsElders: 'Church Elders',
+      statsElders: 'Kohhran Committee',
     },
     events: {
       title: 'Events & Programs',
@@ -231,7 +231,7 @@ export const translations = {
       faithTitle: 'Kan Rinna',
       faithText: 'Kan rin dan...',
       shepherdsTitle: 'Kan Vengtute',
-      statsElders: 'Kohhran Upate',
+      statsElders: 'Kohhran Committee',
     },
     events: {
       title: 'Programme',
