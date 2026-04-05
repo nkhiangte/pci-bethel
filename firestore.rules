@@ -39,8 +39,11 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (
-          (request.auth.token.email == "kohhranb@gmail.com" || request.auth.token.email == "nkhiangte@gmail.com") ||
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+          request.auth.uid == "KvdUzxS37ESXZSX6xspTQ7OEeo83" ||
+          request.auth.token.get('email', '') == "kohhranb@gmail.com" || 
+          request.auth.token.get('email', '') == "nkhiangte@gmail.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'member') == 'admin')
         );
     }
 
@@ -93,13 +96,15 @@ service cloud.firestore {
     }
 
     match /gallery/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, get, list: if true;
+      allow create: if isAuthenticated() && (request.auth.uid == "KvdUzxS37ESXZSX6xspTQ7OEeo83" || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
     match /gallery_folders/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, get, list: if true;
+      allow create: if isAuthenticated() && (request.auth.uid == "KvdUzxS37ESXZSX6xspTQ7OEeo83" || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
     match /{collectionName}/{docId} {
