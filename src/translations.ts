@@ -46,7 +46,7 @@ export const translations = {
       verseOfTheDay: 'Verse of the Day',
       newsTitle: 'Latest News & Updates',
       viewAll: 'View All',
-      puipate: 'Pastors & Elders',
+      puipate: 'Kohhran Committee',
       weeklyProgram: [ // Mock for type checking if needed in Events.tsx
         { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
@@ -64,7 +64,7 @@ export const translations = {
       missionText: 'To spread the Gospel...',
       faithTitle: 'Our Faith',
       faithText: 'We believe in...',
-      shepherdsTitle: 'Our Shepherds',
+      shepherdsTitle: 'Kohhran Committee',
       statsElders: 'Kohhran Committee',
     },
     events: {
@@ -212,7 +212,7 @@ export const translations = {
       verseOfTheDay: 'Vawiin Chang Thlan',
       newsTitle: 'Chanchin Thar',
       viewAll: 'En Zawng Zawng',
-      puipate: 'Kohhran Puipate',
+      puipate: 'Kohhran Committee',
       weeklyProgram: [
         { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
@@ -230,7 +230,7 @@ export const translations = {
       missionText: 'Chanchin Tha hril...',
       faithTitle: 'Kan Rinna',
       faithText: 'Kan rin dan...',
-      shepherdsTitle: 'Kan Vengtute',
+      shepherdsTitle: 'Kohhran Committee',
       statsElders: 'Kohhran Committee',
     },
     events: {
