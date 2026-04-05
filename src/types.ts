@@ -340,11 +340,20 @@ export interface Resource {
   fileSize?: string;
 }
 
+export interface GalleryFolder {
+  id: string;
+  name: string;
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
+  date: string;
+  description?: string;
+}
+
 export interface GalleryItem {
   id: string;
   title: string;
   imageUrl: string;
   category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
+  folderId?: string;
   date: string;
 }
 

@@ -256,6 +256,19 @@
       },
       "required": ["title", "category", "date", "downloadUrl"]
     },
+    "GalleryFolder": {
+      "title": "Gallery Folder",
+      "description": "Folders for organizing gallery items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Committees", "Kohhran Chetna", "Kohhran Hunpui"] },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "category", "date"]
+    },
     "GalleryItem": {
       "title": "Gallery Item",
       "description": "Images for the church gallery",
@@ -265,6 +278,7 @@
         "title": { "type": "string" },
         "imageUrl": { "type": "string" },
         "category": { "type": "string", "enum": ["Committees", "Kohhran Chetna", "Kohhran Hunpui"] },
+        "folderId": { "type": "string" },
         "date": { "type": "string", "format": "date" }
       },
       "required": ["title", "imageUrl", "category", "date"]
@@ -408,6 +422,10 @@
     "/gallery/{itemId}": {
       "schema": "GalleryItem",
       "description": "Collection of gallery items"
+    },
+    "/gallery_folders/{folderId}": {
+      "schema": "GalleryFolder",
+      "description": "Collection of gallery folders"
     },
     "/archives/{entryId}": {
       "schema": "ArchiveEntry",
