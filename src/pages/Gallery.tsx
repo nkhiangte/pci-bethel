@@ -15,9 +15,100 @@ import {
   Save,
   ChevronRight,
   Upload,
-  CheckCircle2
+  CheckCircle2,
+  GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SortablePhotoProps {
+  item: GalleryItem;
+  isAdmin: boolean;
+  onDelete: (id: string, e: React.MouseEvent) => void;
+  onPreview: (url: string) => void;
+}
+
+const SortablePhoto: React.FC<SortablePhotoProps> = ({ item, isAdmin, onDelete, onPreview }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
+    >
+      <div 
+        className="aspect-square overflow-hidden cursor-pointer"
+        onClick={() => onPreview(item.imageUrl)}
+      >
+        <img 
+          src={item.imageUrl} 
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+      <div className="p-4 flex justify-between items-start">
+        <div>
+          <h4 className="font-bold text-slate-800 truncate max-w-[150px]">{item.title}</h4>
+          <div className="flex items-center text-xs text-slate-500 mt-1">
+            <Calendar size={12} className="mr-1" />
+            {item.date}
+          </div>
+        </div>
+        {isAdmin && (
+          <div 
+            {...attributes} 
+            {...listeners}
+            className="p-1 text-slate-400 hover:text-church-600 cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical size={18} />
+          </div>
+        )}
+      </div>
+      
+      {isAdmin && (
+        <button 
+          onClick={(e) => onDelete(item.id, e)}
+          className="absolute top-2 right-2 p-2 bg-white/90 text-red-500 rounded-full shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-50 transition"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const Gallery: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -47,12 +138,23 @@ const Gallery: React.FC = () => {
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   
   const [folderForm, setFolderForm] = useState<Partial<GalleryFolder>>({ name: '', date: new Date().toISOString().split('T')[0] });
   const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (!currentCategory) {
@@ -95,8 +197,13 @@ const Gallery: React.FC = () => {
     
     const unsubscribeItems = query.onSnapshot((snapshot: any) => {
         const itemData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        // Sort in memory to avoid index requirement
-        itemData.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+        // Sort by order first, then by date
+        itemData.sort((a: any, b: any) => {
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            return (b.date || '').localeCompare(a.date || '');
+        });
         
         setItems(itemData);
         setLoading(false);
@@ -130,66 +237,111 @@ const Gallery: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedFiles(prev => [...prev, ...files]);
+      
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemForm.title || !currentCategory || (!selectedFile && !itemForm.imageUrl)) return;
+    if (!itemForm.title || !currentCategory || (selectedFiles.length === 0 && !itemForm.imageUrl)) return;
     
     setUploading(true);
-    let finalImageUrl = itemForm.imageUrl;
+    setUploadProgress(0);
 
     try {
-        if (selectedFile) {
-            const fileExt = selectedFile.name.split('.').pop();
+        const totalFiles = selectedFiles.length;
+        let completedFiles = 0;
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
             const storagePath = `gallery/${currentCategoryPath}/${fileName}`;
             const storageRef = storage.ref().child(storagePath);
             
-            const uploadTask = storageRef.put(selectedFile);
+            const uploadTask = storageRef.put(file);
             
-            await new Promise((resolve, reject) => {
+            const downloadUrl = await new Promise<string>((resolve, reject) => {
                 uploadTask.on(
                     'state_changed',
                     (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        setUploadProgress(progress);
+                        const fileProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        const overallProgress = ((completedFiles * 100) + fileProgress) / totalFiles;
+                        setUploadProgress(overallProgress);
                     },
                     (error) => reject(error),
                     async () => {
-                        finalImageUrl = await uploadTask.snapshot.ref.getDownloadURL();
-                        resolve(true);
+                        const url = await uploadTask.snapshot.ref.getDownloadURL();
+                        resolve(url);
                     }
                 );
             });
+
+            // Use current items length + i as order
+            const order = items.length + i;
+
+            await db.collection('gallery').add({
+                ...itemForm,
+                title: totalFiles > 1 ? `${itemForm.title} (${i + 1})` : itemForm.title,
+                imageUrl: downloadUrl,
+                category: currentCategory,
+                folderId: currentFolderId || null,
+                order: order
+            });
+
+            completedFiles++;
+            setUploadProgress((completedFiles / totalFiles) * 100);
         }
 
-        await db.collection('gallery').add({
-            ...itemForm,
-            imageUrl: finalImageUrl,
-            category: currentCategory,
-            folderId: currentFolderId || null
-        });
-        
         setIsAddingItem(false);
         setItemForm({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
-        setSelectedFile(null);
-        setFilePreview(null);
+        setSelectedFiles([]);
+        setFilePreviews([]);
         setUploadProgress(0);
     } catch (error) {
-        console.error("Error adding item:", error);
+        console.error("Error adding items:", error);
         handleFirestoreError(error, OperationType.CREATE, 'gallery');
     } finally {
         setUploading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setItems(newItems);
+
+      // Update Firestore with new orders
+      try {
+        const batch = db.batch();
+        newItems.forEach((item, index) => {
+          const ref = db.collection('gallery').doc(item.id);
+          batch.update(ref, { order: index });
+        });
+        await batch.commit();
+      } catch (error) {
+        console.error("Error updating item order:", error);
+      }
     }
   };
 
@@ -377,51 +529,36 @@ const Gallery: React.FC = () => {
                 )}
 
                 {/* Items (Photos) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {items.map((item) => (
-                    <motion.div
-                      layout
-                      key={item.id}
-                      className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
-                    >
-                      <div 
-                        className="aspect-square overflow-hidden cursor-pointer"
-                        onClick={() => setSelectedImage(item.imageUrl)}
-                      >
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={items.map(i => i.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {items.map((item) => (
+                        <SortablePhoto
+                          key={item.id}
+                          item={item}
+                          isAdmin={isAdmin}
+                          onDelete={handleDeleteItem}
+                          onPreview={setSelectedImage}
                         />
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-bold text-slate-800 truncate">{item.title}</h4>
-                        <div className="flex items-center text-xs text-slate-500 mt-1">
-                          <Calendar size={12} className="mr-1" />
-                          {item.date}
-                        </div>
-                      </div>
+                      ))}
                       
-                      {isAdmin && (
-                        <button 
-                          onClick={(e) => handleDeleteItem(item.id, e)}
-                          className="absolute top-2 right-2 p-2 bg-white/90 text-red-500 rounded-full shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-50 transition"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                      {items.length === 0 && (
+                        <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
+                          <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />
+                          <p className="text-slate-500">No photos in this {currentFolderId ? 'folder' : 'category'} yet.</p>
+                          {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add Photo" to upload images.</p>}
+                        </div>
                       )}
-                    </motion.div>
-                  ))}
-                  
-                  {items.length === 0 && (
-                    <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                      <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />
-                      <p className="text-slate-500">No photos in this {currentFolderId ? 'folder' : 'category'} yet.</p>
-                      {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add Photo" to upload images.</p>}
                     </div>
-                  )}
-                </div>
+                  </SortableContext>
+                </DndContext>
               </>
             )}
           </div>
@@ -526,29 +663,49 @@ const Gallery: React.FC = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photo</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
-                    {filePreview ? (
-                      <div className="space-y-2 text-center">
-                        <img src={filePreview} alt="Preview" className="max-h-40 mx-auto rounded-lg shadow-sm" />
-                        <button 
-                          type="button"
-                          onClick={() => { setSelectedFile(null); setFilePreview(null); }}
-                          className="text-xs text-red-500 font-bold hover:underline"
-                          disabled={uploading}
-                        >
-                          Remove and choose another
-                        </button>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photos</label>
+                  <div className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
+                    {filePreviews.length > 0 ? (
+                      <div className="w-full space-y-4">
+                        <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2">
+                          {filePreviews.map((preview, idx) => (
+                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden group">
+                              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                              <button 
+                                type="button"
+                                onClick={() => handleRemoveFile(idx)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                disabled={uploading}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-center">
+                          <label className="cursor-pointer text-sm font-bold text-church-600 hover:text-church-500">
+                            Add more photos
+                            <input 
+                              type="file" 
+                              className="sr-only" 
+                              multiple
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              disabled={uploading}
+                            />
+                          </label>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-1 text-center">
                         <Upload className="mx-auto h-12 w-12 text-slate-400" />
                         <div className="flex text-sm text-slate-600">
                           <label className="relative cursor-pointer bg-white rounded-md font-medium text-church-600 hover:text-church-500 focus-within:outline-none">
-                            <span>Upload a file</span>
+                            <span>Upload files</span>
                             <input 
                               type="file" 
                               className="sr-only" 
+                              multiple
                               accept="image/*"
                               onChange={handleFileChange}
                               disabled={uploading}
@@ -556,12 +713,12 @@ const Gallery: React.FC = () => {
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB</p>
+                        <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB each</p>
                       </div>
                     )}
                     
                     {uploading && (
-                      <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-4">
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-4 z-10">
                         <Loader2 className="animate-spin text-church-600 mb-2" size={32} />
                         <div className="w-full max-w-[200px] bg-slate-200 rounded-full h-2 mb-1">
                           <div 
@@ -597,7 +754,7 @@ const Gallery: React.FC = () => {
                   </button>
                   <button 
                     type="submit"
-                    disabled={uploading || (!selectedFile && !itemForm.imageUrl)}
+                    disabled={uploading || (selectedFiles.length === 0 && !itemForm.imageUrl)}
                     className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploading ? (

@@ -355,6 +355,7 @@ export interface GalleryItem {
   category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui';
   folderId?: string;
   date: string;
+  order?: number;
 }
 
 export interface ArchiveEntry {
