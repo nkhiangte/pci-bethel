@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GalleryItem, GalleryFolder } from '../types';
-import { db, handleFirestoreError, OperationType } from '../services/firebase';
+import { db, auth, storage, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus, 
@@ -13,7 +13,9 @@ import {
   Loader2,
   X,
   Save,
-  ChevronRight
+  ChevronRight,
+  Upload,
+  CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -43,6 +45,11 @@ const Gallery: React.FC = () => {
   // Modal states
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  
   const [folderForm, setFolderForm] = useState<Partial<GalleryFolder>>({ name: '', date: new Date().toISOString().split('T')[0] });
   const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -122,21 +129,67 @@ const Gallery: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemForm.title || !itemForm.imageUrl || !currentCategory) return;
+    if (!itemForm.title || !currentCategory || (!selectedFile && !itemForm.imageUrl)) return;
     
+    setUploading(true);
+    let finalImageUrl = itemForm.imageUrl;
+
     try {
+        if (selectedFile) {
+            const fileExt = selectedFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const storagePath = `gallery/${currentCategoryPath}/${fileName}`;
+            const storageRef = storage.ref().child(storagePath);
+            
+            const uploadTask = storageRef.put(selectedFile);
+            
+            await new Promise((resolve, reject) => {
+                uploadTask.on(
+                    'state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        setUploadProgress(progress);
+                    },
+                    (error) => reject(error),
+                    async () => {
+                        finalImageUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                        resolve(true);
+                    }
+                );
+            });
+        }
+
         await db.collection('gallery').add({
             ...itemForm,
+            imageUrl: finalImageUrl,
             category: currentCategory,
             folderId: currentFolderId || null
         });
+        
         setIsAddingItem(false);
         setItemForm({ title: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
+        setSelectedFile(null);
+        setFilePreview(null);
+        setUploadProgress(0);
     } catch (error) {
         console.error("Error adding item:", error);
         handleFirestoreError(error, OperationType.CREATE, 'gallery');
+    } finally {
+        setUploading(false);
     }
   };
 
@@ -464,29 +517,71 @@ const Gallery: React.FC = () => {
                   <input 
                     required
                     type="text"
-                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition"
+                    disabled={uploading}
+                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
                     placeholder="e.g. Group Photo"
                     value={itemForm.title}
                     onChange={e => setItemForm({...itemForm, title: e.target.value})}
                   />
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
-                  <input 
-                    required
-                    type="url"
-                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition"
-                    placeholder="https://example.com/image.jpg"
-                    value={itemForm.imageUrl}
-                    onChange={e => setItemForm({...itemForm, imageUrl: e.target.value})}
-                  />
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photo</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
+                    {filePreview ? (
+                      <div className="space-y-2 text-center">
+                        <img src={filePreview} alt="Preview" className="max-h-40 mx-auto rounded-lg shadow-sm" />
+                        <button 
+                          type="button"
+                          onClick={() => { setSelectedFile(null); setFilePreview(null); }}
+                          className="text-xs text-red-500 font-bold hover:underline"
+                          disabled={uploading}
+                        >
+                          Remove and choose another
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1 text-center">
+                        <Upload className="mx-auto h-12 w-12 text-slate-400" />
+                        <div className="flex text-sm text-slate-600">
+                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-church-600 hover:text-church-500 focus-within:outline-none">
+                            <span>Upload a file</span>
+                            <input 
+                              type="file" 
+                              className="sr-only" 
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              disabled={uploading}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    )}
+                    
+                    {uploading && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-4">
+                        <Loader2 className="animate-spin text-church-600 mb-2" size={32} />
+                        <div className="w-full max-w-[200px] bg-slate-200 rounded-full h-2 mb-1">
+                          <div 
+                            className="bg-church-600 h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs font-bold text-church-700">{Math.round(uploadProgress)}% Uploading...</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
                   <input 
                     required
                     type="date"
-                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition"
+                    disabled={uploading}
+                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
                     value={itemForm.date}
                     onChange={e => setItemForm({...itemForm, date: e.target.value})}
                   />
@@ -494,16 +589,27 @@ const Gallery: React.FC = () => {
                 <div className="flex space-x-3 pt-4">
                   <button 
                     type="button"
+                    disabled={uploading}
                     onClick={() => setIsAddingItem(false)}
-                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition"
+                    className="flex-1 px-4 py-3 border border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md"
+                    disabled={uploading || (!selectedFile && !itemForm.imageUrl)}
+                    className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Save size={18} className="mr-2" /> Add Photo
+                    {uploading ? (
+                      <>
+                        <Loader2 size={18} className="mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} className="mr-2" /> Add Photo
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
