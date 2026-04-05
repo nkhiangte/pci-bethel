@@ -263,7 +263,7 @@ const Articles: React.FC = () => {
       {/* Reader Modal */}
       {isModalOpen && selectedArticle && (
         <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm overflow-y-auto">
-            <div className="max-w-3xl mx-auto min-h-screen bg-white shadow-2xl relative">
+            <div className="max-w-3xl mx-auto min-h-screen bg-slate-50 shadow-2xl relative">
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10">
                     <div className="flex items-center gap-2 text-sm text-slate-500">

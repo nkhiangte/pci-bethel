@@ -199,7 +199,7 @@ const Announcements: React.FC = () => {
   };
 
   return (
-    <div className="py-12 bg-white min-h-screen">
+    <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-serif font-bold text-church-900">{t.announcements.title}</h1>
