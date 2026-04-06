@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Phone, MessageCircle, Plus, Edit, Trash2, X, Loader, UserSquare 
+  Phone, MessageCircle, Plus, Edit, Trash2, X, Loader, UserSquare, Camera 
 } from 'lucide-react';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
