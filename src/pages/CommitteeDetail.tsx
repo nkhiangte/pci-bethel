@@ -1131,78 +1131,41 @@ const CommitteeDetail: React.FC = () => {
                   <p className="text-slate-500">{t.committeeDetail.members.noMembers}</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-100">
-                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.name}</th>
-                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.designation}</th>
-                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.contact}</th>
-                          {isAdmin && <th className="p-4 font-bold text-slate-700 text-sm text-right">{t.committeeDetail.members.actions}</th>}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {committee.members.map((member) => (
-                          <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
-                            <td className="p-4">
-                              <span className="font-bold text-slate-800">{member.name}</span>
-                            </td>
-                            <td className="p-4">
-                              <span className="text-church-600 font-medium text-sm">{member.role}</span>
-                            </td>
-                            <td className="p-4">
-                              {member.phone ? (
-                                <div className="flex items-center gap-3">
-                                  <span className="text-slate-600 text-sm font-medium">{member.phone}</span>
-                                  <div className="flex gap-2">
-                                    <a 
-                                      href={`tel:${member.phone}`}
-                                      className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors"
-                                      title="Call"
-                                    >
-                                      <Phone size={14} />
-                                    </a>
-                                    <a 
-                                      href={`https://wa.me/91${(member.phone || '').toString().replace(/\D/g, '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                                      title="WhatsApp"
-                                    >
-                                      <MessageCircle size={14} />
-                                    </a>
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-slate-300 text-xs italic">{t.committeeDetail.members.notProvided}</span>
-                              )}
-                            </td>
-                            {isAdmin && (
-                              <td className="p-4 text-right">
-                                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} 
-                                    className="p-2 text-church-600 hover:bg-church-50 rounded-lg transition-colors"
-                                    title="Edit"
-                                  >
-                                    <Edit size={16} />
-                                  </button>
-                                  <button 
-                                    onClick={() => handleDeleteMember(member.id!)} 
-                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Delete"
-                                  >
-                                    <Trash size={16} />
-                                  </button>
-                                </div>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {committee.members.map((member) => (
+                    <div key={member.id} className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group">
+                      <div className="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                        {member.imageUrl ? (
+                          <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Users className="w-full h-full p-4 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-bold text-slate-800 text-lg">{member.name}</h4>
+                        <p className="text-church-600 font-medium text-sm mb-2">{member.role}</p>
+                        
+                        {member.phone && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-600 text-sm font-medium">{member.phone}</span>
+                            <a href={`tel:${member.phone}`} className="p-1.5 bg-church-100 text-church-600 rounded-lg hover:bg-church-200 transition-colors" title="Call">
+                              <Phone size={14} />
+                            </a>
+                            <a href={`https://wa.me/91${(member.phone || '').toString().replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors" title="WhatsApp">
+                              <MessageCircle size={14} />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {isAdmin && (
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-1.5 bg-white text-church-600 shadow-sm border border-slate-200 hover:bg-church-50 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteMember(member.id!)} className="p-1.5 bg-white text-red-500 shadow-sm border border-slate-200 hover:bg-red-50 rounded-lg"><Trash size={14} /></button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </section>
