@@ -29,18 +29,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   'Weekly Program': Calendar
 };
 
-const ARCHIVE_SECTIONS = [
-    { id: 'Weekly Program', label: 'Weekly Program', icon: Calendar, color: 'bg-indigo-600', description: 'Past weekly schedules and duty rosters.' },
-    { id: 'Pastors', label: 'Pastors', icon: UserCheck, color: 'bg-cyan-600', description: 'Records of our spiritual shepherds.' },
-    { id: 'Upa kal ta te', label: 'Upa kal ta te', icon: Cross, color: 'bg-slate-600', description: 'Kohhran hruaitu min kalsan tawhte.' },
-    { id: 'Rawngbawltu te', label: 'Rawngbawltu te', icon: Users, color: 'bg-church-600', description: 'Records of past leaders and committees.' },
-    { id: 'Document', label: 'Documents', icon: FileText, color: 'bg-blue-500', description: 'Official papers, reports, and publications.' },
-    { id: 'Photo', label: 'Photos', icon: ImageIcon, color: 'bg-emerald-500', description: 'Gallery of church events and memories.' },
-    { id: 'Video', label: 'Videos', icon: Video, color: 'bg-red-500', description: 'Recordings of services and special items.' },
-    { id: 'History', label: 'History', icon: History, color: 'bg-amber-500', description: 'Church history, milestones, and timeline.' },
-    { id: 'Minute', label: 'Minutes', icon: FileClock, color: 'bg-purple-500', description: 'Committee meeting records and resolutions.' },
-];
-
 const DEFAULT_RAWNGBAWLTU_SUBCATEGORIES = [
     'Executive Body', 'Ramthar', 'FINANCE', 'BUILDING', 'SOCIAL FRONT', 
     'REFRESHMENT', 'KRISTIAN CHHUNGKUA', 'WORSHIP', 'MASIHI SANGATI', 
@@ -77,6 +65,18 @@ const triggerDownload = (blob: Blob, filename: string) => {
 const Archives: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+
+  const ARCHIVE_SECTIONS = [
+    { id: 'Weekly Program', label: t.archives.sections.weeklyProgram, icon: Calendar, color: 'bg-indigo-600', description: t.archives.descriptions.weeklyProgram },
+    { id: 'Pastors', label: t.archives.sections.pastors, icon: UserCheck, color: 'bg-cyan-600', description: t.archives.descriptions.pastors },
+    { id: 'Upa kal ta te', label: t.archives.sections.upaKalTaTe, icon: Cross, color: 'bg-slate-600', description: t.archives.descriptions.upaKalTaTe },
+    { id: 'Rawngbawltu te', label: t.archives.sections.rawngbawltuTe, icon: Users, color: 'bg-church-600', description: t.archives.descriptions.rawngbawltuTe },
+    { id: 'Document', label: t.archives.sections.documents, icon: FileText, color: 'bg-blue-500', description: t.archives.descriptions.documents },
+    { id: 'Photo', label: t.archives.sections.photos, icon: ImageIcon, color: 'bg-emerald-500', description: t.archives.descriptions.photos },
+    { id: 'Video', label: t.archives.sections.videos, icon: Video, color: 'bg-red-500', description: t.archives.descriptions.videos },
+    { id: 'History', label: t.archives.sections.history, icon: History, color: 'bg-amber-500', description: t.archives.descriptions.history },
+    { id: 'Minute', label: t.archives.sections.minutes, icon: FileClock, color: 'bg-purple-500', description: t.archives.descriptions.minutes },
+  ];
   
   const [archives, setArchives] = useState<ArchiveEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -719,7 +719,7 @@ const Archives: React.FC = () => {
                                 }
                             </h2>
                             <p className="text-sm text-slate-500">
-                                {isViewingRecords || isSSHotute || isSSDepartmentView ? 'Viewing records' : 'Select a folder'}
+                                {isViewingRecords || isSSHotute || isSSDepartmentView ? t.archives.viewingRecords : t.archives.selectFolder}
                             </p>
                         </div>
                     </div>
@@ -733,13 +733,13 @@ const Archives: React.FC = () => {
                                         onClick={() => setViewMode('list')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-bold transition ${viewMode === 'list' ? 'bg-white text-church-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                     >
-                                        <LayoutList size={16} /> List
+                                        <LayoutList size={16} /> {t.archives.list}
                                     </button>
                                     <button 
                                         onClick={() => setViewMode('analytics')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-bold transition ${viewMode === 'analytics' ? 'bg-white text-church-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                     >
-                                        <BarChart3 size={16} /> Analytics
+                                        <BarChart3 size={16} /> {t.archives.analytics}
                                     </button>
                                 </div>
 
@@ -749,7 +749,7 @@ const Archives: React.FC = () => {
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                             <input 
                                                 type="text" 
-                                                placeholder={isSSDepartmentView ? "Search teachers..." : "Search..."} 
+                                                placeholder={isSSDepartmentView ? t.archives.searchTeachers : t.archives.search} 
                                                 className="w-full md:w-64 pl-10 pr-12 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-church-500"
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}

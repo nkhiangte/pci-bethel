@@ -6,8 +6,10 @@ import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Users, Loader, Home, TrendingUp, Book, DollarSign, List, History, Camera, Video, UserSquare
+  Users, Loader, Home, TrendingUp, Book, DollarSign, List, History, Camera, Video, UserSquare,
+  Edit, Save, X, Upload, Trash2
 } from 'lucide-react';
+import { storage, handleFirestoreError, OperationType } from '../services/firebase';
 import StatsTable from '../components/StatsTable';
 
 const Fellowship: React.FC = () => {
@@ -15,6 +17,10 @@ const Fellowship: React.FC = () => {
   const { language } = useLanguage();
   const { isAdmin } = useAuth();
   const [fellowship, setFellowship] = useState<Ministry | null | undefined>(undefined);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Ministry>>({});
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isKTP = id === 'ktp';
   const isKPVM = id === 'kpvm';
@@ -51,6 +57,40 @@ const Fellowship: React.FC = () => {
     fetchFellowship();
   }, [id, language]);
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !id || !fellowship) return;
+    setIsSaving(true);
+    try {
+      let imageUrl = editForm.image || fellowship.image;
+
+      if (logoFile) {
+        const storageRef = storage.ref(`ministry_logos/${id}_${Date.now()}`);
+        await storageRef.put(logoFile);
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
+      const updatedData = {
+        ...editForm,
+        image: imageUrl
+      };
+
+      await db.collection('ministries').doc(id).set(updatedData, { merge: true });
+      setFellowship({ ...fellowship, ...updatedData });
+      setIsEditing(false);
+      setLogoFile(null);
+    } catch (error) {
+      console.error("Error saving fellowship:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const openEditModal = () => {
+    if (!fellowship) return;
+    setEditForm(fellowship);
+    setIsEditing(true);
+  };
+
   // Redirect KTP to the new dedicated KTP routes
   if (isKTP) return <Navigate to="/ktp/leaders" replace />;
 
@@ -64,8 +104,16 @@ const Fellowship: React.FC = () => {
               <div className="bg-white border-b border-slate-200">
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                       <div className="flex items-center gap-6">
-                          <div className="w-24 h-24 bg-slate-200 rounded-2xl overflow-hidden shadow-md shrink-0">
+                          <div className="w-24 h-24 bg-slate-200 rounded-2xl overflow-hidden shadow-md shrink-0 relative group">
                               <img src={fellowship.image} alt={fellowship.name} className="w-full h-full object-cover" />
+                              {isAdmin && (
+                                  <button 
+                                      onClick={openEditModal}
+                                      className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                  >
+                                      <Edit size={20} />
+                                  </button>
+                              )}
                           </div>
                           <div>
                               <h1 className="text-3xl font-serif font-bold text-slate-900">{fellowship.name}</h1>
@@ -154,8 +202,16 @@ const Fellowship: React.FC = () => {
         <div className="bg-church-900 text-white py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row items-center gap-8">
-                    <div className="w-32 h-32 bg-white p-2 rounded-full shadow-xl shrink-0">
+                    <div className="w-32 h-32 bg-white p-2 rounded-full shadow-xl shrink-0 relative group">
                         <img src={fellowship.image} alt="Logo" className="w-full h-full object-cover rounded-full" />
+                        {isAdmin && (
+                            <button 
+                                onClick={openEditModal}
+                                className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full"
+                            >
+                                <Edit size={24} />
+                            </button>
+                        )}
                     </div>
                     <div className="text-center md:text-left">
                         <h1 className="text-4xl font-serif font-bold mb-2">{fellowship.name}</h1>
@@ -181,6 +237,85 @@ const Fellowship: React.FC = () => {
                  </div>
              </div>
         </div>
+
+        {/* Edit Modal */}
+        {isEditing && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                    <form onSubmit={handleSave}>
+                        <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+                            <h3 className="text-xl font-bold text-slate-800">Edit {fellowship.name}</h3>
+                            <button type="button" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
+                                <input 
+                                    className="w-full border p-2 rounded" 
+                                    value={editForm.name || ''} 
+                                    onChange={e => setEditForm({...editForm, name: e.target.value})} 
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                                <textarea 
+                                    className="w-full border p-2 rounded h-24" 
+                                    value={editForm.description || ''} 
+                                    onChange={e => setEditForm({...editForm, description: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Logo / Image</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded border overflow-hidden bg-slate-100 flex-shrink-0">
+                                        <img 
+                                            src={logoFile ? URL.createObjectURL(logoFile) : editForm.image} 
+                                            alt="Preview" 
+                                            className="w-full h-full object-cover" 
+                                            referrerPolicy="no-referrer" 
+                                        />
+                                    </div>
+                                    <div className="flex-grow">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-church-50 file:text-church-700 hover:file:bg-church-100"
+                                            onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Leader</label>
+                                    <input 
+                                        className="w-full border p-2 rounded" 
+                                        value={editForm.leader || ''} 
+                                        onChange={e => setEditForm({...editForm, leader: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Schedule</label>
+                                    <input 
+                                        className="w-full border p-2 rounded" 
+                                        value={editForm.schedule || ''} 
+                                        onChange={e => setEditForm({...editForm, schedule: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t bg-slate-50 flex justify-end space-x-3">
+                            <button type="button" onClick={() => setIsEditing(false)} className="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-white font-medium transition">Cancel</button>
+                            <button type="submit" disabled={isSaving} className="px-5 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-medium flex items-center shadow-md transition disabled:opacity-50">
+                                {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
     </div>
   );
 };

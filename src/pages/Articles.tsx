@@ -76,14 +76,14 @@ const Articles: React.FC = () => {
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!db?.doc || !window.confirm("Are you sure you want to delete this content?")) return;
+    if (!db?.doc || !window.confirm(t.articles.deleteConfirm)) return;
     
     try {
       await db.collection('articles').doc(id).delete();
       fetchArticles();
     } catch (error) {
       console.error("Error deleting article:", error);
-      alert("Failed to delete content.");
+      alert(t.articles.deleteFail);
     }
   };
 
@@ -92,7 +92,7 @@ const Articles: React.FC = () => {
     
     // Basic validation
     if (!editingArticle.title || !editingArticle.author || !editingArticle.content) {
-      alert("Please fill in Title, Author, and Content.");
+      alert(t.articles.validation);
       return;
     }
 
@@ -113,7 +113,7 @@ const Articles: React.FC = () => {
       fetchArticles();
     } catch (error) {
       console.error("Error saving article:", error);
-      alert("Failed to save content.");
+      alert(t.articles.saveFail);
     }
     setIsSaving(false);
   };
@@ -149,7 +149,7 @@ const Articles: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search by title or author..." 
+              placeholder={t.articles.searchPlaceholder} 
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-church-500 focus:border-transparent outline-none shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -176,7 +176,7 @@ const Articles: React.FC = () => {
                     onClick={handleAddNew}
                     className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 shadow-sm transition whitespace-nowrap shrink-0"
                 >
-                    <Plus size={18} className="mr-2" /> Add New
+                    <Plus size={18} className="mr-2" /> {t.articles.addNew}
                 </button>
             )}
           </div>
@@ -254,8 +254,8 @@ const Articles: React.FC = () => {
         ) : (
             <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-200">
                 <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-lg font-bold text-slate-700">No content found</h3>
-                <p className="text-slate-500 mt-1">Try adjusting your search or filter.</p>
+                <h3 className="text-lg font-bold text-slate-700">{t.articles.noContent}</h3>
+                <p className="text-slate-500 mt-1">{t.articles.noContentSub}</p>
             </div>
         )}
       </div>
@@ -306,14 +306,14 @@ const Articles: React.FC = () => {
 
                     {selectedArticle.videoUrl && (
                         <div className="mt-10 pt-8 border-t border-slate-100">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><Mic size={20} className="mr-2"/> Watch / Listen</h3>
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><Mic size={20} className="mr-2"/> {t.articles.watchListen}</h3>
                             <a 
                                 href={selectedArticle.videoUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
                             >
-                                <ExternalLink size={18} className="mr-2" /> Open Video Link
+                                <ExternalLink size={18} className="mr-2" /> {t.articles.openVideo}
                             </a>
                         </div>
                     )}
@@ -327,33 +327,33 @@ const Articles: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
-                    <h3 className="text-xl font-bold text-slate-800">{editingArticle.id ? 'Edit Content' : 'Add New Content'}</h3>
+                    <h3 className="text-xl font-bold text-slate-800">{editingArticle.id ? t.articles.editContent : t.articles.addNewContent}</h3>
                     <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                 </div>
                 
                 <div className="p-6 space-y-4 overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.title}</label>
                         <input 
                             className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
                             value={editingArticle.title || ''} 
                             onChange={e => setEditingArticle({...editingArticle, title: e.target.value})} 
-                            placeholder="Enter title"
+                            placeholder={t.articles.form.placeholders.title}
                         />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Author / Speaker</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.author}</label>
                             <input 
                                 className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
                                 value={editingArticle.author || ''} 
                                 onChange={e => setEditingArticle({...editingArticle, author: e.target.value})} 
-                                placeholder="Author name"
+                                placeholder={t.articles.form.placeholders.author}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.date}</label>
                             <input 
                                 type="date"
                                 className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
@@ -364,7 +364,7 @@ const Articles: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.category}</label>
                         <div className="flex gap-4 mt-1">
                             <label className="flex items-center cursor-pointer">
                                 <input 
@@ -392,41 +392,41 @@ const Articles: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Content</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.content}</label>
                         <textarea 
                             className="w-full border p-2.5 rounded-lg h-64 focus:ring-2 focus:ring-church-500 outline-none font-mono text-sm" 
                             value={editingArticle.content || ''} 
                             onChange={e => setEditingArticle({...editingArticle, content: e.target.value})} 
-                            placeholder="Type or paste the full content here..."
+                            placeholder={t.articles.form.placeholders.content}
                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Image URL (Optional)</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.imageUrl}</label>
                             <input 
                                 className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
                                 value={editingArticle.imageUrl || ''} 
                                 onChange={e => setEditingArticle({...editingArticle, imageUrl: e.target.value})} 
-                                placeholder="https://..."
+                                placeholder={t.articles.form.placeholders.image}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Video Link (Optional)</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.videoUrl}</label>
                             <input 
                                 className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none" 
                                 value={editingArticle.videoUrl || ''} 
                                 onChange={e => setEditingArticle({...editingArticle, videoUrl: e.target.value})} 
-                                placeholder="YouTube link"
+                                placeholder={t.articles.form.placeholders.video}
                             />
                         </div>
                     </div>
                 </div>
 
                 <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50 rounded-b-xl">
-                    <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
+                    <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">{t.articles.cancel}</button>
                     <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center transition shadow-sm disabled:opacity-50">
-                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} Save Content
+                        {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} {t.articles.saveContent}
                     </button>
                 </div>
             </div>

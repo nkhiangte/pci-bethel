@@ -161,6 +161,7 @@ const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin
 
 const Gallery: React.FC = () => {
   const { isAdmin } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -170,10 +171,10 @@ const Gallery: React.FC = () => {
   const currentFolderId = pathParts[2]; // e.g. folder document ID
   
   const categories = [
-    { name: 'Committees', path: 'committees', label: 'Committees' },
-    { name: 'Kohhran Chetna', path: 'kohhran-chetna', label: 'Kohhran Chetna' },
-    { name: 'Kohhran Hunpui', path: 'kohhran-hunpui', label: 'Kohhran Hunpui' },
-    { name: 'Videos', path: 'videos', label: 'Videos' },
+    { name: 'Committees', path: 'committees', label: t.gallery.categories.committees },
+    { name: 'Kohhran Chetna', path: 'kohhran-chetna', label: t.gallery.categories.chetna },
+    { name: 'Kohhran Hunpui', path: 'kohhran-hunpui', label: t.gallery.categories.hunpui },
+    { name: 'Videos', path: 'videos', label: t.gallery.categories.videos },
   ];
   
   const currentCategory = categories.find(c => c.path === currentCategoryPath)?.label as GalleryFolder['category'] | undefined;
@@ -492,7 +493,7 @@ const Gallery: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold mb-4"
           >
-            Church Gallery
+            {t.gallery.title}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -500,7 +501,7 @@ const Gallery: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="text-church-100 max-w-2xl mx-auto"
           >
-            Capturing the moments and memories of our church life and service.
+            {t.gallery.subtitle}
           </motion.p>
         </div>
       </div>
@@ -509,7 +510,7 @@ const Gallery: React.FC = () => {
         {/* Navigation Breadcrumbs */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-8 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-sm text-slate-600">
-            <Link to="/gallery" className="hover:text-church-600 transition">Gallery</Link>
+            <Link to="/gallery" className="hover:text-church-600 transition">{t.gallery.breadcrumb}</Link>
             {currentCategory && (
               <>
                 <ChevronRight size={14} className="text-slate-400" />
@@ -539,7 +540,7 @@ const Gallery: React.FC = () => {
               onClick={() => navigate(currentFolderId ? `/gallery/${currentCategoryPath}` : '/gallery')}
               className="flex items-center text-sm font-medium text-slate-500 hover:text-church-600 transition"
             >
-              <ArrowLeft size={16} className="mr-1" /> Back
+              <ArrowLeft size={16} className="mr-1" /> {t.gallery.back}
             </button>
           )}
         </div>
@@ -564,7 +565,7 @@ const Gallery: React.FC = () => {
                   </div>
                   <div className="p-6 text-center">
                     <h3 className="text-xl font-bold text-slate-800 mb-2">{cat.label}</h3>
-                    <p className="text-sm text-slate-500">View folders and photos</p>
+                    <p className="text-sm text-slate-500">{t.gallery.viewFolders}</p>
                   </div>
                 </Link>
               </motion.div>
@@ -588,7 +589,7 @@ const Gallery: React.FC = () => {
                       onClick={() => setIsAddingFolder(true)}
                       className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
                     >
-                      <FolderPlus size={18} className="mr-2" /> New Folder
+                      <FolderPlus size={18} className="mr-2" /> {t.gallery.newFolder}
                     </button>
                     <button 
                       onClick={() => {
@@ -597,7 +598,7 @@ const Gallery: React.FC = () => {
                       }}
                       className="flex items-center px-4 py-2 bg-white text-church-600 border border-church-200 rounded-lg hover:bg-church-50 transition shadow-sm"
                     >
-                      <Plus size={18} className="mr-2" /> {currentCategory === 'Videos' ? 'Add Video' : 'Add Photo'}
+                      <Plus size={18} className="mr-2" /> {currentCategory === 'Videos' ? t.gallery.addVideo : t.gallery.addPhoto}
                     </button>
                   </div>
                 </div>
@@ -607,7 +608,7 @@ const Gallery: React.FC = () => {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="animate-spin text-church-600 mb-4" size={48} />
-                <p className="text-slate-500">Loading gallery...</p>
+                <p className="text-slate-500">{t.gallery.loading}</p>
               </div>
             ) : (
               <>
@@ -666,8 +667,8 @@ const Gallery: React.FC = () => {
                   {folders.filter(f => (f.parentId || null) === (currentFolderId || null)).length === 0 && !currentFolderId && (
                     <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
                       <Folder size={48} className="mx-auto text-slate-300 mb-3" />
-                      <p className="text-slate-500">No folders created yet.</p>
-                      {isAdmin && <p className="text-sm text-church-600 mt-2">Click "New Folder" to get started.</p>}
+                      <p className="text-slate-500">{t.gallery.noFolders}</p>
+                      {isAdmin && <p className="text-sm text-church-600 mt-2">Click "{t.gallery.newFolder}" to get started.</p>}
                     </div>
                   )}
                 </div>
@@ -700,8 +701,8 @@ const Gallery: React.FC = () => {
                       {items.length === 0 && (
                         <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
                           {currentCategory === 'Videos' ? <Youtube size={48} className="mx-auto text-slate-300 mb-3" /> : <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />}
-                          <p className="text-slate-500">No {currentCategory === 'Videos' ? 'videos' : 'photos'} in this {currentFolderId ? 'folder' : 'category'} yet.</p>
-                          {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add {currentCategory === 'Videos' ? 'Video' : 'Photo'}" to upload content.</p>}
+                          <p className="text-slate-500">{t.gallery.noItems}</p>
+                          {isAdmin && <p className="text-sm text-church-600 mt-2">Click "Add {currentCategory === 'Videos' ? t.gallery.addVideo : t.gallery.addPhoto}" to upload content.</p>}
                         </div>
                       )}
                     </div>
@@ -725,7 +726,7 @@ const Gallery: React.FC = () => {
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-900 text-white">
-                <h3 className="text-xl font-bold">Edit Details</h3>
+                <h3 className="text-xl font-bold">{t.gallery.editDetails}</h3>
                 <button onClick={() => setIsEditingItem(false)} className="text-white/70 hover:text-white transition">
                   <X size={24} />
                 </button>
@@ -780,13 +781,13 @@ const Gallery: React.FC = () => {
                     onClick={() => setIsEditingItem(false)}
                     className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-50 transition"
                   >
-                    Cancel
+                    {t.gallery.cancel}
                   </button>
                   <button 
                     type="submit"
                     className="flex-1 px-4 py-3 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition flex items-center justify-center shadow-md"
                   >
-                    <Save size={20} className="mr-2" /> Save Changes
+                    <Save size={20} className="mr-2" /> {t.gallery.saveChanges}
                   </button>
                 </div>
               </form>

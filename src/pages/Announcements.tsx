@@ -149,7 +149,7 @@ const Announcements: React.FC = () => {
     if (!newVideoUrl.trim()) return;
     const vidId = getYouTubeId(newVideoUrl);
     if (!vidId) {
-        alert("Please enter a valid YouTube link.");
+        alert(t.announcements.validation.video);
         return;
     }
     setEditForm(prev => ({
@@ -168,7 +168,7 @@ const Announcements: React.FC = () => {
 
   const handleSave = async () => {
     if (!db || !db.collection) {
-        alert("Database unavailable.");
+        alert(t.announcements.validation.db);
         return;
     }
 
@@ -183,7 +183,7 @@ const Announcements: React.FC = () => {
       fetchAnnouncements();
     } catch (error) {
       console.error("Error saving:", error);
-      alert("Failed to save announcement.");
+      alert(t.announcements.validation.saveFail);
     }
   };
 
@@ -208,7 +208,7 @@ const Announcements: React.FC = () => {
                     onClick={handleAddNew}
                     className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm font-bold"
                 >
-                    <Plus size={18} className="mr-2" /> Post Announcement
+                    <Plus size={18} className="mr-2" /> {t.announcements.postAnnouncement}
                 </button>
             )}
         </div>
@@ -241,7 +241,11 @@ const Announcements: React.FC = () => {
                         <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
                             item.category === 'Emergency' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
                         }`}>
-                        {item.category}
+                        {item.category === 'General' ? t.announcements.categories.general :
+                         item.category === 'Youth' ? t.announcements.categories.youth :
+                         item.category === 'Funeral' ? t.announcements.categories.funeral :
+                         item.category === 'Emergency' ? t.announcements.categories.emergency :
+                         item.category}
                         </span>
                     </div>
 
@@ -276,7 +280,7 @@ const Announcements: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white font-bold uppercase tracking-wider">
-                                                <Youtube size={12} className="text-red-500" /> Watch
+                                                <Youtube size={12} className="text-red-500" /> {t.announcements.watch}
                                             </div>
                                         </div>
                                     );
@@ -366,23 +370,23 @@ const Announcements: React.FC = () => {
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-church-50">
                     <h3 className="text-xl font-bold text-church-900">
-                        {editForm.id ? 'Edit Announcement' : 'New Announcement'}
+                        {editForm.id ? t.announcements.editAnnouncement : t.announcements.newAnnouncement}
                     </h3>
                     <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
                 </div>
                 <div className="p-6 space-y-4 overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.title}</label>
                         <input 
                             className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-church-500 transition" 
                             value={editForm.title || ''} 
                             onChange={e => setEditForm({...editForm, title: e.target.value})}
-                            placeholder="Announcement Heading"
+                            placeholder={t.announcements.form.placeholders.title}
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.date}</label>
                             <input 
                                 type="date"
                                 className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-church-500 transition" 
@@ -391,16 +395,16 @@ const Announcements: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.category}</label>
                             <select 
                                 className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-church-500 transition" 
                                 value={editForm.category} 
                                 onChange={e => setEditForm({...editForm, category: e.target.value as any})}
                             >
-                                <option value="General">General</option>
-                                <option value="Youth">Youth</option>
-                                <option value="Funeral">Funeral</option>
-                                <option value="Emergency">Emergency</option>
+                                <option value="General">{t.announcements.categories.general}</option>
+                                <option value="Youth">{t.announcements.categories.youth}</option>
+                                <option value="Funeral">{t.announcements.categories.funeral}</option>
+                                <option value="Emergency">{t.announcements.categories.emergency}</option>
                             </select>
                         </div>
                     </div>
@@ -408,7 +412,7 @@ const Announcements: React.FC = () => {
                     {/* Multiple Video Support Section */}
                     <div className="space-y-3 p-4 bg-red-50/50 rounded-xl border border-red-100">
                         <label className="block text-sm font-bold text-red-900 flex items-center gap-2">
-                           <Youtube size={18} className="text-red-500" /> YouTube Videos
+                           <Youtube size={18} className="text-red-500" /> {t.announcements.form.videos}
                         </label>
                         
                         <div className="space-y-2">
@@ -430,21 +434,21 @@ const Announcements: React.FC = () => {
                                 className="flex-1 border border-red-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-red-400" 
                                 value={newVideoUrl} 
                                 onChange={e => setNewVideoUrl(e.target.value)}
-                                placeholder="Paste YouTube link here..."
+                                placeholder={t.announcements.form.placeholders.video}
                                 onKeyPress={e => e.key === 'Enter' && handleAddVideo()}
                             />
                             <button 
                                 onClick={handleAddVideo}
                                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs font-bold transition shadow-sm flex items-center gap-2"
                             >
-                                <PlusCircle size={16} /> Add Link
+                                <PlusCircle size={16} /> {t.announcements.form.addLink}
                             </button>
                         </div>
                     </div>
                     
                     {/* Multiple Image Upload Section with Captions */}
                     <div className="space-y-3">
-                        <label className="block text-sm font-bold text-slate-700">Pictures & Captions</label>
+                        <label className="block text-sm font-bold text-slate-700">{t.announcements.form.pictures}</label>
                         
                         <div className="grid grid-cols-1 gap-4 mb-3">
                             {editForm.imageUrls?.map((url, index) => (
@@ -460,11 +464,11 @@ const Announcements: React.FC = () => {
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                            <Type size={12} /> Caption for photo {index + 1}
+                                            <Type size={12} /> {t.announcements.form.placeholders.caption} {index + 1}
                                         </div>
                                         <textarea 
                                             className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-church-400 outline-none resize-none h-14"
-                                            placeholder="E.g. Group photo..."
+                                            placeholder={t.announcements.form.placeholders.caption}
                                             value={editForm.imageCaptions?.[index] || ''}
                                             onChange={(e) => updateCaption(index, e.target.value)}
                                         />
@@ -483,7 +487,7 @@ const Announcements: React.FC = () => {
                                 ) : (
                                     <>
                                         <Upload size={24} className="mb-1" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Add More Photos</span>
+                                        <span className="text-xs font-black uppercase tracking-widest">{t.announcements.form.addPhotos}</span>
                                     </>
                                 )}
                             </button>
@@ -504,18 +508,18 @@ const Announcements: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Content</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.content}</label>
                         <textarea 
                             className="w-full border border-slate-300 rounded-lg p-2.5 h-32 outline-none focus:ring-2 focus:ring-church-500 transition" 
                             value={editForm.content || ''} 
                             onChange={e => setEditForm({...editForm, content: e.target.value})}
-                            placeholder="Detailed announcement text..."
+                            placeholder={t.announcements.form.placeholders.content}
                         />
                     </div>
                 </div>
                 <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50">
-                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-white font-medium transition">Cancel</button>
-                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold transition shadow-sm">Save Post</button>
+                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-white font-medium transition">{t.announcements.cancel}</button>
+                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-bold transition shadow-sm">{t.announcements.savePost}</button>
                 </div>
             </div>
         </div>
@@ -527,12 +531,12 @@ const Announcements: React.FC = () => {
             <div className="bg-white rounded-xl p-6 max-sm w-full shadow-2xl">
                 <div className="flex items-center text-red-600 mb-4">
                     <AlertCircle className="mr-2" size={24} />
-                    <h3 className="text-lg font-bold">Delete Announcement?</h3>
+                    <h3 className="text-lg font-bold">{t.announcements.deleteTitle}</h3>
                 </div>
-                <p className="text-slate-600 mb-6">This action will permanently remove this post and cannot be undone.</p>
+                <p className="text-slate-600 mb-6">{t.announcements.deleteSub}</p>
                 <div className="flex justify-end space-x-3">
-                    <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition">Confirm Delete</button>
+                    <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-lg">{t.announcements.cancel}</button>
+                    <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition">{t.announcements.deleteConfirm}</button>
                 </div>
             </div>
          </div>

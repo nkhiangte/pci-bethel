@@ -71,7 +71,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
    {
     name: 'Sunday School',
     icon: 'BookOpen',
-    description: 'The Sunday School Committee oversees the spiritual education of children and youth, organizing classes, curriculum, and special events.',
+    description: 'Sunday School Committee hian naupang leh ṭhalaite thlarau lama an ṭhanlenna tura zirtirna kalpui te, zirlai bu ruahman te leh hun pawimawh hrang hrang buatsaihte a thawk a ni.',
     members: [
         { id: 'ss-c', name: 'Upa David Lalchhanhima', role: 'Chairman' },
         { id: 'ss-vc', name: 'Upa Lalremruata', role: 'Vice Chairman' },
@@ -91,7 +91,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Finance Committee',
     icon: 'DollarSign',
-    description: 'Responsible for managing the church\'s financial resources, including budgeting, fundraising, and transparent reporting.',
+    description: 'Kohhran Thawhlawm ki pui Pathian Ram chhiartu leh in sem tute an ni.',
     members: [
         { id: 'fin-c', name: 'Upa C.Lalthantluanga', role: 'Chairman' },
         { id: 'fin-vc', name: 'Upa Daikhawzama', role: 'Vice Chairman' },
@@ -131,7 +131,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Ramthar Committee',
     icon: 'Globe',
-    description: 'Dedicated to supporting missionary work and outreach programs, spreading the Gospel beyond our local community.',
+    description: 'Missionary-te thlawpna leh ramthara Chanchin Ṭha puandarhna kawnga hma latu an ni.',
     members: [
       { id: 'ramthar-c', name: 'Upa H.Zairemmawia', role: 'Chairman' },
       { id: 'ramthar-vc', name: 'Pu H.Vanlalthanga', role: 'Vice Chairman' },
@@ -145,7 +145,7 @@ const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
   {
     name: 'Building Committee',
     icon: 'Home',
-    description: 'Manages the construction, maintenance, and renovation of all church properties and facilities.',
+    description: 'Kohhran in leh lo, hmunhma enkawl leh cheiṭhat hna thawk tute an ni.',
     members: [
         { id: 'bld-c', name: 'Upa David Lalchhanhima', role: 'Chairman' },
         { id: 'bld-vc', name: 'Upa R.Lalramhluna', role: 'Vice Chairman' },
@@ -309,7 +309,7 @@ const Departments: React.FC = () => {
   };
 
   const handleDeleteCommittee = async (committeeId: string) => {
-    if (!db || !window.confirm("Are you sure you want to delete this entire committee?")) return;
+    if (!db || !window.confirm(t.departments.deleteConfirm)) return;
     try { await db.collection('committees').doc(committeeId).delete(); fetchCommittees(); }
     catch (error) { console.error("Error deleting committee:", error); }
   };
@@ -317,7 +317,7 @@ const Departments: React.FC = () => {
   // ── Seed / order ────────────────────────────────────────────────────────────
 
   const handleSeedData = async () => {
-    if (!db || !db.collection || !window.confirm("This will DELETE ALL existing committees and re-seed from the initial data. Are you sure?")) return;
+    if (!db || !db.collection || !window.confirm(t.departments.seedConfirm)) return;
     setIsSeeding(true);
     try {
         const committeesRef = db.collection('committees');
@@ -354,7 +354,7 @@ const Departments: React.FC = () => {
   };
 
   const handleSaveOrder = async () => {
-    if (!db || !db.batch || !window.confirm("Save new committee order?")) return;
+    if (!db || !db.batch || !window.confirm(t.departments.orderConfirm)) return;
     setLoading(true);
     try {
         const batch = db.batch();
@@ -395,20 +395,20 @@ const Departments: React.FC = () => {
 
         <div className="max-w-md mx-auto mb-8 relative">
           <Search size={20} className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
-          <input type="text" className="w-full pl-10 pr-4 py-3 rounded-full border border-slate-300 focus:ring-2 focus:ring-church-500" placeholder="Search committees..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <input type="text" className="w-full pl-10 pr-4 py-3 rounded-full border border-slate-300 focus:ring-2 focus:ring-church-500" placeholder={t.departments.searchPlaceholder} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
         {isAdmin && !isOfflineMode && (
           <div className="text-center mb-8 flex flex-wrap justify-center gap-4">
             <button onClick={() => openCommitteeModal(null)} className="inline-flex items-center px-6 py-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-sm transition">
-              <Plus size={18} className="mr-2" /> Add New Committee
+              <Plus size={18} className="mr-2" /> {t.departments.addNew}
             </button>
             <button onClick={handleSaveOrder} disabled={!hasOrderChanged || loading} className="inline-flex items-center px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 shadow-sm transition disabled:opacity-50">
-              <Save size={18} className="mr-2" /> Save Order
+              <Save size={18} className="mr-2" /> {t.departments.saveOrder}
             </button>
             <button onClick={handleSeedData} disabled={isSeeding} className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-sm transition disabled:opacity-50">
               {isSeeding ? <Loader className="animate-spin w-5 h-5 mr-2" /> : <Database size={18} className="mr-2" />}
-              Seed All Committees
+              {t.departments.seedAll}
             </button>
           </div>
         )}
@@ -420,7 +420,7 @@ const Departments: React.FC = () => {
             {isOfflineMode && (
               <div className="mb-6 p-3 bg-church-50 text-church-700 text-xs rounded text-center flex items-center justify-center">
                 <AlertTriangle size={14} className="mr-2" />
-                Public View Mode. Admin controls are disabled.
+                {t.departments.offlineMode}
               </div>
             )}
 
@@ -478,11 +478,11 @@ const Departments: React.FC = () => {
                           ))}
                         </div>
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                          {c.members?.length || 0} Members
+                          {c.members?.length || 0} {t.departments.members}
                         </span>
                       </div>
                       <div className="text-church-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        View Details <ChevronRight size={14} />
+                        {t.departments.viewDetails} <ChevronRight size={14} />
                       </div>
                     </div>
                   </Link>
@@ -493,7 +493,7 @@ const Departments: React.FC = () => {
             {filteredCommittees.length === 0 && (
               <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
                 <Search size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500">No committees found matching "{searchTerm}"</p>
+                <p className="text-slate-500">{t.departments.noResults} "{searchTerm}"</p>
               </div>
             )}
           </>
@@ -507,28 +507,28 @@ const Departments: React.FC = () => {
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
           <form onSubmit={handleSaveCommittee}>
             <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">{editingCommittee?.id ? 'Edit Committee' : 'New Committee'}</h3>
+              <h3 className="text-lg font-bold mb-4">{editingCommittee?.id ? t.departments.editCommittee : t.departments.newCommittee}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Committee Name</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">{t.departments.form.name}</label>
                   <input required className="w-full border border-slate-300 rounded p-2" value={editingCommittee?.name || ''} onChange={e => setEditingCommittee({...editingCommittee, name: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">{t.common.description}</label>
-                  <textarea className="w-full border border-slate-300 rounded p-2 h-24" value={editingCommittee?.description || ''} onChange={e => setEditingCommittee({...editingCommittee, description: e.target.value})} placeholder="Brief description..."></textarea>
+                  <textarea className="w-full border border-slate-300 rounded p-2 h-24" value={editingCommittee?.description || ''} onChange={e => setEditingCommittee({...editingCommittee, description: e.target.value})} placeholder={t.common.description + '...'}></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Icon (Fallback)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">{t.departments.form.icon}</label>
                   <select required className="w-full border border-slate-300 rounded p-2" value={editingCommittee?.icon} onChange={e => setEditingCommittee({...editingCommittee, icon: e.target.value})}>
                     {Object.keys(ICON_MAP).map(iconName => <option key={iconName} value={iconName}>{iconName}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Custom Logo (Optional)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">{t.departments.form.logo}</label>
                   <div className="flex items-center space-x-4">
                     {editingCommittee?.logoUrl && !logoFile && (
                       <div className="w-12 h-12 rounded border overflow-hidden bg-slate-100 flex-shrink-0">
-                        <img src={editingCommittee.logoUrl} alt="Current Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={editingCommittee.logoUrl} alt={t.departments.form.currentLogo} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                     )}
                     <div className="flex-grow">
@@ -544,21 +544,21 @@ const Departments: React.FC = () => {
                         type="button" 
                         onClick={() => setEditingCommittee({...editingCommittee, logoUrl: ''})}
                         className="p-2 text-red-500 hover:bg-red-50 rounded"
-                        title="Remove Logo"
+                        title={t.departments.form.removeLogo}
                       >
                         <Trash2 size={16} />
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">If uploaded, this will replace the icon.</p>
+                  <p className="text-xs text-slate-400 mt-1">{t.departments.form.logoNote}</p>
                 </div>
               </div>
             </div>
             <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
-              <button type="button" onClick={() => setIsCommitteeModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
+              <button type="button" onClick={() => setIsCommitteeModalOpen(false)} className="px-4 py-2 border rounded">{t.departments.cancel}</button>
               <button type="submit" disabled={loading || isUploading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">
                 {(loading || isUploading) ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} 
-                {isUploading ? 'Uploading...' : 'Save'}
+                {isUploading ? t.departments.form.uploading : t.departments.save}
               </button>
             </div>
           </form>

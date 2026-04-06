@@ -200,7 +200,7 @@ const Home: React.FC = () => {
                 <p className="text-slate-500 text-sm mt-1">{weeklyDuty.weekRange}</p>
             </div>
             <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
-                View Full Schedule <ArrowRight size={16} className="ml-1"/>
+                {t.home.viewFullSchedule} <ArrowRight size={16} className="ml-1"/>
             </Link>
         </div>
 
@@ -208,14 +208,14 @@ const Home: React.FC = () => {
             <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-church-900 text-white p-6 flex items-center gap-3">
                     <ClipboardList size={22} className="text-church-400" />
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">Ministers for this Month</h4>
+                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">{t.home.ministersMonth}</h4>
                 </div>
                 
                 <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
                     <div className="md:col-span-4 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
                             <Users size={16} className="text-church-600" />
-                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Offering Counters</h5>
+                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{t.home.offeringCounters}</h5>
                         </div>
                         <div className="divide-y divide-slate-50">
                             {weeklyDuty.thawhlawmChiartute?.map((name, i) => (
@@ -230,7 +230,7 @@ const Home: React.FC = () => {
                     <div className="md:col-span-8 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b-2 border-church-50">
                             <UserCircle size={16} className="text-church-600" />
-                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Ushers (Male & Female)</h5>
+                            <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{t.home.ushers}</h5>
                         </div>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
                             {weeklyDuty.ushers?.map((name, i) => (
@@ -247,33 +247,33 @@ const Home: React.FC = () => {
             <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">
                     <Radio size={22} className="text-church-700" />
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Ministers for this Week</h4>
+                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">{t.home.ministersWeek}</h4>
                 </div>
                 <div className="p-8 space-y-6">
                     <div className="grid grid-cols-1 gap-y-6">
                         <div className="group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Worship Leader</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t.home.worshipLeader}</label>
                             <p className="text-sm font-black text-slate-800 group-hover:text-church-700 transition-colors">{weeklyDuty.zaiHruaitu || '-'}</p>
                             <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Pianist</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t.home.pianist}</label>
                                 <p className="text-sm font-black text-slate-800">{weeklyDuty.pianoTumtu || '-'}</p>
                             </div>
                             <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Song Conductor</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t.home.songConductor}</label>
                                 <p className="text-sm font-black text-slate-800">{weeklyDuty.hlaHriltu || '-'}</p>
                             </div>
                         </div>
                         <div className="group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Light & Sound</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t.home.lightSound}</label>
                             <p className="text-sm font-black text-slate-800">{weeklyDuty.lightAndSoundDuty || '-'}</p>
                             <div className="h-0.5 w-full bg-slate-50 mt-2"></div>
                         </div>
                         <div>
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
-                                <Music size={10} className="text-church-400"/> Floral Decoration
+                                <Music size={10} className="text-church-400"/> {t.home.floralDecoration}
                             </label>
                             <p className="text-sm font-bold text-slate-700 bg-church-50/50 p-2 rounded-lg border border-church-100 text-center">{weeklyDuty.pangparKhawitu || '-'}</p>
                         </div>
@@ -287,7 +287,7 @@ const Home: React.FC = () => {
       <section className="bg-gradient-to-b from-transparent to-slate-50/50 rounded-[3rem] py-8">
          <div className="text-center mb-10 relative">
             <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.puipate}</h2>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Click for individual biography</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{t.home.clickBio}</p>
             <div className="h-1 w-20 bg-church-500 mx-auto mt-3 rounded-full"></div>
          </div>
          
@@ -370,7 +370,7 @@ const Home: React.FC = () => {
          
          <div className="text-center mt-12">
             <Link to="/about" className="inline-flex items-center px-6 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-church-700 transition shadow-sm">
-               View All Leaders & Profiles <ChevronRight size={16} className="ml-2" />
+               {t.home.viewAllLeaders} <ChevronRight size={16} className="ml-2" />
             </Link>
          </div>
       </section>

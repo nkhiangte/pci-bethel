@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Phone, Edit, X, Save, Loader, AlertCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ContactInfo {
   addressLine1: string;
@@ -23,6 +24,7 @@ const INITIAL_CONTACT_DATA: ContactInfo = {
 
 const Contact: React.FC = () => {
   const { isAdmin } = useAuth();
+  const { t } = useLanguage();
   const [data, setData] = useState<ContactInfo>(INITIAL_CONTACT_DATA);
   const [loading, setLoading] = useState(true);
   
@@ -118,7 +120,7 @@ const Contact: React.FC = () => {
             {/* Location Card */}
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
                 <div className="p-4 bg-church-50 text-church-600 rounded-full mb-4 ring-4 ring-church-50/50"><MapPin size={32} /></div>
-                <h3 className="font-bold text-lg mb-3 text-slate-800">Our Location</h3>
+                <h3 className="font-bold text-lg mb-3 text-slate-800">{t.contact.location}</h3>
                 <div className="text-slate-600 leading-relaxed">
                     <p>{data.addressLine1}</p>
                     <p>{data.addressLine2}</p>
@@ -128,7 +130,7 @@ const Contact: React.FC = () => {
             {/* Phone & Email Card */}
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
                 <div className="p-4 bg-green-50 text-green-600 rounded-full mb-4 ring-4 ring-green-50/50"><Phone size={32} /></div>
-                <h3 className="font-bold text-lg mb-3 text-slate-800">Phone & Email</h3>
+                <h3 className="font-bold text-lg mb-3 text-slate-800">{t.contact.phoneEmail}</h3>
                 <div className="text-slate-600 leading-relaxed space-y-3 flex flex-col items-center">
                     <div className="flex flex-col items-center gap-2">
                         <p className="font-medium text-slate-800">{data.phone}</p>
@@ -157,25 +159,25 @@ const Contact: React.FC = () => {
         {/* Contact Form */}
         <div className="mt-16 bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 max-w-3xl mx-auto">
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-serif font-bold text-church-900 mb-2">Send us a Message</h2>
-                <p className="text-slate-500">We'd love to hear from you. Fill out the form below.</p>
+                <h2 className="text-3xl font-serif font-bold text-church-900 mb-2">{t.contact.sendMessage}</h2>
+                <p className="text-slate-500">{t.contact.formSubtitle}</p>
             </div>
             <form className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Your Name</label>
-                        <input className="w-full border border-slate-200 bg-slate-50 rounded-lg p-3 focus:bg-white focus:ring-2 focus:ring-church-500 outline-none transition" required placeholder="John Doe" />
+                        <label className="block text-sm font-bold text-slate-700 mb-1.5">{t.contact.name}</label>
+                        <input className="w-full border border-slate-200 bg-slate-50 rounded-lg p-3 focus:bg-white focus:ring-2 focus:ring-church-500 outline-none transition" required placeholder="Hming..." />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Phone Number</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1.5">{t.contact.phone}</label>
                         <input className="w-full border border-slate-200 bg-slate-50 rounded-lg p-3 focus:bg-white focus:ring-2 focus:ring-church-500 outline-none transition" placeholder="+91..." />
                     </div>
                 </div>
                 <div>
-                     <label className="block text-sm font-bold text-slate-700 mb-1.5">Message</label>
-                     <textarea className="w-full border border-slate-200 bg-slate-50 rounded-lg p-3 h-40 focus:bg-white focus:ring-2 focus:ring-church-500 outline-none transition resize-none" required placeholder="How can we help you?"></textarea>
+                     <label className="block text-sm font-bold text-slate-700 mb-1.5">{t.contact.message}</label>
+                     <textarea className="w-full border border-slate-200 bg-slate-50 rounded-lg p-3 h-40 focus:bg-white focus:ring-2 focus:ring-church-500 outline-none transition resize-none" required placeholder="Engnge i sawi duh?"></textarea>
                 </div>
-                <button className="w-full bg-church-600 text-white font-bold py-4 rounded-lg hover:bg-church-700 transition shadow-lg shadow-church-200 transform hover:-translate-y-0.5">Send Message</button>
+                <button className="w-full bg-church-600 text-white font-bold py-4 rounded-lg hover:bg-church-700 transition shadow-lg shadow-church-200 transform hover:-translate-y-0.5">{t.contact.send}</button>
             </form>
         </div>
       </div>

@@ -71,27 +71,27 @@ const DATA = {
         id: 'ktp',
         name: 'Kristian Ṭhalai Pawl',
         acronym: 'KTP',
-        description: 'The Youth Fellowship of the church, dedicated to serving Christ through music, evangelism, and social work.',
+        description: 'Rawngbawl tura Chhandam',
         leader: 'Tv. Lalrinfela (Leader)',
-        schedule: 'Every Monday @ 7:00 PM',
+        schedule: 'Thawhṭanni @ 7:00 PM',
         image: 'https://i.ibb.co/L8yPzCq/ktp-logo.png'
       },
       {
         id: 'kpvm',
         name: 'Kohhran Hmeichhia',
         acronym: 'KH',
-        description: "The Women's Fellowship, a cornerstone of our church, focusing on spiritual growth, service, and community support.",
+        description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
         leader: 'Pi Lalhlimpuii (Leader)',
-        schedule: 'Every Tuesday @ 1:30 PM',
+        schedule: 'Thawhlehni @ 1:30 PM',
         image: 'https://i.ibb.co/k2x1G2Q/hmeichhia.jpg'
       },
       {
         id: 'pavlai',
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
-        description: "The Men's Fellowship, providing a space for men to grow in faith and serve the church and community.",
+        description: "Mipa te Pual inkhawmpawlna, rinnaa ṭhanlenna leh kohhran leh khawtlang tana rawngbawlna hmun.",
         leader: 'Pu R. Lalmalsawma (Leader)',
-        schedule: 'Every Friday @ 7:00 PM',
+        schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
       }
     ] as Ministry[],
@@ -101,26 +101,26 @@ const DATA = {
         name: 'Rev. Lalhmingthanga Chhangte',
         role: 'Pastor', // Changed to Pastor as requested
         imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
-        description: 'Serving as the spiritual head and guiding our church with wisdom and grace.',
+        description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.',
         order: 0, // Added order for consistency
       }
     ] as Staff[],
     proPastors: [] as Staff[], // Removed mock data for Pro Pastors
     elders: [
-      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', period: '1995', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'A pillar of faith, serving the church with dedication and compassion.', order: 1 },
-      { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', period: '1998', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Known for his unwavering commitment to church community.', order: 2 },
-      { id: 'e3', name: 'T. Upa Hminga', role: 'Elder', period: '2005', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Guides our congregation with profound spiritual insights.', order: 3 },
-      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Elder', period: '2001', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'His gentle guidance and wisdom are a blessing to all.', order: 4 },
-      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Elder', period: '2010', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Leads with vision and a heart for service.', order: 5 },
-      { id: 'e6', name: 'Upa Daikhawzama', role: 'Elder', period: '2008', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'A devoted elder, always ready to lend an ear and offer counsel.', order: 6 },
-      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Elder', period: '2012', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Passionate about nurturing spiritual growth within the church.', order: 7 },
-      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Elder', period: '2015', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Provides steadfast leadership and encouragement.', order: 8 },
-      { id: 'e9', name: 'Upa Lianpianga', role: 'Elder', period: '1999', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Dedicated to community outreach and pastoral care.', order: 9 },
-      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Elder', period: '2018', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Inspires generosity and service in the congregation.', order: 10 },
-      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Elder', period: '2003', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'A faithful servant, committed to upholding biblical truths.', order: 11 },
-      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Elder', period: '2006', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Offers wise counsel and a calm presence to all who seek it.', order: 12 },
-      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Elder', period: '2020', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'Known for his heartfelt prayers and deep spiritual understanding.', order: 13 },
-      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Elder', period: '2022', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Champions youth programs and ministries.', order: 14 }
+      { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', period: '1995', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.', order: 1 },
+      { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', period: '1998', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.', order: 2 },
+      { id: 'e3', name: 'T. Upa Hminga', role: 'Elder', period: '2005', imageUrl: 'https://i.ibb.co/Gvq96sxK/T-Upa-Hminga.jpg', description: 'Thlarau lam thil hriatna thuk tak nei a, kohhran kaihruaitu.', order: 3 },
+      { id: 'e4', name: 'Upa B.L. Thanga', role: 'Elder', period: '2001', imageUrl: 'https://i.ibb.co/Q7LDd8Q9/Upa-Ba.jpg', description: 'A kaihhruaina duhawm tak leh finnate chu malsawmna a ni.', order: 4 },
+      { id: 'e5', name: 'Upa David Lalchhanhima', role: 'Elder', period: '2010', imageUrl: 'https://i.ibb.co/fV4FY94Y/Upa-Dav.jpg', description: 'Rawngbawlna thinlung tak pu a, hruaitu a ni.', order: 5 },
+      { id: 'e6', name: 'Upa Daikhawzama', role: 'Elder', period: '2008', imageUrl: 'https://i.ibb.co/dJs5HSj0/Upa-DKZ.jpg', description: 'Upa rinawm tak, ngaihtuahna tha tak pe zel a ni.', order: 6 },
+      { id: 'e7', name: 'Upa Hmingthanmawia Sailo', role: 'Elder', period: '2012', imageUrl: 'https://i.ibb.co/FL6dnZN1/Upa-Hminga.jpg', description: 'Thlarau lam thil hriatna thuk tak nei a, kohhran kaihruaitu.', order: 7 },
+      { id: 'e8', name: 'Upa K. Vanlalhmuaka', role: 'Elder', period: '2015', imageUrl: 'https://i.ibb.co/s9kD2H50/Upa-Hmuaka.jpg', description: 'Kaihhruaina nghet tak pe a, thlamuantu a ni.', order: 8 },
+      { id: 'e9', name: 'Upa Lianpianga', role: 'Elder', period: '1999', imageUrl: 'https://i.ibb.co/1fsM0n5b/Upa-Liana.jpg', description: 'Khawtlang tana inpe a, mi ngaihsak tak a ni.', order: 9 },
+      { id: 'e10', name: 'Upa H. Zairemmawia', role: 'Elder', period: '2018', imageUrl: 'https://i.ibb.co/jv6HZt58/Upa-Mawia.jpg', description: 'Kohhran chhungah inpeknate a chawh lartu a ni.', order: 10 },
+      { id: 'e11', name: 'Upa G. Vanlallawma', role: 'Elder', period: '2003', imageUrl: 'https://i.ibb.co/S4FMThT1/Upa-Sawma.jpg', description: 'Rawngbawltu rinawm tak, Pathian thu vawng tlat a ni.', order: 11 },
+      { id: 'e12', name: 'Upa H.L. Tehluna', role: 'Elder', period: '2006', imageUrl: 'https://i.ibb.co/b5TcDF1y/Upa-Tehluna.jpg', description: 'Finna nei a, ngaihsak tak a ni.', order: 12 },
+      { id: 'e13', name: 'Upa C. Lalthantluanga', role: 'Elder', period: '2020', imageUrl: 'https://i.ibb.co/MkYn154v/Upa-Tluanga.jpg', description: 'A tawngtainate avanga mi hriat hlawh, Pathian thu hrethiam tak a ni.', order: 13 },
+      { id: 'e14', name: 'Upa C. Zohmingthanga', role: 'Elder', period: '2022', imageUrl: 'https://i.ibb.co/7tsDcQDk/Upa-Zaia.jpg', description: 'Ṭhalai program leh rawngbawlnate tana inpe.', order: 14 }
     ] as Staff[],
     weeklyDuty: {
       id: 'current',
