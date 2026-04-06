@@ -1,119 +1,227 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Document ID: {userId}
-    // Fields:
-    //   - uid: string (required)
-    //   - email: string (required)
-    //   - displayName: string (required)
-    //   - role: string (required, 'admin'|'member')
-    //   - isAdmin: bool (optional)
-    //   - createdAt: string (required)
-    //
-    // Collection: announcements, events, sermons, ministries, staff, weeklyDuties, 
-    //             records, sundaySchoolDepartments, sundaySchoolReports, ktpHruaitute, 
-    //             ktpBudget, resources, gallery, gallery_folders, archives, articles, 
-    //             missionaries, committees, thawhlawm
-    // [Standard fields as defined in firebase-blueprint.json]
-    //
-    // ===============================================================
-
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-    
+    // ===============================
+    // Helper functions
+    // ===============================
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
     function isAdmin() {
-      return isAuthenticated() &&
-        (
-          request.auth.uid == "KvdUzxS37ESXZSX6xspTQ7OEeo83" ||
-          request.auth.token.email == "kohhranb@gmail.com" || 
-          request.auth.token.email == "nkhiangte@gmail.com"
-        );
+      return isAuthenticated() && (
+        request.auth.uid == "KvdUzxS37ESXZsX6xspTQ7oEeo83" ||
+        request.auth.token.email == "nkhiangte@gmail.com" ||
+        request.auth.token.email == "kohhranb@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+          )
+        )
+      );
     }
 
-    function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    }
+    // ===============================
+    // Publicly readable collections
+    // ===============================
 
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
-    }
-
-    function isValidUser(data) {
-      return data.uid is string && data.uid.size() > 0 &&
-             data.email is string && isValidEmail(data.email) &&
-             data.displayName is string && data.displayName.size() > 0 &&
-             data.role in ['admin', 'member'];
-    }
-
-    // ===============================================================
-    // Rules
-    // ===============================================================
-
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    (isOwner(userId) && request.resource.data.role == 'member' || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
-      allow delete: if isAdmin();
-    }
-
-    match /ktpYearlyReports/{reportId} {
-      allow read, get, list: if true;
+    match /announcements/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /ktpMinutesArchives/{docId} {
-      allow read, get, list: if true;
+    match /articles/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /ktpHruaitute/{docId} {
-      allow read, get, list: if true;
+    match /archives/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /ktpBudget/{docId} {
-      allow read, get, list: if true;
+    match /bialMembers/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /committees/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /committees/{committeeId}/committeeReports/{reportId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /committees/{committeeId}/committeeImages/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /elders/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pastors/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /proPastors/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /events/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /gallery/{docId} {
-      allow read, get, list: if true;
-      allow create: if isAuthenticated() && (request.auth.uid == "KvdUzxS37ESXZSX6xspTQ7OEeo83" || isAdmin());
-      allow update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /gallery_folders/{docId} {
-      allow read, get, list: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    match /{collectionName}/{docId} {
-      allow read: if true; // Publicly readable church info
+    match /inkhawmChanvo/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /upaBials/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpBudget/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpLeaders/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpGallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpProductions/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /fellowship/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /fellowship/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpWhosWho/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpYearlyReports/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /kpvmBuhfaitham/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /kpvmNitinInkhawm/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /financeReports/{reportId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ministries/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /missionaries/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /records/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /resources/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /sundaySchoolDepartments/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /sundaySchoolWeeklyReports/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /thawhlawm/{docId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
     }
+
+    match /weeklyDuties/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /ktpMinutesArchives/{year} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ===============================
+    // User profiles
+    // ===============================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+    }
+
   }
 }

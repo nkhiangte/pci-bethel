@@ -41,6 +41,7 @@ import UpaBial from './pages/UpaBial';
 import Articles from './pages/Articles'; 
 import Missionaries from './pages/Missionaries'; 
 import Thawhlawm from './pages/Thawhlawm';
+import CommitteeDetail from './pages/CommitteeDetail';
 
 const App: React.FC = () => {
   return (
@@ -72,6 +73,7 @@ const App: React.FC = () => {
                 <Route path="/events" element={<Events />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/committees" element={<Departments />} />
+                <Route path="/committees/:id" element={<CommitteeDetail />} />
                 <Route path="/sundayschool/:departmentId" element={<SundaySchool />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
