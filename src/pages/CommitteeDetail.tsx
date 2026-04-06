@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { 
   Committee, 
   CommitteeMember, 
@@ -138,12 +140,22 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
                   </div>
                 )}
                 {isAdmin && !isOfflineMode && (
-                  <button 
-                    onClick={() => onDelete(committee.id, img.id)}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
-                  >
-                    <Trash size={14} />
-                  </button>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => onEdit(committee.id, img)}
+                      className="p-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-lg"
+                      title="Edit Caption"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      onClick={() => onDelete(committee.id, img.id)}
+                      className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                      title="Delete"
+                    >
+                      <Trash size={14} />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
@@ -425,6 +437,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
                 <label className="block text-sm font-bold text-slate-700 mb-1">File Upload</label>
                 <input 
                   type="file" 
+                  accept={fileType === 'pdf' ? '.pdf' : '.xlsx,.xls,.csv'}
                   className="w-full border border-slate-300 rounded-xl p-2.5 text-sm" 
                   onChange={e => setFile(e.target.files?.[0] || null)} 
                 />
@@ -465,16 +478,17 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
 
 interface ImageModalProps {
   committeeId: string;
+  editingImage: CommitteeImage | null;
   onSave: (committeeId: string, image: CommitteeImage) => Promise<void>;
   onClose: () => void;
   loading: boolean;
 }
 
-const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, loading }) => {
-  const [caption, setCaption] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSave, onClose, loading }) => {
+  const [caption, setCaption] = useState(editingImage?.caption || '');
+  const [imageUrl, setImageUrl] = useState(editingImage?.url || '');
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(editingImage?.url || null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -549,59 +563,69 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
         <form onSubmit={handleSubmit}>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Add Image</h3>
+              <h3 className="text-xl font-bold text-slate-800">{editingImage ? 'Edit Image' : 'Add Image'}</h3>
               <button type="button" onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-4">
-              {/* URL Input */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
-                <div className="flex gap-2">
-                  <input 
-                    className="flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-church-500 outline-none" 
-                    placeholder="Paste image URL here..." 
-                    value={imageUrl}
-                    onChange={e => {
-                      setImageUrl(e.target.value);
-                      if (e.target.value) {
-                        setFile(null);
-                        setPreview(e.target.value);
-                      }
-                    }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400 mt-1">Paste a URL from the Gallery or any web image.</p>
-              </div>
-
-              <div className="relative flex items-center py-2">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-xs text-slate-400 font-bold uppercase">OR</span>
-                <div className="flex-grow border-t border-slate-200"></div>
-              </div>
-
-              {/* File Upload */}
-              <div 
-                onClick={() => fileRef.current?.click()}
-                className="aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-all overflow-hidden relative"
-              >
-                {preview ? (
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <>
-                    <Camera size={32} className="text-slate-400 mb-2" />
-                    <p className="text-sm text-slate-500 font-medium">Click to upload image</p>
-                  </>
-                )}
-                {uploading && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                    <Loader className="animate-spin text-church-600" size={24} />
+              {!editingImage && (
+                <>
+                  {/* URL Input */}
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                    <div className="flex gap-2">
+                      <input 
+                        className="flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-church-500 outline-none" 
+                        placeholder="Paste image URL here..." 
+                        value={imageUrl}
+                        onChange={e => {
+                          setImageUrl(e.target.value);
+                          if (e.target.value) {
+                            setFile(null);
+                            setPreview(e.target.value);
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">Paste a URL from the Gallery or any web image.</p>
                   </div>
-                )}
-              </div>
-              <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-slate-200"></div>
+                    <span className="flex-shrink mx-4 text-xs text-slate-400 font-bold uppercase">OR</span>
+                    <div className="flex-grow border-t border-slate-200"></div>
+                  </div>
+
+                  {/* File Upload */}
+                  <div 
+                    onClick={() => fileRef.current?.click()}
+                    className="aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-all overflow-hidden relative"
+                  >
+                    {preview ? (
+                      <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <>
+                        <Camera size={32} className="text-slate-400 mb-2" />
+                        <p className="text-sm text-slate-500 font-medium">Click to upload image</p>
+                      </>
+                    )}
+                    {uploading && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <Loader className="animate-spin text-church-600" size={24} />
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+                </>
+              )}
+
+              {editingImage && preview && (
+                <div className="aspect-video rounded-xl overflow-hidden border border-slate-200">
+                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Caption (Optional)</label>
@@ -800,7 +824,7 @@ const CommitteeDetail: React.FC = () => {
     try {
       const imagesRef = db.collection('committees').doc(committeeId).collection('committeeImages');
       
-      if (image.id && image.id.length > 20) { // Assuming generated ID is long
+      if (image.id && image.id.length > 15) { // If it has a long ID, it's likely an existing or generated one
          await imagesRef.doc(image.id).set(image);
       } else {
          const newDoc = imagesRef.doc();
@@ -809,6 +833,7 @@ const CommitteeDetail: React.FC = () => {
       
       await fetchData();
       setIsImageModalOpen(false);
+      setEditingImage(null);
     } catch (error) { console.error("Error saving image:", error); }
     setLoading(false);
   };
@@ -860,20 +885,20 @@ const CommitteeDetail: React.FC = () => {
           <div className="flex border-b border-slate-100 px-8 pt-4 gap-8 overflow-x-auto scrollbar-hide sticky top-0 bg-white z-20">
             {(
               [
-                { key: 'members', label: 'Members', icon: Users, href: '#members' },
-                { key: 'activities', label: 'Activities', icon: Calendar, href: '#activities' },
-                { key: 'images', label: 'Gallery', icon: ImageIcon, href: '#images' },
-                { key: 'reports', label: 'Reports', icon: FileText, href: '#reports' },
+                { key: 'members', label: 'Members', icon: Users, id: 'members' },
+                { key: 'activities', label: 'Activities', icon: Calendar, id: 'activities' },
+                { key: 'images', label: 'Gallery', icon: ImageIcon, id: 'images' },
+                { key: 'reports', label: 'Reports', icon: FileText, id: 'reports' },
               ] as const
-            ).map(({ key, label, icon: Icon, href }) => (
-              <a
+            ).map(({ key, label, icon: Icon, id }) => (
+              <button
                 key={key}
-                href={href}
+                onClick={() => scrollToSection(id)}
                 className="whitespace-nowrap pb-4 text-sm font-bold flex items-center gap-2 border-b-4 border-transparent text-slate-400 hover:text-church-600 transition-all hover:border-church-200"
               >
                 <Icon size={18} />
                 {label}
-              </a>
+              </button>
             ))}
           </div>
 
@@ -961,13 +986,16 @@ const CommitteeDetail: React.FC = () => {
                         <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : 'TBA'}</span>
                         <span className="text-xl font-black">{activity.date ? activity.date.split(' ')[1] : ''}</span>
                       </div>
-                      <div className="flex-grow">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
-                          <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
+                        <div className="flex-grow">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
+                            <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
+                          </div>
+                          <div 
+                            className="text-slate-600 mt-2 leading-relaxed prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: activity.description }}
+                          />
                         </div>
-                        <p className="text-slate-600 mt-2 leading-relaxed">{activity.description}</p>
-                      </div>
                       {isAdmin && (
                         <div className="flex md:flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => { setEditingActivity(activity); setIsActivityModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={18} /></button>
@@ -996,7 +1024,8 @@ const CommitteeDetail: React.FC = () => {
                 isOfflineMode={isOfflineMode}
                 galleryFolders={galleryFolders}
                 galleryItems={galleryItems}
-                onAdd={() => setIsImageModalOpen(true)}
+                onAdd={() => { setEditingImage(null); setIsImageModalOpen(true); }}
+                onEdit={(cid, img) => { setEditingImage(img); setIsImageModalOpen(true); }}
                 onDelete={handleDeleteImage}
               />
             </section>
@@ -1083,8 +1112,17 @@ const CommitteeDetail: React.FC = () => {
                     <input type="text" className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.date || ''} onChange={e => setEditingActivity({...editingActivity!, date: e.target.value})} placeholder="e.g., October 15, 2026" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                    <textarea required className="w-full border border-slate-300 rounded-xl p-3 h-32 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.description || ''} onChange={e => setEditingActivity({...editingActivity!, description: e.target.value})} placeholder="Details about the activity..."></textarea>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Description / Story</label>
+                    <div className="bg-white rounded-xl overflow-hidden border border-slate-300">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={editingActivity?.description || ''} 
+                        onChange={(content) => setEditingActivity({...editingActivity!, description: content})}
+                        placeholder="Narrate the story of this activity..."
+                        className="h-48"
+                      />
+                    </div>
+                    <div className="h-12"></div> {/* Spacer for Quill toolbar/overflow */}
                   </div>
                 </div>
               </div>
@@ -1112,8 +1150,9 @@ const CommitteeDetail: React.FC = () => {
       {isImageModalOpen && (
         <ImageModal 
           committeeId={id!}
+          editingImage={editingImage}
           onSave={handleSaveImage}
-          onClose={() => setIsImageModalOpen(false)}
+          onClose={() => { setIsImageModalOpen(false); setEditingImage(null); }}
           loading={loading}
         />
       )}
