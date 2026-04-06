@@ -1048,9 +1048,9 @@ const CommitteeDetail: React.FC = () => {
           <div className="flex border-b border-slate-100 px-8 pt-4 gap-8 overflow-x-auto scrollbar-hide sticky top-0 bg-white z-20">
             {(
               [
+                { key: 'images', label: 'Gallery', icon: ImageIcon, id: 'images' },
                 { key: 'members', label: 'Members', icon: Users, id: 'members' },
                 { key: 'activities', label: 'Activities', icon: Calendar, id: 'activities' },
-                { key: 'images', label: 'Gallery', icon: ImageIcon, id: 'images' },
                 { key: 'reports', label: 'Reports', icon: FileText, id: 'reports' },
               ] as const
             ).map(({ key, label, icon: Icon, id }) => (
@@ -1066,6 +1066,28 @@ const CommitteeDetail: React.FC = () => {
           </div>
 
           <div className="p-8 md:p-12 space-y-16">
+            {/* Images Section */}
+            <section id="images" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <ImageIcon size={24} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800">Gallery</h3>
+                </div>
+              </div>
+              <ImagesPanel 
+                committee={committee}
+                isAdmin={isAdmin}
+                isOfflineMode={isOfflineMode}
+                galleryFolders={galleryFolders}
+                galleryItems={galleryItems}
+                onAdd={() => { setEditingImage(null); setIsImageModalOpen(true); }}
+                onEdit={(cid, img) => { setEditingImage(img); setIsImageModalOpen(true); }}
+                onDelete={handleDeleteImage}
+              />
+            </section>
+
             {/* Members Section */}
             <section id="members" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-slate-100 pb-4 gap-4">
@@ -1209,28 +1231,6 @@ const CommitteeDetail: React.FC = () => {
                   ))}
                 </div>
               )}
-            </section>
-
-            {/* Images Section */}
-            <section id="images" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                    <ImageIcon size={24} />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Gallery</h3>
-                </div>
-              </div>
-              <ImagesPanel 
-                committee={committee}
-                isAdmin={isAdmin}
-                isOfflineMode={isOfflineMode}
-                galleryFolders={galleryFolders}
-                galleryItems={galleryItems}
-                onAdd={() => { setEditingImage(null); setIsImageModalOpen(true); }}
-                onEdit={(cid, img) => { setEditingImage(img); setIsImageModalOpen(true); }}
-                onDelete={handleDeleteImage}
-              />
             </section>
 
             {/* Reports Section */}
