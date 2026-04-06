@@ -113,9 +113,10 @@ const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin
           <div 
             {...attributes} 
             {...listeners}
-            className="p-1 text-slate-400 hover:text-church-600 cursor-grab active:cursor-grabbing"
+            className="p-2 text-slate-400 hover:text-church-600 cursor-grab active:cursor-grabbing bg-slate-50 rounded-lg hover:bg-church-50 transition-colors"
+            title="Drag to reorder"
           >
-            <GripVertical size={18} />
+            <GripVertical size={20} />
           </div>
         )}
       </div>
@@ -248,14 +249,18 @@ const Gallery: React.FC = () => {
                 (item.folderId || null) === (currentFolderId || null)
             );
             // Sort by order first, then by date
-            filteredItems.sort((a: any, b: any) => {
-                if (a.order !== undefined && b.order !== undefined) {
-                    return a.order - b.order;
+            const sortedItems = [...filteredItems].sort((a: any, b: any) => {
+                const orderA = a.order !== undefined ? a.order : 999999;
+                const orderB = b.order !== undefined ? b.order : 999999;
+                
+                if (orderA !== orderB) {
+                    return orderA - orderB;
                 }
+                // Tie-breaker: date (newest first)
                 return (b.date || '').localeCompare(a.date || '');
             });
             
-            setItems(filteredItems);
+            setItems(sortedItems);
             setLoading(false);
         }, (error: any) => {
             console.error("Error fetching items:", error);
@@ -555,22 +560,27 @@ const Gallery: React.FC = () => {
               </h2>
               
               {isAdmin && (
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => setIsAddingFolder(true)}
-                    className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
-                  >
-                    <FolderPlus size={18} className="mr-2" /> New Folder
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setItemType(currentCategory === 'Videos' ? 'video' : 'photo');
-                      setIsAddingItem(true);
-                    }}
-                    className="flex items-center px-4 py-2 bg-white text-church-600 border border-church-200 rounded-lg hover:bg-church-50 transition shadow-sm"
-                  >
-                    <Plus size={18} className="mr-2" /> {currentCategory === 'Videos' ? 'Add Video' : 'Add Photo'}
-                  </button>
+                <div className="flex items-center space-x-3">
+                  <p className="text-xs text-slate-500 hidden sm:block">
+                    <span className="font-bold text-church-600">Admin Tip:</span> Use the handle <GripVertical size={14} className="inline" /> to drag and reorder items.
+                  </p>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => setIsAddingFolder(true)}
+                      className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm"
+                    >
+                      <FolderPlus size={18} className="mr-2" /> New Folder
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setItemType(currentCategory === 'Videos' ? 'video' : 'photo');
+                        setIsAddingItem(true);
+                      }}
+                      className="flex items-center px-4 py-2 bg-white text-church-600 border border-church-200 rounded-lg hover:bg-church-50 transition shadow-sm"
+                    >
+                      <Plus size={18} className="mr-2" /> {currentCategory === 'Videos' ? 'Add Video' : 'Add Photo'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
