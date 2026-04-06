@@ -16,13 +16,16 @@ const Navbar: React.FC = () => {
   const navLinks = [
     { name: t.nav.home, path: '/' },
     { name: t.nav.upaBial, path: '/upa-bial' },
-    { name: t.nav.missionaries, path: '/missionaries' },
-    { name: t.nav.articles, path: '/articles' },
-    { name: t.nav.about, path: '/about' },
-    { name: t.nav.events, path: '/events' },
-    { name: t.nav.announcements, path: '/announcements' },
     { name: t.nav.departments, path: '/committees' },
-    { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
+    { 
+      name: t.nav.fellowships, 
+      path: '#',
+      children: [
+        { name: 'Kohhran Hmeichhia', path: '/kohhran-hmeichhia' },
+        { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
+        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
+      ]
+    },
     { 
       name: t.nav.sundaySchool, 
       path: '#',
@@ -38,15 +41,12 @@ const Navbar: React.FC = () => {
         { name: t.sundaySchool.puitling, path: '/sundayschool/puitling' },
       ]
     },
-    { 
-      name: t.nav.fellowships, 
-      path: '#',
-      children: [
-        { name: 'Kohhran Hmeichhia', path: '/kohhran-hmeichhia' },
-        { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
-        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
-      ]
-    },
+    { name: t.nav.announcements, path: '/announcements' },
+    { name: t.nav.events, path: '/events' },
+    { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
+    { name: t.nav.records, path: '/records' },
+    { name: t.nav.missionaries, path: '/missionaries' },
+    { name: t.nav.articles, path: '/articles' },
     { 
       name: t.nav.contributions, 
       path: '#',
@@ -58,9 +58,9 @@ const Navbar: React.FC = () => {
         { name: 'Masihi Sangati', path: '/thawhlawm?category=masihi-sangati' },
       ]
     },
-    { name: t.nav.records, path: '/records' },
     { name: t.nav.archives, path: '/archives' },
     { name: t.nav.gallery, path: '/gallery' },
+    { name: t.nav.about, path: '/about' },
     { name: t.nav.contact, path: '/contact' },
   ];
 
