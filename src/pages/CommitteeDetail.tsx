@@ -41,6 +41,7 @@ interface ImagesPanelProps {
   galleryFolders: GalleryFolder[];
   galleryItems: GalleryItem[];
   onAdd: (committeeId: string) => void;
+  onEdit: (committeeId: string, image: CommitteeImage) => void;
   onDelete: (committeeId: string, imageId: string) => void;
 }
 
@@ -48,9 +49,10 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
   committee, 
   isAdmin, 
   isOfflineMode, 
-  galleryFolders,
+  galleryFolders, 
   galleryItems,
   onAdd, 
+  onEdit,
   onDelete 
 }) => {
   const directImages: CommitteeImage[] = committee.images || [];
@@ -542,10 +544,10 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSa
       }
 
       const image: CommitteeImage = {
-        id: Date.now().toString(),
+        id: editingImage?.id || Date.now().toString(),
         url: finalUrl,
         caption: caption.trim(),
-        uploadedAt: new Date().toISOString(),
+        uploadedAt: editingImage?.uploadedAt || new Date().toISOString(),
       };
 
       await onSave(committeeId, image);
@@ -658,6 +660,13 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSa
 
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
+const scrollToSection = (id: string) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 const CommitteeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -683,6 +692,7 @@ const CommitteeDetail: React.FC = () => {
   const [editingReport, setEditingReport] = useState<CommitteeReport | null>(null);
   
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [editingImage, setEditingImage] = useState<CommitteeImage | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!id || !db) return;
