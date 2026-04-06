@@ -20,7 +20,9 @@ import {
   Edit2,
   Play,
   Youtube,
-  FolderPlus
+  FolderPlus,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -129,6 +131,20 @@ const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin
             title="Edit Details"
           >
             <Edit2 size={16} />
+          </button>
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              const url = item.videoUrl || item.imageUrl;
+              if (url) {
+                navigator.clipboard.writeText(url);
+                alert('URL copied to clipboard!');
+              }
+            }}
+            className="p-2 bg-white/90 text-emerald-600 rounded-full shadow-md hover:bg-emerald-50 transition"
+            title="Copy URL"
+          >
+            <Copy size={16} />
           </button>
           <button 
             onClick={(e) => onDelete(item.id, e)}

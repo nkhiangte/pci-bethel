@@ -624,6 +624,7 @@ interface ImageModalProps {
 
 const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, loading }) => {
   const [caption, setCaption] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -639,6 +640,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
     }
 
     setFile(selectedFile);
+    setImageUrl(''); // Clear URL if file is selected
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(selectedFile);
@@ -646,43 +648,48 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
-      alert('Please select an image.');
+    
+    let finalUrl = imageUrl.trim();
+
+    if (!finalUrl && !file) {
+      alert('Please select an image or enter an image URL.');
       return;
     }
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const storagePath = `committees/${committeeId}/images/${fileName}`;
-      const storageRef = storage.ref().child(storagePath);
-      
-      const uploadTask = storageRef.put(file);
-      
-      const downloadUrl = await new Promise<string>((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          null,
-          (error) => reject(error),
-          async () => {
-            const url = await storageRef.getDownloadURL();
-            resolve(url);
-          }
-        );
-      });
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const storagePath = `committees/${committeeId}/images/${fileName}`;
+        const storageRef = storage.ref().child(storagePath);
+        
+        const uploadTask = storageRef.put(file);
+        
+        finalUrl = await new Promise<string>((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            null,
+            (error) => reject(error),
+            async () => {
+              const url = await storageRef.getDownloadURL();
+              resolve(url);
+            }
+          );
+        });
+      }
 
       const image: CommitteeImage = {
         id: Date.now().toString(),
-        url: downloadUrl,
+        url: finalUrl,
         caption: caption.trim(),
         uploadedAt: new Date().toISOString(),
       };
 
       await onSave(committeeId, image);
     } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload image. Please try again.");
+      console.error("Error saving image:", error);
+      alert("Failed to save image. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -701,6 +708,33 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
             </div>
 
             <div className="space-y-4">
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                <div className="flex gap-2">
+                  <input 
+                    className="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm" 
+                    placeholder="Paste image URL here..." 
+                    value={imageUrl}
+                    onChange={e => {
+                      setImageUrl(e.target.value);
+                      if (e.target.value) {
+                        setFile(null);
+                        setPreview(e.target.value);
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">Paste a URL from the Gallery or any web image.</p>
+              </div>
+
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="flex-shrink mx-4 text-xs text-slate-400 font-bold uppercase">OR</span>
+                <div className="flex-grow border-t border-slate-200"></div>
+              </div>
+
+              {/* File Upload */}
               <div 
                 onClick={() => fileRef.current?.click()}
                 className="aspect-video border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-all overflow-hidden relative"
@@ -710,7 +744,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
                 ) : (
                   <>
                     <Camera size={32} className="text-slate-400 mb-2" />
-                    <p className="text-sm text-slate-500 font-medium">Click to select image</p>
+                    <p className="text-sm text-slate-500 font-medium">Click to upload image</p>
                   </>
                 )}
                 {uploading && (
@@ -737,11 +771,11 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, l
             <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100">Cancel</button>
             <button 
               type="submit" 
-              disabled={loading || uploading || !file}
+              disabled={loading || uploading || (!file && !imageUrl.trim())}
               className="px-5 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center gap-2 disabled:opacity-50"
             >
               {loading || uploading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={16} />}
-              Upload Image
+              {imageUrl.trim() && !file ? 'Link Image' : 'Upload & Save'}
             </button>
           </div>
         </form>
