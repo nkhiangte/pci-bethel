@@ -97,6 +97,85 @@ const Fellowship: React.FC = () => {
   if (fellowship === undefined) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500" /></div>;
   if (fellowship === null) return <Navigate to="/" />;
 
+  // ── Shared Edit Modal ─────────────────────────────────────
+  const editModal = isEditing && (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <form onSubmit={handleSave}>
+          <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+            <h3 className="text-xl font-bold text-slate-800">Edit {fellowship.name}</h3>
+            <button type="button" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
+              <input
+                className="w-full border p-2 rounded"
+                value={editForm.name || ''}
+                onChange={e => setEditForm({...editForm, name: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+              <textarea
+                className="w-full border p-2 rounded h-24"
+                value={editForm.description || ''}
+                onChange={e => setEditForm({...editForm, description: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Logo / Image</label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded border overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img
+                    src={logoFile ? URL.createObjectURL(logoFile) : editForm.image}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="flex-grow">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-church-50 file:text-church-700 hover:file:bg-church-100"
+                    onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Leader</label>
+                <input
+                  className="w-full border p-2 rounded"
+                  value={editForm.leader || ''}
+                  onChange={e => setEditForm({...editForm, leader: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Schedule</label>
+                <input
+                  className="w-full border p-2 rounded"
+                  value={editForm.schedule || ''}
+                  onChange={e => setEditForm({...editForm, schedule: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="p-6 border-t bg-slate-50 flex justify-end space-x-3">
+            <button type="button" onClick={() => setIsEditing(false)} className="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-white font-medium transition">Cancel</button>
+            <button type="submit" disabled={isSaving} className="px-5 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-medium flex items-center shadow-md transition disabled:opacity-50">
+              {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   // ── KPVM Render ───────────────────────────────────────────
   if (isKPVM) {
       return (
@@ -107,7 +186,7 @@ const Fellowship: React.FC = () => {
                           <div className="w-24 h-24 bg-slate-200 rounded-2xl overflow-hidden shadow-md shrink-0 relative group">
                               <img src={fellowship.image} alt={fellowship.name} className="w-full h-full object-cover" />
                               {isAdmin && (
-                                  <button 
+                                  <button
                                       onClick={openEditModal}
                                       className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                   >
@@ -161,7 +240,7 @@ const Fellowship: React.FC = () => {
                   )}
                   {kpvmActiveTab === 'buhfaitham' && (
                       <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                          <StatsTable 
+                          <StatsTable
                               title="Buhfaitham Record"
                               collectionName="kpvmBuhfaitham"
                               isAdmin={isAdmin}
@@ -178,7 +257,7 @@ const Fellowship: React.FC = () => {
                   )}
                   {kpvmActiveTab === 'nitin-inkhawm' && (
                       <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                          <StatsTable 
+                          <StatsTable
                               title="Kristian Chhungkua (Nitin Inkhawm)"
                               collectionName="kpvmNitinInkhawm"
                               isAdmin={isAdmin}
@@ -192,6 +271,8 @@ const Fellowship: React.FC = () => {
                       </div>
                   )}
               </div>
+
+              {editModal}
           </div>
       );
   }
@@ -205,7 +286,7 @@ const Fellowship: React.FC = () => {
                     <div className="w-32 h-32 bg-white p-2 rounded-full shadow-xl shrink-0 relative group">
                         <img src={fellowship.image} alt="Logo" className="w-full h-full object-cover rounded-full" />
                         {isAdmin && (
-                            <button 
+                            <button
                                 onClick={openEditModal}
                                 className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full"
                             >
@@ -220,7 +301,7 @@ const Fellowship: React.FC = () => {
                 </div>
             </div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
              <div className="bg-white p-8 rounded-xl shadow-sm">
                  <h2 className="text-2xl font-bold text-slate-800 mb-4">About {fellowship.acronym || fellowship.name}</h2>
@@ -238,84 +319,7 @@ const Fellowship: React.FC = () => {
              </div>
         </div>
 
-        {/* Edit Modal */}
-        {isEditing && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                    <form onSubmit={handleSave}>
-                        <div className="p-6 border-b flex justify-between items-center bg-slate-50">
-                            <h3 className="text-xl font-bold text-slate-800">Edit {fellowship.name}</h3>
-                            <button type="button" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
-                                <input 
-                                    className="w-full border p-2 rounded" 
-                                    value={editForm.name || ''} 
-                                    onChange={e => setEditForm({...editForm, name: e.target.value})} 
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                                <textarea 
-                                    className="w-full border p-2 rounded h-24" 
-                                    value={editForm.description || ''} 
-                                    onChange={e => setEditForm({...editForm, description: e.target.value})}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Logo / Image</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded border overflow-hidden bg-slate-100 flex-shrink-0">
-                                        <img 
-                                            src={logoFile ? URL.createObjectURL(logoFile) : editForm.image} 
-                                            alt="Preview" 
-                                            className="w-full h-full object-cover" 
-                                            referrerPolicy="no-referrer" 
-                                        />
-                                    </div>
-                                    <div className="flex-grow">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-church-50 file:text-church-700 hover:file:bg-church-100"
-                                            onChange={e => setLogoFile(e.target.files?.[0] || null)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Leader</label>
-                                    <input 
-                                        className="w-full border p-2 rounded" 
-                                        value={editForm.leader || ''} 
-                                        onChange={e => setEditForm({...editForm, leader: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Schedule</label>
-                                    <input 
-                                        className="w-full border p-2 rounded" 
-                                        value={editForm.schedule || ''} 
-                                        onChange={e => setEditForm({...editForm, schedule: e.target.value})}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-6 border-t bg-slate-50 flex justify-end space-x-3">
-                            <button type="button" onClick={() => setIsEditing(false)} className="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-white font-medium transition">Cancel</button>
-                            <button type="submit" disabled={isSaving} className="px-5 py-2.5 bg-church-600 text-white rounded-lg hover:bg-church-700 font-medium flex items-center shadow-md transition disabled:opacity-50">
-                                {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={18} className="mr-2" />} Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )}
+        {editModal}
     </div>
   );
 };
