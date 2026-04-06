@@ -424,6 +424,13 @@ export interface CommitteeMember {
   phone?: string;
 }
 
+export interface CommitteeImage {
+  id: string;
+  url: string;
+  caption?: string;
+  uploadedAt: string;
+}
+
 export interface CommitteeActivity {
   id: string;
   title: string;
@@ -438,5 +445,6 @@ export interface Committee {
   description?: string;
   members: CommitteeMember[];
   activities?: CommitteeActivity[];
+  images?: CommitteeImage[];
   order?: number;
 }

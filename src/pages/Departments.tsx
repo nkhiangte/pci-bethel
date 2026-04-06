@@ -4,11 +4,12 @@ import {
   Smile, Library, Book, Box, Newspaper, FileText, UserPlus, Clock, 
   ClipboardCheck, Handshake, ChevronDown, ChevronUp, Search, Loader, 
   AlertTriangle, Phone, Plus, Edit, Trash, Save, X, Database, ArrowUp, ArrowDown,
-  Upload, Download, File, FileSpreadsheet, Trash2, BarChart2
+  Upload, Download, File, FileSpreadsheet, Trash2, BarChart2, Image as ImageIcon,
+  Camera
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db } from '../services/firebase';
-import { Committee, CommitteeMember } from '../types';
+import { db, storage, handleFirestoreError, OperationType } from '../services/firebase';
+import { Committee, CommitteeMember, CommitteeImage } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -612,6 +613,265 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({
   );
 };
 
+// ─── Image Upload Modal ───────────────────────────────────────────────────────
+
+interface ImageModalProps {
+  committeeId: string;
+  onSave: (committeeId: string, image: CommitteeImage) => Promise<void>;
+  onClose: () => void;
+  loading: boolean;
+}
+
+const ImageModal: React.FC<ImageModalProps> = ({ committeeId, onSave, onClose, loading }) => {
+  const [caption, setCaption] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    setFile(selectedFile);
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(selectedFile);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) {
+      alert('Please select an image.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storagePath = `committees/${committeeId}/images/${fileName}`;
+      const storageRef = storage.ref().child(storagePath);
+      
+      const uploadTask = storageRef.put(file);
+      
+      const downloadUrl = await new Promise<string>((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          null,
+          (error) => reject(error),
+          async () => {
+            const url = await storageRef.getDownloadURL();
+            resolve(url);
+          }
+        );
+      });
+
+      const image: CommitteeImage = {
+        id: Date.now().toString(),
+        url: downloadUrl,
+        caption: caption.trim(),
+        uploadedAt: new Date().toISOString(),
+      };
+
+      await onSave(committeeId, image);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <form onSubmit={handleSubmit}>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-800">Add Image</h3>
+              <button type="button" onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div 
+                onClick={() => fileRef.current?.click()}
+                className="aspect-video border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-church-400 hover:bg-church-50 transition-all overflow-hidden relative"
+              >
+                {preview ? (
+                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <Camera size={32} className="text-slate-400 mb-2" />
+                    <p className="text-sm text-slate-500 font-medium">Click to select image</p>
+                  </>
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                    <Loader className="animate-spin text-church-600" size={24} />
+                  </div>
+                )}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Caption (Optional)</label>
+                <input 
+                  className="w-full border border-slate-300 rounded-lg p-2.5" 
+                  placeholder="Enter a brief caption..." 
+                  value={caption}
+                  onChange={e => setCaption(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 flex justify-end gap-2 rounded-b-xl">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100">Cancel</button>
+            <button 
+              type="submit" 
+              disabled={loading || uploading || !file}
+              className="px-5 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading || uploading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={16} />}
+              Upload Image
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ─── Images Tab Panel ─────────────────────────────────────────────────────────
+
+interface ImagesPanelProps {
+  committee: Committee & { images?: CommitteeImage[] };
+  isAdmin: boolean;
+  isOfflineMode: boolean;
+  galleryFolders: GalleryFolder[];
+  galleryItems: GalleryItem[];
+  onAdd: (committeeId: string) => void;
+  onDelete: (committeeId: string, imageId: string) => void;
+}
+
+const ImagesPanel: React.FC<ImagesPanelProps> = ({ 
+  committee, 
+  isAdmin, 
+  isOfflineMode, 
+  galleryFolders,
+  galleryItems,
+  onAdd, 
+  onDelete 
+}) => {
+  const directImages: CommitteeImage[] = (committee as any).images || [];
+  
+  // Find linked gallery folder
+  const linkedFolder = galleryFolders.find(f => f.name.toLowerCase() === committee.name.toLowerCase());
+  const linkedImages = linkedFolder 
+    ? galleryItems.filter(item => item.folderId === linkedFolder.id)
+    : [];
+
+  return (
+    <div>
+      {/* Gallery Synced Images */}
+      {linkedImages.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-church-600 uppercase tracking-wider">Synced from Gallery</h4>
+              <span className="text-[10px] bg-church-100 text-church-700 px-2 py-0.5 rounded-full font-bold">Auto-Sync</span>
+            </div>
+            <Link 
+              to={`/gallery/committees/${linkedFolder?.id}`}
+              className="text-[10px] text-slate-500 hover:text-church-600 underline"
+            >
+              Manage in Gallery
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {linkedImages.map(img => (
+              <div key={img.id} className="group relative aspect-square rounded-lg overflow-hidden bg-slate-200 shadow-sm border border-slate-100">
+                <img 
+                  src={img.imageUrl} 
+                  alt={img.title || 'Gallery Image'} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 translate-y-full group-hover:translate-y-0 transition-transform">
+                  <p className="text-[10px] text-white line-clamp-2 leading-tight">{img.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Direct Uploads */}
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          {linkedImages.length > 0 ? 'Direct Committee Uploads' : 'Images'}
+        </h4>
+        {isAdmin && !isOfflineMode && (
+          <button 
+            onClick={() => onAdd(committee.id)}
+            className="text-xs font-semibold text-church-600 bg-church-100 px-3 py-1.5 rounded-lg hover:bg-church-200 flex items-center gap-1"
+          >
+            <Plus size={13} /> Add Image
+          </button>
+        )}
+      </div>
+
+      {directImages.length === 0 && linkedImages.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-slate-200">
+          <ImageIcon size={48} className="mx-auto text-slate-300 mb-3" />
+          <p className="text-sm text-slate-500">No images found for this committee.</p>
+          {isAdmin && (
+            <p className="text-xs text-church-600 mt-2">
+              Upload directly here or create a folder named "{committee.name}" in the Gallery.
+            </p>
+          )}
+        </div>
+      ) : directImages.length === 0 && linkedImages.length > 0 ? (
+        <p className="text-xs text-slate-400 italic text-center py-4">No direct uploads. All images are synced from Gallery.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {directImages.map(img => (
+            <div key={img.id} className="group relative aspect-square rounded-lg overflow-hidden bg-slate-200 shadow-sm border border-slate-100">
+              <img 
+                src={img.url} 
+                alt={img.caption || 'Committee Image'} 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                referrerPolicy="no-referrer"
+              />
+              {img.caption && (
+                <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 translate-y-full group-hover:translate-y-0 transition-transform">
+                  <p className="text-[10px] text-white line-clamp-2 leading-tight">{img.caption}</p>
+                </div>
+              )}
+              {isAdmin && !isOfflineMode && (
+                <button 
+                  onClick={() => onDelete(committee.id, img.id)}
+                  className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Departments component ───────────────────────────────────────────────
 
 const Departments: React.FC = () => {
@@ -644,6 +904,14 @@ const Departments: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [editingReportInfo, setEditingReportInfo] = useState<{ committeeId: string; report?: CommitteeReport | null }>({ committeeId: '' });
 
+  // Image modal
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedCommitteeForImage, setSelectedCommitteeForImage] = useState<string | null>(null);
+
+  // Gallery Sync Data
+  const [galleryFolders, setGalleryFolders] = useState<GalleryFolder[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+
   // Reordering
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   const initialOrderRef = useRef<string[]>([]);
@@ -658,6 +926,15 @@ const Departments: React.FC = () => {
     }
 
     try {
+        // Fetch Gallery data for syncing
+        const gFoldersSnap = await db.collection('gallery_folders').where('category', '==', 'Committees').get();
+        const gFolders = gFoldersSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+        setGalleryFolders(gFolders);
+
+        const gItemsSnap = await db.collection('gallery').where('category', '==', 'Committees').get();
+        const gItems = gItemsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+        setGalleryItems(gItems);
+
         const snapshot = await db.collection('committees').get();
         if (!snapshot.empty) {
             const fetchedData = snapshot.docs.map((doc: any) => ({
@@ -670,20 +947,24 @@ const Departments: React.FC = () => {
             });
 
             // Fetch reports subcollection for each committee
-            const fetchedWithReports = await Promise.all(
+            const fetchedWithSubcollections = await Promise.all(
               fetchedData.map(async (committee) => {
                 try {
                   const reportsSnap = await db.collection('committees').doc(committee.id).collection('committeeReports').get();
                   const reports: CommitteeReport[] = reportsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-                  return { ...committee, reports };
+                  
+                  const imagesSnap = await db.collection('committees').doc(committee.id).collection('committeeImages').get();
+                  const images: CommitteeImage[] = imagesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+                  
+                  return { ...committee, reports, images };
                 } catch {
-                  return { ...committee, reports: [] };
+                  return { ...committee, reports: [], images: [] };
                 }
               })
             );
 
-            setCommittees(fetchedWithReports as any);
-            initialOrderRef.current = fetchedWithReports.map(c => c.id);
+            setCommittees(fetchedWithSubcollections as any);
+            initialOrderRef.current = fetchedWithSubcollections.map(c => c.id);
             setIsOfflineMode(false);
         } else {
             setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
@@ -835,6 +1116,41 @@ const Departments: React.FC = () => {
         return { ...c, reports } as any;
       }));
     } catch (error) { console.error("Error deleting report:", error); }
+  };
+
+  // ── Save image — stored in subcollection ────────────────────────────────────
+
+  const handleSaveImage = async (committeeId: string, image: CommitteeImage) => {
+    if (!db) return;
+    setLoading(true);
+    try {
+      const imagesRef = db.collection('committees').doc(committeeId).collection('committeeImages');
+      await imagesRef.doc(image.id).set(image);
+
+      // Refresh images for this committee
+      const snap = await imagesRef.get();
+      const images: CommitteeImage[] = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+      setCommittees(prev => prev.map(c => c.id === committeeId ? { ...c, images } as any : c));
+
+      setIsImageModalOpen(false);
+      setSelectedCommitteeForImage(null);
+    } catch (error) {
+      console.error("Error saving image:", error);
+      alert("Failed to save image metadata.");
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteImage = async (committeeId: string, imageId: string) => {
+    if (!db || !window.confirm("Delete this image?")) return;
+    try {
+      await db.collection('committees').doc(committeeId).collection('committeeImages').doc(imageId).delete();
+      setCommittees(prev => prev.map(c => {
+        if (c.id !== committeeId) return c;
+        const images = ((c as any).images || []).filter((img: CommitteeImage) => img.id !== imageId);
+        return { ...c, images } as any;
+      }));
+    } catch (error) { console.error("Error deleting image:", error); }
   };
 
   // ── Seed / order ────────────────────────────────────────────────────────────
@@ -1121,9 +1437,15 @@ const Departments: React.FC = () => {
 
                           {/* Images tab */}
                           {currentTab === 'images' && (
-                            <div>
-                              <p className="text-sm text-slate-400 italic text-center py-4">Images feature coming soon.</p>
-                            </div>
+                            <ImagesPanel 
+                              committee={c as any}
+                              isAdmin={isAdmin}
+                              isOfflineMode={isOfflineMode}
+                              galleryFolders={galleryFolders}
+                              galleryItems={galleryItems}
+                              onAdd={(id) => { setSelectedCommitteeForImage(id); setIsImageModalOpen(true); }}
+                              onDelete={handleDeleteImage}
+                            />
                           )}
 
                           {/* Reports tab */}
@@ -1258,6 +1580,16 @@ const Departments: React.FC = () => {
         editingReport={editingReportInfo.report}
         onSave={handleSaveReport}
         onClose={() => { setIsReportModalOpen(false); setEditingReportInfo({ committeeId: '' }); }}
+        loading={loading}
+      />
+    )}
+
+    {/* ── Image Modal ── */}
+    {isImageModalOpen && selectedCommitteeForImage && (
+      <ImageModal 
+        committeeId={selectedCommitteeForImage}
+        onSave={handleSaveImage}
+        onClose={() => { setIsImageModalOpen(false); setSelectedCommitteeForImage(null); }}
         loading={loading}
       />
     )}
