@@ -274,7 +274,7 @@ const Events: React.FC = () => {
       setIsEditing(false);
       fetchEvents();
     } catch (error) {
-      alert("Failed to save.");
+      alert(t.stats.saveFail);
     }
     setLoading(false);
   };
@@ -309,7 +309,7 @@ const Events: React.FC = () => {
                 <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-4xl font-serif font-bold text-church-900">{t.events.title}</h1>
                     {(new Date().getDay() === 0 && (new Date().getHours() > 19 || (new Date().getHours() === 19 && new Date().getMinutes() >= 30))) && (
-                        <span className="bg-church-100 text-church-700 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">Next Week</span>
+                        <span className="bg-church-100 text-church-700 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">{t.events.nextWeek}</span>
                     )}
                 </div>
                 <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
@@ -318,7 +318,7 @@ const Events: React.FC = () => {
             </div>
             {isAdmin && (
                 <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm font-bold">
-                    <Plus size={18} className="mr-2" /> Add Program
+                    <Plus size={18} className="mr-2" /> {t.events.addProgram}
                 </button>
             )}
         </div>
@@ -347,15 +347,15 @@ const Events: React.FC = () => {
                 </div>
                 <div className="p-6 flex-1 pr-16">
                   <div className="flex items-center space-x-2 mb-3">
-                    <span className="text-xs font-bold px-2 py-1 rounded uppercase tracking-wide bg-church-100 text-church-700"> SERVICE </span>
+                    <span className="text-xs font-bold px-2 py-1 rounded uppercase tracking-wide bg-church-100 text-church-700"> {t.events.service} </span>
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-2">{event.title}</h3>
                   {event.program && Object.values(event.program).some(v => !!v) && (
                       <div className="bg-slate-50 p-5 rounded-lg my-4 space-y-1 border border-slate-100 shadow-inner">
-                          <ProgramItem label="Hruaitu" value={event.program.hruaitu} />
-                          <ProgramItem label="Ṭantu" value={event.program.tantu} />
-                          <ProgramItem label={speakerLabel} value={event.program.thuhriltu} />
-                          <ProgramItem label="Thupui" value={event.program.thupui} />
+                          <ProgramItem label={t.events.hruaitu} value={event.program.hruaitu} />
+                          <ProgramItem label={t.events.tantu} value={event.program.tantu} />
+                          <ProgramItem label={isNilaiZan ? t.events.thupuiHawngtu : t.events.thuhriltu} value={event.program.thuhriltu} />
+                          <ProgramItem label={t.events.thupui} value={event.program.thupui} />
                       </div>
                   )}
                   <div className="flex flex-col sm:flex-row sm:space-x-6 text-sm text-slate-500 mt-auto pt-4 border-t border-slate-100">
@@ -373,48 +373,48 @@ const Events: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col">
                 <div className="p-6 border-b flex justify-between items-center bg-church-50 rounded-t-xl">
-                    <h3 className="text-xl font-bold text-church-900">Program Details</h3>
+                    <h3 className="text-xl font-bold text-church-900">{t.events.programDetails}</h3>
                     <button onClick={() => setIsEditing(false)}><X size={20}/></button>
                 </div>
                 <div className="p-6 space-y-4 overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder="Service Name" />
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.title}</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} placeholder={t.events.form.placeholders.title} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.date}</label>
                             <input type="date" className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})} />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Time</label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})} placeholder="e.g. 07:00 PM" />
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.time}</label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})} placeholder={t.events.form.placeholders.time} />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Hruaitu</label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder="Conductor name" />
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.hruaitu}</label>
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder={t.events.form.placeholders.conductor} />
                         </div>
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">
-                                {normalizeTitle(editForm.title || '').includes('nilai') ? "Thupui Hawngtu" : "Thuhriltu"}
+                                {normalizeTitle(editForm.title || '').includes('nilai') ? t.events.thupuiHawngtu : t.events.thuhriltu}
                             </label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder="Preacher or Speaker name" />
+                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder={t.events.form.placeholders.preacher} />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Thupui (Topic)</label>
-                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder="Sermon or lesson topic" />
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.topic}</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder={t.events.form.placeholders.topic} />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Ṭantu (Reader)</label>
-                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder="Name of person reading" />
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.reader}</label>
+                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder={t.events.form.placeholders.reader} />
                     </div>
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl border-t">
-                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition">Cancel</button>
-                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition shadow-sm">Save Changes</button>
+                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition">{t.fellowship.cancel}</button>
+                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition shadow-sm">{t.fellowship.save}</button>
                 </div>
             </div>
         </div>
@@ -423,11 +423,11 @@ const Events: React.FC = () => {
       {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl p-6 max-sm w-full">
-                  <h3 className="text-lg font-bold text-red-600 mb-4">Confirm Delete</h3>
-                  <p className="text-slate-600 mb-6">Remove this occurrence from the schedule?</p>
+                  <h3 className="text-lg font-bold text-red-600 mb-4">{t.events.deleteConfirm}</h3>
+                  <p className="text-slate-600 mb-6">{t.events.deleteSub}</p>
                   <div className="flex justify-end space-x-3">
-                      <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 font-bold">Cancel</button>
-                      <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded font-bold">Delete</button>
+                      <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-slate-600 font-bold">{t.fellowship.cancel}</button>
+                      <button onClick={() => handleDelete(showDeleteConfirm)} className="px-4 py-2 bg-red-600 text-white rounded font-bold">{t.announcements.deleteConfirm}</button>
                   </div>
               </div>
           </div>

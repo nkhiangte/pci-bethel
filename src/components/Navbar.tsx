@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
       name: t.nav.sundaySchool, 
       path: '#',
       children: [
-        { name: 'Weekly Report', path: '/sundayschool/report' },
+        { name: t.nav.weeklyReport, path: '/sundayschool/report' },
         { name: t.sundaySchool['pre-beginner'], path: '/sundayschool/pre-beginner' },
         { name: t.sundaySchool.beginner, path: '/sundayschool/beginner' },
         { name: t.sundaySchool.primary, path: '/sundayschool/primary' },
@@ -42,13 +42,13 @@ const Navbar: React.FC = () => {
       name: t.nav.fellowships, 
       path: '#',
       children: [
-        { name: 'Kohhran Hmeichhia', path: '/fellowship/kpvm' },
+        { name: 'Kohhran Hmeichhia', path: '/kohhran-hmeichhia' },
         { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
-        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/fellowship/pavlai' },
+        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
       ]
     },
     { 
-      name: 'Contributions', 
+      name: t.nav.contributions, 
       path: '#',
       children: [
         { name: 'Pathian Ram', path: '/thawhlawm?category=pathian-ram' },
@@ -160,7 +160,7 @@ const Navbar: React.FC = () => {
                    to="/admin"
                    className="px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:bg-church-800 flex items-center"
                  >
-                   <Shield size={14} className="mr-1" /> Admin
+                   <Shield size={14} className="mr-1" /> {t.nav.admin}
                  </Link>
               )}
             </div>
@@ -262,7 +262,7 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsOpen(false)}
                 className="block px-3 py-2 rounded-md text-base font-medium text-orange-400 hover:bg-church-800"
               >
-                Admin Dashboard
+                {t.nav.adminDashboard}
               </Link>
             )}
 

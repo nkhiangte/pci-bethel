@@ -1,3 +1,4 @@
+import { useState } from 'react';
 
 export type Language = 'en' | 'mizo';
 
@@ -15,6 +16,10 @@ export const translations = {
       chanvo: 'Inkhawm Chanvo',
       sundaySchool: 'Sunday School',
       fellowships: 'Fellowships',
+      contributions: 'Contributions',
+      weeklyReport: 'Weekly Report',
+      admin: 'Admin',
+      adminDashboard: 'Admin Dashboard',
       records: 'Records',
       archives: 'Archives',
       gallery: 'Gallery',
@@ -59,6 +64,14 @@ export const translations = {
       floralDecoration: 'Pangpar Khawitu',
       clickBio: 'Hming hmet la, an chanchin en rawh',
       viewAllLeaders: 'Hruaitute Chanchin En Kim Rawh',
+      noAnnouncements: 'No recent announcements.',
+      inkhawmRawngbawlna: 'Inkhawm & Rawngbawlna',
+      editDuties: 'Edit Weekly Duties',
+      addPastor: 'Add Pastor',
+      addProPastor: 'Add Pro-Pastor',
+      addElder: 'Add Elder',
+      noPastorData: 'No pastor data available.',
+      noBiography: 'No biography available.',
       weeklyProgram: [ // Mock for type checking if needed in Events.tsx
         { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
@@ -81,6 +94,32 @@ export const translations = {
     },
     events: {
       title: 'Events & Programs',
+      nextWeek: 'Next Week',
+      addProgram: 'Add Program',
+      service: 'SERVICE',
+      programDetails: 'Program Details',
+      hruaitu: 'Hruaitu',
+      tantu: 'Ṭantu',
+      thuhriltu: 'Thuhriltu',
+      thupuiHawngtu: 'Thupui Hawngtu',
+      thupui: 'Thupui',
+      form: {
+        title: 'Title',
+        date: 'Date',
+        time: 'Time',
+        topic: 'Thupui (Topic)',
+        reader: 'Ṭantu (Reader)',
+        placeholders: {
+          title: 'Service Name',
+          time: 'e.g. 07:00 PM',
+          conductor: 'Conductor name',
+          preacher: 'Preacher or Speaker name',
+          topic: 'Sermon or lesson topic',
+          reader: 'Name of person reading',
+        }
+      },
+      deleteConfirm: 'Confirm Delete',
+      deleteSub: 'Remove this occurrence from the schedule?',
     },
     announcements: {
       title: 'Announcements',
@@ -148,6 +187,91 @@ export const translations = {
       deleteConfirm: 'Are you sure you want to delete this entire committee?',
       seedConfirm: 'This will DELETE ALL existing committees and re-seed from the initial data. Are you sure?',
       orderConfirm: 'Save new committee order?',
+    },
+    committeeDetail: {
+      back: 'Back to Committees',
+      defaultDesc: 'Dedicated to serving the church and community.',
+      tabs: {
+        gallery: 'Gallery',
+        members: 'Members',
+        activities: 'Activities',
+        reports: 'Reports',
+      },
+      sections: {
+        gallery: 'Gallery',
+        members: 'Committee Members',
+        activities: 'Recent Activities',
+        reports: 'Reports',
+      },
+      admin: {
+        import: 'Import',
+        addMember: 'Add Member',
+        addActivity: 'Add Activity',
+        editMember: 'Edit Member',
+        editActivity: 'Edit Activity',
+      },
+      members: {
+        noMembers: 'No members listed for this committee.',
+        name: 'Name',
+        designation: 'Designation',
+        contact: 'Contact',
+        actions: 'Actions',
+        notProvided: 'Not provided',
+        deleteConfirm: 'Delete this member?',
+      },
+      activities: {
+        noActivities: 'No activities recorded yet.',
+        tba: 'TBA',
+        date: 'Date',
+        title: 'Title',
+        description: 'Description / Story',
+        placeholderTitle: 'e.g., Annual Retreat',
+        placeholderDate: 'e.g., October 15, 2026',
+        placeholderStory: 'Narrate the story of this activity...',
+        deleteConfirm: 'Delete this activity?',
+      },
+      modals: {
+        fullName: 'Full Name',
+        role: 'Role',
+        phone: 'Phone (Optional)',
+        cancel: 'Cancel',
+        save: 'Save',
+      }
+    },
+    fellowship: {
+      edit: 'Edit Fellowship',
+      name: 'Fellowship Name',
+      description: 'Description',
+      logo: 'Logo',
+      currentLogo: 'Current Logo',
+      removeLogo: 'Remove Logo',
+      replaceIcon: 'This will replace the default icon.',
+      leadership: 'Leadership & Schedule',
+      leader: 'Leader',
+      weeklyService: 'Weekly Service',
+      buhfaitham: 'Buhfaitham Record',
+      reports: 'Recent Reports',
+      gallery: 'Gallery',
+      save: 'Save Changes',
+      cancel: 'Cancel',
+      deleteConfirm: 'Are you sure you want to delete this logo?',
+    },
+    stats: {
+      year: 'Year',
+      totalFamilies: 'Total Families',
+      donors: 'Donors',
+      percentage: '%',
+      weight: 'Weight (kg)',
+      amount: 'Amount (₹)',
+      totalHouses: 'Total Households',
+      attendees: 'Attendees',
+      export: 'Export to Excel',
+      addRecord: 'Add Record',
+      actions: 'Actions',
+      noRecords: 'No records found.',
+      deleteConfirm: 'Delete this record?',
+      saveFail: 'Failed to save.',
+      deleteFail: 'Failed to delete.',
     },
     sundaySchool: {
       'pre-beginner': 'Pre-Beginner',
@@ -336,7 +460,16 @@ export const translations = {
     },
     common: {
       description: 'Description',
-    }
+    },
+    admin: {
+      title: 'Admin Dashboard',
+      churchSettings: 'Church Settings',
+      churchSettingsDesc: 'Update church logo and general information.',
+      logo: 'Church Logo',
+      uploadLogo: 'Upload New Logo',
+      removeLogo: 'Remove Custom Logo',
+      logoNote: 'This logo will appear in the navigation bar and other sections.',
+    },
   },
   mizo: {
     nav: {
@@ -351,6 +484,10 @@ export const translations = {
       chanvo: 'Inkhawm Chanvo',
       sundaySchool: 'Sunday School',
       fellowships: 'Fellowships',
+      contributions: 'Thawhlawmte',
+      weeklyReport: 'Weekly Report',
+      admin: 'Admin',
+      adminDashboard: 'Admin Dashboard',
       records: 'Chhinchhiahna',
       archives: 'Archives',
       gallery: 'Gallery',
@@ -395,6 +532,14 @@ export const translations = {
       floralDecoration: 'Pangpar Khawitu',
       clickBio: 'Hming hmet la, an chanchin en rawh',
       viewAllLeaders: 'Hruaitute Chanchin En Kim Rawh',
+      noAnnouncements: 'Chanchin thar hmuh tur a awm rih lo.',
+      inkhawmRawngbawlna: 'Inkhawm & Rawngbawlna',
+      editDuties: 'Rawngbawlna hun siamremna',
+      addPastor: 'Pastor thar dahna',
+      addProPastor: 'Pro-Pastor thar dahna',
+      addElder: 'Upa thar dahna',
+      noPastorData: 'Pastor chanchin hmuh tur a awm rih lo.',
+      noBiography: 'Chanchin ziah a la awm lo.',
       weeklyProgram: [
         { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
@@ -417,6 +562,32 @@ export const translations = {
     },
     events: {
       title: 'Programme',
+      nextWeek: 'Kar thar',
+      addProgram: 'Program thar dahna',
+      service: 'INKHAWM',
+      programDetails: 'Program chipchiar',
+      hruaitu: 'Hruaitu',
+      tantu: 'Ṭantu',
+      thuhriltu: 'Thuhriltu',
+      thupuiHawngtu: 'Thupui Hawngtu',
+      thupui: 'Thupui',
+      form: {
+        title: 'Thupui',
+        date: 'Ni (Date)',
+        time: 'A hun (Time)',
+        topic: 'Thupui (Topic)',
+        reader: 'Ṭantu (Reader)',
+        placeholders: {
+          title: 'Inkhawm hming',
+          time: 'e.g. 07:00 PM',
+          conductor: 'Hruaitu hming',
+          preacher: 'Thuhriltu hming',
+          topic: 'Sermon thupui',
+          reader: 'Ṭantu hming',
+        }
+      },
+      deleteConfirm: 'Paih i duh tak tak em?',
+      deleteSub: 'He program hi schedule atanga paih i duh em?',
     },
     announcements: {
       title: 'Thupuan',
@@ -484,6 +655,91 @@ export const translations = {
       deleteConfirm: 'He committee hi i paih vek duh tak tak em?',
       seedConfirm: 'He hian committee awm sa zawng zawng a paih vek ang a, a tharin a dah leh ang. I chiang em?',
       orderConfirm: 'Committee remdan hi i vawngtha duh em?',
+    },
+    committeeDetail: {
+      back: 'Committee-ah kir lehna',
+      defaultDesc: 'Kohhran leh khawtlang tana rawngbawl tura din.',
+      tabs: {
+        gallery: 'Gallery',
+        members: 'Member-te',
+        activities: 'Hnathawhte',
+        reports: 'Report-te',
+      },
+      sections: {
+        gallery: 'Gallery',
+        members: 'Committee Member-te',
+        activities: 'Hnathawh tharte',
+        reports: 'Report-te',
+      },
+      admin: {
+        import: 'Lakluhna',
+        addMember: 'Member Dahna',
+        addActivity: 'Hnathawh Dahna',
+        editMember: 'Member Siamremna',
+        editActivity: 'Hnathawh Siamremna',
+      },
+      members: {
+        noMembers: 'He committee-ah hian member an la awm lo.',
+        name: 'Hming',
+        designation: 'Designation',
+        contact: 'Biakpawhna',
+        actions: 'Actions',
+        notProvided: 'Tarlan a ni lo',
+        deleteConfirm: 'He member hi paih i duh tak tak em?',
+      },
+      activities: {
+        noActivities: 'Hnathawh chhinchhiah a la awm lo.',
+        tba: 'TBA',
+        date: 'A hun (Date)',
+        title: 'Thupui',
+        description: 'Hrilhfiahna / Chanchin',
+        placeholderTitle: 'e.g., Annual Retreat',
+        placeholderDate: 'e.g., October 15, 2026',
+        placeholderStory: 'He hnathawh chanchin hi hetah hian ziak rawh...',
+        deleteConfirm: 'He hnathawh hi paih i duh tak tak em?',
+      },
+      modals: {
+        fullName: 'Hming Pum',
+        role: 'Role',
+        phone: 'Phone (A duh tan)',
+        cancel: 'Sutlehna',
+        save: 'Vawnthatna',
+      }
+    },
+    fellowship: {
+      edit: 'Fellowship Siamremna',
+      name: 'Fellowship Hming',
+      description: 'Hrilhfiahna',
+      logo: 'Logo',
+      currentLogo: 'Logo hman mek',
+      removeLogo: 'Logo paihna',
+      replaceIcon: 'He hian icon pangngai a thlak ang.',
+      leadership: 'Hruaitute leh Hunruat',
+      leader: 'Hruaitu',
+      weeklyService: 'Inkhawm Hun',
+      buhfaitham: 'Buhfaitham Record',
+      reports: 'Report tharte',
+      gallery: 'Gallery',
+      save: 'Vawnthatna',
+      cancel: 'Sutlehna',
+      deleteConfirm: 'He logo hi paih i duh tak tak em?',
+    },
+    stats: {
+      year: 'Kum',
+      totalFamilies: 'Chhungkua zawng zawng',
+      donors: 'Petute',
+      percentage: '%',
+      weight: 'Rihna (kg)',
+      amount: 'Zat (₹)',
+      totalHouses: 'In-chhung zawng zawng',
+      attendees: 'Inkhawm zat',
+      export: 'Excel-a lakchhuahna',
+      addRecord: 'Dah tharna',
+      actions: 'Actions',
+      noRecords: 'Engmah hmuh a ni lo.',
+      deleteConfirm: 'He record hi paih i duh tak tak em?',
+      saveFail: 'Vawnthat theih a ni lo.',
+      deleteFail: 'Paih theih a ni lo.',
     },
     sundaySchool: {
       'pre-beginner': 'Pre-Beginner',
@@ -672,6 +928,35 @@ export const translations = {
     },
     common: {
       description: 'Hrilhfiahna',
-    }
+    },
+    admin: {
+      title: 'Admin Dashboard',
+      churchSettings: 'Kohhran Inremkhawmna',
+      churchSettingsDesc: 'Kohhran logo leh thil dang siamṭhatna.',
+      logo: 'Kohhran Logo',
+      uploadLogo: 'Logo thar dahna',
+      removeLogo: 'Logo paihna',
+      logoNote: 'He logo hi navigation bar leh hmun dangah a lang ang.',
+    },
   }
 };
+
+// Hook added here to fix the missing export error
+export function useTranslation() {
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(
+    (localStorage.getItem('app_language') as Language) || 'en'
+  );
+
+  const changeLanguage = (lang: Language) => {
+    localStorage.setItem('app_language', lang);
+    setCurrentLanguage(lang);
+  };
+
+  // We return the directly mapped object of strings.
+  // This matches what your Navbar and Home components are expecting!
+  return {
+    t: translations[currentLanguage], 
+    lang: currentLanguage,
+    changeLanguage
+  };
+}

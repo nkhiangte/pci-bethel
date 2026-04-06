@@ -98,7 +98,7 @@ const Home: React.FC = () => {
       setIsEditModalOpen(false);
       fetchData();
       if (selectedLeader?.id === staff.id) setSelectedLeader(staff);
-    } catch (error) { alert("Failed to save."); }
+    } catch (error) { alert(t.stats.saveFail); }
     setIsSaving(false);
   };
 
@@ -110,7 +110,7 @@ const Home: React.FC = () => {
       setIsEditModalOpen(false);
       fetchData();
       if (selectedLeader?.id === id) setSelectedLeader(null);
-    } catch (error) { alert("Failed to delete."); }
+    } catch (error) { alert(t.stats.deleteFail); }
     setIsSaving(false);
   };
 
@@ -180,7 +180,7 @@ const Home: React.FC = () => {
             </div>
         ) : (
             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-                <p className="text-slate-500 italic">No recent announcements.</p>
+                <p className="text-slate-500 italic">{t.home.noAnnouncements}</p>
             </div>
         )}
       </section>
@@ -190,9 +190,9 @@ const Home: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
             <div>
                 <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-serif font-bold text-slate-900">Inkhawm & Rawngbawlna</h2>
+                    <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.inkhawmRawngbawlna}</h2>
                     {isAdmin && (
-                        <Link to="/admin/duties" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title="Edit Weekly Duties">
+                        <Link to="/admin/duties" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title={t.home.editDuties}>
                             <Edit size={18} />
                         </Link>
                     )}
@@ -297,15 +297,15 @@ const Home: React.FC = () => {
                 {isAdmin && (
                     <div className="absolute right-0 top-0 flex flex-col gap-2 z-10 md:flex-row">
                         <button onClick={() => handleAddNew('pastors')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center shadow-sm">
-                            <Plus size={12} className="mr-1"/> Add Pastor
+                            <Plus size={12} className="mr-1"/> {t.home.addPastor}
                         </button>
                         <button onClick={() => handleAddNew('proPastors')} className="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full hover:bg-blue-700 flex items-center shadow-sm">
-                            <Plus size={12} className="mr-1"/> Add Pro-Pastor
+                            <Plus size={12} className="mr-1"/> {t.home.addProPastor}
                         </button>
                     </div>
                 )}
                 {allPastoralLeaders.length === 0 ? (
-                    <p className="text-slate-500 italic">No pastor data available.</p>
+                    <p className="text-slate-500 italic">{t.home.noPastorData}</p>
                 ) : (
                     allPastoralLeaders.map(p => (
                     <div key={p.id} className="text-center group relative cursor-pointer" onClick={() => setSelectedLeader(p)}>
@@ -338,7 +338,7 @@ const Home: React.FC = () => {
              {isAdmin && (
                 <div className="text-center mb-6">
                     <button onClick={() => handleAddNew('elders')} className="text-xs font-bold text-white bg-church-600 px-3 py-1 rounded-full hover:bg-church-700 flex items-center mx-auto shadow-sm">
-                        <Plus size={12} className="mr-1"/> Add Elder
+                        <Plus size={12} className="mr-1"/> {t.home.addElder}
                     </button>
                 </div>
              )}
@@ -416,7 +416,7 @@ const Home: React.FC = () => {
                 <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
                     {selectedLeader.biography ? (
                         <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedLeader.biography}</article>
-                    ) : <p className="text-center text-slate-500 italic">No biography available.</p>}
+                    ) : <p className="text-center text-slate-500 italic">{t.home.noBiography}</p>}
                 </div>
             </div>
         </div>

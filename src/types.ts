@@ -423,6 +423,7 @@ export interface CommitteeMember {
   name: string;
   role: string;
   phone?: string;
+  imageUrl?: string;
 }
 
 export interface CommitteeImage {

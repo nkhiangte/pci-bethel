@@ -1,3 +1,4 @@
+
 import { Announcement, Event, Ministry, Staff, WeeklyDuty, Sermon } from './types';
 import { Language } from './translations';
 
@@ -5,7 +6,7 @@ export const CHURCH_NAME = "Mizoram Synod (PCI) Champhai Bethel Kohhran";
 
 // DATA STORES
 const DATA = {
-  en: {
+    en: {
     announcements: [
       {
         id: '1',
@@ -88,11 +89,7 @@ const DATA = {
         id: 'pavlai',
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
-        description: `Thil tumte :
-i) Mi dangte Krista hnena hruai.
-ii) Kohhran hmalakna ṭawiawm
-iii) Kristian chhungkaw ṭha din tura ṭan lak.
-Thupui : Krista tana nun. (Phil 1 : 21)`,
+        description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
@@ -102,13 +99,13 @@ Thupui : Krista tana nun. (Phil 1 : 21)`,
       {
         id: 'p1',
         name: 'Rev. Lalhmingthanga Chhangte',
-        role: 'Pastor',
+        role: 'Pastor', // Changed to Pastor as requested
         imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
         description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.',
-        order: 0,
+        order: 0, // Added order for consistency
       }
     ] as Staff[],
-    proPastors: [] as Staff[],
+    proPastors: [] as Staff[], // Removed mock data for Pro Pastors
     elders: [
       { id: 'e1', name: 'Upa C. Lalzuala', role: 'Elder', period: '1995', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.', order: 1 },
       { id: 'e2', name: 'Upa R. Lalruata', role: 'Elder', period: '1998', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.', order: 2 },
@@ -153,6 +150,7 @@ Thupui : Krista tana nun. (Phil 1 : 21)`,
         morning: 'Chawhnu Inkhawm',
         evening: 'Zan Inkhawm'
       },
+      // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
         sundaySchool: [
           { id: 'ss1', label: 'Tantu', value: '' },
@@ -244,11 +242,7 @@ Thupui : Krista tana nun. (Phil 1 : 21)`,
         id: 'pavlai',
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
-        description: `Thil tumte :
-i) Mi dangte Krista hnena hruai.
-ii) Kohhran hmalakna ṭawiawm
-iii) Kristian chhungkaw ṭha din tura ṭan lak.
-Thupui : Krista tana nun. (Phil 1 : 21)`,
+        description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
@@ -261,10 +255,10 @@ Thupui : Krista tana nun. (Phil 1 : 21)`,
         role: 'Bialtu Pastor',
         imageUrl: 'https://i.ibb.co/CKyK3v4Z/pastor.jpg',
         description: 'Kohhran hruaitu ber, finna leh khawngaihnaa kohhran kaihruaitu.',
-        order: 0,
+        order: 0, // Added order for consistency
       }
     ] as Staff[],
-    proPastors: [] as Staff[],
+    proPastors: [] as Staff[], // Removed mock data for Pro Pastors (Mizo)
     elders: [
       { id: 'e1', name: 'Upa C. Lalzuala', role: 'Upa', period: '1995', imageUrl: 'https://i.ibb.co/v4wDgNKq/Upa-Zoa.jpg', description: 'Rinna banpui, inpeknate leh lainatnate nen kohhran rawngbawltu.', order: 1 },
       { id: 'e2', name: 'Upa R. Lalruata', role: 'Upa', period: '1998', imageUrl: 'https://i.ibb.co/fYQGQ3mW/Ruata.jpg', description: 'Kohhran thawhpui a, inpe zova mi a ni.', order: 2 },
@@ -309,6 +303,7 @@ Thupui : Krista tana nun. (Phil 1 : 21)`,
         morning: 'Chawhnu Inkhawm',
         evening: 'Zan Inkhawm'
       },
+      // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
         sundaySchool: [
           { id: 'ss1', label: 'Tantu', value: '' },
@@ -349,6 +344,7 @@ export const getConstants = (lang: Language) => DATA[lang];
 
 // Exports for backward compatibility with old components
 export const ANNOUNCEMENTS_DATA = DATA.en.announcements;
+// FIX: Export SERMONS_DATA for backward compatibility and to resolve import errors.
 export const SERMONS_DATA = DATA.en.sermons;
 export const EVENTS_DATA = DATA.en.events.map(e => ({
     day: e.dayOfWeek !== undefined ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek] : 'Special',
@@ -357,6 +353,7 @@ export const EVENTS_DATA = DATA.en.events.map(e => ({
     leader: e.program?.thuhriltu || e.program?.hruaitu || 'TBD'
 }));
 
+// LEADERS_DATA will now be dynamically fetched, this constant is kept as a placeholder/backup.
 export const LEADERS_DATA = DATA.en.pastors.map(p => ({
     name: p.name,
     role: p.role,

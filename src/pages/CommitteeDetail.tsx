@@ -887,7 +887,7 @@ const CommitteeDetail: React.FC = () => {
   };
 
   const handleDeleteMember = async (memberId: string) => {
-    if (!db || !id || !window.confirm("Delete this member?")) return;
+    if (!db || !id || !window.confirm(t.committeeDetail.members.deleteConfirm)) return;
     try {
       const committeeRef = db.collection('committees').doc(id);
       const doc = await committeeRef.get();
@@ -920,7 +920,7 @@ const CommitteeDetail: React.FC = () => {
   };
 
   const handleDeleteActivity = async (activityId: string) => {
-    if (!db || !id || !window.confirm("Delete this activity?")) return;
+    if (!db || !id || !window.confirm(t.committeeDetail.activities.deleteConfirm)) return;
     try {
       const committeeRef = db.collection('committees').doc(id);
       const doc = await committeeRef.get();
@@ -1029,15 +1029,19 @@ const CommitteeDetail: React.FC = () => {
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link to="/committees" className="inline-flex items-center text-church-200 hover:text-white mb-6 transition-colors">
-            <ArrowLeft size={20} className="mr-2" /> Back to Committees
+            <ArrowLeft size={20} className="mr-2" /> {t.committeeDetail.back}
           </Link>
           <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
-              <Users size={40} className="text-church-200" />
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl overflow-hidden">
+              {committee.logoUrl ? (
+                <img src={committee.logoUrl} alt={committee.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <Users size={40} className="text-church-200" />
+              )}
             </div>
             <div>
               <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight">{committee.name}</h1>
-              <p className="text-church-200 mt-2 max-w-2xl text-lg">{committee.description || 'Dedicated to serving the church and community.'}</p>
+              <p className="text-church-200 mt-2 max-w-2xl text-lg">{committee.description || t.committeeDetail.defaultDesc}</p>
             </div>
           </div>
         </div>
@@ -1050,10 +1054,10 @@ const CommitteeDetail: React.FC = () => {
           <div className="flex border-b border-slate-100 px-8 pt-4 gap-8 overflow-x-auto scrollbar-hide sticky top-0 bg-white z-20">
             {(
               [
-                { key: 'images', label: 'Gallery', icon: ImageIcon, id: 'images' },
-                { key: 'members', label: 'Members', icon: Users, id: 'members' },
-                { key: 'activities', label: 'Activities', icon: Calendar, id: 'activities' },
-                { key: 'reports', label: 'Reports', icon: FileText, id: 'reports' },
+                { key: 'images', label: t.committeeDetail.tabs.gallery, icon: ImageIcon, id: 'images' },
+                { key: 'members', label: t.committeeDetail.tabs.members, icon: Users, id: 'members' },
+                { key: 'activities', label: t.committeeDetail.tabs.activities, icon: Calendar, id: 'activities' },
+                { key: 'reports', label: t.committeeDetail.tabs.reports, icon: FileText, id: 'reports' },
               ] as const
             ).map(({ key, label, icon: Icon, id }) => (
               <button
@@ -1075,7 +1079,7 @@ const CommitteeDetail: React.FC = () => {
                   <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
                     <ImageIcon size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Gallery</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">{t.committeeDetail.sections.gallery}</h3>
                 </div>
               </div>
               <ImagesPanel 
@@ -1097,7 +1101,7 @@ const CommitteeDetail: React.FC = () => {
                   <div className="p-2 bg-church-100 text-church-600 rounded-lg">
                     <Users size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Committee Members</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">{t.committeeDetail.sections.members}</h3>
                 </div>
                 {isAdmin && (
                   <div className="flex flex-wrap gap-2">
@@ -1105,13 +1109,13 @@ const CommitteeDetail: React.FC = () => {
                       onClick={() => setIsImportModalOpen(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm"
                     >
-                      <Upload size={18} /> Import
+                      <Upload size={18} /> {t.committeeDetail.admin.import}
                     </button>
                     <button 
                       onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
                       className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
                     >
-                      <PlusCircle size={18} /> Add Member
+                      <PlusCircle size={18} /> {t.committeeDetail.admin.addMember}
                     </button>
                   </div>
                 )}
@@ -1120,7 +1124,7 @@ const CommitteeDetail: React.FC = () => {
               {!committee.members || committee.members.length === 0 ? (
                 <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                   <Users size={48} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-slate-500">No members listed for this committee.</p>
+                  <p className="text-slate-500">{t.committeeDetail.members.noMembers}</p>
                 </div>
               ) : (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -1128,10 +1132,10 @@ const CommitteeDetail: React.FC = () => {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-100">
-                          <th className="p-4 font-bold text-slate-700 text-sm">Name</th>
-                          <th className="p-4 font-bold text-slate-700 text-sm">Designation</th>
-                          <th className="p-4 font-bold text-slate-700 text-sm">Contact</th>
-                          {isAdmin && <th className="p-4 font-bold text-slate-700 text-sm text-right">Actions</th>}
+                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.name}</th>
+                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.designation}</th>
+                          <th className="p-4 font-bold text-slate-700 text-sm">{t.committeeDetail.members.contact}</th>
+                          {isAdmin && <th className="p-4 font-bold text-slate-700 text-sm text-right">{t.committeeDetail.members.actions}</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
@@ -1156,7 +1160,7 @@ const CommitteeDetail: React.FC = () => {
                                       <Phone size={14} />
                                     </a>
                                     <a 
-                                      href={`https://wa.me/91${member.phone.replace(/\D/g, '')}`}
+                                      href={`https://wa.me/91${(member.phone || '').toString().replace(/\D/g, '')}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
@@ -1167,7 +1171,7 @@ const CommitteeDetail: React.FC = () => {
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-slate-300 text-xs italic">Not provided</span>
+                                <span className="text-slate-300 text-xs italic">{t.committeeDetail.members.notProvided}</span>
                               )}
                             </td>
                             {isAdmin && (
@@ -1206,14 +1210,14 @@ const CommitteeDetail: React.FC = () => {
                   <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
                     <Calendar size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Recent Activities</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">{t.committeeDetail.sections.activities}</h3>
                 </div>
                 {isAdmin && (
                   <button 
                     onClick={() => { setEditingActivity({ title: '', description: '', date: '' }); setIsActivityModalOpen(true); }}
                     className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
                   >
-                    <PlusCircle size={18} /> Add Activity
+                    <PlusCircle size={18} /> {t.committeeDetail.admin.addActivity}
                   </button>
                 )}
               </div>
@@ -1221,14 +1225,14 @@ const CommitteeDetail: React.FC = () => {
               {!committee.activities || committee.activities.length === 0 ? (
                 <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                   <Calendar size={48} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-slate-500">No activities recorded yet.</p>
+                  <p className="text-slate-500">{t.committeeDetail.activities.noActivities}</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {committee.activities.map((activity) => (
                     <div key={activity.id} className="group p-8 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-6">
                       <div className="flex-shrink-0 w-16 h-16 bg-church-50 text-church-600 rounded-2xl flex flex-col items-center justify-center">
-                        <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : 'TBA'}</span>
+                        <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : t.committeeDetail.activities.tba}</span>
                         <span className="text-xl font-black">{activity.date ? activity.date.split(' ')[1] : ''}</span>
                       </div>
                         <div className="flex-grow">
@@ -1260,7 +1264,7 @@ const CommitteeDetail: React.FC = () => {
                   <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                     <FileText size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800">Reports</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">{t.committeeDetail.sections.reports}</h3>
                 </div>
               </div>
               <ReportsPanel
@@ -1283,30 +1287,30 @@ const CommitteeDetail: React.FC = () => {
             <form onSubmit={handleSaveMember}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-slate-800">{editingMember?.id ? 'Edit Member' : 'Add Member'}</h3>
+                  <h3 className="text-xl font-bold text-slate-800">{editingMember?.id ? t.committeeDetail.admin.editMember : t.committeeDetail.admin.addMember}</h3>
                   <button type="button" onClick={() => setIsMemberModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                     <X size={20} />
                   </button>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.modals.fullName}</label>
                     <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingMember?.name || ''} onChange={e => setEditingMember({...editingMember!, name: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Role</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.modals.role}</label>
                     <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingMember?.role || ''} onChange={e => setEditingMember({...editingMember!, role: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Phone (Optional)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.modals.phone}</label>
                     <input className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingMember?.phone || ''} onChange={e => setEditingMember({...editingMember!, phone: e.target.value})} />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
-                <button type="button" onClick={() => setIsMemberModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsMemberModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">{t.committeeDetail.modals.cancel}</button>
                 <button type="submit" disabled={loading} className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all">
-                  {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} Save
+                  {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} {t.committeeDetail.modals.save}
                 </button>
               </div>
             </form>
@@ -1320,28 +1324,28 @@ const CommitteeDetail: React.FC = () => {
             <form onSubmit={handleSaveActivity}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-slate-800">{editingActivity?.id ? 'Edit Activity' : 'Add Activity'}</h3>
+                  <h3 className="text-xl font-bold text-slate-800">{editingActivity?.id ? t.committeeDetail.admin.editActivity : t.committeeDetail.admin.addActivity}</h3>
                   <button type="button" onClick={() => setIsActivityModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                     <X size={20} />
                   </button>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                    <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.title || ''} onChange={e => setEditingActivity({...editingActivity!, title: e.target.value})} placeholder="e.g., Annual Retreat" />
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.activities.title}</label>
+                    <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.title || ''} onChange={e => setEditingActivity({...editingActivity!, title: e.target.value})} placeholder={t.committeeDetail.activities.placeholderTitle} />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Date (Optional)</label>
-                    <input type="text" className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.date || ''} onChange={e => setEditingActivity({...editingActivity!, date: e.target.value})} placeholder="e.g., October 15, 2026" />
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.activities.date}</label>
+                    <input type="text" className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingActivity?.date || ''} onChange={e => setEditingActivity({...editingActivity!, date: e.target.value})} placeholder={t.committeeDetail.activities.placeholderDate} />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Description / Story</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.activities.description}</label>
                     <div className="bg-white rounded-xl overflow-hidden border border-slate-300">
                       <ReactQuill 
                         theme="snow" 
                         value={editingActivity?.description || ''} 
                         onChange={(content) => setEditingActivity({...editingActivity!, description: content})}
-                        placeholder="Narrate the story of this activity..."
+                        placeholder={t.committeeDetail.activities.placeholderStory}
                         className="h-48"
                       />
                     </div>
@@ -1350,9 +1354,9 @@ const CommitteeDetail: React.FC = () => {
                 </div>
               </div>
               <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
-                <button type="button" onClick={() => setIsActivityModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsActivityModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">{t.committeeDetail.modals.cancel}</button>
                 <button type="submit" disabled={loading} className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all">
-                  {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} Save
+                  {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} {t.committeeDetail.modals.save}
                 </button>
               </div>
             </form>

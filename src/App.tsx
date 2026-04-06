@@ -23,6 +23,14 @@ import KtpYearlyReports from './pages/KTP/KtpYearlyReports';
 import KtpGallery from './pages/KTP/KtpGallery';
 import KtpProductions from './pages/KTP/KtpProductions';
 import KtpWhosWho from './pages/KTP/KtpWhosWho';
+import KppLayout from './pages/KPP/KppLayout';
+import KppLeaders from './pages/KPP/KppLeaders';
+import KppMembers from './pages/KPP/KppMembers';
+import KppGallery from './pages/KPP/KppGallery';
+import KhLayout from './pages/KohhranHmeichhia/KhLayout';
+import KhLeaders from './pages/KohhranHmeichhia/KhLeaders';
+import KhMembers from './pages/KohhranHmeichhia/KhMembers';
+import KhGallery from './pages/KohhranHmeichhia/KhGallery';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
@@ -94,6 +102,22 @@ const App: React.FC = () => {
             <Route path="gallery" element={<KtpGallery />} />
             <Route path="productions" element={<KtpProductions />} />
             <Route path="whoswho" element={<KtpWhosWho />} />
+          </Route>
+
+          {/* KPP Routes */}
+          <Route path="/kpp" element={<KppLayout />}>
+            <Route index element={<Navigate to="/kpp/leaders" replace />} />
+            <Route path="leaders" element={<KppLeaders />} />
+            <Route path="members" element={<KppMembers />} />
+            <Route path="gallery" element={<KppGallery />} />
+          </Route>
+
+          {/* Kohhran Hmeichhia Routes */}
+          <Route path="/kohhran-hmeichhia" element={<KhLayout />}>
+            <Route index element={<Navigate to="/kohhran-hmeichhia/leaders" replace />} />
+            <Route path="leaders" element={<KhLeaders />} />
+            <Route path="members" element={<KhMembers />} />
+            <Route path="gallery" element={<KhGallery />} />
           </Route>
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/gallery/*" element={<Gallery />} />

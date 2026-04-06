@@ -35,6 +35,7 @@ const AdminDashboard: React.FC = () => {
       { title: 'Manage Weekly Duties', icon: ClipboardList, link: '/admin/duties', color: 'bg-indigo-500', desc: 'Update ushers, song leaders, etc.' },
       { title: 'Manage Gallery', icon: Image, link: '/gallery', color: 'bg-purple-500', desc: 'Upload photos from recent events.' },
       { title: 'Manage Users', icon: UserCog, link: '/admin/users', color: 'bg-pink-500', desc: 'Manage registered users and admin roles.' },
+      { title: 'Church Settings', icon: Settings, link: '/admin/settings', color: 'bg-slate-700', desc: 'Update church logo and general information.' },
   ];
 
   const handleMigrateWeeklyPrograms = async () => {

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { db } from '../services/firebase';
+import { useTranslation } from '../translations';
 
 interface StatsTableProps {
   title: string;
@@ -14,6 +15,7 @@ interface StatsTableProps {
 }
 
 const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns, isAdmin }) => {
+  const { t } = useTranslation();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,15 +47,15 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
       }
       setEditForm({});
       fetchData();
-    } catch (e) { alert("Failed to save."); }
+    } catch (e) { alert(t.stats.saveFail); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this record?")) return;
+    if (!window.confirm(t.stats.deleteConfirm)) return;
     try {
       await db.collection(collectionName).doc(id).delete();
       fetchData();
-    } catch (e) { alert("Failed to delete."); }
+    } catch (e) { alert(t.stats.deleteFail); }
   };
 
   const exportToExcel = () => {
@@ -70,7 +72,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
           <TableIcon size={20} className="mr-2 text-church-600"/> {title}
         </h3>
         <div className="flex gap-2">
-          <button onClick={exportToExcel} className="p-2 text-slate-500 hover:bg-slate-200 rounded-lg transition" title="Export to Excel">
+          <button onClick={exportToExcel} className="p-2 text-slate-500 hover:bg-slate-200 rounded-lg transition" title={t.stats.export}>
             <Download size={18}/>
           </button>
           {isAdmin && (
@@ -78,7 +80,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
               onClick={() => { setIsAdding(true); setEditForm({}); }}
               className="px-4 py-2 bg-church-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-church-700 transition"
             >
-              <Plus size={16}/> Add Record
+              <Plus size={16}/> {t.stats.addRecord}
             </button>
           )}
         </div>
@@ -91,7 +93,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
               {columns.map(col => (
                 <th key={col.key} className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">{col.label}</th>
               ))}
-              {isAdmin && <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider text-right">Actions</th>}
+              {isAdmin && <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider text-right">{t.stats.actions}</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -118,7 +120,7 @@ const StatsTable: React.FC<StatsTableProps> = ({ title, collectionName, columns,
             {loading ? (
               <tr><td colSpan={columns.length + 1} className="px-6 py-12 text-center"><Loader className="animate-spin mx-auto text-church-500"/></td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={columns.length + 1} className="px-6 py-12 text-center text-slate-400 italic">No records found.</td></tr>
+              <tr><td colSpan={columns.length + 1} className="px-6 py-12 text-center text-slate-400 italic">{t.stats.noRecords}</td></tr>
             ) : (
               data.map(row => (
                 <tr key={row.id} className="hover:bg-slate-50 transition-colors">
