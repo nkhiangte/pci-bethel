@@ -47,6 +47,7 @@ interface ImagesPanelProps {
   onAdd: (committeeId: string) => void;
   onEdit: (committeeId: string, image: CommitteeImage) => void;
   onDelete: (committeeId: string, imageId: string) => void;
+  onImageClick: (url: string) => void;
 }
 
 const ImagesPanel: React.FC<ImagesPanelProps> = ({ 
@@ -57,7 +58,8 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
   galleryItems,
   onAdd, 
   onEdit,
-  onDelete 
+  onDelete,
+  onImageClick
 }) => {
   const directImages: CommitteeImage[] = committee.images || [];
   
@@ -133,7 +135,7 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {directImages.map(img => (
-              <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-slate-200 shadow-sm border border-slate-100">
+              <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-slate-200 shadow-sm border border-slate-100 cursor-pointer" onClick={() => onImageClick(img.url)}>
                 <img 
                   src={img.url} 
                   alt={img.caption || 'Committee Image'} 
@@ -148,14 +150,14 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
                 {isAdmin && !isOfflineMode && (
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
-                      onClick={() => onEdit(committee.id, img)}
+                      onClick={(e) => { e.stopPropagation(); onEdit(committee.id, img); }}
                       className="p-2 bg-church-600 text-white rounded-full hover:bg-church-700 shadow-lg"
                       title="Edit Caption"
                     >
                       <Edit size={14} />
                     </button>
                     <button 
-                      onClick={() => onDelete(committee.id, img.id)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(committee.id, img.id); }}
                       className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
                       title="Delete"
                     >
@@ -825,6 +827,7 @@ const CommitteeDetail: React.FC = () => {
   const [editingImage, setEditingImage] = useState<CommitteeImage | null>(null);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!id || !db) return;
