@@ -623,8 +623,19 @@ const Gallery: React.FC = () => {
                     >
                       <div className="mb-3 flex justify-center">
                         {(() => {
-                          const folderItems = allItems.filter(item => item.folderId === folder.id);
-                          const firstItem = folderItems[0];
+                          const getFirstItemInFolder = (folderId: string): GalleryItem | undefined => {
+                            const directItems = allItems.filter(item => item.folderId === folderId);
+                            if (directItems.length > 0) return directItems[0];
+                            
+                            const subfolders = folders.filter(f => f.parentId === folderId);
+                            for (const subfolder of subfolders) {
+                              const item = getFirstItemInFolder(subfolder.id);
+                              if (item) return item;
+                            }
+                            return undefined;
+                          };
+
+                          const firstItem = getFirstItemInFolder(folder.id);
                           
                           if (firstItem) {
                             const videoId = firstItem.videoUrl ? getYouTubeId(firstItem.videoUrl) : null;

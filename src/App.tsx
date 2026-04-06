@@ -31,6 +31,7 @@ import KhLayout from './pages/KohhranHmeichhia/KhLayout';
 import KhLeaders from './pages/KohhranHmeichhia/KhLeaders';
 import KhMembers from './pages/KohhranHmeichhia/KhMembers';
 import KhGallery from './pages/KohhranHmeichhia/KhGallery';
+import KhReports from './pages/KohhranHmeichhia/KhReports';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import AdminDashboard from './pages/AdminDashboard';
@@ -117,6 +118,7 @@ const App: React.FC = () => {
             <Route index element={<Navigate to="/kohhran-hmeichhia/leaders" replace />} />
             <Route path="leaders" element={<KhLeaders />} />
             <Route path="members" element={<KhMembers />} />
+            <Route path="reports" element={<KhReports />} />
             <Route path="gallery" element={<KhGallery />} />
           </Route>
                 <Route path="/contact" element={<Contact />} />
