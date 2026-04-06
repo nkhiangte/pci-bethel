@@ -164,6 +164,7 @@ const Gallery: React.FC = () => {
   
   const [folders, setFolders] = useState<GalleryFolder[]>([]);
   const [items, setItems] = useState<GalleryItem[]>([]);
+  const [allItems, setAllItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentFolder, setCurrentFolder] = useState<GalleryFolder | null>(null);
   const [parentFolders, setParentFolders] = useState<GalleryFolder[]>([]);
@@ -244,6 +245,8 @@ const Gallery: React.FC = () => {
         .where('category', '==', currentCategory)
         .onSnapshot((snapshot: any) => {
             const itemData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+            setAllItems(itemData);
+            
             // Filter in memory to handle legacy items without folderId
             const filteredItems = itemData.filter((item: any) => 
                 (item.folderId || null) === (currentFolderId || null)
@@ -601,7 +604,34 @@ const Gallery: React.FC = () => {
                       className="group relative bg-white p-4 rounded-xl border border-slate-200 hover:border-church-300 hover:shadow-md transition-all text-center"
                     >
                       <div className="mb-3 flex justify-center">
-                        <Folder size={48} className="text-amber-400 group-hover:scale-110 transition-transform" fill="currentColor" fillOpacity={0.2} />
+                        {(() => {
+                          const folderItems = allItems.filter(item => item.folderId === folder.id);
+                          const firstItem = folderItems[0];
+                          
+                          if (firstItem) {
+                            const videoId = firstItem.videoUrl ? getYouTubeId(firstItem.videoUrl) : null;
+                            const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : firstItem.imageUrl;
+                            
+                            return (
+                              <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden shadow-inner bg-slate-100">
+                                <img 
+                                  src={thumbnailUrl} 
+                                  alt={folder.name} 
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                                <div className="absolute bottom-0 right-0 p-1 bg-white/80 rounded-tl-lg">
+                                  <Folder size={12} className="text-amber-500" fill="currentColor" />
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <Folder size={48} className="text-amber-400 group-hover:scale-110 transition-transform" fill="currentColor" fillOpacity={0.2} />
+                          );
+                        })()}
                       </div>
                       <h4 className="font-bold text-slate-800 truncate">{folder.name}</h4>
                       <p className="text-xs text-slate-500 mt-1">{folder.date}</p>
