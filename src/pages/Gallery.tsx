@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GalleryItem, GalleryFolder } from '../types';
 import { db, auth, storage, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext'; 
+import { useLanguage } from '../contexts/LanguageContext';
+import { 
   Plus, 
   Trash2, 
   Image as ImageIcon, 
