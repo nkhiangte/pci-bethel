@@ -123,27 +123,54 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
       {!members || members.length === 0 ? (
         <p className="text-slate-500 text-center py-8">No leaders added yet.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {members.map((member) => (
-            <div key={member.id} className="border rounded-xl p-4 flex flex-col items-center text-center">
-              <div className="w-24 h-24 rounded-full bg-slate-200 mb-4 overflow-hidden">
-                {member.imageUrl ? (
-                  <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Users className="w-full h-full p-4 text-slate-400" />
-                )}
-              </div>
-              <h4 className="font-bold text-slate-800">{member.name}</h4>
-              <p className="text-church-600 text-sm font-medium">{member.role}</p>
-              <p className="text-slate-500 text-xs mb-4">{member.phone}</p>
-              {isAdmin && (
-                <div className="flex gap-2 mt-auto">
-                  <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={16} /></button>
-                  <button onClick={() => handleDeleteMember(member.id!)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="p-4 font-bold text-slate-700 text-sm">Name</th>
+                <th className="p-4 font-bold text-slate-700 text-sm">Designation</th>
+                <th className="p-4 font-bold text-slate-700 text-sm">Contact</th>
+                {isAdmin && <th className="p-4 font-bold text-slate-700 text-sm text-right">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {members.map((member) => (
+                <tr key={member.id} className="hover:bg-slate-50/50">
+                  <td className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
+                      {member.imageUrl ? (
+                        <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-full h-full p-2 text-slate-400" />
+                      )}
+                    </div>
+                    <span className="font-bold text-slate-800">{member.name}</span>
+                  </td>
+                  <td className="p-4 text-church-600 font-medium text-sm">{member.role}</td>
+                  <td className="p-4 text-slate-600 text-sm">
+                    {member.phone && (
+                      <div className="flex gap-2">
+                        <a href={`tel:${member.phone}`} className="text-church-600 hover:text-church-800">
+                          {member.phone}
+                        </a>
+                        <a href={`https://wa.me/${member.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800">
+                          WhatsApp
+                        </a>
+                      </div>
+                    )}
+                  </td>
+                  {isAdmin && (
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={16} /></button>
+                        <button onClick={() => handleDeleteMember(member.id!)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
