@@ -454,6 +454,7 @@ export interface Committee {
   id: string;
   name: string;
   icon: string;
+  logoUrl?: string;
   description?: string;
   members: CommitteeMember[];
   activities?: CommitteeActivity[];

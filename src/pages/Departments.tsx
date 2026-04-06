@@ -220,6 +220,8 @@ const Departments: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCommitteeModalOpen, setIsCommitteeModalOpen] = useState(false);
   const [editingCommittee, setEditingCommittee] = useState<Partial<Committee> | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Reordering
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
@@ -269,17 +271,40 @@ const Departments: React.FC = () => {
     if (!db || !editingCommittee) return;
     setLoading(true);
     try {
+        let logoUrl = editingCommittee.logoUrl;
+
+        if (logoFile) {
+            setIsUploading(true);
+            const storageRef = storage.ref(`committee_logos/${Date.now()}_${logoFile.name}`);
+            await storageRef.put(logoFile);
+            logoUrl = await storageRef.getDownloadURL();
+            setIsUploading(false);
+        }
+
         const { id, ...dataToSave } = editingCommittee;
+        const finalData = { ...dataToSave, logoUrl };
+
         if (id && !id.startsWith('static-')) {
-            await db.collection('committees').doc(id).set(dataToSave, { merge: true });
+            await db.collection('committees').doc(id).set(finalData, { merge: true });
         } else {
             const newOrder = committees.length > 0 ? Math.max(...committees.map(c => c.order || 0)) + 1 : 0;
-            await db.collection('committees').add({ name: dataToSave.name || 'Untitled', icon: dataToSave.icon || 'Users', description: dataToSave.description || '', members: dataToSave.members || [], order: newOrder });
+            await db.collection('committees').add({ 
+                ...finalData,
+                name: dataToSave.name || 'Untitled', 
+                icon: dataToSave.icon || 'Users', 
+                description: dataToSave.description || '', 
+                members: dataToSave.members || [], 
+                order: newOrder 
+            });
         }
         setIsCommitteeModalOpen(false);
         setEditingCommittee(null);
+        setLogoFile(null);
         fetchCommittees();
-    } catch (error) { console.error("Error saving committee:", error); }
+    } catch (error) { 
+        console.error("Error saving committee:", error); 
+        setIsUploading(false);
+    }
     setLoading(false);
   };
 
@@ -350,6 +375,7 @@ const Departments: React.FC = () => {
 
   const openCommitteeModal = (committee: Partial<Committee> | null) => {
     setEditingCommittee(committee || { name: '', icon: 'Users', description: '', members: [] });
+    setLogoFile(null);
     setIsCommitteeModalOpen(true);
   };
 
@@ -428,7 +454,11 @@ const Departments: React.FC = () => {
                         <div className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br border-2 token-3d group-hover:animate-rotate-y-slow preserve-3d flex items-center justify-center overflow-hidden shadow-lg ${colorClass}`}>
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine pointer-events-none z-10"></div>
                           <div className="relative z-20 backface-hidden" style={{ transform: 'translateZ(20px)' }}>
-                            <Icon size={36} className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" strokeWidth={2.5} />
+                            {c.logoUrl ? (
+                              <img src={c.logoUrl} alt={c.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Icon size={36} className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" strokeWidth={2.5} />
+                            )}
                           </div>
                           <div className="absolute inset-0.5 rounded-2xl border border-white/20 z-0"></div>
                         </div>
@@ -488,16 +518,48 @@ const Departments: React.FC = () => {
                   <textarea className="w-full border border-slate-300 rounded p-2 h-24" value={editingCommittee?.description || ''} onChange={e => setEditingCommittee({...editingCommittee, description: e.target.value})} placeholder="Brief description..."></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Icon</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Icon (Fallback)</label>
                   <select required className="w-full border border-slate-300 rounded p-2" value={editingCommittee?.icon} onChange={e => setEditingCommittee({...editingCommittee, icon: e.target.value})}>
                     {Object.keys(ICON_MAP).map(iconName => <option key={iconName} value={iconName}>{iconName}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Custom Logo (Optional)</label>
+                  <div className="flex items-center space-x-4">
+                    {editingCommittee?.logoUrl && !logoFile && (
+                      <div className="w-12 h-12 rounded border overflow-hidden bg-slate-100 flex-shrink-0">
+                        <img src={editingCommittee.logoUrl} alt="Current Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
+                    <div className="flex-grow">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-church-50 file:text-church-700 hover:file:bg-church-100"
+                        onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                      />
+                    </div>
+                    {editingCommittee?.logoUrl && (
+                      <button 
+                        type="button" 
+                        onClick={() => setEditingCommittee({...editingCommittee, logoUrl: ''})}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded"
+                        title="Remove Logo"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">If uploaded, this will replace the icon.</p>
                 </div>
               </div>
             </div>
             <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl">
               <button type="button" onClick={() => setIsCommitteeModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
-              <button type="submit" disabled={loading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">{loading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save</button>
+              <button type="submit" disabled={loading || isUploading} className="px-4 py-2 bg-church-600 text-white rounded flex items-center">
+                {(loading || isUploading) ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} 
+                {isUploading ? 'Uploading...' : 'Save'}
+              </button>
             </div>
           </form>
         </div>

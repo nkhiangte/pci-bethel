@@ -30,7 +30,9 @@ import {
   ExternalLink,
   PlusCircle,
   FileDown,
-  Upload
+  Upload,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -1143,9 +1145,27 @@ const CommitteeDetail: React.FC = () => {
                             </td>
                             <td className="p-4">
                               {member.phone ? (
-                                <span className="text-slate-500 text-sm flex items-center gap-2">
-                                  <span className="opacity-50">📞</span> {member.phone}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-slate-600 text-sm font-medium">{member.phone}</span>
+                                  <div className="flex gap-2">
+                                    <a 
+                                      href={`tel:${member.phone}`}
+                                      className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors"
+                                      title="Call"
+                                    >
+                                      <Phone size={14} />
+                                    </a>
+                                    <a 
+                                      href={`https://wa.me/91${member.phone.replace(/\D/g, '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                                      title="WhatsApp"
+                                    >
+                                      <MessageCircle size={14} />
+                                    </a>
+                                  </div>
+                                </div>
                               ) : (
                                 <span className="text-slate-300 text-xs italic">Not provided</span>
                               )}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Youtube, MapPin, Phone, Mail, Lock, LogOut } from 'lucide-react';
+import { Facebook, Youtube, MapPin, Phone, Mail, Lock, LogOut, MessageCircle } from 'lucide-react';
 import { CHURCH_NAME } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,9 +55,20 @@ const Footer: React.FC = () => {
                 <MapPin size={18} className="mr-2 mt-0.5 flex-shrink-0" />
                 <span>Bethel Veng, Champhai,<br/>Mizoram 796321</span>
               </div>
-              <div className="flex items-center">
-                <Phone size={18} className="mr-2 flex-shrink-0" />
-                <span>+91 98620 12345</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  <Phone size={18} className="mr-2 flex-shrink-0" />
+                  <a href="tel:+919862012345" className="hover:text-white transition">+91 98620 12345</a>
+                </div>
+                <a 
+                  href="https://wa.me/919862012345" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="p-1.5 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30 transition"
+                  title="WhatsApp"
+                >
+                  <MessageCircle size={14} />
+                </a>
               </div>
               <div className="flex items-center">
                 <Mail size={18} className="mr-2 flex-shrink-0" />

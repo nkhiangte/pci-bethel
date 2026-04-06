@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Phone, Edit, X, Save, Loader, AlertCircle } from 'lucide-react';
+import { MapPin, Phone, Edit, X, Save, Loader, AlertCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 
@@ -129,8 +129,26 @@ const Contact: React.FC = () => {
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
                 <div className="p-4 bg-green-50 text-green-600 rounded-full mb-4 ring-4 ring-green-50/50"><Phone size={32} /></div>
                 <h3 className="font-bold text-lg mb-3 text-slate-800">Phone & Email</h3>
-                <div className="text-slate-600 leading-relaxed space-y-1">
-                    <p className="font-medium text-slate-800">{data.phone}</p>
+                <div className="text-slate-600 leading-relaxed space-y-3 flex flex-col items-center">
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="font-medium text-slate-800">{data.phone}</p>
+                        <div className="flex gap-3">
+                            <a 
+                                href={`tel:${data.phone.replace(/[^0-9+]/g, '')}`}
+                                className="flex items-center gap-2 px-4 py-2 bg-church-50 text-church-600 rounded-full text-sm font-bold hover:bg-church-100 transition shadow-sm border border-church-100"
+                            >
+                                <Phone size={16} /> Call
+                            </a>
+                            <a 
+                                href={`https://wa.me/91${data.phone.replace(/[^0-9]/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-full text-sm font-bold hover:bg-green-100 transition shadow-sm border border-green-100"
+                            >
+                                <MessageCircle size={16} /> WhatsApp
+                            </a>
+                        </div>
+                    </div>
                     <p className="text-sm">{data.email}</p>
                 </div>
             </div>
