@@ -89,7 +89,11 @@ const DATA = {
         id: 'pavlai',
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
-        description: "Mipa te Pual inkhawmpawlna, rinnaa ṭhanlenna leh kohhran leh khawtlang tana rawngbawlna hmun.",
+        description: "Thil tumte :
+i) Mi dangte Krista hnena hruai.
+ii) Kohhran hmalakna ṭawiawm
+iii) Kristian chhungkaw ṭha din tura ṭan lak.
+Thupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
@@ -242,7 +246,11 @@ const DATA = {
         id: 'pavlai',
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
-        description: "Mipa te Pual inkhawmpawlna, rinnaa ṭhanlenna leh kohhran leh khawtlang tana rawngbawlna hmun.",
+        description: "Thil tumte :
+i) Mi dangte Krista hnena hruai.
+ii) Kohhran hmalakna ṭawiawm
+iii) Kristian chhungkaw ṭha din tura ṭan lak.
+Thupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
