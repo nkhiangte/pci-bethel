@@ -74,6 +74,9 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
       const imageUrl: string = await storageRef.getDownloadURL();
 
       await db.collection('ministries').doc(ministryId).set({ image: imageUrl }, { merge: true });
+      
+      // Update local state to ensure the new image persists
+      setFellowship({ ...fellowship!, image: imageUrl });
       setCustomImage(imageUrl);
       setIsEditing(false);
       setLogoFile(null);
