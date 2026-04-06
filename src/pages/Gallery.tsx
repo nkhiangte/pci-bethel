@@ -239,31 +239,29 @@ const Gallery: React.FC = () => {
         });
 
     // Fetch items
-    let query = db.collection('gallery').where('category', '==', currentCategory);
-    if (currentFolderId) {
-        query = query.where('folderId', '==', currentFolderId);
-    } else {
-        // If no folder selected, show items with no folderId
-        query = query.where('folderId', '==', null);
-    }
-    
-    const unsubscribeItems = query.onSnapshot((snapshot: any) => {
-        const itemData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        // Sort by order first, then by date
-        itemData.sort((a: any, b: any) => {
-            if (a.order !== undefined && b.order !== undefined) {
-                return a.order - b.order;
-            }
-            return (b.date || '').localeCompare(a.date || '');
+    const unsubscribeItems = db.collection('gallery')
+        .where('category', '==', currentCategory)
+        .onSnapshot((snapshot: any) => {
+            const itemData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+            // Filter in memory to handle legacy items without folderId
+            const filteredItems = itemData.filter((item: any) => 
+                (item.folderId || null) === (currentFolderId || null)
+            );
+            // Sort by order first, then by date
+            filteredItems.sort((a: any, b: any) => {
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                return (b.date || '').localeCompare(a.date || '');
+            });
+            
+            setItems(filteredItems);
+            setLoading(false);
+        }, (error: any) => {
+            console.error("Error fetching items:", error);
+            handleFirestoreError(error, OperationType.GET, 'gallery');
+            setLoading(false);
         });
-        
-        setItems(itemData);
-        setLoading(false);
-    }, (error: any) => {
-        console.error("Error fetching items:", error);
-        handleFirestoreError(error, OperationType.GET, 'gallery');
-        setLoading(false);
-    });
 
     return () => {
         unsubscribeFolders();
@@ -586,7 +584,7 @@ const Gallery: React.FC = () => {
               <>
                 {/* Folders */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
-                  {folders.filter(f => f.parentId === (currentFolderId || null)).map((folder) => (
+                  {folders.filter(f => (f.parentId || null) === (currentFolderId || null)).map((folder) => (
                     <Link 
                       key={folder.id}
                       to={`/gallery/${currentCategoryPath}/${folder.id}`}
@@ -609,7 +607,7 @@ const Gallery: React.FC = () => {
                     </Link>
                   ))}
                   
-                  {folders.filter(f => f.parentId === (currentFolderId || null)).length === 0 && !currentFolderId && (
+                  {folders.filter(f => (f.parentId || null) === (currentFolderId || null)).length === 0 && !currentFolderId && (
                     <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
                       <Folder size={48} className="mx-auto text-slate-300 mb-3" />
                       <p className="text-slate-500">No folders created yet.</p>
