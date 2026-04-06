@@ -1094,6 +1094,7 @@ const CommitteeDetail: React.FC = () => {
                 onAdd={() => { setEditingImage(null); setIsImageModalOpen(true); }}
                 onEdit={(cid, img) => { setEditingImage(img); setIsImageModalOpen(true); }}
                 onDelete={handleDeleteImage}
+                onImageClick={setEnlargedImage}
               />
             </section>
 
