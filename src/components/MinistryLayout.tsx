@@ -47,12 +47,14 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
     fetchMinistry();
   }, [ministryId, language]);
 
-  // ── Logo edit state ──────────────────────────────────────
+  // ── Edit state ──────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', description: '' });
 
   const currentImage = customImage || fellowship?.image;
 
@@ -82,8 +84,23 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
     setIsSaving(false);
   };
 
+  const handleSaveInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db) return;
+    setIsSaving(true);
+    try {
+      await db.collection('ministries').doc(ministryId).set(editForm, { merge: true });
+      setFellowship({ ...fellowship!, ...editForm });
+      setIsEditingInfo(false);
+    } catch (err) {
+      console.error(`Error saving ${ministryId} info:`, err);
+    }
+    setIsSaving(false);
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
+    setIsEditingInfo(false);
     setLogoFile(null);
     setPreviewUrl(null);
   };
@@ -122,7 +139,20 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
             </div>
 
             <div>
-              <h1 className="text-3xl font-serif font-bold text-white">{fellowship.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-serif font-bold text-white">{fellowship.name}</h1>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setEditForm({ name: fellowship.name, description: fellowship.description });
+                      setIsEditingInfo(true);
+                    }}
+                    className="p-1.5 hover:bg-white/20 rounded-lg text-white/70 hover:text-white transition"
+                  >
+                    <Edit size={18} />
+                  </button>
+                )}
+              </div>
               <p className="text-church-200 mt-2 max-w-2xl whitespace-pre-line">{fellowship.description}</p>
             </div>
           </div>
@@ -223,6 +253,49 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
                     ? <Loader className="animate-spin w-4 h-4 mr-2" />
                     : <Save size={16} className="mr-2" />}
                   Save Logo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Info Modal ────────────────────────────────── */}
+      {isEditingInfo && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <form onSubmit={handleSaveInfo}>
+              <div className="p-5 border-b flex justify-between items-center bg-slate-50">
+                <h3 className="text-lg font-bold text-slate-800">Edit {fellowship.name} Info</h3>
+                <button type="button" onClick={handleCancel} className="text-slate-400 hover:text-slate-600">
+                  <X size={22} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
+                  <input
+                    required
+                    value={editForm.name}
+                    onChange={e => setEditForm({...editForm, name: e.target.value})}
+                    className="w-full border rounded-lg p-2.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                  <textarea
+                    required
+                    value={editForm.description}
+                    onChange={e => setEditForm({...editForm, description: e.target.value})}
+                    className="w-full border rounded-lg p-2.5 h-32"
+                  />
+                </div>
+              </div>
+              <div className="p-5 border-t bg-slate-50 flex justify-end gap-3">
+                <button type="button" onClick={handleCancel} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-white font-medium transition">Cancel</button>
+                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 font-medium flex items-center shadow-md transition disabled:opacity-50">
+                  {isSaving ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />}
+                  Save Changes
                 </button>
               </div>
             </form>
