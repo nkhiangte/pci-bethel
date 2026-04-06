@@ -7,6 +7,7 @@ import { Loader } from 'lucide-react';
 const KppLeaders: React.FC = () => {
   const { isAdmin } = useAuth();
   const [members, setMembers] = useState([]);
+  const [leadersImages, setLeadersImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -14,7 +15,9 @@ const KppLeaders: React.FC = () => {
     try {
       const doc = await db.collection('ministries').doc('pavlai').get();
       if (doc.exists) {
-        setMembers((doc.data() as any).members || []);
+        const data = doc.data() as any;
+        setMembers(data.members || []);
+        setLeadersImages(data.leadersImages || []);
       }
     } catch (error) {
       console.error("Error fetching KPP leaders:", error);
@@ -31,6 +34,7 @@ const KppLeaders: React.FC = () => {
       ministryId="pavlai" 
       isAdmin={isAdmin} 
       members={members} 
+      leadersImages={leadersImages}
       onUpdate={fetchData} 
     />
   );

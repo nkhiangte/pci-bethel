@@ -63,6 +63,7 @@ export interface Ministry {
   schedule: string;
   image: string;
   logoUrl?: string;
+  leadersImages?: CommitteeImage[];
 }
 
 export interface Staff {
