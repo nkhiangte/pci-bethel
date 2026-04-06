@@ -438,6 +438,18 @@ export interface CommitteeActivity {
   date?: string;
 }
 
+export interface CommitteeReport {
+  id: string;
+  name: string;
+  type: 'yearly' | 'monthly';
+  year: number;
+  month?: number;
+  fileUrl: string;
+  fileType: 'pdf' | 'excel';
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
 export interface Committee {
   id: string;
   name: string;
@@ -446,5 +458,6 @@ export interface Committee {
   members: CommitteeMember[];
   activities?: CommitteeActivity[];
   images?: CommitteeImage[];
+  reports?: CommitteeReport[];
   order?: number;
 }

@@ -51,7 +51,7 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
   onAdd, 
   onDelete 
 }) => {
-  const directImages: CommitteeImage[] = (committee as any).images || [];
+  const directImages: CommitteeImage[] = committee.images || [];
   
   // Find linked gallery folder
   const linkedFolder = galleryFolders.find(f => f.name.toLowerCase() === committee.name.toLowerCase());
@@ -164,12 +164,48 @@ interface ReportsPanelProps {
 }
 
 const ReportsPanel: React.FC<ReportsPanelProps> = ({ committee, isAdmin, isOfflineMode, onAdd, onEdit, onDelete }) => {
-  const reports: CommitteeReport[] = (committee as any).reports || [];
+  const reports: CommitteeReport[] = committee.reports || [];
+  const [reportView, setReportView] = useState<'yearly' | 'monthly'>('yearly');
+  const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
+
+  const yearlyReports = reports
+    .filter(r => r.type === 'yearly')
+    .sort((a, b) => b.year - a.year);
+
+  const monthlyReports = reports
+    .filter(r => r.type === 'monthly' && r.year === filterYear)
+    .sort((a, b) => (b.month || 0) - (a.month || 0));
+
+  const allYears = Array.from(
+    new Set([
+      new Date().getFullYear(),
+      ...reports.filter(r => r.type === 'monthly').map(r => r.year)
+    ])
+  ).sort((a, b) => b - a);
+
+  const MONTH_NAMES = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December'
+  ];
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Reports & Documents</h4>
+        <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+          {(['yearly', 'monthly'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setReportView(v)}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                reportView === v
+                  ? 'bg-white text-church-700 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {v === 'yearly' ? '📅 Yearly' : '📆 Monthly'}
+            </button>
+          ))}
+        </div>
         {isAdmin && !isOfflineMode && (
           <button 
             onClick={() => onAdd(committee.id)}
@@ -180,36 +216,47 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ committee, isAdmin, isOffli
         )}
       </div>
 
-      {reports.length === 0 ? (
+      {reportView === 'monthly' && (
+        <div className="flex items-center gap-2 mb-6">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter Year:</label>
+          <select
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white"
+            value={filterYear}
+            onChange={e => setFilterYear(Number(e.target.value))}
+          >
+            {allYears.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      )}
+
+      {(reportView === 'yearly' ? yearlyReports : monthlyReports).length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
           <FileText size={48} className="mx-auto text-slate-300 mb-3" />
-          <p className="text-sm text-slate-500">No reports uploaded yet.</p>
+          <p className="text-sm text-slate-500">No {reportView} reports found.</p>
         </div>
       ) : (
         <div className="grid gap-4">
-          {reports.map(report => (
+          {(reportView === 'yearly' ? yearlyReports : monthlyReports).map(report => (
             <div key={report.id} className="group flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-church-50 text-church-600 rounded-lg">
-                  <FileText size={24} />
+                  {report.fileType === 'pdf' ? <FileText size={24} /> : <FileDown size={24} />}
                 </div>
                 <div>
-                  <h5 className="font-bold text-slate-800">{report.title}</h5>
+                  <h5 className="font-bold text-slate-800">{report.name}</h5>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-slate-500 flex items-center gap-1">
-                      <Calendar size={12} /> {report.date}
+                      <Calendar size={12} /> {report.type === 'monthly' ? `${MONTH_NAMES[report.month! - 1]} ` : ''}{report.year}
                     </span>
-                    {report.type && (
-                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
-                        {report.type}
-                      </span>
-                    )}
+                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
+                      {report.fileType}
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <a 
-                  href={report.url} 
+                  href={report.fileUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-2 text-church-600 hover:bg-church-50 rounded-lg transition-colors"
@@ -228,7 +275,7 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ committee, isAdmin, isOffli
                     </button>
                     <button 
                       onClick={() => onDelete(committee.id, report.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash size={18} />
@@ -255,23 +302,25 @@ interface ReportModalProps {
 }
 
 const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, onSave, onClose, loading }) => {
-  const [title, setTitle] = useState(editingReport?.title || '');
-  const [date, setDate] = useState(editingReport?.date || new Date().toISOString().split('T')[0]);
-  const [type, setType] = useState(editingReport?.type || 'Monthly');
-  const [url, setUrl] = useState(editingReport?.url || '');
+  const [name, setName] = useState(editingReport?.name || '');
+  const [year, setYear] = useState(editingReport?.year || new Date().getFullYear());
+  const [month, setMonth] = useState(editingReport?.month || new Date().getMonth() + 1);
+  const [type, setType] = useState<'yearly' | 'monthly'>(editingReport?.type || 'monthly');
+  const [fileUrl, setFileUrl] = useState(editingReport?.fileUrl || '');
+  const [fileType, setFileType] = useState<'pdf' | 'excel'>(editingReport?.fileType || 'pdf');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || (!url && !file)) {
-      alert('Please provide a title and either a file or a URL.');
+    if (!name || (!fileUrl && !file)) {
+      alert('Please provide a name and either a file or a URL.');
       return;
     }
 
     setUploading(true);
     try {
-      let finalUrl = url;
+      let finalUrl = fileUrl;
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -283,10 +332,12 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
 
       const report: CommitteeReport = {
         id: editingReport?.id || Date.now().toString(),
-        title,
-        date,
+        name,
+        year,
+        month: type === 'monthly' ? month : undefined,
         type,
-        url: finalUrl,
+        fileUrl: finalUrl,
+        fileType,
         uploadedAt: editingReport?.uploadedAt || new Date().toISOString(),
       };
 
@@ -313,39 +364,62 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Report Title</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Report Name</label>
                 <input 
                   required 
                   className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" 
                   placeholder="e.g., Finance Report - Oct 2026"
-                  value={title} 
-                  onChange={e => setTitle(e.target.value)} 
+                  value={name} 
+                  onChange={e => setName(e.target.value)} 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    required 
-                    className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" 
-                    value={date} 
-                    onChange={e => setDate(e.target.value)} 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Type</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Report Type</label>
                   <select 
                     className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none"
                     value={type}
-                    onChange={e => setType(e.target.value)}
+                    onChange={e => setType(e.target.value as 'yearly' | 'monthly')}
                   >
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Annual">Annual</option>
-                    <option value="Special">Special</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Year</label>
+                  <input 
+                    type="number" 
+                    required 
+                    className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" 
+                    value={year} 
+                    onChange={e => setYear(Number(e.target.value))} 
+                  />
+                </div>
+              </div>
+              {type === 'monthly' && (
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Month</label>
+                  <select 
+                    className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none"
+                    value={month}
+                    onChange={e => setMonth(Number(e.target.value))}
+                  >
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
+                      <option key={m} value={m}>{new Date(0, m-1).toLocaleString('default', { month: 'long' })}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">File Type</label>
+                <select 
+                  className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none"
+                  value={fileType}
+                  onChange={e => setFileType(e.target.value as 'pdf' | 'excel')}
+                >
+                  <option value="pdf">PDF Document</option>
+                  <option value="excel">Excel Spreadsheet</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">File Upload</label>
@@ -354,7 +428,6 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
                   className="w-full border border-slate-300 rounded-xl p-2.5 text-sm" 
                   onChange={e => setFile(e.target.files?.[0] || null)} 
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Upload PDF, Word, or Excel document.</p>
               </div>
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-slate-200"></div>
@@ -366,8 +439,8 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
                 <input 
                   className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" 
                   placeholder="https://..."
-                  value={url} 
-                  onChange={e => setUrl(e.target.value)} 
+                  value={fileUrl} 
+                  onChange={e => setFileUrl(e.target.value)} 
                 />
               </div>
             </div>
@@ -570,7 +643,6 @@ const CommitteeDetail: React.FC = () => {
   const [committee, setCommittee] = useState<Committee | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<'members' | 'activities' | 'images' | 'reports'>('members');
 
   // Gallery Sync Data
   const [galleryFolders, setGalleryFolders] = useState<GalleryFolder[]>([]);
@@ -606,12 +678,12 @@ const CommitteeDetail: React.FC = () => {
         
         // Fetch subcollections
         const reportsSnap = await db.collection('committees').doc(id).collection('committeeReports').get();
-        const reports = reportsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+        const reports = reportsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as CommitteeReport[];
         
         const imagesSnap = await db.collection('committees').doc(id).collection('committeeImages').get();
-        const images = imagesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+        const images = imagesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as CommitteeImage[];
         
-        setCommittee({ ...committeeData, reports, images } as any);
+        setCommittee({ ...committeeData, reports, images });
       } else {
         navigate('/committees');
       }
@@ -697,25 +769,28 @@ const CommitteeDetail: React.FC = () => {
     setLoading(true);
     try {
       const reportsRef = db.collection('committees').doc(committeeId).collection('committeeReports');
-      await reportsRef.doc(report.id).set(report);
       
-      const snap = await reportsRef.get();
-      const reports = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-      setCommittee(prev => prev ? { ...prev, reports } as any : null);
+      if (report.id) {
+        await reportsRef.doc(report.id).set(report);
+      } else {
+        const newDoc = reportsRef.doc();
+        await newDoc.set({ ...report, id: newDoc.id });
+      }
+      
+      // Refresh data
+      await fetchData();
       setIsReportModalOpen(false);
     } catch (error) { console.error("Error saving report:", error); }
     setLoading(false);
   };
 
   const handleDeleteReport = async (committeeId: string, reportId: string) => {
-    if (!db || !window.confirm("Delete this report?")) return;
+    if (!db || !id) return;
+    // Using a simpler confirmation for now, or I should implement a custom modal
+    if (!window.confirm("Delete this report?")) return;
     try {
       await db.collection('committees').doc(committeeId).collection('committeeReports').doc(reportId).delete();
-      setCommittee(prev => {
-        if (!prev) return null;
-        const reports = ((prev as any).reports || []).filter((r: any) => r.id !== reportId);
-        return { ...prev, reports } as any;
-      });
+      await fetchData();
     } catch (error) { console.error("Error deleting report:", error); }
   };
 
@@ -724,25 +799,26 @@ const CommitteeDetail: React.FC = () => {
     setLoading(true);
     try {
       const imagesRef = db.collection('committees').doc(committeeId).collection('committeeImages');
-      await imagesRef.doc(image.id).set(image);
       
-      const snap = await imagesRef.get();
-      const images = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-      setCommittee(prev => prev ? { ...prev, images } as any : null);
+      if (image.id && image.id.length > 20) { // Assuming generated ID is long
+         await imagesRef.doc(image.id).set(image);
+      } else {
+         const newDoc = imagesRef.doc();
+         await newDoc.set({ ...image, id: newDoc.id });
+      }
+      
+      await fetchData();
       setIsImageModalOpen(false);
     } catch (error) { console.error("Error saving image:", error); }
     setLoading(false);
   };
 
   const handleDeleteImage = async (committeeId: string, imageId: string) => {
-    if (!db || !window.confirm("Delete this image?")) return;
+    if (!db || !id) return;
+    if (!window.confirm("Delete this image?")) return;
     try {
       await db.collection('committees').doc(committeeId).collection('committeeImages').doc(imageId).delete();
-      setCommittee(prev => {
-        if (!prev) return null;
-        const images = ((prev as any).images || []).filter((img: any) => img.id !== imageId);
-        return { ...prev, images } as any;
-      });
+      await fetchData();
     } catch (error) { console.error("Error deleting image:", error); }
   };
 
@@ -757,7 +833,7 @@ const CommitteeDetail: React.FC = () => {
   if (!committee) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 scroll-smooth">
       {/* Header Banner */}
       <div className="bg-church-900 text-white py-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -780,156 +856,170 @@ const CommitteeDetail: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-20">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-          {/* Tabs Navigation */}
-          <div className="flex border-b border-slate-100 px-8 pt-4 gap-8 overflow-x-auto scrollbar-hide">
+          {/* Tabs Navigation (Jump Links) */}
+          <div className="flex border-b border-slate-100 px-8 pt-4 gap-8 overflow-x-auto scrollbar-hide sticky top-0 bg-white z-20">
             {(
               [
-                { key: 'members', label: 'Committee Members', icon: Users },
-                { key: 'activities', label: 'Activities', icon: Calendar },
-                { key: 'images', label: 'Gallery', icon: ImageIcon },
-                { key: 'reports', label: 'Reports', icon: FileText },
+                { key: 'members', label: 'Members', icon: Users, href: '#members' },
+                { key: 'activities', label: 'Activities', icon: Calendar, href: '#activities' },
+                { key: 'images', label: 'Gallery', icon: ImageIcon, href: '#images' },
+                { key: 'reports', label: 'Reports', icon: FileText, href: '#reports' },
               ] as const
-            ).map(({ key, label, icon: Icon }) => (
-              <button
+            ).map(({ key, label, icon: Icon, href }) => (
+              <a
                 key={key}
-                onClick={() => setActiveTab(key)}
-                className={`whitespace-nowrap pb-4 text-sm font-bold flex items-center gap-2 border-b-4 transition-all ${
-                  activeTab === key
-                    ? 'border-church-600 text-church-700'
-                    : 'border-transparent text-slate-400 hover:text-slate-600'
-                }`}
+                href={href}
+                className="whitespace-nowrap pb-4 text-sm font-bold flex items-center gap-2 border-b-4 border-transparent text-slate-400 hover:text-church-600 transition-all hover:border-church-200"
               >
                 <Icon size={18} />
                 {label}
-              </button>
+              </a>
             ))}
           </div>
 
-          <div className="p-8 md:p-12">
-            {/* Members Tab */}
-            {activeTab === 'members' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex justify-between items-center mb-8">
+          <div className="p-8 md:p-12 space-y-16">
+            {/* Members Section */}
+            <section id="members" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-church-100 text-church-600 rounded-lg">
+                    <Users size={24} />
+                  </div>
                   <h3 className="text-2xl font-bold text-slate-800">Committee Members</h3>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
-                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
-                    >
-                      <PlusCircle size={18} /> Add Member
-                    </button>
-                  )}
                 </div>
-                
-                {!committee.members || committee.members.length === 0 ? (
-                  <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <Users size={48} className="mx-auto text-slate-300 mb-3" />
-                    <p className="text-slate-500">No members listed for this committee.</p>
-                  </div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {committee.members.map((member) => (
-                      <div key={member.id} className="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all relative">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="text-lg font-bold text-slate-800">{member.name}</h4>
-                            <p className="text-church-600 font-medium text-sm mt-1">{member.role}</p>
-                            {member.phone && (
-                              <p className="text-slate-500 text-xs mt-2 flex items-center gap-1">
-                                <span className="opacity-50">📞</span> {member.phone}
-                              </p>
-                            )}
-                          </div>
-                          {isAdmin && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={16} /></button>
-                              <button onClick={() => handleDeleteMember(member.id!)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {isAdmin && (
+                  <button 
+                    onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
+                  >
+                    <PlusCircle size={18} /> Add Member
+                  </button>
                 )}
               </div>
-            )}
-
-            {/* Activities Tab */}
-            {activeTab === 'activities' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-2xl font-bold text-slate-800">Recent Activities</h3>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => { setEditingActivity({ title: '', description: '', date: '' }); setIsActivityModalOpen(true); }}
-                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
-                    >
-                      <PlusCircle size={18} /> Add Activity
-                    </button>
-                  )}
+              
+              {!committee.members || committee.members.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                  <Users size={48} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500">No members listed for this committee.</p>
                 </div>
-
-                {!(committee as any).activities || (committee as any).activities.length === 0 ? (
-                  <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <Calendar size={48} className="mx-auto text-slate-300 mb-3" />
-                    <p className="text-slate-500">No activities recorded yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {(committee as any).activities.map((activity: any) => (
-                      <div key={activity.id} className="group p-8 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-6">
-                        <div className="flex-shrink-0 w-16 h-16 bg-church-50 text-church-600 rounded-2xl flex flex-col items-center justify-center">
-                          <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : 'TBA'}</span>
-                          <span className="text-xl font-black">{activity.date ? activity.date.split(' ')[1] : ''}</span>
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
-                            <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
-                          </div>
-                          <p className="text-slate-600 mt-2 leading-relaxed">{activity.description}</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {committee.members.map((member) => (
+                    <div key={member.id} className="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all relative">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="text-lg font-bold text-slate-800">{member.name}</h4>
+                          <p className="text-church-600 font-medium text-sm mt-1">{member.role}</p>
+                          {member.phone && (
+                            <p className="text-slate-500 text-xs mt-2 flex items-center gap-1">
+                              <span className="opacity-50">📞</span> {member.phone}
+                            </p>
+                          )}
                         </div>
                         {isAdmin && (
-                          <div className="flex md:flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setEditingActivity(activity); setIsActivityModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={18} /></button>
-                            <button onClick={() => handleDeleteActivity(activity.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={18} /></button>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={16} /></button>
+                            <button onClick={() => handleDeleteMember(member.id!)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
                           </div>
                         )}
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Activities Section */}
+            <section id="activities" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                    <Calendar size={24} />
                   </div>
+                  <h3 className="text-2xl font-bold text-slate-800">Recent Activities</h3>
+                </div>
+                {isAdmin && (
+                  <button 
+                    onClick={() => { setEditingActivity({ title: '', description: '', date: '' }); setIsActivityModalOpen(true); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
+                  >
+                    <PlusCircle size={18} /> Add Activity
+                  </button>
                 )}
               </div>
-            )}
 
-            {/* Images Tab */}
-            {activeTab === 'images' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <ImagesPanel 
-                  committee={committee as any}
-                  isAdmin={isAdmin}
-                  isOfflineMode={isOfflineMode}
-                  galleryFolders={galleryFolders}
-                  galleryItems={galleryItems}
-                  onAdd={() => setIsImageModalOpen(true)}
-                  onDelete={handleDeleteImage}
-                />
-              </div>
-            )}
+              {!committee.activities || committee.activities.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                  <Calendar size={48} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500">No activities recorded yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {committee.activities.map((activity) => (
+                    <div key={activity.id} className="group p-8 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-6">
+                      <div className="flex-shrink-0 w-16 h-16 bg-church-50 text-church-600 rounded-2xl flex flex-col items-center justify-center">
+                        <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : 'TBA'}</span>
+                        <span className="text-xl font-black">{activity.date ? activity.date.split(' ')[1] : ''}</span>
+                      </div>
+                      <div className="flex-grow">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
+                          <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
+                        </div>
+                        <p className="text-slate-600 mt-2 leading-relaxed">{activity.description}</p>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex md:flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditingActivity(activity); setIsActivityModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={18} /></button>
+                          <button onClick={() => handleDeleteActivity(activity.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={18} /></button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
-            {/* Reports Tab */}
-            {activeTab === 'reports' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <ReportsPanel
-                  committee={committee as any}
-                  isAdmin={isAdmin}
-                  isOfflineMode={isOfflineMode}
-                  onAdd={() => { setEditingReport(null); setIsReportModalOpen(true); }}
-                  onEdit={(cid, report) => { setEditingReport(report); setIsReportModalOpen(true); }}
-                  onDelete={handleDeleteReport}
-                />
+            {/* Images Section */}
+            <section id="images" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <ImageIcon size={24} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800">Gallery</h3>
+                </div>
               </div>
-            )}
+              <ImagesPanel 
+                committee={committee}
+                isAdmin={isAdmin}
+                isOfflineMode={isOfflineMode}
+                galleryFolders={galleryFolders}
+                galleryItems={galleryItems}
+                onAdd={() => setIsImageModalOpen(true)}
+                onDelete={handleDeleteImage}
+              />
+            </section>
+
+            {/* Reports Section */}
+            <section id="reports" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <FileText size={24} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800">Reports</h3>
+                </div>
+              </div>
+              <ReportsPanel
+                committee={committee}
+                isAdmin={isAdmin}
+                isOfflineMode={isOfflineMode}
+                onAdd={() => { setEditingReport(null); setIsReportModalOpen(true); }}
+                onEdit={(cid, report) => { setEditingReport(report); setIsReportModalOpen(true); }}
+                onDelete={handleDeleteReport}
+              />
+            </section>
           </div>
         </div>
       </div>
