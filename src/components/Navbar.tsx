@@ -47,17 +47,6 @@ const Navbar: React.FC = () => {
     { name: t.nav.records, path: '/records' },
     { name: t.nav.missionaries, path: '/missionaries' },
     { name: t.nav.articles, path: '/articles' },
-    { 
-      name: t.nav.contributions, 
-      path: '#',
-      children: [
-        { name: 'Pathian Ram', path: '/thawhlawm?category=pathian-ram' },
-        { name: 'Ramthar', path: '/thawhlawm?category=ramthar' },
-        { name: 'Refreshment', path: '/thawhlawm?category=refreshment' },
-        { name: 'Building', path: '/thawhlawm?category=building' },
-        { name: 'Masihi Sangati', path: '/thawhlawm?category=masihi-sangati' },
-      ]
-    },
     { name: t.nav.archives, path: '/archives' },
     { name: t.nav.gallery, path: '/gallery' },
     { name: t.nav.about, path: '/about' },
