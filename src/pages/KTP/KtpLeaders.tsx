@@ -110,6 +110,10 @@ const KtpLeaders: React.FC = () => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Partial<KTPGroup> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [editingImage, setEditingImage] = useState<CommitteeImage | null>(null);
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!db?.collection) return;
@@ -122,6 +126,45 @@ const KtpLeaders: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleSaveImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !data || !editingImage) return;
+    setIsSaving(true);
+    try {
+      let imageUrl = editingImage.url;
+      if (imageFile) {
+        const storageRef = storage.ref(`ktp_leaders_images/${Date.now()}`);
+        await storageRef.put(imageFile);
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
+      let currentImages = data.leadersImages || [];
+      const imageData = { ...editingImage, url: imageUrl, uploadedAt: new Date().toISOString() };
+
+      if (editingImage.id) {
+        currentImages = currentImages.map((img: any) => img.id === editingImage.id ? imageData : img);
+      } else {
+        currentImages.push({ ...imageData, id: Date.now().toString() });
+      }
+      
+      await db.collection('ktpLeaders').doc('2026').update({ leadersImages: currentImages });
+      fetchData();
+      setIsImageModalOpen(false);
+      setEditingImage(null);
+      setImageFile(null);
+    } catch (error) { console.error("Error saving image:", error); alert("Failed to save image."); }
+    setIsSaving(false);
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!db || !data || !window.confirm("Are you sure you want to delete this image?")) return;
+    try {
+      const currentImages = (data.leadersImages || []).filter((img: any) => img.id !== imageId);
+      await db.collection('ktpLeaders').doc('2026').update({ leadersImages: currentImages });
+      fetchData();
+    } catch (error) { console.error("Error deleting image:", error); alert("Failed to delete image."); }
+  };
 
   const handleEditGroup = (group: KTPGroup) => {
     setEditingGroup(group);
@@ -194,6 +237,33 @@ const KtpLeaders: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Leaders Images Section */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 className="text-lg font-bold text-slate-800">Hruaitute Photo</h3>
+          {isAdmin && (
+            <button 
+              onClick={() => { setEditingImage({ id: '', url: '', uploadedAt: '' }); setIsImageModalOpen(true); setImageFile(null); }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-church-600 text-white text-xs font-bold rounded-lg hover:bg-church-700"
+            >
+              <Plus size={14} /> Add Photo
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {(data.leadersImages || []).map((img) => (
+            <div key={img.id} className="relative group border rounded-xl overflow-hidden aspect-square">
+              <img src={img.url} alt="Leader" className="w-full h-full object-cover cursor-pointer" onClick={() => setEnlargedImage(img.url)} />
+              {isAdmin && (
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleDeleteImage(img.id)} className="p-1.5 bg-red-500 text-white rounded-lg"><Trash2 size={12} /></button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {data.leaders && <MemberList title="Office Bearers" members={data.leaders} />}
       {data.committeeMembers && <MemberList title="Committee Members" members={data.committeeMembers} />}
       {data.exOfficioMembers && <MemberList title="Ex-Officio Members" members={data.exOfficioMembers} />}
@@ -253,6 +323,34 @@ const KtpLeaders: React.FC = () => {
             onSave={handleSaveGroup}
             isLoading={isSaving}
         />
+      )}
+
+      {/* Image Modal */}
+      {isImageModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Add Photo</h3>
+            <form onSubmit={handleSaveImage} className="space-y-4">
+              <input className="w-full border rounded-xl p-3" placeholder="Image URL" value={editingImage?.url || ''} onChange={e => setEditingImage({...editingImage!, url: e.target.value})} />
+              <div className="flex items-center gap-2">
+                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
+                <Camera size={20} className="text-slate-400" />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => { setIsImageModalOpen(false); setImageFile(null); }} className="px-4 py-2 text-slate-600">Cancel</button>
+                <button type="submit" disabled={isSaving} className="px-6 py-2 bg-church-600 text-white rounded-xl">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Enlarged Image Modal */}
+      {enlargedImage && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setEnlargedImage(null)}>
+          <img src={enlargedImage} alt="Enlarged" className="max-w-full max-h-full object-contain" />
+          <button onClick={() => setEnlargedImage(null)} className="absolute top-4 right-4 text-white"><X size={32} /></button>
+        </div>
       )}
     </div>
   );

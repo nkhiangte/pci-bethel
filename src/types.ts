@@ -265,6 +265,7 @@ export interface KTPHruaitute {
   exOfficioMembers: KTPMember[];
   groupLeaders?: KTPGroup[];
   subCommittees?: KTPSubCommittee[];
+  leadersImages?: CommitteeImage[];
 }
 
 export interface BudgetItem {
