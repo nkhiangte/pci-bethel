@@ -29,8 +29,10 @@ import {
   Download,
   ExternalLink,
   PlusCircle,
-  FileDown
+  FileDown,
+  Upload
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -478,6 +480,132 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
   );
 };
 
+interface ImportMembersModalProps {
+  onImport: (members: CommitteeMember[]) => Promise<void>;
+  onClose: () => void;
+  loading: boolean;
+}
+
+const ImportMembersModal: React.FC<ImportMembersModalProps> = ({ onImport, onClose, loading }) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<CommitteeMember[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+        
+        const members: CommitteeMember[] = data.map(row => ({
+          name: row.Name || row.name || '',
+          role: row.Designation || row.Role || row.role || row.designation || '',
+          phone: row.Contact || row.Phone || row.phone || row.contact || '',
+        })).filter(m => m.name);
+        
+        setPreview(members);
+      } catch (error) {
+        console.error("Error parsing file:", error);
+        alert("Failed to parse file. Please ensure it's a valid Excel or CSV file.");
+      }
+    };
+    reader.readAsBinaryString(selectedFile);
+  };
+
+  const handleDownloadTemplate = () => {
+    const template = [
+      { Name: 'John Doe', Designation: 'Chairman', Contact: '9876543210' },
+      { Name: 'Jane Smith', Designation: 'Secretary', Contact: '9876543211' }
+    ];
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "committee_members_template.xlsx");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-800">Import Members</h3>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-church-50 p-4 rounded-xl border border-church-100 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-church-800">Download Template</p>
+                <p className="text-xs text-church-600">Use this template to format your member list correctly.</p>
+              </div>
+              <button 
+                onClick={handleDownloadTemplate}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-church-600 rounded-lg border border-church-200 hover:bg-church-100 transition-all font-bold text-sm"
+              >
+                <FileDown size={16} /> Template
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Select File (Excel or CSV)</label>
+              <input 
+                type="file" 
+                accept=".xlsx, .xls, .csv"
+                onChange={handleFileChange}
+                className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-church-500 outline-none"
+              />
+            </div>
+
+            {preview.length > 0 && (
+              <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 sticky top-0">
+                    <tr>
+                      <th className="p-3 font-bold text-slate-700">Name</th>
+                      <th className="p-3 font-bold text-slate-700">Designation</th>
+                      <th className="p-3 font-bold text-slate-700">Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {preview.map((m, i) => (
+                      <tr key={i}>
+                        <td className="p-3 text-slate-600">{m.name}</td>
+                        <td className="p-3 text-slate-600">{m.role}</td>
+                        <td className="p-3 text-slate-600">{m.phone}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
+          <button onClick={onClose} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+          <button 
+            onClick={() => onImport(preview)}
+            disabled={loading || preview.length === 0}
+            className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all"
+          >
+            {loading ? <Loader className="animate-spin w-4 h-4" /> : <Upload size={18} />}
+            Import {preview.length} Members
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface ImageModalProps {
   committeeId: string;
   editingImage: CommitteeImage | null;
@@ -694,6 +822,8 @@ const CommitteeDetail: React.FC = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<CommitteeImage | null>(null);
 
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !db) return;
     setLoading(true);
@@ -796,6 +926,29 @@ const CommitteeDetail: React.FC = () => {
       await committeeRef.update({ activities });
       setCommittee(prev => prev ? { ...prev, activities } : null);
     } catch (error) { console.error("Error deleting activity:", error); }
+  };
+
+  const handleImportMembers = async (newMembers: CommitteeMember[]) => {
+    if (!db || !id) return;
+    setLoading(true);
+    try {
+      const committeeRef = db.collection('committees').doc(id);
+      const doc = await committeeRef.get();
+      const existingMembers = (doc.data() as any).members || [];
+      
+      const membersToSave = [
+        ...existingMembers,
+        ...newMembers.map(m => ({ ...m, id: Date.now().toString() + Math.random().toString(36).substring(7) }))
+      ];
+      
+      await committeeRef.update({ members: membersToSave });
+      setCommittee(prev => prev ? { ...prev, members: membersToSave } : null);
+      setIsImportModalOpen(false);
+    } catch (error) {
+      console.error("Error importing members:", error);
+      alert("Failed to import members.");
+    }
+    setLoading(false);
   };
 
   const handleSaveReport = async (committeeId: string, report: CommitteeReport) => {
@@ -915,7 +1068,7 @@ const CommitteeDetail: React.FC = () => {
           <div className="p-8 md:p-12 space-y-16">
             {/* Members Section */}
             <section id="members" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-slate-100 pb-4 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-church-100 text-church-600 rounded-lg">
                     <Users size={24} />
@@ -923,12 +1076,20 @@ const CommitteeDetail: React.FC = () => {
                   <h3 className="text-2xl font-bold text-slate-800">Committee Members</h3>
                 </div>
                 {isAdmin && (
-                  <button 
-                    onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100"
-                  >
-                    <PlusCircle size={18} /> Add Member
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      onClick={() => setIsImportModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm"
+                    >
+                      <Upload size={18} /> Import
+                    </button>
+                    <button 
+                      onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
+                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
+                    >
+                      <PlusCircle size={18} /> Add Member
+                    </button>
+                  </div>
                 )}
               </div>
               
@@ -938,28 +1099,60 @@ const CommitteeDetail: React.FC = () => {
                   <p className="text-slate-500">No members listed for this committee.</p>
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {committee.members.map((member) => (
-                    <div key={member.id} className="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all relative">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="text-lg font-bold text-slate-800">{member.name}</h4>
-                          <p className="text-church-600 font-medium text-sm mt-1">{member.role}</p>
-                          {member.phone && (
-                            <p className="text-slate-500 text-xs mt-2 flex items-center gap-1">
-                              <span className="opacity-50">📞</span> {member.phone}
-                            </p>
-                          )}
-                        </div>
-                        {isAdmin && (
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-2 text-church-600 hover:bg-church-50 rounded-lg"><Edit size={16} /></button>
-                            <button onClick={() => handleDeleteMember(member.id!)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-100">
+                          <th className="p-4 font-bold text-slate-700 text-sm">Name</th>
+                          <th className="p-4 font-bold text-slate-700 text-sm">Designation</th>
+                          <th className="p-4 font-bold text-slate-700 text-sm">Contact</th>
+                          {isAdmin && <th className="p-4 font-bold text-slate-700 text-sm text-right">Actions</th>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {committee.members.map((member) => (
+                          <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
+                            <td className="p-4">
+                              <span className="font-bold text-slate-800">{member.name}</span>
+                            </td>
+                            <td className="p-4">
+                              <span className="text-church-600 font-medium text-sm">{member.role}</span>
+                            </td>
+                            <td className="p-4">
+                              {member.phone ? (
+                                <span className="text-slate-500 text-sm flex items-center gap-2">
+                                  <span className="opacity-50">📞</span> {member.phone}
+                                </span>
+                              ) : (
+                                <span className="text-slate-300 text-xs italic">Not provided</span>
+                              )}
+                            </td>
+                            {isAdmin && (
+                              <td className="p-4 text-right">
+                                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                    onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} 
+                                    className="p-2 text-church-600 hover:bg-church-50 rounded-lg transition-colors"
+                                    title="Edit"
+                                  >
+                                    <Edit size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteMember(member.id!)} 
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </section>
@@ -1163,6 +1356,14 @@ const CommitteeDetail: React.FC = () => {
           editingImage={editingImage}
           onSave={handleSaveImage}
           onClose={() => { setIsImageModalOpen(false); setEditingImage(null); }}
+          loading={loading}
+        />
+      )}
+
+      {isImportModalOpen && (
+        <ImportMembersModal 
+          onImport={handleImportMembers}
+          onClose={() => setIsImportModalOpen(false)}
           loading={loading}
         />
       )}
