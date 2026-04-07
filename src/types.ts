@@ -244,6 +244,7 @@ export interface KTPMember {
   name: string;
   phone?: string;
   role?: string;
+  imageUrl?: string;
 }
 
 export interface KTPGroup {
