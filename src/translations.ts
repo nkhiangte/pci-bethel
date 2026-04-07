@@ -141,11 +141,13 @@ export const translations = {
         content: 'Content',
         videos: 'YouTube Videos',
         addLink: 'Add Link',
+        addUrl: 'Add URL',
         pictures: 'Pictures & Captions',
         addPhotos: 'Add More Photos',
         placeholders: {
           title: 'Announcement Heading',
           video: 'Paste YouTube link here...',
+          imageUrl: 'Paste image URL here...',
           content: 'Detailed announcement text...',
           caption: 'E.g. Group photo...',
         }
@@ -610,11 +612,13 @@ export const translations = {
         content: 'A chhunga thu awmte',
         videos: 'YouTube Video-te',
         addLink: 'Link Dahna',
+        addUrl: 'URL Dahna',
         pictures: 'Thlalak & Hrilhfiahna',
         addPhotos: 'Thlalak Dah Belhna',
         placeholders: {
           title: 'Thupuan thupui',
           video: 'YouTube link hetah hian paste rawh...',
+          imageUrl: 'Thlalak URL hetah hian paste rawh...',
           content: 'Thupuan chipchiar zawk hetah hian ziak rawh...',
           caption: 'Thlalak hrilhfiahna...',
         }

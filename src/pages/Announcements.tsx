@@ -33,6 +33,7 @@ const Announcements: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -145,6 +146,25 @@ const Announcements: React.FC = () => {
       imageUrls: prev.imageUrls?.filter((_, i) => i !== index),
       imageCaptions: prev.imageCaptions?.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleAddImageUrl = () => {
+    if (!newImageUrl.trim()) return;
+    
+    // Basic URL validation
+    try {
+      new URL(newImageUrl);
+    } catch (e) {
+      alert("Please enter a valid URL");
+      return;
+    }
+
+    setEditForm(prev => ({
+      ...prev,
+      imageUrls: [...(prev.imageUrls || []), newImageUrl.trim()],
+      imageCaptions: [...(prev.imageCaptions || []), '']
+    }));
+    setNewImageUrl('');
   };
 
   const handleAddVideo = () => {
@@ -456,8 +476,8 @@ const Announcements: React.FC = () => {
                         <div className="grid grid-cols-1 gap-4 mb-3">
                             {editForm.imageUrls?.map((url, index) => (
                                 <div key={index} className="flex gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                    <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-slate-200">
-                                        <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                    <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                        <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         <button 
                                             onClick={() => removeImageAt(index)} 
                                             className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg"
@@ -479,21 +499,44 @@ const Announcements: React.FC = () => {
                                 </div>
                             ))}
                             
-                            <button 
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploadingImage}
-                                className="h-20 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-300 transition bg-slate-50"
-                            >
-                                {uploadingImage ? (
-                                    <Loader className="animate-spin" size={24} />
-                                ) : (
-                                    <>
-                                        <Upload size={24} className="mb-1" />
-                                        <span className="text-xs font-black uppercase tracking-widest">{t.announcements.form.addPhotos}</span>
-                                    </>
-                                )}
-                            </button>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex gap-2">
+                                    <input 
+                                        className="flex-1 border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-church-500" 
+                                        value={newImageUrl} 
+                                        onChange={e => setNewImageUrl(e.target.value)}
+                                        placeholder={t.announcements.form.placeholders.imageUrl}
+                                        onKeyPress={e => e.key === 'Enter' && handleAddImageUrl()}
+                                    />
+                                    <button 
+                                        onClick={handleAddImageUrl}
+                                        className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 text-xs font-bold transition shadow-sm flex items-center gap-2"
+                                    >
+                                        <PlusCircle size={16} /> {t.announcements.form.addUrl}
+                                    </button>
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200"></span></div>
+                                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400 font-bold tracking-widest">or</span></div>
+                                </div>
+
+                                <button 
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingImage}
+                                    className="h-16 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:text-church-600 hover:border-church-300 transition bg-slate-50"
+                                >
+                                    {uploadingImage ? (
+                                        <Loader className="animate-spin" size={24} />
+                                    ) : (
+                                        <>
+                                            <Upload size={20} className="mb-1" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{t.announcements.form.addPhotos}</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <input 
