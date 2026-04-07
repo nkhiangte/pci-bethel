@@ -24,6 +24,7 @@ export const translations = {
       archives: 'Archives',
       gallery: 'Gallery',
       contact: 'Contact',
+      directory: 'Directory',
     },
     auth: {
       signIn: 'Sign In',
@@ -492,6 +493,7 @@ export const translations = {
       archives: 'Archives',
       gallery: 'Gallery',
       contact: 'Biakpawhna',
+      directory: 'Directory',
     },
     auth: {
       signIn: 'Lut Rawh',

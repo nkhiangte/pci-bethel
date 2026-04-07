@@ -51,6 +51,7 @@ import Articles from './pages/Articles';
 import Missionaries from './pages/Missionaries'; 
 import Thawhlawm from './pages/Thawhlawm';
 import CommitteeDetail from './pages/CommitteeDetail';
+import Directory from './pages/Directory';
 
 const App: React.FC = () => {
   return (
@@ -130,6 +131,7 @@ const App: React.FC = () => {
                 <Route path="/admin/thawhlawm" element={<AdminThawhlawm />} /> 
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> 
+                <Route path="/directory" element={<Directory />} /> 
                 <Route path="/archives" element={<Archives />} />
                 <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
                 <Route path="/thawhlawm" element={<Thawhlawm />} />
