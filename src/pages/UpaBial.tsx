@@ -5,7 +5,7 @@ import { db } from '../services/firebase';
 import { Users, MapPin, ChevronDown, ChevronUp, Database, Loader, Plus, Edit, Trash, X, Save, Upload, Trash2, Globe, LocateFixed } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
-const BASE_MAP_URL = 'https://www.google.com/maps/d/embed?mid=1Xns6BCmnqrgImcTeDiWKwYGyRqS_zJo';
+const BASE_MAP_URL = 'https://www.google.com/maps/d/embed?mid=1Xns6BCmnqrgImcTeDiWKwYGyRqS_zJo&ehbc=2E312F';
 
 interface UpaBialData {
   id: string; // e.g., 'bial-1'
@@ -72,14 +72,20 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     number: 4,
     areaDescription: 'Pi Suneihi In atangin Pi SR Lalrintluangi In thleng',
     leader: 'T Upa V Kaizasiama',
-    members: ['Pu Dawngsuanpauva', 'Pu B Zelkhangova']
+    members: ['Pu Dawngsuanpauva', 'Pu B Zelkhangova'],
+    mapLat: '23.4735',
+    mapLng: '93.3275',
+    mapZoom: '18'
   },
   {
     id: 'bial-5',
     number: 5,
     areaDescription: 'Pu C Roliana In atangin Upa HT Vanlalsawma in bul step thlengin, Pu Buka tuikhur bul leh a chung lam huamin, kawngpui tlak lam zawng',
     leader: 'T Upa C Lalthazuala',
-    members: ['Pu Thangkunga Hualngo', 'Pu Lalhmingmawia']
+    members: ['Pu Thangkunga Hualngo', 'Pu Lalhmingmawia'],
+    mapLat: '23.4720',
+    mapLng: '93.3260',
+    mapZoom: '18'
   },
   {
     id: 'bial-6',
@@ -87,14 +93,20 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Pu K Zakima In bul step-ah chhuk thlain, Pu Salmanga tuikhur suin, Zion Veng ramri thleng',
     leader: 'Upa David Lalchhanhima',
     members: ['Pu Kapthuama', 'Pu Thangdeihchina'],
-    imageUrl: BIAL_IMAGES[6]
+    imageUrl: BIAL_IMAGES[6],
+    mapLat: '23.4690',
+    mapLng: '93.3285',
+    mapZoom: '18'
   },
   {
     id: 'bial-7',
     number: 7,
     areaDescription: 'Pu B Lalliantawna In atangin Pu PC Thanhluma in bul step suin a inkar zawng',
     leader: 'Upa HT Lalthlengliana',
-    members: ['Pu MS Dawnga', 'Pu F Lalhriatpuia']
+    members: ['Pu MS Dawnga', 'Pu F Lalhriatpuia'],
+    mapLat: '23.4675',
+    mapLng: '93.3295',
+    mapZoom: '18'
   },
   {
     id: 'bial-8',
@@ -102,7 +114,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'PWD Complex zawng leh Upa HT Vanlalsawma In atangin Pu JC Laldinthara Inah kualin Pu TC Vanlalchuana In/Pu Buka tuikhur thlengin',
     leader: 'Upa H Zairemmawia',
     members: ['Pu Nelson Khiangte', 'Pu C Lalengmawia'],
-    imageUrl: BIAL_IMAGES[8]
+    imageUrl: BIAL_IMAGES[8],
+    mapLat: '23.4660',
+    mapLng: '93.3310',
+    mapZoom: '18'
   },
   {
     id: 'bial-9',
@@ -110,7 +125,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Upa R Lalramhluna In atangin Chhura hmun mual zawng',
     leader: 'Upa Hmingthanmawia Sailo',
     members: ['Pu K Lalengthanga', 'Pu T Sangtluanga', 'Pu Khawlrosiama'],
-    imageUrl: BIAL_IMAGES[9]
+    imageUrl: BIAL_IMAGES[9],
+    mapLat: '23.4810',
+    mapLng: '93.3240',
+    mapZoom: '18'
   },
   {
     id: 'bial-10',
@@ -118,7 +136,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Chhura hmun peng atangin kawngpui dungah Vengthar ramri thlengin, Mualnuam mual huamin tlak lam zawng',
     leader: 'Upa Lianpianga',
     members: ['Pu Lalramthara', 'Pu Lalramnghakhlela', 'Pu K Lalengkima'],
-    imageUrl: BIAL_IMAGES[10]
+    imageUrl: BIAL_IMAGES[10],
+    mapLat: '23.4830',
+    mapLng: '93.3220',
+    mapZoom: '18'
   },
   {
     id: 'bial-11',
@@ -126,7 +147,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Pu PC Thanhluma In atangin Kohhran ram huamin, Vengthar ramri su in kawngpui dung chhuah lam zawng',
     leader: 'Upa HT Vanlalsawma',
     members: ['Pu Keneth Lalthanzauva', 'Pu PC Zoramthanga'],
-    imageUrl: BIAL_IMAGES[11]
+    imageUrl: BIAL_IMAGES[11],
+    mapLat: '23.4790',
+    mapLng: '93.3265',
+    mapZoom: '18'
   },
   {
     id: 'bial-12',
@@ -134,14 +158,20 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Pu T Sawmpauva In bul step atangin Pu Salmanga tuikhur suin chhuah lam mual zawng',
     leader: 'Upa C Zohmingthanga',
     members: ['Pu C Malsawmdawngliana', 'Pu Lalthanghulha'],
-    imageUrl: BIAL_IMAGES[12]
+    imageUrl: BIAL_IMAGES[12],
+    mapLat: '23.4650',
+    mapLng: '93.3330',
+    mapZoom: '18'
   },
   {
     id: 'bial-13',
     number: 13,
     areaDescription: 'Pi Lalrinzami (L) In huamin Pu Zamsianthanga In atangin Pu Pauzathanga In thleng',
     leader: 'T Upa Hmingthansanga',
-    members: ['Pu Lalsanglura Zote', 'Pu Mungngaihsanga']
+    members: ['Pu Lalsanglura Zote', 'Pu Mungngaihsanga'],
+    mapLat: '23.4630',
+    mapLng: '93.3350',
+    mapZoom: '18'
   }
 ];
 
@@ -331,7 +361,7 @@ const UpaBial: React.FC = () => {
         // Update map URL if coordinates exist
         if (selectedBial && selectedBial.mapLat && selectedBial.mapLng) {
             const zoom = selectedBial.mapZoom || '18';
-            setCurrentMapUrl(`${BASE_MAP_URL}&ll=${selectedBial.mapLat},${selectedBial.mapLng}&z=${zoom}`);
+            setCurrentMapUrl(`${BASE_MAP_URL}&ll=${selectedBial.mapLat},${selectedBial.mapLng}&z=${zoom}&q=Bial%20${selectedBial.number}`);
             
             // Only scroll on mobile, on desktop the map is sticky
             if (window.innerWidth < 1024 && mapContainerRef.current) {
@@ -498,6 +528,7 @@ const UpaBial: React.FC = () => {
                     } ${expandedId ? 'border-church-100' : 'border-white'}`}
                 >
                     <iframe 
+                        key={currentMapUrl}
                         src={currentMapUrl} 
                         width="100%" 
                         height="100%" 
