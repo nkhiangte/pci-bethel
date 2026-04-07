@@ -843,8 +843,52 @@ const CommitteeDetail: React.FC = () => {
 
       // Fetch Committee
       const doc = await db.collection('committees').doc(id).get();
-      if (doc.exists) {
-        const committeeData = { id: doc.id, ...doc.data() } as Committee;
+      if (doc.exists || id === 'static-kohhran') {
+        let committeeData: Committee;
+        
+        if (id === 'static-kohhran') {
+          committeeData = {
+            id: 'static-kohhran',
+            name: 'Kohhran Committee',
+            icon: 'Users',
+            description: 'Kohhran hruaitu ber leh thutlukna siamtu lian ber an ni.',
+            members: []
+          };
+        } else {
+          committeeData = { id: doc.id, ...doc.data() } as Committee;
+        }
+
+        // Special handling for Kohhran Committee members
+        if (committeeData.name.toLowerCase() === 'kohhran committee') {
+          try {
+            const [pastorsSnap, proPastorsSnap, eldersSnap] = await Promise.all([
+              db.collection('pastors').orderBy('order', 'asc').get(),
+              db.collection('proPastors').orderBy('order', 'asc').get(),
+              db.collection('elders').orderBy('order', 'asc').get()
+            ]);
+
+            const pastoralMembers: CommitteeMember[] = [
+              ...pastorsSnap.docs.map((d: any) => {
+                const data = d.data();
+                return { id: d.id, name: data.name, role: data.role, imageUrl: data.imageUrl };
+              }),
+              ...proPastorsSnap.docs.map((d: any) => {
+                const data = d.data();
+                return { id: d.id, name: data.name, role: data.role, imageUrl: data.imageUrl };
+              }),
+              ...eldersSnap.docs.map((d: any) => {
+                const data = d.data();
+                return { id: d.id, name: data.name, role: data.role, imageUrl: data.imageUrl };
+              })
+            ];
+
+            if (pastoralMembers.length > 0) {
+              committeeData.members = pastoralMembers;
+            }
+          } catch (err) {
+            console.error("Error fetching pastoral members for Kohhran Committee:", err);
+          }
+        }
         
         // Fetch subcollections
         const reportsSnap = await db.collection('committees').doc(id).collection('committeeReports').get();

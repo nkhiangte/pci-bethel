@@ -244,33 +244,62 @@ const Departments: React.FC = () => {
 
     try {
         const snapshot = await db.collection('committees').get();
-        if (!snapshot.empty) {
-            let fetchedData = snapshot.docs.map((doc: any) => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Committee[];
+        let fetchedData = !snapshot.empty 
+          ? snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Committee[]
+          : [];
 
-            // Ensure Kohhran Committee is present in the list
-            const hasKohhran = fetchedData.some(c => c.name.toLowerCase() === 'kohhran committee');
-            if (!hasKohhran) {
-              const kohhranBase = INITIAL_COMMITTEES.find(c => c.name.toLowerCase() === 'kohhran committee');
-              if (kohhranBase) {
-                // Prepend it with a static ID so it can be saved later
-                fetchedData = [{ ...kohhranBase, id: 'static-kohhran', order: -1 }, ...fetchedData];
-              }
-            }
+        // Ensure Kohhran Committee is present
+        let kohhranIndex = fetchedData.findIndex(c => c.name.toLowerCase() === 'kohhran committee');
+        let kohhran: Committee;
 
-            fetchedData.sort((a, b) => {
-                if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
-                return a.name.localeCompare(b.name);
-            });
-
-            setCommittees(fetchedData);
-            initialOrderRef.current = fetchedData.map(c => c.id);
-            setIsOfflineMode(false);
+        if (kohhranIndex === -1) {
+          const kohhranBase = INITIAL_COMMITTEES.find(c => c.name.toLowerCase() === 'kohhran committee');
+          kohhran = { ...kohhranBase, id: 'static-kohhran', order: -1, members: [] } as Committee;
+          fetchedData = [kohhran, ...fetchedData];
+          kohhranIndex = 0;
         } else {
-            setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
+          kohhran = fetchedData[kohhranIndex];
         }
+
+        // Fetch Kohhran Committee members from pastors, proPastors, and elders
+        try {
+          const [pastorsSnap, proPastorsSnap, eldersSnap] = await Promise.all([
+            db.collection('pastors').orderBy('order', 'asc').get(),
+            db.collection('proPastors').orderBy('order', 'asc').get(),
+            db.collection('elders').orderBy('order', 'asc').get()
+          ]);
+
+          const pastoralMembers: CommitteeMember[] = [
+            ...pastorsSnap.docs.map((doc: any) => {
+              const d = doc.data();
+              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
+            }),
+            ...proPastorsSnap.docs.map((doc: any) => {
+              const d = doc.data();
+              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
+            }),
+            ...eldersSnap.docs.map((doc: any) => {
+              const d = doc.data();
+              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
+            })
+          ];
+
+          if (pastoralMembers.length > 0) {
+            kohhran.members = pastoralMembers;
+            fetchedData[kohhranIndex] = { ...kohhran };
+          }
+        } catch (err) {
+          console.error("Error fetching pastoral members for Kohhran Committee:", err);
+        }
+
+        fetchedData.sort((a, b) => {
+            if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+            return a.name.localeCompare(b.name);
+        });
+
+        setCommittees(fetchedData);
+        initialOrderRef.current = fetchedData.map(c => c.id);
+        setIsOfflineMode(false);
     } catch (error: any) {
         setCommittees(INITIAL_COMMITTEES.map((c, i) => ({ ...c, id: `static-${i}`, order: i } as Committee)));
         setIsOfflineMode(true);
