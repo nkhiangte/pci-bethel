@@ -68,7 +68,13 @@ const MONTH_NAMES = [
 // ─── Initial committee data (unchanged) ─────────────────────────────────────
 
 const INITIAL_COMMITTEES: Omit<Committee, 'id'>[] = [
-   {
+  {
+    name: 'Kohhran Committee',
+    icon: 'Users',
+    description: 'Kohhran hruaitu ber leh thutlukna siamtu lian ber an ni.',
+    members: []
+  },
+  {
     name: 'Sunday School',
     icon: 'BookOpen',
     description: 'Sunday School Committee hian naupang leh ṭhalaite thlarau lama an ṭhanlenna tura zirtirna kalpui te, zirlai bu ruahman te leh hun pawimawh hrang hrang buatsaihte a thawk a ni.',
@@ -384,6 +390,73 @@ const Departments: React.FC = () => {
     c.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const kohhranCommittee = filteredCommittees.find(c => c.name.toLowerCase() === 'kohhran committee');
+  const otherCommittees = filteredCommittees.filter(c => c.name.toLowerCase() !== 'kohhran committee');
+
+  const renderCommitteeCard = (c: Committee, index: number, isFullWidth: boolean = false) => {
+    const Icon = ICON_MAP[c.icon] || Users;
+    const colorClass = ICON_COLORS[c.icon] || 'from-church-600 to-church-800 text-white border-church-400';
+
+    return (
+      <Link 
+        key={c.id} 
+        to={`/committees/${c.id}`}
+        className={`group bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full relative ${isFullWidth ? 'max-w-md mx-auto' : ''}`}
+      >
+        {/* Admin Controls */}
+        {isAdmin && !isOfflineMode && (
+          <div className="absolute top-4 right-4 flex space-x-1 z-20" onClick={(e) => e.preventDefault()}>
+            {!searchTerm && (
+              <>
+                <button onClick={() => handleMoveCommittee(c.id, 'up')} disabled={index === 0} className="p-2 text-slate-500 bg-white/90 rounded-full hover:bg-church-50 hover:text-church-600 disabled:opacity-30 shadow-sm" title="Move Up"><ArrowUp size={14} /></button>
+                <button onClick={() => handleMoveCommittee(c.id, 'down')} disabled={index === filteredCommittees.length - 1} className="p-2 text-slate-500 bg-white/90 rounded-full hover:bg-church-50 hover:text-church-600 disabled:opacity-30 shadow-sm" title="Move Down"><ArrowDown size={14} /></button>
+              </>
+            )}
+            <button onClick={() => openCommitteeModal(c)} className="p-2 text-church-600 bg-white/90 rounded-full hover:bg-church-100 shadow-sm"><Edit size={14} /></button>
+            <button onClick={() => handleDeleteCommittee(c.id)} className="p-2 text-red-500 bg-white/90 rounded-full hover:bg-red-100 shadow-sm"><Trash size={14} /></button>
+          </div>
+        )}
+
+        <div className="p-8 flex flex-col items-center text-center flex-grow">
+          <div className="perspective-1000 mb-6">
+            <div className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br border-2 token-3d group-hover:animate-rotate-y-slow preserve-3d flex items-center justify-center overflow-hidden shadow-lg ${colorClass}`}>
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine pointer-events-none z-10"></div>
+              <div className="relative z-20 backface-hidden" style={{ transform: 'translateZ(20px)' }}>
+                {c.logoUrl ? (
+                  <img src={c.logoUrl} alt={c.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <Icon size={36} className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" strokeWidth={2.5} />
+                )}
+              </div>
+              <div className="absolute inset-0.5 rounded-2xl border border-white/20 z-0"></div>
+            </div>
+          </div>
+          
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-700 transition-colors mb-3">{c.name}</h3>
+          <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed">{c.description || 'Dedicated to serving the church and community.'}</p>
+        </div>
+
+        <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center overflow-hidden">
+                  <Users size={12} className="text-slate-400" />
+                </div>
+              ))}
+            </div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {c.members?.length || 0} {t.departments.members}
+            </span>
+          </div>
+          <div className="text-church-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+            {t.departments.viewDetails} <ChevronRight size={14} />
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -424,70 +497,15 @@ const Departments: React.FC = () => {
               </div>
             )}
 
+            {/* Kohhran Committee - Special Top Row */}
+            {kohhranCommittee && (
+              <div className="mb-12">
+                {renderCommitteeCard(kohhranCommittee, 0, true)}
+              </div>
+            )}
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCommittees.map((c, index) => {
-                const Icon = ICON_MAP[c.icon] || Users;
-                const colorClass = ICON_COLORS[c.icon] || 'from-church-600 to-church-800 text-white border-church-400';
-
-                return (
-                  <Link 
-                    key={c.id} 
-                    to={`/committees/${c.id}`}
-                    className="group bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full relative"
-                  >
-                    {/* Admin Controls */}
-                    {isAdmin && !isOfflineMode && (
-                      <div className="absolute top-4 right-4 flex space-x-1 z-20" onClick={(e) => e.preventDefault()}>
-                        {!searchTerm && (
-                          <>
-                            <button onClick={() => handleMoveCommittee(c.id, 'up')} disabled={index === 0} className="p-2 text-slate-500 bg-white/90 rounded-full hover:bg-church-50 hover:text-church-600 disabled:opacity-30 shadow-sm" title="Move Up"><ArrowUp size={14} /></button>
-                            <button onClick={() => handleMoveCommittee(c.id, 'down')} disabled={index === filteredCommittees.length - 1} className="p-2 text-slate-500 bg-white/90 rounded-full hover:bg-church-50 hover:text-church-600 disabled:opacity-30 shadow-sm" title="Move Down"><ArrowDown size={14} /></button>
-                          </>
-                        )}
-                        <button onClick={() => openCommitteeModal(c)} className="p-2 text-church-600 bg-white/90 rounded-full hover:bg-church-100 shadow-sm"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteCommittee(c.id)} className="p-2 text-red-500 bg-white/90 rounded-full hover:bg-red-100 shadow-sm"><Trash size={14} /></button>
-                      </div>
-                    )}
-
-                    <div className="p-8 flex flex-col items-center text-center flex-grow">
-                      <div className="perspective-1000 mb-6">
-                        <div className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br border-2 token-3d group-hover:animate-rotate-y-slow preserve-3d flex items-center justify-center overflow-hidden shadow-lg ${colorClass}`}>
-                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine pointer-events-none z-10"></div>
-                          <div className="relative z-20 backface-hidden" style={{ transform: 'translateZ(20px)' }}>
-                            {c.logoUrl ? (
-                              <img src={c.logoUrl} alt={c.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            ) : (
-                              <Icon size={36} className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" strokeWidth={2.5} />
-                            )}
-                          </div>
-                          <div className="absolute inset-0.5 rounded-2xl border border-white/20 z-0"></div>
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-700 transition-colors mb-3">{c.name}</h3>
-                      <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed">{c.description || 'Dedicated to serving the church and community.'}</p>
-                    </div>
-
-                    <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {[1, 2, 3].map(i => (
-                            <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center overflow-hidden">
-                              <Users size={12} className="text-slate-400" />
-                            </div>
-                          ))}
-                        </div>
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                          {c.members?.length || 0} {t.departments.members}
-                        </span>
-                      </div>
-                      <div className="text-church-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        {t.departments.viewDetails} <ChevronRight size={14} />
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+              {otherCommittees.map((c, index) => renderCommitteeCard(c, index + (kohhranCommittee ? 1 : 0)))}
             </div>
 
             {filteredCommittees.length === 0 && (
