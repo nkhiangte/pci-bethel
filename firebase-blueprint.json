@@ -395,9 +395,13 @@
       "schema": "SundaySchoolDepartment",
       "description": "Collection of Sunday School departments"
     },
-    "/sundaySchoolReports/{reportId}": {
+    "/sundaySchoolWeeklyReports/{reportId}": {
       "schema": "SundaySchoolReport",
       "description": "Collection of Sunday School weekly reports"
+    },
+    "/ss_teachers/{teacherId}": {
+      "schema": "Staff",
+      "description": "Collection of Sunday School teacher profiles"
     },
     "/users/{userId}": {
       "schema": "UserProfile",

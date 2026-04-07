@@ -193,6 +193,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /ss_teachers/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /thawhlawm/{docId} {
       allow read: if isAdmin();
       allow create: if true;
