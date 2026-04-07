@@ -145,6 +145,26 @@ const SundaySchool: React.FC = () => {
     fetchTeacherProfile();
   }, [selectedTeacherName]);
 
+  const handleClearTeachersExceptPuitling = async () => {
+      if (!db || !db.collection || !window.confirm("This will remove ALL teachers from all departments EXCEPT Puitling. Are you sure?")) return;
+      setIsSeeding(true);
+      try {
+          const batch = db.batch();
+          const deptsToClear = ['pre-beginner', 'beginner', 'primary', 'junior', 'intermediate', 'sacrament', 'senior'];
+          deptsToClear.forEach(id => {
+              const docRef = db.collection('sundaySchoolDepartments').doc(id);
+              batch.update(docRef, { teachers: [] });
+          });
+          await batch.commit();
+          fetchDepartments();
+          alert("Teachers cleared successfully (Puitling preserved)!");
+      } catch(e: any) {
+          console.error(e);
+          alert(`Failed to clear teachers: ${e.message}`);
+      }
+      setIsSeeding(false);
+  };
+
   const handleSeed = async () => {
       if (!db || !db.collection || !window.confirm("This will RESET all Sunday School data in Firebase to empty fields. Are you sure?")) return;
       setIsSeeding(true);
@@ -485,9 +505,14 @@ const SundaySchool: React.FC = () => {
                           </div>
 
                           {isAdmin && (
-                              <button onClick={handleSeed} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-red-50 text-red-700 border border-red-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition shadow-sm">
-                                  <Database size={16} /> {isSeeding ? 'Resetting...' : 'Factory Reset Firebase'}
-                              </button>
+                              <div className="space-y-2">
+                                  <button onClick={handleClearTeachersExceptPuitling} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition shadow-sm">
+                                      <Trash size={16} /> Clear Teachers (Excl. Puitling)
+                                  </button>
+                                  <button onClick={handleSeed} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-red-50 text-red-700 border border-red-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition shadow-sm">
+                                      <Database size={16} /> {isSeeding ? 'Resetting...' : 'Factory Reset Firebase'}
+                                  </button>
+                              </div>
                           )}
                       </div>
                   </div>
