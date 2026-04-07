@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Staff } from '../types';
-import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone, Hand, Upload, Crop, Check, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone, Hand, Upload, Crop, Check, RotateCcw, Camera, Image as ImageIcon } from 'lucide-react';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
@@ -206,95 +206,84 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col md:flex-row overflow-hidden animate-in zoom-in-90 duration-200">
         
         {/* Left Side: Image Preview & Adjustment */}
-        <div className="md:w-1/2 bg-slate-100 p-6 flex flex-col border-r border-slate-200">
-            <h3 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
-                <span className="flex items-center"><Move size={18} className="mr-2"/> Image Settings</span>
+        <div className="md:w-1/2 bg-slate-100 p-6 flex flex-col border-r border-slate-200 items-center justify-center">
+            <h3 className="font-bold text-slate-700 mb-8 flex items-center w-full">
+                <Camera size={18} className="mr-2"/> Profile Picture
             </h3>
             
-            <div 
-                ref={imageContainerRef}
-                className="flex-1 flex items-center justify-center mb-6 bg-slate-200 rounded-lg overflow-hidden relative shadow-inner min-h-[300px] select-none"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleMouseDown}
-                onTouchMove={handleMouseMove}
-                onTouchEnd={handleMouseUp}
-                onWheel={handleWheel}
-            >
-                {formData.imageUrl ? (
-                    <div className="relative w-64 h-64 rounded-full md:rounded-lg overflow-hidden bg-white shadow-lg border-4 border-white group cursor-grab active:cursor-grabbing">
+            <div className="flex flex-col items-center mb-8">
+                <div className="w-48 h-48 rounded-full bg-white border-4 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer shadow-xl">
+                    {formData.imageUrl ? (
                         <img 
                             src={formData.imageUrl} 
                             alt="Preview" 
-                            className="w-full h-full object-cover transition-transform duration-75 ease-out pointer-events-none" 
+                            className="w-full h-full object-cover transition-transform duration-75 ease-out" 
                             style={{
                                 objectPosition: `${formData.imagePositionX ?? 50}% ${formData.imagePositionY ?? 0}%`,
                                 transform: `scale(${formData.imageScale ?? 1})`
                             }}
                         />
-                        {/* Hint Overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            <Hand className="text-white mb-1" size={24} />
-                            <span className="text-white text-[10px] font-bold uppercase tracking-wider text-center px-4">CSS Adjust<br/>Drag / Scroll</span>
+                    ) : (
+                        <div className="text-slate-400 flex flex-col items-center">
+                            <Camera size={48} className="mb-2 opacity-50"/>
+                            <span className="text-xs font-bold uppercase tracking-widest">No Photo</span>
                         </div>
+                    )}
+                    
+                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Upload className="text-white mb-2" size={32} />
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest">Upload Photo</span>
                     </div>
-                ) : (
-                    <div className="text-slate-400 flex flex-col items-center">
-                        <ImageIcon size={48} className="mb-2 opacity-50"/>
-                        <span>No Image Selected</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Fine Tune Controls */}
-            <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex gap-2">
-                    <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 flex items-center justify-center bg-church-600 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-church-700 transition"
-                    >
-                        <Crop size={14} className="mr-2" /> Upload & Crop New
-                    </button>
+                    
                     <input 
                         type="file" 
                         ref={fileInputRef} 
-                        className="hidden" 
+                        className="absolute inset-0 opacity-0 cursor-pointer"
                         accept="image/*"
                         onChange={handleFileSelect}
                     />
                 </div>
-                
-                <hr className="border-slate-100" />
-                
-                <div>
-                    <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">
-                        <span>Fine Tune (CSS)</span>
-                        <span>Existing Image</span>
+                <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-[0.2em]">Click to Upload & Crop</p>
+            </div>
+
+            {/* Fine Tune Controls - Only if image exists */}
+            {formData.imageUrl && (
+                <div className="w-full space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em]">
+                        <span>Position Adjustment</span>
+                        <button onClick={() => setFormData({...formData, imagePositionX: 50, imagePositionY: 0, imageScale: 1})} className="text-church-600 hover:underline">Reset</button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-4">
                         <div>
-                            <label className="text-xs text-slate-500">X-Pos</label>
+                            <div className="flex justify-between text-[10px] text-slate-500 mb-1 font-bold uppercase"><span>Horizontal</span> <span>{Math.round(formData.imagePositionX ?? 50)}%</span></div>
                             <input 
                                 type="range" min="-100" max="200" 
                                 value={formData.imagePositionX ?? 50} 
                                 onChange={(e) => setFormData({...formData, imagePositionX: Number(e.target.value)})}
-                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-church-600"
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-slate-500">Y-Pos</label>
+                            <div className="flex justify-between text-[10px] text-slate-500 mb-1 font-bold uppercase"><span>Vertical</span> <span>{Math.round(formData.imagePositionY ?? 0)}%</span></div>
                             <input 
                                 type="range" min="-100" max="200" 
                                 value={formData.imagePositionY ?? 0} 
                                 onChange={(e) => setFormData({...formData, imagePositionY: Number(e.target.value)})}
-                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-church-600"
+                            />
+                        </div>
+                        <div>
+                            <div className="flex justify-between text-[10px] text-slate-500 mb-1 font-bold uppercase"><span>Zoom</span> <span>{formData.imageScale ?? 1}x</span></div>
+                            <input 
+                                type="range" min="1" max="3" step="0.1"
+                                value={formData.imageScale ?? 1} 
+                                onChange={(e) => setFormData({...formData, imageScale: Number(e.target.value)})}
+                                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-church-600"
                             />
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
 
         {/* Right Side: Form Details */}
@@ -336,28 +325,30 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 )}
             </div>
             
-            <div className={`grid ${collectionName === 'ss_teachers' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Qualification</label>
-                    <input
-                    className="w-full border border-slate-300 rounded p-2.5"
-                    value={formData.qualification || ''}
-                    onChange={e => setFormData({ ...formData, qualification: e.target.value })}
-                    placeholder="e.g. B.A, B.D"
-                    />
-                </div>
-                {collectionName !== 'ss_teachers' && (
+            {collectionName !== 'ss_teachers' && (
+                <div className={`grid ${collectionName === 'ss_teachers' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Qualification</label>
                         <input
                         className="w-full border border-slate-300 rounded p-2.5"
-                        value={formData.probationTenure || ''}
-                        onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
-                        placeholder="e.g. 2005 - 2007"
+                        value={formData.qualification || ''}
+                        onChange={e => setFormData({ ...formData, qualification: e.target.value })}
+                        placeholder="e.g. B.A, B.D"
                         />
                     </div>
-                )}
-            </div>
+                    {collectionName !== 'ss_teachers' && (
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Probation Tenure</label>
+                            <input
+                            className="w-full border border-slate-300 rounded p-2.5"
+                            value={formData.probationTenure || ''}
+                            onChange={e => setFormData({ ...formData, probationTenure: e.target.value })}
+                            placeholder="e.g. 2005 - 2007"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">
@@ -420,24 +411,28 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 </div>
             )}
 
-            <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
-                <input
-                className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
-                value={formData.imageUrl || ''}
-                onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                placeholder="https://..."
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Brief Description (Quote)</label>
-                <textarea
-                className="w-full border border-slate-300 rounded p-2.5 h-16 resize-none"
-                value={formData.description || ''}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Short inspiring quote."
-                />
-            </div>
+            {collectionName !== 'ss_teachers' && (
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                    <input
+                    className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
+                    value={formData.imageUrl || ''}
+                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://..."
+                    />
+                </div>
+            )}
+            {collectionName !== 'ss_teachers' && (
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Brief Description (Quote)</label>
+                    <textarea
+                    className="w-full border border-slate-300 rounded p-2.5 h-16 resize-none"
+                    value={formData.description || ''}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Short inspiring quote."
+                    />
+                </div>
+            )}
             {collectionName !== 'ss_teachers' && (
                 <div>
                     <label className="block text-sm font-bold text-church-700 mb-1 flex items-center gap-2">
@@ -466,7 +461,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
             <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-br-xl border-t">
             <button onClick={onClose} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
             <button onClick={handleSaveClick} disabled={isLoading} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center transition shadow-sm disabled:opacity-50">
-                {isLoading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Biography
+                {isLoading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} {collectionName === 'ss_teachers' ? 'Save Profile' : 'Save Biography'}
             </button>
             </div>
         </div>

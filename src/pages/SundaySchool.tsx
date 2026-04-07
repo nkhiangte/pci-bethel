@@ -10,7 +10,7 @@ import {
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
-  Camera, Move, ZoomIn, Download
+  Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
@@ -252,33 +252,60 @@ const SundaySchool: React.FC = () => {
   };
 
   const handleSaveTeacherProfile = async (staff: Staff, collectionName: string) => {
-    if (!db?.collection) return;
+    if (!db?.collection || !currentDept) return;
     setIsSaving(true);
     try {
+      // 1. Save the profile
       if (staff.id) {
         await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
       } else {
         await db.collection(collectionName).add(staff);
       }
+
+      // 2. If it's a new teacher or name changed, update the department's teacher list
+      // Note: This app uses names to link teachers to departments.
+      if (!currentDept.teachers.includes(staff.name)) {
+        const updatedTeachers = [...currentDept.teachers, staff.name];
+        await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+          teachers: updatedTeachers
+        });
+      }
+
       setIsTeacherEditModalOpen(false);
       setTeacherProfile(staff);
       fetchDepartments(); // Refresh to show new image/role
     } catch (error) {
+      console.error("Error saving teacher profile:", error);
       alert("Failed to save teacher profile.");
     }
     setIsSaving(false);
   };
 
   const handleDeleteTeacherProfile = async (id: string, collectionName: string) => {
-    if (!db || !window.confirm("Delete this teacher profile?")) return;
+    if (!db || !window.confirm("Delete this teacher profile?") || !currentDept) return;
     setIsSaving(true);
     try {
+      // 1. Get the teacher profile to know their name
+      const profileDoc = await db.collection(collectionName).doc(id).get();
+      const teacherName = profileDoc.data()?.name;
+
+      // 2. Delete the profile
       await db.collection(collectionName).doc(id).delete();
+
+      // 3. Remove from department's teachers list
+      if (teacherName) {
+        const updatedTeachers = currentDept.teachers.filter(name => name !== teacherName);
+        await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+          teachers: updatedTeachers
+        });
+      }
+
       setTeacherProfile(null);
       setIsTeacherEditModalOpen(false);
       setShowDeleteConfirm(null);
       fetchDepartments(); // Refresh
     } catch (error) {
+      console.error("Error deleting profile:", error);
       alert("Failed to delete profile.");
     }
     setIsSaving(false);
@@ -423,6 +450,15 @@ const SundaySchool: React.FC = () => {
                                 {isAdmin && currentDept && (
                                     <div className="flex gap-2">
                                         <button 
+                                            onClick={() => {
+                                                setTeacherProfile({ id: '', name: '', role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
+                                                setIsTeacherEditModalOpen(true);
+                                            }}
+                                            className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
+                                        >
+                                            <PlusCircle size={18} /> Add Teacher
+                                        </button>
+                                        <button 
                                             onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} 
                                             className="p-2 bg-slate-50 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-xl transition shadow-sm border border-slate-100"
                                             title="Edit Department"
@@ -434,14 +470,14 @@ const SundaySchool: React.FC = () => {
                                             className="p-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 hover:bg-blue-100 shadow-sm transition" 
                                             title="Download Template"
                                         >
-                                            <Download size={18} />
+                                            <FileDown size={18} />
                                         </button>
                                         <button 
                                             onClick={() => importInputRef.current?.click()} 
                                             className="p-2 bg-green-50 text-green-700 rounded-xl border border-green-200 hover:bg-green-100 shadow-sm transition" 
                                             title="Import Teachers"
                                         >
-                                            <FileUp size={18} />
+                                            <Upload size={18} />
                                         </button>
                                         <input type="file" ref={importInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleImportTeachers} />
                                     </div>
