@@ -128,9 +128,9 @@ const Directory: React.FC = () => {
     if (!searchTerm.trim()) return [];
     const term = searchTerm.toLowerCase();
     return allMembers.filter(m => 
-      m.name.toLowerCase().includes(term) || 
-      m.role.toLowerCase().includes(term) ||
-      m.source.toLowerCase().includes(term)
+      (m.name || '').toLowerCase().includes(term) || 
+      (m.role || '').toLowerCase().includes(term) ||
+      (m.source || '').toLowerCase().includes(term)
     );
   }, [searchTerm, allMembers]);
 
@@ -187,8 +187,8 @@ const Directory: React.FC = () => {
                       )}
                     </div>
                     <div className="flex-grow min-w-0">
-                      <h3 className="font-bold text-slate-900 truncate">{member.name}</h3>
-                      <p className="text-xs font-medium text-church-600 uppercase tracking-wider">{member.role}</p>
+                      <h3 className="font-bold text-slate-900 truncate">{member.name || 'Unknown'}</h3>
+                      <p className="text-xs font-medium text-church-600 uppercase tracking-wider">{member.role || 'Member'}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{member.source}</p>
                     </div>
                     {member.phone && (
@@ -201,7 +201,7 @@ const Directory: React.FC = () => {
                           <Phone size={18} />
                         </a>
                         <a 
-                          href={`https://wa.me/91${member.phone.replace(/\D/g, '')}`}
+                          href={`https://wa.me/91${String(member.phone).replace(/\D/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-colors"
