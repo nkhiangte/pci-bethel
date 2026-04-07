@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -250,9 +252,10 @@ const Announcements: React.FC = () => {
                     </div>
 
                     <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
-                        <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-wrap">
-                            {item.content}
-                        </div>
+                        <div 
+                            className="p-6 text-slate-700 leading-relaxed prose prose-slate max-w-none"
+                            dangerouslySetInnerHTML={{ __html: item.content }}
+                        />
 
                         {/* Multiple Videos Display */}
                         {displayVideos.length > 0 && (
@@ -509,12 +512,16 @@ const Announcements: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.content}</label>
-                        <textarea 
-                            className="w-full border border-slate-300 rounded-lg p-2.5 h-32 outline-none focus:ring-2 focus:ring-church-500 transition" 
-                            value={editForm.content || ''} 
-                            onChange={e => setEditForm({...editForm, content: e.target.value})}
-                            placeholder={t.announcements.form.placeholders.content}
-                        />
+                        <div className="bg-white rounded-lg overflow-hidden border border-slate-300">
+                            <ReactQuill 
+                                theme="snow" 
+                                value={editForm.content || ''} 
+                                onChange={(content) => setEditForm({...editForm, content})}
+                                placeholder={t.announcements.form.placeholders.content}
+                                className="h-48"
+                            />
+                        </div>
+                        <div className="h-12"></div> {/* Spacer for Quill toolbar/overflow */}
                     </div>
                 </div>
                 <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50">
