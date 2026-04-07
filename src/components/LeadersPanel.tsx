@@ -230,7 +230,7 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
                 
                 {isAdmin && (
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-1.5 bg-white text-church-600 shadow-sm border border-slate-200 hover:bg-church-50 rounded-lg"><Edit size={14} /></button>
+                    <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); setImageFile(null); }} className="p-1.5 bg-white text-church-600 shadow-sm border border-slate-200 hover:bg-church-50 rounded-lg"><Edit size={14} /></button>
                     <button onClick={() => handleDeleteMember(member.id!)} className="p-1.5 bg-white text-red-500 shadow-sm border border-slate-200 hover:bg-red-50 rounded-lg"><Trash size={14} /></button>
                   </div>
                 )}
@@ -246,6 +246,31 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">{editingMember?.id ? 'Edit Leader' : 'Add Leader'}</h3>
             <form onSubmit={handleSaveMember} className="space-y-4">
+              <div className="flex flex-col items-center mb-4">
+                <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                  {imageFile ? (
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="w-full h-full object-cover" />
+                  ) : editingMember?.imageUrl ? (
+                    <img src={editingMember.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="text-slate-400" size={32} />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Upload className="text-white" size={24} />
+                  </div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setImageFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-slate-500 mt-2">Upload Profile Picture</span>
+              </div>
               <input required className="w-full border rounded-xl p-3" placeholder="Name" value={editingMember?.name || ''} onChange={e => setEditingMember({...editingMember!, name: e.target.value})} />
               <input required className="w-full border rounded-xl p-3" placeholder="Designation" value={editingMember?.role || ''} onChange={e => setEditingMember({...editingMember!, role: e.target.value})} />
               <input className="w-full border rounded-xl p-3" placeholder="Phone" value={editingMember?.phone || ''} onChange={e => setEditingMember({...editingMember!, phone: e.target.value})} />

@@ -816,6 +816,7 @@ const CommitteeDetail: React.FC = () => {
   // Modals
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<CommitteeMember | null>(null);
+  const [memberImageFile, setMemberImageFile] = useState<File | null>(null);
   
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
@@ -872,19 +873,29 @@ const CommitteeDetail: React.FC = () => {
     if (!db || !id || !editingMember) return;
     setLoading(true);
     try {
+      let imageUrl = editingMember.imageUrl || '';
+      if (memberImageFile) {
+        const storageRef = storage.ref(`committee_members/${id}_${Date.now()}`);
+        await storageRef.put(memberImageFile);
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
       const committeeRef = db.collection('committees').doc(id);
       const doc = await committeeRef.get();
       let members = (doc.data() as any).members || [];
       
+      const memberData = { ...editingMember, imageUrl };
+
       if (editingMember.id) {
-        members = members.map((m: any) => m.id === editingMember.id ? editingMember : m);
+        members = members.map((m: any) => m.id === editingMember.id ? memberData : m);
       } else {
-        members.push({ ...editingMember, id: Date.now().toString() });
+        members.push({ ...memberData, id: Date.now().toString() });
       }
       
       await committeeRef.update({ members });
       setCommittee(prev => prev ? { ...prev, members } : null);
       setIsMemberModalOpen(false);
+      setMemberImageFile(null);
     } catch (error) { console.error("Error saving member:", error); }
     setLoading(false);
   };
@@ -1116,7 +1127,7 @@ const CommitteeDetail: React.FC = () => {
                       <Upload size={18} /> {t.committeeDetail.admin.import}
                     </button>
                     <button 
-                      onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); }}
+                      onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); setMemberImageFile(null); }}
                       className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
                     >
                       <PlusCircle size={18} /> {t.committeeDetail.admin.addMember}
@@ -1160,7 +1171,7 @@ const CommitteeDetail: React.FC = () => {
                       
                       {isAdmin && (
                         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); }} className="p-1.5 bg-white text-church-600 shadow-sm border border-slate-200 hover:bg-church-50 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => { setEditingMember(member); setIsMemberModalOpen(true); setMemberImageFile(null); }} className="p-1.5 bg-white text-church-600 shadow-sm border border-slate-200 hover:bg-church-50 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteMember(member.id!)} className="p-1.5 bg-white text-red-500 shadow-sm border border-slate-200 hover:bg-red-50 rounded-lg"><Trash size={14} /></button>
                         </div>
                       )}
@@ -1260,6 +1271,31 @@ const CommitteeDetail: React.FC = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                      {memberImageFile ? (
+                        <img src={URL.createObjectURL(memberImageFile)} alt="Preview" className="w-full h-full object-cover" />
+                      ) : editingMember?.imageUrl ? (
+                        <img src={editingMember.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                      ) : (
+                        <Camera className="text-slate-400" size={32} />
+                      )}
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Upload className="text-white" size={24} />
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setMemberImageFile(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-500 mt-2">Upload Profile Picture</span>
+                  </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.modals.fullName}</label>
                     <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingMember?.name || ''} onChange={e => setEditingMember({...editingMember!, name: e.target.value})} />
