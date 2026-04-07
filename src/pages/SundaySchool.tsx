@@ -146,21 +146,27 @@ const SundaySchool: React.FC = () => {
   }, [selectedTeacherName]);
 
   const handleClearTeachersExceptPuitling = async () => {
-      if (!db || !db.collection || !window.confirm("This will remove ALL teachers from all departments EXCEPT Puitling. Are you sure?")) return;
+      if (!db || !db.collection || !window.confirm("This will remove ALL teachers and leadership from all departments EXCEPT Puitling. Are you sure?")) return;
       setIsSeeding(true);
       try {
           const batch = db.batch();
           const deptsToClear = ['pre-beginner', 'beginner', 'primary', 'junior', 'intermediate', 'sacrament', 'senior'];
           deptsToClear.forEach(id => {
               const docRef = db.collection('sundaySchoolDepartments').doc(id);
-              batch.update(docRef, { teachers: [] });
+              batch.update(docRef, { 
+                  teachers: [],
+                  leader: '',
+                  asstLeader: '',
+                  secretary: '',
+                  asstSecretary: ''
+              });
           });
           await batch.commit();
           fetchDepartments();
-          alert("Teachers cleared successfully (Puitling preserved)!");
+          alert("Teachers and leadership cleared successfully (Puitling preserved)!");
       } catch(e: any) {
           console.error(e);
-          alert(`Failed to clear teachers: ${e.message}`);
+          alert(`Failed to clear data: ${e.message}`);
       }
       setIsSeeding(false);
   };
