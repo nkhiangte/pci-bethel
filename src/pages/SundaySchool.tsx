@@ -251,31 +251,33 @@ const SundaySchool: React.FC = () => {
       }
   };
 
-  const handleSaveTeacherProfile = async (staff: Staff) => {
+  const handleSaveTeacherProfile = async (staff: Staff, collectionName: string) => {
     if (!db?.collection) return;
     setIsSaving(true);
     try {
       if (staff.id) {
-        await db.collection('ss_teachers').doc(staff.id).set(staff, { merge: true });
+        await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
       } else {
-        await db.collection('ss_teachers').add(staff);
+        await db.collection(collectionName).add(staff);
       }
       setIsTeacherEditModalOpen(false);
       setTeacherProfile(staff);
+      fetchDepartments(); // Refresh to show new image/role
     } catch (error) {
       alert("Failed to save teacher profile.");
     }
     setIsSaving(false);
   };
 
-  const handleDeleteTeacherProfile = async (id: string) => {
+  const handleDeleteTeacherProfile = async (id: string, collectionName: string) => {
     if (!db || !window.confirm("Delete this teacher profile?")) return;
     setIsSaving(true);
     try {
-      await db.collection('ss_teachers').doc(id).delete();
+      await db.collection(collectionName).doc(id).delete();
       setTeacherProfile(null);
       setIsTeacherEditModalOpen(false);
       setShowDeleteConfirm(null);
+      fetchDepartments(); // Refresh
     } catch (error) {
       alert("Failed to delete profile.");
     }
@@ -475,13 +477,28 @@ const SundaySchool: React.FC = () => {
                                                       <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Teacher'}</p>
                                                       
                                                       {profile?.phoneNumber && (
-                                                          <div className="flex items-center gap-2">
-                                                              <span className="text-slate-500 text-[10px] font-bold">{profile.phoneNumber}</span>
-                                                              <div className="flex gap-1">
-                                                                  <a href={`tel:${profile.phoneNumber}`} onClick={e => e.stopPropagation()} className="p-1 bg-church-50 text-church-600 rounded hover:bg-church-100 transition-colors">
-                                                                      <Phone size={10} />
+                                                          <div className="flex items-center gap-2 mt-2">
+                                                              <div className="flex gap-1.5">
+                                                                  <a 
+                                                                    href={`tel:${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
+                                                                    onClick={e => e.stopPropagation()} 
+                                                                    className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors border border-church-100 shadow-sm"
+                                                                    title="Call"
+                                                                  >
+                                                                      <Phone size={12} />
+                                                                  </a>
+                                                                  <a 
+                                                                    href={`https://wa.me/91${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer" 
+                                                                    onClick={e => e.stopPropagation()} 
+                                                                    className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors border border-green-100 shadow-sm"
+                                                                    title="WhatsApp"
+                                                                  >
+                                                                      <MessageCircle size={12} />
                                                                   </a>
                                                               </div>
+                                                              <span className="text-slate-400 text-[10px] font-mono">{profile.phoneNumber}</span>
                                                           </div>
                                                       )}
                                                   </div>
@@ -826,7 +843,7 @@ const SundaySchool: React.FC = () => {
                   isLoading={isSaving}
                   showDeleteConfirm={showDeleteConfirm}
                   setShowDeleteConfirm={setShowDeleteConfirm}
-                  collectionName={'pastors' as any} 
+                  collectionName={'ss_teachers' as any} 
               />
           )}
 
