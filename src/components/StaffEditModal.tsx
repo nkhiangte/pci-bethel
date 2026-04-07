@@ -205,102 +205,100 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
     <div className="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col md:flex-row overflow-hidden animate-in zoom-in-90 duration-200">
         
-        {/* Left Side: Image Preview & Adjustment - Hidden for SS Teachers */}
-        {collectionName !== 'ss_teachers' && (
-            <div className="md:w-1/2 bg-slate-100 p-6 flex flex-col border-r border-slate-200">
-                <h3 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
-                    <span className="flex items-center"><Move size={18} className="mr-2"/> Image Settings</span>
-                </h3>
-                
-                <div 
-                    ref={imageContainerRef}
-                    className="flex-1 flex items-center justify-center mb-6 bg-slate-200 rounded-lg overflow-hidden relative shadow-inner min-h-[300px] select-none"
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    onTouchStart={handleMouseDown}
-                    onTouchMove={handleMouseMove}
-                    onTouchEnd={handleMouseUp}
-                    onWheel={handleWheel}
-                >
-                    {formData.imageUrl ? (
-                        <div className="relative w-64 h-64 rounded-full md:rounded-lg overflow-hidden bg-white shadow-lg border-4 border-white group cursor-grab active:cursor-grabbing">
-                            <img 
-                                src={formData.imageUrl} 
-                                alt="Preview" 
-                                className="w-full h-full object-cover transition-transform duration-75 ease-out pointer-events-none" 
-                                style={{
-                                    objectPosition: `${formData.imagePositionX ?? 50}% ${formData.imagePositionY ?? 0}%`,
-                                    transform: `scale(${formData.imageScale ?? 1})`
-                                }}
-                            />
-                            {/* Hint Overlay */}
-                            <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                <Hand className="text-white mb-1" size={24} />
-                                <span className="text-white text-[10px] font-bold uppercase tracking-wider text-center px-4">CSS Adjust<br/>Drag / Scroll</span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-slate-400 flex flex-col items-center">
-                            <ImageIcon size={48} className="mb-2 opacity-50"/>
-                            <span>No Image Selected</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Fine Tune Controls */}
-                <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex-1 flex items-center justify-center bg-church-600 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-church-700 transition"
-                        >
-                            <Crop size={14} className="mr-2" /> Upload & Crop New
-                        </button>
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            className="hidden" 
-                            accept="image/*"
-                            onChange={handleFileSelect}
+        {/* Left Side: Image Preview & Adjustment */}
+        <div className="md:w-1/2 bg-slate-100 p-6 flex flex-col border-r border-slate-200">
+            <h3 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
+                <span className="flex items-center"><Move size={18} className="mr-2"/> Image Settings</span>
+            </h3>
+            
+            <div 
+                ref={imageContainerRef}
+                className="flex-1 flex items-center justify-center mb-6 bg-slate-200 rounded-lg overflow-hidden relative shadow-inner min-h-[300px] select-none"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
+                onWheel={handleWheel}
+            >
+                {formData.imageUrl ? (
+                    <div className="relative w-64 h-64 rounded-full md:rounded-lg overflow-hidden bg-white shadow-lg border-4 border-white group cursor-grab active:cursor-grabbing">
+                        <img 
+                            src={formData.imageUrl} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover transition-transform duration-75 ease-out pointer-events-none" 
+                            style={{
+                                objectPosition: `${formData.imagePositionX ?? 50}% ${formData.imagePositionY ?? 0}%`,
+                                transform: `scale(${formData.imageScale ?? 1})`
+                            }}
                         />
-                    </div>
-                    
-                    <hr className="border-slate-100" />
-                    
-                    <div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">
-                            <span>Fine Tune (CSS)</span>
-                            <span>Existing Image</span>
+                        {/* Hint Overlay */}
+                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <Hand className="text-white mb-1" size={24} />
+                            <span className="text-white text-[10px] font-bold uppercase tracking-wider text-center px-4">CSS Adjust<br/>Drag / Scroll</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-xs text-slate-500">X-Pos</label>
-                                <input 
-                                    type="range" min="-100" max="200" 
-                                    value={formData.imagePositionX ?? 50} 
-                                    onChange={(e) => setFormData({...formData, imagePositionX: Number(e.target.value)})}
-                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-slate-500">Y-Pos</label>
-                                <input 
-                                    type="range" min="-100" max="200" 
-                                    value={formData.imagePositionY ?? 0} 
-                                    onChange={(e) => setFormData({...formData, imagePositionY: Number(e.target.value)})}
-                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
-                                />
-                            </div>
+                    </div>
+                ) : (
+                    <div className="text-slate-400 flex flex-col items-center">
+                        <ImageIcon size={48} className="mb-2 opacity-50"/>
+                        <span>No Image Selected</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Fine Tune Controls */}
+            <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 flex items-center justify-center bg-church-600 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-church-700 transition"
+                    >
+                        <Crop size={14} className="mr-2" /> Upload & Crop New
+                    </button>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                    />
+                </div>
+                
+                <hr className="border-slate-100" />
+                
+                <div>
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">
+                        <span>Fine Tune (CSS)</span>
+                        <span>Existing Image</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-xs text-slate-500">X-Pos</label>
+                            <input 
+                                type="range" min="-100" max="200" 
+                                value={formData.imagePositionX ?? 50} 
+                                onChange={(e) => setFormData({...formData, imagePositionX: Number(e.target.value)})}
+                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-slate-500">Y-Pos</label>
+                            <input 
+                                type="range" min="-100" max="200" 
+                                value={formData.imagePositionY ?? 0} 
+                                onChange={(e) => setFormData({...formData, imagePositionY: Number(e.target.value)})}
+                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                            />
                         </div>
                     </div>
                 </div>
             </div>
-        )}
+        </div>
 
         {/* Right Side: Form Details */}
-        <div className={`${collectionName === 'ss_teachers' ? 'w-full' : 'md:w-1/2'} flex flex-col h-full max-h-[90vh]`}>
+        <div className="md:w-1/2 flex flex-col h-full max-h-[90vh]">
             <div className="p-6 border-b flex justify-between items-center bg-church-50">
             <h3 className="text-xl font-bold text-church-900">{staff.id ? `Edit ${staff.name}` : `Add New Member`}</h3>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
@@ -422,17 +420,15 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 </div>
             )}
 
-            {collectionName !== 'ss_teachers' && (
-                <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
-                    <input
-                    className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
-                    value={formData.imageUrl || ''}
-                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
-                    />
-                </div>
-            )}
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                <input
+                className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
+                value={formData.imageUrl || ''}
+                onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                placeholder="https://..."
+                />
+            </div>
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Brief Description (Quote)</label>
                 <textarea

@@ -469,8 +469,20 @@ const SundaySchool: React.FC = () => {
                                                 }}
                                                 className={`bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group transition-all ${isAdmin ? 'cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md' : ''}`}
                                               >
-                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
-                                                      {teacherName.charAt(0)}
+                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100">
+                                                      {profile?.imageUrl ? (
+                                                          <img 
+                                                            src={profile.imageUrl} 
+                                                            alt={teacherName} 
+                                                            className="w-full h-full object-cover" 
+                                                            referrerPolicy="no-referrer" 
+                                                            style={{ objectPosition: `${profile.imagePositionX ?? 50}% ${profile.imagePositionY ?? 0}%` }}
+                                                          />
+                                                      ) : (
+                                                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
+                                                              {teacherName.charAt(0)}
+                                                          </div>
+                                                      )}
                                                   </div>
                                                   <div className="flex-grow min-w-0">
                                                       <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
