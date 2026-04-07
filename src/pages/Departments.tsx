@@ -245,10 +245,21 @@ const Departments: React.FC = () => {
     try {
         const snapshot = await db.collection('committees').get();
         if (!snapshot.empty) {
-            const fetchedData = snapshot.docs.map((doc: any) => ({
+            let fetchedData = snapshot.docs.map((doc: any) => ({
                 id: doc.id,
                 ...doc.data()
             })) as Committee[];
+
+            // Ensure Kohhran Committee is present in the list
+            const hasKohhran = fetchedData.some(c => c.name.toLowerCase() === 'kohhran committee');
+            if (!hasKohhran) {
+              const kohhranBase = INITIAL_COMMITTEES.find(c => c.name.toLowerCase() === 'kohhran committee');
+              if (kohhranBase) {
+                // Prepend it with a static ID so it can be saved later
+                fetchedData = [{ ...kohhranBase, id: 'static-kohhran', order: -1 }, ...fetchedData];
+              }
+            }
+
             fetchedData.sort((a, b) => {
                 if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
                 return a.name.localeCompare(b.name);
