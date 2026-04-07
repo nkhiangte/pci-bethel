@@ -38,6 +38,7 @@ const SundaySchool: React.FC = () => {
   const { isAdmin } = useAuth();
   
   const [departments, setDepartments] = useState<SundaySchoolDepartment[]>([]);
+  const [allTeachers, setAllTeachers] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Weekly Report States
@@ -88,6 +89,11 @@ const SundaySchool: React.FC = () => {
             const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
             setDepartments(mappedData as SundaySchoolDepartment[]);
         }
+
+        // Also fetch all teacher profiles to display roles in the list
+        const teachersSnap = await db.collection('ss_teachers').get();
+        const teachersData = teachersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff));
+        setAllTeachers(teachersData);
     } catch (e) {
         console.error("Error fetching departments:", e);
         const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
@@ -411,42 +417,16 @@ const SundaySchool: React.FC = () => {
                       <div className="md:col-span-2 space-y-6">
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><Users className="text-church-600"/> Leadership</h3>
-                                  {isAdmin && currentDept && (
-                                      <button onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} className="p-2.5 bg-slate-50 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-xl transition shadow-sm border border-slate-100">
-                                          <Edit size={18} />
-                                      </button>
-                                  )}
-                              </div>
-                              <div className="grid sm:grid-cols-2 gap-6">
-                                  <div className="space-y-4">
-                                      <div className="group cursor-pointer" onClick={() => currentDept?.leader && setSelectedTeacherName(currentDept.leader)}>
-                                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{leaderLabel}</span>
-                                          <span className="font-bold text-slate-800 text-lg group-hover:text-church-600 transition-colors">{currentDept?.leader || 'Not Assigned'}</span>
-                                      </div>
-                                      <div className="group cursor-pointer" onClick={() => currentDept?.asstLeader && setSelectedTeacherName(currentDept.asstLeader)}>
-                                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{asstLeaderLabel}</span>
-                                          <span className="font-bold text-slate-800 text-lg group-hover:text-church-600 transition-colors">{currentDept?.asstLeader || 'Not Assigned'}</span>
-                                      </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                      <div className="group cursor-pointer" onClick={() => currentDept?.secretary && setSelectedTeacherName(currentDept.secretary)}>
-                                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Secretary</span>
-                                          <span className="font-bold text-slate-800 text-lg group-hover:text-church-600 transition-colors">{currentDept?.secretary || 'Not Assigned'}</span>
-                                      </div>
-                                      <div className="group cursor-pointer" onClick={() => currentDept?.asstSecretary && setSelectedTeacherName(currentDept.asstSecretary)}>
-                                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Asst. Secretary</span>
-                                          <span className="font-bold text-slate-800 text-lg group-hover:text-church-600 transition-colors">{currentDept?.asstSecretary || 'Not Assigned'}</span>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                              <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.teachers.length || 0})</h3>
-                                {isAdmin && (
+                                {isAdmin && currentDept && (
                                     <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} 
+                                            className="p-2 bg-slate-50 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-xl transition shadow-sm border border-slate-100"
+                                            title="Edit Department"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
                                         <button 
                                             onClick={handleDownloadTemplate} 
                                             className="p-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 hover:bg-blue-100 shadow-sm transition" 
@@ -465,28 +445,52 @@ const SundaySchool: React.FC = () => {
                                     </div>
                                 )}
                               </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {currentDept && currentDept.teachers.length > 0 ? (
-                                      currentDept.teachers.map((t, i) => (
-                                          <button 
-                                            key={i} 
-                                            onClick={() => setSelectedTeacherName(t)}
-                                            className="flex items-center p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-church-300 hover:bg-white hover:shadow-md transition-all text-left"
-                                          >
-                                              <div className="w-8 h-8 bg-white text-church-600 rounded-lg flex items-center justify-center font-black text-xs mr-3 shadow-sm border border-slate-100 group-hover:bg-church-600 group-hover:text-white transition-colors">{i+1}</div>
-                                              <div className="flex-1">
-                                                <span className="font-bold text-slate-700 group-hover:text-church-800">{t}</span>
-                                                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                                                    <Info size={10} /> View Profile
-                                                </div>
+                              
+                              {!currentDept || currentDept.teachers.length === 0 ? (
+                                  <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                                      <Users size={48} className="mx-auto text-slate-300 mb-3" />
+                                      <p className="text-slate-500">No teachers listed in database.</p>
+                                  </div>
+                              ) : (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {currentDept.teachers.map((teacherName, i) => {
+                                          const profile = allTeachers.find(p => p.name === teacherName);
+                                          return (
+                                              <div 
+                                                key={i} 
+                                                onClick={() => setSelectedTeacherName(teacherName)}
+                                                className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md transition-all"
+                                              >
+                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100">
+                                                      {profile?.imageUrl ? (
+                                                          <img src={profile.imageUrl} alt={teacherName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                      ) : (
+                                                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
+                                                              {teacherName.charAt(0)}
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                                  <div className="flex-grow min-w-0">
+                                                      <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
+                                                      <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Teacher'}</p>
+                                                      
+                                                      {profile?.phoneNumber && (
+                                                          <div className="flex items-center gap-2">
+                                                              <span className="text-slate-500 text-[10px] font-bold">{profile.phoneNumber}</span>
+                                                              <div className="flex gap-1">
+                                                                  <a href={`tel:${profile.phoneNumber}`} onClick={e => e.stopPropagation()} className="p-1 bg-church-50 text-church-600 rounded hover:bg-church-100 transition-colors">
+                                                                      <Phone size={10} />
+                                                                  </a>
+                                                              </div>
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                                  <ChevronRight size={14} className="text-slate-300 group-hover:text-church-400 mt-1" />
                                               </div>
-                                              <ChevronRight size={16} className="text-slate-300 group-hover:text-church-400 transition-transform group-hover:translate-x-1" />
-                                          </button>
-                                      ))
-                                  ) : (
-                                      <div className="text-slate-400 italic text-sm col-span-2 py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">No teachers listed in database.</div>
-                                  )}
-                              </div>
+                                          );
+                                      })}
+                                  </div>
+                              )}
                           </div>
                       </div>
 
