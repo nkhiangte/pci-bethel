@@ -257,39 +257,6 @@ const Departments: React.FC = () => {
           kohhran = { ...kohhranBase, id: 'static-kohhran', order: -1, members: [] } as Committee;
           fetchedData = [kohhran, ...fetchedData];
           kohhranIndex = 0;
-        } else {
-          kohhran = fetchedData[kohhranIndex];
-        }
-
-        // Fetch Kohhran Committee members from pastors, proPastors, and elders
-        try {
-          const [pastorsSnap, proPastorsSnap, eldersSnap] = await Promise.all([
-            db.collection('pastors').orderBy('order', 'asc').get(),
-            db.collection('proPastors').orderBy('order', 'asc').get(),
-            db.collection('elders').orderBy('order', 'asc').get()
-          ]);
-
-          const pastoralMembers: CommitteeMember[] = [
-            ...pastorsSnap.docs.map((doc: any) => {
-              const d = doc.data();
-              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
-            }),
-            ...proPastorsSnap.docs.map((doc: any) => {
-              const d = doc.data();
-              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
-            }),
-            ...eldersSnap.docs.map((doc: any) => {
-              const d = doc.data();
-              return { id: doc.id, name: d.name, role: d.role, imageUrl: d.imageUrl };
-            })
-          ];
-
-          if (pastoralMembers.length > 0) {
-            kohhran.members = pastoralMembers;
-            fetchedData[kohhranIndex] = { ...kohhran };
-          }
-        } catch (err) {
-          console.error("Error fetching pastoral members for Kohhran Committee:", err);
         }
 
         fetchedData.sort((a, b) => {
