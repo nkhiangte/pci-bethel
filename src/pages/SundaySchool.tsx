@@ -460,17 +460,17 @@ const SundaySchool: React.FC = () => {
                                           return (
                                               <div 
                                                 key={i} 
-                                                onClick={() => setSelectedTeacherName(teacherName)}
-                                                className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md transition-all"
+                                                onClick={() => {
+                                                    if (isAdmin) {
+                                                        const p = allTeachers.find(prof => prof.name === teacherName);
+                                                        setTeacherProfile(p || { id: '', name: teacherName, role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
+                                                        setIsTeacherEditModalOpen(true);
+                                                    }
+                                                }}
+                                                className={`bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group transition-all ${isAdmin ? 'cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md' : ''}`}
                                               >
-                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100">
-                                                      {profile?.imageUrl ? (
-                                                          <img src={profile.imageUrl} alt={teacherName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                                      ) : (
-                                                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
-                                                              {teacherName.charAt(0)}
-                                                          </div>
-                                                      )}
+                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
+                                                      {teacherName.charAt(0)}
                                                   </div>
                                                   <div className="flex-grow min-w-0">
                                                       <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
@@ -502,7 +502,11 @@ const SundaySchool: React.FC = () => {
                                                           </div>
                                                       )}
                                                   </div>
-                                                  <ChevronRight size={14} className="text-slate-300 group-hover:text-church-400 mt-1" />
+                                                  {isAdmin && (
+                                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                          <Edit size={14} className="text-slate-400" />
+                                                      </div>
+                                                  )}
                                               </div>
                                           );
                                       })}
@@ -694,144 +698,7 @@ const SundaySchool: React.FC = () => {
               </div>
           )}
 
-          {/* Teacher Profile View Modal */}
-          {selectedTeacherName && (
-              <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedTeacherName(null)}>
-                  <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-                      {loadingProfile ? (
-                          <div className="p-24 text-center"><Loader className="animate-spin mx-auto text-church-500" size={48} /></div>
-                      ) : teacherProfile ? (
-                          <>
-                              <div className="relative min-h-[14rem] md:min-h-[16rem] shrink-0 bg-church-900 text-white flex items-end overflow-hidden">
-                                  <img 
-                                      src={teacherProfile.imageUrl} 
-                                      className="absolute inset-0 w-full h-full object-cover opacity-40" 
-                                      alt="Profile BG"
-                                      style={{ objectPosition: `${teacherProfile.imagePositionX ?? 50}% ${teacherProfile.imagePositionY ?? 0}%` }}
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-church-900 via-church-900/60 to-transparent"></div>
-                                  
-                                  <button 
-                                      onClick={() => setSelectedTeacherName(null)}
-                                      className="absolute top-8 right-8 p-3 bg-white/10 hover:bg-white/20 rounded-full transition text-white border border-white/20 z-20"
-                                  >
-                                      <X size={24} />
-                                  </button>
-
-                                  <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center md:items-end gap-6 w-full">
-                                      <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white shrink-0">
-                                          <img 
-                                              src={teacherProfile.imageUrl} 
-                                              alt={teacherProfile.name} 
-                                              className="w-full h-full object-cover" 
-                                              style={{ objectPosition: `${teacherProfile.imagePositionX ?? 50}% ${teacherProfile.imagePositionY ?? 0}%` }}
-                                          />
-                                      </div>
-                                      <div className="text-center md:text-left flex-1">
-                                          <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
-                                              <span className="inline-block bg-church-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full shadow-lg">
-                                                  Teacher
-                                              </span>
-                                              {teacherProfile.qualification && (
-                                                  <span className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
-                                                      {teacherProfile.qualification}
-                                                  </span>
-                                              )}
-                                          </div>
-                                          
-                                          <h2 className="text-2xl md:text-4xl font-serif font-black mb-2 leading-tight">
-                                              {teacherProfile.name}
-                                          </h2>
-                                          
-                                          <div className="flex flex-col gap-1 text-sm text-church-200 opacity-90 mt-2">
-                                              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                                                  <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest text-xs">
-                                                      <Calendar size={14} /> Dept: {currentDept?.name}
-                                                  </div>
-                                              </div>
-                                              {teacherProfile.phoneNumber && (
-                                                  <div className="flex gap-2 justify-center md:justify-start mt-3">
-                                                      <a href={`tel:${teacherProfile.phoneNumber}`} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
-                                                          <Phone size={12} /> Call
-                                                      </a>
-                                                      <a href={`https://wa.me/${teacherProfile.phoneNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
-                                                          <MessageCircle size={12} /> WhatsApp
-                                                      </a>
-                                                  </div>
-                                              )}
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-
-                              <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
-                                  <div className="grid lg:grid-cols-12 gap-12">
-                                      <div className="lg:col-span-8">
-                                          <div className="flex items-center gap-2 mb-6">
-                                              <div className="h-px bg-slate-100 flex-1"></div>
-                                              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Biography & Testimonial</h3>
-                                              <div className="h-px bg-slate-100 flex-1"></div>
-                                          </div>
-                                          
-                                          {teacherProfile.biography ? (
-                                              <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                                  {teacherProfile.biography}
-                                              </article>
-                                          ) : (
-                                              <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                                                  <BookOpen size={40} className="mx-auto text-slate-300 mb-4" />
-                                                  <p className="text-slate-500 italic">Detailed biography not yet added to Firebase.</p>
-                                              </div>
-                                          )}
-                                      </div>
-
-                                      <div className="lg:col-span-4 space-y-8">
-                                          <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden">
-                                              <Sparkles className="absolute -top-4 -left-4 text-church-100" size={48} />
-                                              <h4 className="text-xs font-black text-church-600 uppercase tracking-widest mb-4 relative z-10">Department Role</h4>
-                                              <p className="text-slate-600 italic font-serif leading-relaxed relative z-10">
-                                                  "{teacherProfile.description || `Dedicated teacher in the ${currentDept?.name} department.`}"
-                                              </p>
-                                          </div>
-
-                                          {isAdmin && (
-                                              <button 
-                                                  onClick={() => setIsTeacherEditModalOpen(true)}
-                                                  className="w-full py-4 bg-church-50 text-church-700 font-black uppercase text-[10px] tracking-widest rounded-2xl border border-church-100 hover:bg-church-100 transition shadow-sm flex items-center justify-center gap-2"
-                                              >
-                                                  <Edit size={14} /> Edit Teacher Profile
-                                              </button>
-                                          )}
-                                      </div>
-                                  </div>
-                              </div>
-                          </>
-                      ) : (
-                          <div className="p-12 text-center bg-white flex flex-col items-center">
-                              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-6">
-                                  <User size={48} />
-                              </div>
-                              <h2 className="text-2xl font-serif font-black text-slate-800 mb-2">{selectedTeacherName}</h2>
-                              <p className="text-slate-500 mb-8 max-w-xs">Detailed profile information has not been added to our digital archives yet.</p>
-                              <div className="flex gap-4">
-                                  <button onClick={() => setSelectedTeacherName(null)} className="px-6 py-2 border rounded-full font-bold text-slate-600 hover:bg-slate-50 transition">Close</button>
-                                  {isAdmin && (
-                                      <button 
-                                          onClick={() => {
-                                              setTeacherProfile({ id: '', name: selectedTeacherName!, role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
-                                              setIsTeacherEditModalOpen(true);
-                                          }}
-                                          className="px-6 py-2 bg-church-600 text-white rounded-full font-bold hover:bg-church-700 transition shadow-lg"
-                                      >
-                                          Create Profile
-                                      </button>
-                                  )}
-                              </div>
-                          </div>
-                      )}
-                  </div>
-              </div>
-          )}
+          {/* Teacher Profile View Modal Removed */}
 
           {/* Teacher Edit Modal */}
           {isTeacherEditModalOpen && (
