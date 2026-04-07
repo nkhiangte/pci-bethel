@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-church-900 text-white sticky top-0 z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between min-h-[5rem] py-2">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
               <img 
@@ -94,9 +94,9 @@ const Navbar: React.FC = () => {
           </div>
           
           <div className="hidden lg:block">
-            <div className="ml-10 flex items-baseline flex-wrap gap-x-2">
+            <div className="ml-10 flex items-center flex-wrap gap-x-2 gap-y-2">
               {navLinks.map((link) => (
-                <div key={link.name} className="relative group z-50 h-full flex items-center">
+                <div key={link.name} className="relative group z-10 hover:z-30 h-full flex items-center">
                   {link.children ? (
                     <>
                       <button
@@ -111,7 +111,7 @@ const Navbar: React.FC = () => {
                       </button>
                       
                       {/* Dropdown Menu with Gap Bridge (pt-2 instead of mt-2) */}
-                      <div className="absolute left-0 top-full pt-2 w-56 hidden group-hover:block animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="absolute left-0 top-full pt-2 w-56 hidden group-hover:block animate-in fade-in slide-in-from-top-1 duration-200 z-40">
                         <div className="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none py-1 overflow-hidden">
                           {link.children.map((child) => (
                             <Link
