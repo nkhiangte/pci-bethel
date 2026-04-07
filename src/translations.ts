@@ -127,9 +127,7 @@ export const translations = {
       postAnnouncement: 'Post Announcement',
       categories: {
         general: 'General',
-        youth: 'Youth',
-        funeral: 'Funeral',
-        emergency: 'Emergency',
+        sunna: 'Sunna',
       },
       watch: 'Watch',
       editAnnouncement: 'Edit Announcement',
@@ -598,9 +596,7 @@ export const translations = {
       postAnnouncement: 'Thupuan Thar Dahna',
       categories: {
         general: 'General',
-        youth: 'Thalaite',
-        funeral: 'Thihna',
-        emergency: 'Emergency',
+        sunna: 'Sunna',
       },
       watch: 'En rawh',
       editAnnouncement: 'Thupuan Siamremna',

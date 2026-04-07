@@ -25,6 +25,7 @@ const Announcements: React.FC = () => {
   const { isAdmin } = useAuth();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [categories, setCategories] = useState<string[]>(['General', 'Sunna']);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Announcement>>({});
@@ -38,7 +39,34 @@ const Announcements: React.FC = () => {
 
   useEffect(() => {
     fetchAnnouncements();
+    fetchCategories();
   }, [language]);
+
+  const fetchCategories = async () => {
+    try {
+      const committeeSnap = await db.collection('committees').get();
+      const committeeNames = committeeSnap.docs.map(doc => doc.data().name);
+      
+      // Static fellowships as they are defined in Navbar
+      const fellowshipNames = ['Kohhran Hmeichhia', 'Kristian Ṭhalai Pawl (KTP)', 'Kohhran Pavalai Pawl (KPP)'];
+
+      const allCats = ['General', 'Sunna', ...committeeNames, ...fellowshipNames];
+      // Remove duplicates
+      const uniqueCats = Array.from(new Set(allCats));
+      
+      // Sort: General first, Sunna second, then alphabetical
+      const sortedCats = uniqueCats.sort((a, b) => {
+        if (a === 'General') return -1;
+        if (b === 'General') return 1;
+        if (a === 'Sunna') return -1;
+        if (b === 'Sunna') return 1;
+        return a.localeCompare(b);
+      });
+      setCategories(sortedCats);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const fetchAnnouncements = async () => {
     setLoading(true);
@@ -71,7 +99,7 @@ const Announcements: React.FC = () => {
     setEditForm({
       title: '',
       date: new Date().toISOString().split('T')[0],
-      category: 'General',
+      category: categories[0] || 'General',
       content: '',
       imageUrls: [],
       imageCaptions: [],
@@ -247,7 +275,7 @@ const Announcements: React.FC = () => {
                 return (
                     <div key={item.id} className="relative pl-8 group">
                     <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${
-                        item.category === 'Emergency' ? 'bg-red-500' : 'bg-church-500'
+                        item.category === 'Sunna' ? 'bg-slate-800' : 'bg-church-500'
                     }`}></div>
                     
                     {isAdmin && (
@@ -261,12 +289,10 @@ const Announcements: React.FC = () => {
                     <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">{item.title}</h2>
                     <div className="flex items-center mb-4">
                         <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
-                            item.category === 'Emergency' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
+                            item.category === 'Sunna' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'
                         }`}>
                         {item.category === 'General' ? t.announcements.categories.general :
-                         item.category === 'Youth' ? t.announcements.categories.youth :
-                         item.category === 'Funeral' ? t.announcements.categories.funeral :
-                         item.category === 'Emergency' ? t.announcements.categories.emergency :
+                         item.category === 'Sunna' ? t.announcements.categories.sunna :
                          item.category}
                         </span>
                     </div>
@@ -424,10 +450,13 @@ const Announcements: React.FC = () => {
                                 value={editForm.category} 
                                 onChange={e => setEditForm({...editForm, category: e.target.value as any})}
                             >
-                                <option value="General">{t.announcements.categories.general}</option>
-                                <option value="Youth">{t.announcements.categories.youth}</option>
-                                <option value="Funeral">{t.announcements.categories.funeral}</option>
-                                <option value="Emergency">{t.announcements.categories.emergency}</option>
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>
+                                        {cat === 'General' ? t.announcements.categories.general :
+                                         cat === 'Sunna' ? t.announcements.categories.sunna :
+                                         cat}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>

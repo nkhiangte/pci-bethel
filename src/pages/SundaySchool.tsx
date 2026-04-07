@@ -10,7 +10,7 @@ import {
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
-  Camera, Move, ZoomIn
+  Camera, Move, ZoomIn, Download
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
@@ -250,6 +250,18 @@ const SundaySchool: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleDownloadTemplate = () => {
+    const data = [
+      ['Name', 'Designation', 'Phone Number'],
+      ['Lalnunmawii', 'Teacher', '9876543210'],
+      ['Hruaitluanga', 'Asst. Teacher', '9876543211']
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers Template");
+    XLSX.writeFile(workbook, "SundaySchool_Teachers_Template.xlsx");
+  };
+
   const handleImportTeachers = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       const normalizedId = departmentId?.toLowerCase();
@@ -262,26 +274,61 @@ const SundaySchool: React.FC = () => {
           const workbook = XLSX.read(data);
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-          const importedTeachers: string[] = [];
           
-          jsonData.forEach((row: any[]) => {
-              if (row.length > 0) {
-                  const val = String(row[0]).trim();
-                  if (val && !['name', 'teacher', 'teachers', 'hming', 'zirtirtu'].includes(val.toLowerCase())) {
-                      importedTeachers.push(val);
+          const importedTeachers: { name: string, designation: string, phone: string }[] = [];
+          
+          // Skip header row if it looks like one
+          const firstRow = jsonData[0];
+          const startIndex = firstRow && String(firstRow[0]).toLowerCase().includes('name') ? 1 : 0;
+
+          for (let i = startIndex; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              if (row && row.length > 0) {
+                  const name = String(row[0] || '').trim();
+                  const designation = String(row[1] || 'Teacher').trim();
+                  const phone = String(row[2] || '').trim();
+                  
+                  if (name) {
+                      importedTeachers.push({ name, designation, phone });
                   }
               }
-          });
+          }
 
           if (importedTeachers.length === 0) {
-              alert("No valid names found in the first column.");
+              alert("No valid data found in the Excel file.");
               return;
           }
 
-          if (window.confirm(`Found ${importedTeachers.length} names. This will REPLACE the existing teacher list for ${currentDept.name}. Proceed?`)) {
+          if (window.confirm(`Found ${importedTeachers.length} teachers. This will update their profiles and REPLACE the existing teacher list for ${currentDept.name}. Proceed?`)) {
               if (db && db.collection) {
-                  await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({ teachers: importedTeachers });
-                  alert("Teachers imported successfully!");
+                  setLoading(true);
+                  
+                  // Update/Create profiles in ss_teachers
+                  // We do this sequentially to avoid batch query issues, though it's slower
+                  for (const t of importedTeachers) {
+                      const snap = await db.collection('ss_teachers').where('name', '==', t.name).limit(1).get();
+                      if (!snap.empty) {
+                          await db.collection('ss_teachers').doc(snap.docs[0].id).update({ 
+                              role: t.designation, 
+                              phoneNumber: t.phone 
+                          });
+                      } else {
+                          await db.collection('ss_teachers').add({
+                              name: t.name,
+                              role: t.designation,
+                              phoneNumber: t.phone,
+                              imageUrl: '',
+                              biography: '',
+                              createdAt: new Date().toISOString()
+                          });
+                      }
+                  }
+                  
+                  // Update department teachers list
+                  const teacherNames = importedTeachers.map(t => t.name);
+                  await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({ teachers: teacherNames });
+                  
+                  alert("Teachers imported and profiles updated successfully!");
                   fetchDepartments();
               } else {
                   alert("Database connection unavailable.");
@@ -292,6 +339,7 @@ const SundaySchool: React.FC = () => {
           alert(`Failed to import: ${error.message || 'Unknown error'}`);
       } finally {
           if (importInputRef.current) importInputRef.current.value = '';
+          setLoading(false);
       }
   };
 
@@ -373,6 +421,13 @@ const SundaySchool: React.FC = () => {
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.teachers.length || 0})</h3>
                                 {isAdmin && (
                                     <div className="flex gap-2">
+                                        <button 
+                                            onClick={handleDownloadTemplate} 
+                                            className="p-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 hover:bg-blue-100 shadow-sm transition" 
+                                            title="Download Template"
+                                        >
+                                            <Download size={18} />
+                                        </button>
                                         <button 
                                             onClick={() => importInputRef.current?.click()} 
                                             className="p-2 bg-green-50 text-green-700 rounded-xl border border-green-200 hover:bg-green-100 shadow-sm transition" 
