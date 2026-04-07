@@ -40,7 +40,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Venglai Kawng phei chung lam zawng leh DC Complex hlui zawng',
     leader: 'Upa PC Lalhmingliana',
     members: ['Pu C Lalrawngbawla', 'Pu Lalmuanpuia'],
-    imageUrl: BIAL_IMAGES[1]
+    imageUrl: BIAL_IMAGES[1],
+    mapLat: '23.4760',
+    mapLng: '93.3290',
+    mapZoom: '18'
   },
   {
     id: 'bial-2',
@@ -48,7 +51,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'MJA Building leh BSI Building atangin Pu K Lalrawna In thlengin chhuah lam zawng',
     leader: 'Upa Lalremruata',
     members: ['Pu C Rohmingliana', 'Pu JC Laldinthara'],
-    imageUrl: BIAL_IMAGES[2]
+    imageUrl: BIAL_IMAGES[2],
+    mapLat: '23.4750',
+    mapLng: '93.3300',
+    mapZoom: '18'
   },
   {
     id: 'bial-3',
@@ -56,7 +62,10 @@ const INITIAL_BIAL_DATA: UpaBialData[] = [
     areaDescription: 'Upa PC Lalhmingliana In atangin kawngui dung zelah Pu L Khenpauva In huamin Biak In leh Soil Comlex huamin chhuah lam zawng',
     leader: 'Upa R Lalramhluna',
     members: ['Pu Thanglianmanga', 'Pu H Lalzuitluanga'],
-    imageUrl: BIAL_IMAGES[3]
+    imageUrl: BIAL_IMAGES[3],
+    mapLat: '23.4770',
+    mapLng: '93.3280',
+    mapZoom: '18'
   },
   {
     id: 'bial-4',
@@ -143,6 +152,7 @@ const UpaBial: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
   const [currentMapUrl, setCurrentMapUrl] = useState(BASE_MAP_URL);
+  const [mapPulse, setMapPulse] = useState(false);
 
   // Edit State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -309,9 +319,13 @@ const UpaBial: React.FC = () => {
         // Collapsing
         setExpandedId(null);
         setCurrentMapUrl(BASE_MAP_URL);
+        setMapPulse(false);
     } else {
         // Expanding
         setExpandedId(id);
+        setMapPulse(true);
+        setTimeout(() => setMapPulse(false), 1500);
+        
         const selectedBial = bials.find(b => b.id === id);
         
         // Update map URL if coordinates exist
@@ -332,6 +346,9 @@ const UpaBial: React.FC = () => {
   const handleLocateOnMap = (e: React.MouseEvent, bial: UpaBialData) => {
       e.stopPropagation();
       setExpandedId(bial.id);
+      setMapPulse(true);
+      setTimeout(() => setMapPulse(false), 1500);
+      
       if (bial.mapLat && bial.mapLng) {
           const zoom = bial.mapZoom || '18';
           setCurrentMapUrl(`${BASE_MAP_URL}&ll=${bial.mapLat},${bial.mapLng}&z=${zoom}`);
@@ -474,7 +491,12 @@ const UpaBial: React.FC = () => {
 
             {/* Map Column (Sticky on Desktop) */}
             <div className="w-full lg:w-2/3 order-1 lg:order-2 h-[500px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
-                <div ref={mapContainerRef} className="w-full h-full bg-white rounded-2xl shadow-xl border-4 border-white overflow-hidden relative group">
+                <div 
+                    ref={mapContainerRef} 
+                    className={`w-full h-full bg-white rounded-2xl shadow-xl border-4 border-white overflow-hidden relative group transition-all duration-500 ${
+                        mapPulse ? 'ring-8 ring-church-500 ring-opacity-30 scale-[1.01]' : ''
+                    } ${expandedId ? 'border-church-100' : 'border-white'}`}
+                >
                     <iframe 
                         src={currentMapUrl} 
                         width="100%" 
@@ -488,6 +510,25 @@ const UpaBial: React.FC = () => {
                         <Globe size={14} className="text-church-600" />
                         {expandedId ? `Viewing Bial ${bials.find(b => b.id === expandedId)?.number}` : 'Interactive Map'}
                     </div>
+
+                    {expandedId && (
+                        <button 
+                            onClick={() => { setExpandedId(null); setCurrentMapUrl(BASE_MAP_URL); }}
+                            className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full text-slate-600 shadow-lg border border-slate-200 z-10 hover:bg-white hover:text-church-600 transition-all"
+                            title="Reset Map"
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
+
+                    {mapPulse && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-church-900/10 backdrop-blur-[1px] pointer-events-none animate-in fade-in duration-300">
+                            <div className="bg-white/90 px-6 py-3 rounded-2xl shadow-2xl border border-church-100 flex items-center gap-3 scale-110 transition-transform">
+                                <MapPin className="text-church-600 animate-bounce" size={24} />
+                                <span className="font-bold text-church-900">Focusing Map...</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
