@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, Archive } from 'lucide-react';
 import { Event, WeeklyDuty, ArchiveEntry } from '../types';
+import AutocompleteInput from '../components/AutocompleteInput';
+import { useEventSuggestions } from '../hooks/useEventSuggestions';
 
 // Helper to get specific dates for the current week (Monday to Sunday)
 const getDatesForWeek = () => {
@@ -77,6 +79,7 @@ const timeToMinutes = (timeStr: string) => {
 const Events: React.FC = () => {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
+  const { suggestions } = useEventSuggestions();
   
   const [displayEvents, setDisplayEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -392,25 +395,32 @@ const Events: React.FC = () => {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.hruaitu}</label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.hruaitu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, hruaitu: e.target.value}})} placeholder={t.events.form.placeholders.conductor} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
-                                {normalizeTitle(editForm.title || '').includes('nilai') ? t.events.thupuiHawngtu : t.events.thuhriltu}
-                            </label>
-                            <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thuhriltu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thuhriltu: e.target.value}})} placeholder={t.events.form.placeholders.preacher} />
-                        </div>
+                        <AutocompleteInput 
+                            label={t.events.hruaitu}
+                            value={editForm.program?.hruaitu || ''} 
+                            onChange={val => setEditForm({...editForm, program: {...editForm.program, hruaitu: val}})} 
+                            suggestions={suggestions}
+                            placeholder={t.events.form.placeholders.conductor}
+                        />
+                        <AutocompleteInput 
+                            label={normalizeTitle(editForm.title || '').includes('nilai') ? t.events.thupuiHawngtu : t.events.thuhriltu}
+                            value={editForm.program?.thuhriltu || ''} 
+                            onChange={val => setEditForm({...editForm, program: {...editForm.program, thuhriltu: val}})} 
+                            suggestions={suggestions}
+                            placeholder={t.events.form.placeholders.preacher}
+                        />
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.topic}</label>
                         <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder={t.events.form.placeholders.topic} />
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.reader}</label>
-                        <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.tantu || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, tantu: e.target.value}})} placeholder={t.events.form.placeholders.reader} />
-                    </div>
+                    <AutocompleteInput 
+                        label={t.events.form.reader}
+                        value={editForm.program?.tantu || ''} 
+                        onChange={val => setEditForm({...editForm, program: {...editForm.program, tantu: val}})} 
+                        suggestions={suggestions}
+                        placeholder={t.events.form.placeholders.reader}
+                    />
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl border-t">
                     <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition">{t.fellowship.cancel}</button>

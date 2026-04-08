@@ -11,7 +11,7 @@ interface ChanvoGroup {
   members?: string[];
 }
 
-const SEED_DATA: ChanvoGroup[] = [
+export const SEED_DATA: ChanvoGroup[] = [
   {
     id: 'thuhriltute',
     title: 'THUHRILTUTE',
