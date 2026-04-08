@@ -10,7 +10,8 @@ import {
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
-  Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle
+  Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle,
+  ChevronUp, ChevronDown
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
@@ -324,6 +325,27 @@ const SundaySchool: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleMoveTeacher = async (index: number, direction: 'up' | 'down') => {
+    if (!db || !currentDept) return;
+    
+    const newTeachers = [...currentDept.teachers];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= newTeachers.length) return;
+    
+    // Swap
+    [newTeachers[index], newTeachers[targetIndex]] = [newTeachers[targetIndex], newTeachers[index]];
+    
+    try {
+      await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+        teachers: newTeachers
+      });
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error moving teacher:", error);
+    }
+  };
+
   const handleDeleteTeacherProfile = async (id: string, collectionName: string) => {
     if (!db || !window.confirm("Delete this teacher profile?") || !currentDept) return;
     setIsSaving(true);
@@ -624,17 +646,41 @@ const SundaySchool: React.FC = () => {
                                                   </div>
                                                   {isAdmin && (
                                                       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                          <div className="flex flex-col gap-1">
+                                                              <button 
+                                                                  onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      handleMoveTeacher(i, 'up');
+                                                                  }}
+                                                                  disabled={i === 0}
+                                                                  className="p-1 bg-white text-slate-400 rounded shadow-sm hover:text-church-600 disabled:opacity-30 border border-slate-100"
+                                                                  title="Move Up"
+                                                              >
+                                                                  <ChevronUp size={12} />
+                                                              </button>
+                                                              <button 
+                                                                  onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      handleMoveTeacher(i, 'down');
+                                                                  }}
+                                                                  disabled={i === currentDept.teachers.length - 1}
+                                                                  className="p-1 bg-white text-slate-400 rounded shadow-sm hover:text-church-600 disabled:opacity-30 border border-slate-100"
+                                                                  title="Move Down"
+                                                              >
+                                                                  <ChevronDown size={12} />
+                                                              </button>
+                                                          </div>
                                                           <button 
                                                               onClick={(e) => {
                                                                   e.stopPropagation();
                                                                   handleRemoveTeacherFromDept(teacherName);
                                                               }}
-                                                              className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 transition-colors border border-red-100"
+                                                              className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 transition-colors border border-red-100 h-fit"
                                                               title="Remove from Department"
                                                           >
                                                               <Trash size={14} />
                                                           </button>
-                                                          <div className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100">
+                                                          <div className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 h-fit">
                                                               <Edit size={14} />
                                                           </div>
                                                       </div>
