@@ -91,9 +91,17 @@ const SundaySchool: React.FC = () => {
         }
 
         // Also fetch all teacher profiles to display roles in the list
-        const teachersSnap = await db.collection('ss_teachers').get();
-        const teachersData = teachersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff));
-        setAllTeachers(teachersData);
+        // Fetch from all staff collections to include Elders/Pastors who might be teaching
+        const staffColls = ['ss_teachers', 'elders', 'pastors', 'proPastors'];
+        let combinedStaff: Staff[] = [];
+        
+        for (const coll of staffColls) {
+          const snap = await db.collection(coll).get();
+          const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff));
+          combinedStaff = [...combinedStaff, ...data];
+        }
+        
+        setAllTeachers(combinedStaff);
     } catch (e) {
         console.error("Error fetching departments:", e);
         const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
@@ -330,9 +338,14 @@ const SundaySchool: React.FC = () => {
     // Prepare data for Excel
     const excelData = [
       ['Name', 'Designation', 'Phone Number'],
-      ...allTeachers
-        .filter(t => currentDept.teachers.includes(t.name))
-        .map(t => [t.name, t.role, t.phoneNumber || t.phone || ''])
+      ...currentDept.teachers.map(teacherName => {
+        const profile = allTeachers.find(t => t.name === teacherName);
+        return [
+          teacherName,
+          profile?.role || 'Teacher',
+          profile?.phoneNumber || profile?.phone || ''
+        ];
+      })
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(excelData);
