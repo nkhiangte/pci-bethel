@@ -184,7 +184,7 @@ const Directory: React.FC = () => {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Directory</h1>
-        <p className="text-slate-600">Search for leaders and members across all departments</p>
+        <p className="text-slate-600">Rawngbawltu hrang hranga hruaitute leh member-te zawnna</p>
       </div>
 
       <div className="relative mb-8">

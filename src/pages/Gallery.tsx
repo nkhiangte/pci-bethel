@@ -201,6 +201,7 @@ const Gallery: React.FC = () => {
   const [folderForm, setFolderForm] = useState<Partial<GalleryFolder>>({ name: '', date: new Date().toISOString().split('T')[0] });
   const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', videoUrl: '', date: new Date().toISOString().split('T')[0] });
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
+  const [categoryThumbnails, setCategoryThumbnails] = useState<Record<string, string>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -294,6 +295,41 @@ const Gallery: React.FC = () => {
         unsubscribeItems();
     };
   }, [currentCategory, currentFolderId]);
+
+  // Fetch random thumbnails for categories on main page
+  useEffect(() => {
+    if (currentCategoryPath) return;
+
+    const fetchCategoryThumbnails = async () => {
+      const thumbs: Record<string, string> = {};
+      
+      for (const cat of categories) {
+        try {
+          const snapshot = await db.collection('gallery')
+            .where('category', '==', cat.label)
+            .limit(50)
+            .get();
+          
+          if (!snapshot.empty) {
+            const docs = snapshot.docs;
+            const randomDoc = docs[Math.floor(Math.random() * docs.length)].data();
+            
+            const videoId = randomDoc.videoUrl ? getYouTubeId(randomDoc.videoUrl) : null;
+            const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : randomDoc.imageUrl;
+            
+            if (thumb) {
+              thumbs[cat.path] = thumb;
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching thumbnail for ${cat.label}:`, error);
+        }
+      }
+      setCategoryThumbnails(thumbs);
+    };
+
+    fetchCategoryThumbnails();
+  }, [currentCategoryPath, t.gallery.categories]);
 
   const handleSaveFolder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -561,8 +597,23 @@ const Gallery: React.FC = () => {
                   to={`/gallery/${cat.path}`}
                   className="group block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
-                  <div className="h-48 bg-church-100 flex items-center justify-center group-hover:bg-church-200 transition-colors">
-                    <Folder size={64} className="text-church-400 group-hover:scale-110 transition-transform duration-300" fill="currentColor" fillOpacity={0.1} />
+                  <div className="h-48 bg-church-100 flex items-center justify-center group-hover:bg-church-200 transition-colors overflow-hidden relative">
+                    {categoryThumbnails[cat.path] ? (
+                      <>
+                        <img 
+                          src={categoryThumbnails[cat.path]} 
+                          alt={cat.label}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
+                        <div className="absolute bottom-3 right-3 p-2 bg-white/90 rounded-full shadow-lg">
+                          <Folder size={20} className="text-amber-500" fill="currentColor" />
+                        </div>
+                      </>
+                    ) : (
+                      <Folder size={64} className="text-church-400 group-hover:scale-110 transition-transform duration-300" fill="currentColor" fillOpacity={0.1} />
+                    )}
                   </div>
                   <div className="p-6 text-center">
                     <h3 className="text-xl font-bold text-slate-800 mb-2">{cat.label}</h3>
