@@ -4,8 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
-import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check, MessageCircle, Send } from 'lucide-react';
+import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check, MessageCircle, Send, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { findContactByName, getWhatsAppLink, generateReminderMessage, getReminderTemplate } from '../services/notificationService';
 
 const AdminDuties: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -13,9 +14,15 @@ const AdminDuties: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [template, setTemplate] = useState('');
 
   useEffect(() => {
     fetchDuties();
+    const initTemplate = async () => {
+      const t = await getReminderTemplate('mizo');
+      setTemplate(t);
+    };
+    initTemplate();
   }, []);
 
   const fetchDuties = async () => {
@@ -97,19 +104,21 @@ const AdminDuties: React.FC = () => {
 
   // --- Notification Logic ---
 
-  const sendIndividualWhatsApp = (name: string, role: string) => {
+  const sendIndividualWhatsApp = async (name: string, role: string) => {
       if (!duties || !name || !name.trim()) return;
       
-      const message = `*Chibai ${name.trim()}*,
+      const contact = await findContactByName(name.trim());
+      const phone = contact?.phone || ''; // Fallback to manual entry if not found
+      
+      const message = generateReminderMessage(
+        template,
+        name.trim(),
+        duties.weekRange,
+        duties.month,
+        role
+      );
 
-Bethel Kohhranah *${duties.month}* thla (${duties.weekRange}) chhung hian *${role}* chanvo i chang a.
-
-Lalpan a rawngbawlnaah malsawm che rawh se.
-
-- Secretary, Bethel Kohhran`;
-
-      // Use window.open to trigger the deep link
-      const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      const url = getWhatsAppLink(phone, message);
       window.open(url, '_blank');
   };
 

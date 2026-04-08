@@ -3,10 +3,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
-import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, Archive } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Clock, Edit, Trash, Plus, X, Save, Loader, AlertCircle, Music, Archive, Bell } from 'lucide-react';
 import { Event, WeeklyDuty, ArchiveEntry } from '../types';
 import AutocompleteInput from '../components/AutocompleteInput';
 import { useEventSuggestions } from '../hooks/useEventSuggestions';
+import ReminderDashboard from '../components/ReminderDashboard';
 
 // Helper to get specific dates for the current week (Monday to Sunday)
 const getDatesForWeek = () => {
@@ -87,6 +88,7 @@ const Events: React.FC = () => {
   const [editForm, setEditForm] = useState<Partial<Event>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [showReminders, setShowReminders] = useState(false);
 
   const checkAndArchivePreviousWeek = useCallback(async () => {
     if (!isAdmin || !db?.collection) return;
@@ -320,11 +322,26 @@ const Events: React.FC = () => {
                 </p>
             </div>
             {isAdmin && (
-                <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm font-bold">
-                    <Plus size={18} className="mr-2" /> {t.events.addProgram}
-                </button>
+                <div className="flex items-center space-x-2">
+                    <button 
+                        onClick={() => setShowReminders(true)}
+                        className="flex items-center px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition shadow-sm font-bold"
+                    >
+                        <Bell size={18} className="mr-2" /> {language === 'mizo' ? 'Hriattirna' : 'Reminders'}
+                    </button>
+                    <button onClick={handleAddNew} className="flex items-center px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 transition shadow-sm font-bold">
+                        <Plus size={18} className="mr-2" /> {t.events.addProgram}
+                    </button>
+                </div>
             )}
         </div>
+
+        {showReminders && (
+            <ReminderDashboard 
+                events={displayEvents} 
+                onClose={() => setShowReminders(false)} 
+            />
+        )}
 
         {loading && <div className="text-center py-10"><Loader className="animate-spin h-8 w-8 mx-auto text-church-500" /></div>}
 
