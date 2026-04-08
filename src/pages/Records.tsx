@@ -23,7 +23,7 @@ type DisplayMode = 'table' | 'analytics';
 
 const TEMPLATE_HEADERS: Record<RecordType, string[]> = {
     baptism: ['name', 'dateOfBirth', 'baptismDate', 'parents', 'minister'],
-    wedding: ['groomName', 'brideName', 'weddingDate', 'minister'],
+    wedding: ['couple', 'weddingDate', 'minister'],
     death: ['name', 'fatherName', 'age', 'dateOfDeath', 'causeOfDeath', 'minister'],
     inkhawmpui: ['eventName', 'year', 'theme', 'puipate', 'speakers'],
     gospelCamping: ['year', 'team', 'speaker', 'date'],
@@ -326,7 +326,10 @@ const Records: React.FC = () => {
             const row: any = {};
             headers.forEach(header => {
                 const displayHeader = t.records.theads[header as keyof typeof t.records.theads] || header;
-                const value = (rec as any)[header];
+                let value = (rec as any)[header];
+                if (header === 'couple') {
+                    value = `${(rec as any).groomName || ''} & ${(rec as any).brideName || ''}`;
+                }
                 row[displayHeader] = dateFields.includes(header) ? formatDateCell(value) : value;
             });
             return row;
@@ -346,7 +349,10 @@ const Records: React.FC = () => {
         const dateFields = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'date'];
         const tableHead = headers.map(h => t.records.theads[h as keyof typeof t.records.theads] || h);
         const tableBody = finalSortedRecords.map(rec => headers.map(header => {
-            const value = (rec as any)[header];
+            let value = (rec as any)[header];
+            if (header === 'couple') {
+                value = `${(rec as any).groomName || ''} & ${(rec as any).brideName || ''}`;
+            }
             return dateFields.includes(header) ? formatDateCell(value) : (value || '');
         }));
         doc.setFontSize(16);
@@ -378,7 +384,11 @@ const Records: React.FC = () => {
                 const sheetName = workbook.SheetNames[0];
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' }) as any[];
                 if (json.length === 0) { setLoading(false); return; }
-                const templateFields = TEMPLATE_HEADERS[activeTab];
+                let templateFields = [...TEMPLATE_HEADERS[activeTab]];
+                // For wedding, we want to import separate groom/bride names even if table shows 'couple'
+                if (activeTab === 'wedding') {
+                    templateFields = ['groomName', 'brideName', 'weddingDate', 'minister'];
+                }
                 const headerMap: Record<string, string> = {};
                 templateFields.forEach(field => {
                     headerMap[field.toLowerCase()] = field;
@@ -387,6 +397,8 @@ const Records: React.FC = () => {
                 });
                 const mizoHeads: Record<string, string[]> = {
                     name: ['hming'],
+                    groomName: ['mo neitu', 'groom', 'groom name'],
+                    brideName: ['mo', 'bride', 'bride name'],
                     fatherName: ['chhungte hming', 'pa hming', 'family', 'relative', 'parent', 'familymember'],
                     age: ['kum', 'age'],
                     dateOfBirth: ['pian ni', 'birthday'],
@@ -570,8 +582,14 @@ const Records: React.FC = () => {
     const finalSortedRecords = useMemo(() => {
         if (!sortConfig) return searchedRecords;
         const sorted = [...searchedRecords].sort((a, b) => {
-            const aVal = (a as any)[sortConfig.key] || '';
-            const bVal = (b as any)[sortConfig.key] || '';
+            let aVal = (a as any)[sortConfig.key] || '';
+            let bVal = (b as any)[sortConfig.key] || '';
+            
+            if (sortConfig.key === 'couple') {
+                aVal = (a as any).groomName || '';
+                bVal = (b as any).groomName || '';
+            }
+
             if (typeof aVal === 'number' && typeof bVal === 'number') return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
             const compareResult = String(aVal).localeCompare(String(bVal));
             return sortConfig.direction === 'asc' ? compareResult : -compareResult;
@@ -598,8 +616,7 @@ const Records: React.FC = () => {
                 }
             case 'wedding':
                 switch(header) {
-                    case 'groomName': return 'font-bold text-blue-900 text-sm md:text-base';
-                    case 'brideName': return 'font-bold text-pink-900 text-sm md:text-base';
+                    case 'couple': return 'font-bold text-blue-900 text-sm md:text-base';
                     case 'weddingDate': return 'font-mono text-pink-700 bg-pink-50 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold inline-block border border-pink-100 shadow-sm';
                     case 'minister': return ministerStyle;
                     default: return 'text-slate-700 text-xs md:text-sm';
@@ -812,7 +829,12 @@ const Records: React.FC = () => {
                                                 <tr key={rec.id} className="hover:bg-slate-50 transition group/row">
                                                     {TEMPLATE_HEADERS[activeTab].map(header => (
                                                         <td key={header} className={`px-3 py-3 md:px-6 md:py-5 text-xs md:text-sm font-medium ${getCellClass(activeTab, header)}`}>
-                                                            {dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
+                                                            {header === 'couple' ? (
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-blue-900">{(rec as any).groomName}</span>
+                                                                    <span className="text-pink-600 text-[10px] md:text-xs font-medium">{(rec as any).brideName}</span>
+                                                                </div>
+                                                            ) : dateFields.includes(header) ? formatDateCell((rec as any)[header]) : (rec as any)[header]}
                                                         </td>
                                                     ))}
                                                     {isAdmin && (
@@ -991,26 +1013,67 @@ const Records: React.FC = () => {
                             <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-white rounded-full transition text-slate-400"><X size={20}/></button>
                         </div>
                         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                            {TEMPLATE_HEADERS[activeTab].map(field => (
-                                <div key={field}>
-                                    <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || field.replace(/([A-Z])/g, ' $1')}</label>
-                                    {field === 'puipate' ? (
-                                        <textarea 
-                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white h-24" 
-                                            value={(editingRecord as any)[field] || ''} 
-                                            onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)}
-                                            placeholder="Enter names, one per line or separated by commas"
-                                        />
-                                    ) : (
+                            {activeTab === 'wedding' ? (
+                                <>
+                                    <div>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads.groomName || 'Groom'}</label>
                                         <input 
-                                            type={dateFields.includes(field) ? 'date' : (field === 'age' || field === 'noOfMembers' || field === 'year') ? 'number' : 'text'} 
+                                            type="text" 
                                             className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
-                                            value={(editingRecord as any)[field] || ''} 
-                                            onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 
+                                            value={editingRecord.groomName || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, groomName: e.target.value })} 
                                         />
-                                    )}
-                                </div>
-                            ))}
+                                    </div>
+                                    <div>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads.brideName || 'Bride'}</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
+                                            value={editingRecord.brideName || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, brideName: e.target.value })} 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads.weddingDate || 'Wedding Date'}</label>
+                                        <input 
+                                            type="date" 
+                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
+                                            value={editingRecord.weddingDate || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, weddingDate: e.target.value })} 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads.minister || 'Minister'}</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
+                                            value={editingRecord.minister || ''} 
+                                            onChange={e => setEditingRecord({ ...editingRecord, minister: e.target.value })} 
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                TEMPLATE_HEADERS[activeTab].map(field => (
+                                    <div key={field}>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || field.replace(/([A-Z])/g, ' $1')}</label>
+                                        {field === 'puipate' ? (
+                                            <textarea 
+                                                className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white h-24" 
+                                                value={(editingRecord as any)[field] || ''} 
+                                                onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)}
+                                                placeholder="Enter names, one per line or separated by commas"
+                                            />
+                                        ) : (
+                                            <input 
+                                                type={dateFields.includes(field) ? 'date' : (field === 'age' || field === 'noOfMembers' || field === 'year') ? 'number' : 'text'} 
+                                                className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white" 
+                                                value={(editingRecord as any)[field] || ''} 
+                                                onChange={e => setEditingRecord({ ...editingRecord, [field]: e.target.value } as any)} 
+                                            />
+                                        )}
+                                    </div>
+                                ))
+                            )}
                         </div>
                         <div className="p-6 bg-slate-50 flex justify-end space-x-3">
                             <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl">Cancel</button>
