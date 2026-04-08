@@ -175,6 +175,7 @@ const Gallery: React.FC = () => {
     { name: 'Committees', path: 'committees', label: t.gallery.categories.committees },
     { name: 'Kohhran Chetna', path: 'kohhran-chetna', label: t.gallery.categories.chetna },
     { name: 'Kohhran Hunpui', path: 'kohhran-hunpui', label: t.gallery.categories.hunpui },
+    { name: 'Inkhawmpui', path: 'inkhawmpui', label: t.gallery.categories.inkhawmpui },
     { name: 'Videos', path: 'videos', label: t.gallery.categories.videos },
   ];
   

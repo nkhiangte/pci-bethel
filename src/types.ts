@@ -348,7 +348,7 @@ export interface Resource {
 export interface GalleryFolder {
   id: string;
   name: string;
-  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos';
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos' | 'Inkhawmpui';
   date: string;
   description?: string;
   parentId?: string;
@@ -359,7 +359,7 @@ export interface GalleryItem {
   title: string;
   imageUrl?: string;
   videoUrl?: string;
-  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos';
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos' | 'Inkhawmpui';
   folderId?: string;
   date: string;
   order?: number;

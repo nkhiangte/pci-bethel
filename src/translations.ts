@@ -446,6 +446,7 @@ export const translations = {
         chetna: 'Kohhran Chetna',
         hunpui: 'Kohhran Hunpui',
         videos: 'Videos',
+        inkhawmpui: 'Inkhawmpui',
       }
     },
     contact: {
@@ -916,6 +917,7 @@ export const translations = {
         chetna: 'Kohhran Chetna',
         hunpui: 'Kohhran Hunpui',
         videos: 'Videos',
+        inkhawmpui: 'Inkhawmpui',
       }
     },
     contact: {
