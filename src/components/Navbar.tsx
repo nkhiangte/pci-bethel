@@ -47,11 +47,23 @@ const Navbar: React.FC = () => {
     { name: t.nav.records, path: '/records' },
     { name: t.nav.directory, path: '/directory' },
     { name: t.nav.missionaries, path: '/missionaries' },
-    { name: t.nav.articles, path: '/articles' },
-    { name: t.nav.archives, path: '/archives' },
+    { 
+      name: t.nav.archives, 
+      path: '#',
+      children: [
+        { name: t.nav.archives, path: '/archives' },
+        { name: t.nav.articles, path: '/articles' },
+      ]
+    },
     { name: t.nav.gallery, path: '/gallery' },
-    { name: t.nav.about, path: '/about' },
-    { name: t.nav.contact, path: '/contact' },
+    { 
+      name: t.nav.about, 
+      path: '#',
+      children: [
+        { name: t.nav.about, path: '/about' },
+        { name: t.nav.contact, path: '/contact' },
+      ]
+    },
   ];
 
   const isActive = (path: string) => location.pathname === path;
