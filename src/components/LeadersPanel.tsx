@@ -110,6 +110,20 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
     } catch (error) { console.error("Error deleting image:", error); }
   };
 
+  const handleDownloadExcel = () => {
+    if (!members || members.length === 0) return;
+    
+    const excelData = [
+      ['Name', 'Designation', 'Phone Number'],
+      ...members.map(m => [m.name, m.role, m.phone || ''])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leaders List");
+    XLSX.writeFile(workbook, `${ministryId.toUpperCase()}_Leaders_List.xlsx`);
+  };
+
   const handleDownloadTemplate = () => {
     const template = [
       { Name: '', Designation: '', Phone: '' }
@@ -179,23 +193,32 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
       <div>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-slate-800">Hruaitute List</h3>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <button onClick={handleDownloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm">
-                <Download size={18} /> Template
-              </button>
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm">
-                <Upload size={18} /> Import
-              </button>
-              <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
-              <button 
-                onClick={() => { setEditingMember({ name: '', role: '', phone: '', imageUrl: '' }); setIsMemberModalOpen(true); setImageFile(null); }}
-                className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all font-bold text-sm"
-              >
-                <PlusCircle size={18} /> Add Leader
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <button 
+              onClick={handleDownloadExcel} 
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
+              title="Download Excel List"
+            >
+              <Download size={18} /> Excel
+            </button>
+            {isAdmin && (
+              <>
+                <button onClick={handleDownloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm">
+                  <Download size={18} /> Template
+                </button>
+                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm">
+                  <Upload size={18} /> Import
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
+                <button 
+                  onClick={() => { setEditingMember({ name: '', role: '', phone: '', imageUrl: '' }); setIsMemberModalOpen(true); setImageFile(null); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all font-bold text-sm"
+                >
+                  <PlusCircle size={18} /> Add Leader
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {!members || members.length === 0 ? (

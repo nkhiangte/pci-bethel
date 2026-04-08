@@ -956,6 +956,20 @@ const CommitteeDetail: React.FC = () => {
     } catch (error) { console.error("Error deleting activity:", error); }
   };
 
+  const handleDownloadExcel = () => {
+    if (!committee || !committee.members) return;
+    
+    const excelData = [
+      ['Name', 'Role', 'Phone Number'],
+      ...committee.members.map(m => [m.name, m.role, m.phone || ''])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Members List");
+    XLSX.writeFile(workbook, `${committee.name}_Members_List.xlsx`);
+  };
+
   const handleImportMembers = async (newMembers: CommitteeMember[]) => {
     if (!db || !id) return;
     setLoading(true);
@@ -1130,22 +1144,31 @@ const CommitteeDetail: React.FC = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-slate-800">{t.committeeDetail.sections.members}</h3>
                 </div>
-                {isAdmin && (
-                  <div className="flex flex-wrap gap-2">
-                    <button 
-                      onClick={() => setIsImportModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm"
-                    >
-                      <Upload size={18} /> {t.committeeDetail.admin.import}
-                    </button>
-                    <button 
-                      onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); setMemberImageFile(null); }}
-                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
-                    >
-                      <PlusCircle size={18} /> {t.committeeDetail.admin.addMember}
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={handleDownloadExcel}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
+                    title="Download Excel List"
+                  >
+                    <FileDown size={18} /> Excel
+                  </button>
+                  {isAdmin && (
+                    <>
+                      <button 
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm"
+                      >
+                        <Upload size={18} /> {t.committeeDetail.admin.import}
+                      </button>
+                      <button 
+                        onClick={() => { setEditingMember({ name: '', role: '', phone: '' }); setIsMemberModalOpen(true); setMemberImageFile(null); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
+                      >
+                        <PlusCircle size={18} /> {t.committeeDetail.admin.addMember}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               
               {!committee.members || committee.members.length === 0 ? (

@@ -391,6 +391,28 @@ const KtpLeaders: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleDownloadExcel = () => {
+    if (!data) return;
+    
+    const excelData: any[][] = [['Category', 'Name', 'Role', 'Phone']];
+    
+    // Add Leaders
+    data.leaders?.forEach(m => excelData.push(['Office Bearer', m.name, m.role || '', m.phone || '']));
+    // Add Committee
+    data.committeeMembers?.forEach(m => excelData.push(['Committee Member', m.name, m.role || '', m.phone || '']));
+    // Add Ex-Officio
+    data.exOfficioMembers?.forEach(m => excelData.push(['Ex-Officio', m.name, m.role || '', m.phone || '']));
+    // Add Groups
+    data.groupLeaders?.forEach(group => {
+      group.members?.forEach(m => excelData.push([group.groupName, m.name, m.role || '', m.phone || '']));
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "KTP Leaders List");
+    XLSX.writeFile(workbook, "KTP_Leaders_List_2026.xlsx");
+  };
+
   if (data === undefined) return <div className="p-12 text-center"><Loader className="animate-spin mx-auto text-church-500" /></div>;
   if (!data) return <div className="p-8 bg-white rounded-xl shadow-sm text-center">No data available.</div>;
 
@@ -453,14 +475,23 @@ const KtpLeaders: React.FC = () => {
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <h3 className="text-lg font-bold text-slate-800">Hruaitute Photo</h3>
-          {isAdmin && (
+          <div className="flex gap-2">
             <button 
-              onClick={() => { setEditingImage({ id: '', url: '', uploadedAt: '' }); setIsImageModalOpen(true); setImageFile(null); }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-church-600 text-white text-xs font-bold rounded-lg hover:bg-church-700"
+              onClick={handleDownloadExcel}
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 border border-emerald-100"
+              title="Download Excel List"
             >
-              <Plus size={14} /> Add Photo
+              <Download size={14} /> Excel
             </button>
-          )}
+            {isAdmin && (
+              <button 
+                onClick={() => { setEditingImage({ id: '', url: '', uploadedAt: '' }); setIsImageModalOpen(true); setImageFile(null); }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-church-600 text-white text-xs font-bold rounded-lg hover:bg-church-700"
+              >
+                <Plus size={14} /> Add Photo
+              </button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {(data.leadersImages || []).map((img) => (

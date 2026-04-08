@@ -324,6 +324,23 @@ const SundaySchool: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleDownloadExcel = () => {
+    if (!currentDept) return;
+    
+    // Prepare data for Excel
+    const excelData = [
+      ['Name', 'Designation', 'Phone Number'],
+      ...allTeachers
+        .filter(t => currentDept.teachers.includes(t.name))
+        .map(t => [t.name, t.role, t.phoneNumber || t.phone || ''])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers List");
+    XLSX.writeFile(workbook, `${currentDept.name}_Teachers_List.xlsx`);
+  };
+
   const handleDownloadTemplate = () => {
     const data = [
       ['Name', 'Designation', 'Phone Number'],
@@ -462,6 +479,13 @@ const SundaySchool: React.FC = () => {
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.teachers.length || 0})</h3>
                                 {isAdmin && currentDept && (
                                     <div className="flex gap-2">
+                                        <button 
+                                            onClick={handleDownloadExcel}
+                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-sm"
+                                            title="Download Excel List"
+                                        >
+                                            <FileDown size={18} /> Excel
+                                        </button>
                                         <button 
                                             onClick={() => {
                                                 setTeacherProfile({ id: '', name: '', role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
