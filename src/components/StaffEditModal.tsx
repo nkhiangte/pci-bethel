@@ -411,17 +411,15 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                 </div>
             )}
 
-            {collectionName !== 'ss_teachers' && (
-                <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
-                    <input
-                    className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
-                    value={formData.imageUrl || ''}
-                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
-                    />
-                </div>
-            )}
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                <input
+                className="w-full border border-slate-300 rounded p-2.5 text-xs text-slate-500"
+                value={formData.imageUrl || ''}
+                onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                placeholder="https://..."
+                />
+            </div>
             {collectionName !== 'ss_teachers' && (
                 <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Brief Description (Quote)</label>

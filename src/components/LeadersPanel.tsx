@@ -274,10 +274,9 @@ const LeadersPanel: React.FC<LeadersPanelProps> = ({ ministryId, isAdmin, member
               <input required className="w-full border rounded-xl p-3" placeholder="Name" value={editingMember?.name || ''} onChange={e => setEditingMember({...editingMember!, name: e.target.value})} />
               <input required className="w-full border rounded-xl p-3" placeholder="Designation" value={editingMember?.role || ''} onChange={e => setEditingMember({...editingMember!, role: e.target.value})} />
               <input className="w-full border rounded-xl p-3" placeholder="Phone" value={editingMember?.phone || ''} onChange={e => setEditingMember({...editingMember!, phone: e.target.value})} />
-              <input className="w-full border rounded-xl p-3" placeholder="Image URL" value={editingMember?.imageUrl || ''} onChange={e => setEditingMember({...editingMember!, imageUrl: e.target.value})} />
-              <div className="flex items-center gap-2">
-                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
-                <Camera size={20} className="text-slate-400" />
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Or paste Image URL</label>
+                <input className="w-full border rounded-xl p-3 text-sm" placeholder="https://..." value={editingMember?.imageUrl || ''} onChange={e => setEditingMember({...editingMember!, imageUrl: e.target.value})} />
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => { setIsMemberModalOpen(false); setImageFile(null); }} className="px-4 py-2 text-slate-600">Cancel</button>

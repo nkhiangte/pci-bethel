@@ -295,12 +295,18 @@ const Fellowship: React.FC = () => {
                                             </button>
                                         )}
                                     </div>
-                                    <div className="flex-grow">
+                                    <div className="flex-grow space-y-2">
                                         <input 
                                             type="file" 
                                             accept="image/*" 
                                             className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-church-50 file:text-church-700 hover:file:bg-church-100"
                                             onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                                        />
+                                        <input 
+                                            className="w-full border p-2 rounded text-xs text-slate-500" 
+                                            placeholder="Or paste Image URL here..."
+                                            value={editForm.image || ''} 
+                                            onChange={e => setEditForm({...editForm, image: e.target.value})} 
                                         />
                                     </div>
                                 </div>

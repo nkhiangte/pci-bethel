@@ -79,6 +79,18 @@ const MemberEditModal: React.FC<{
               onChange={e => setMemberData({ ...memberData, phone: e.target.value })}
             />
           </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+            <input 
+              className="w-full border p-2 rounded-lg text-xs text-slate-500" 
+              placeholder="https://..."
+              value={memberData.imageUrl || ''}
+              onChange={e => {
+                setMemberData({ ...memberData, imageUrl: e.target.value });
+                setPreviewUrl(e.target.value);
+              }}
+            />
+          </div>
         </div>
 
         <div className="mt-8 flex justify-end gap-3">

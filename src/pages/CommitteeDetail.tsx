@@ -1320,6 +1320,10 @@ const CommitteeDetail: React.FC = () => {
                     <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.modals.phone}</label>
                     <input className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={editingMember?.phone || ''} onChange={e => setEditingMember({...editingMember!, phone: e.target.value})} />
                   </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
+                    <input className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none text-xs text-slate-500" placeholder="https://..." value={editingMember?.imageUrl || ''} onChange={e => setEditingMember({...editingMember!, imageUrl: e.target.value})} />
+                  </div>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
