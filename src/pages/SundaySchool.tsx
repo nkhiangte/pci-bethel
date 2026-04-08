@@ -302,6 +302,28 @@ const SundaySchool: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleRemoveTeacherFromDept = async (teacherName: string) => {
+    if (!db || !currentDept || !window.confirm(`Remove ${teacherName} from ${currentDept.name} department?`)) return;
+    setIsSaving(true);
+    try {
+      const updatedTeachers = currentDept.teachers.filter(name => name !== teacherName);
+      const updates: any = { teachers: updatedTeachers };
+      
+      // Also clear leadership roles if they held them
+      if (currentDept.leader === teacherName) updates.leader = '';
+      if (currentDept.asstLeader === teacherName) updates.asstLeader = '';
+      if (currentDept.secretary === teacherName) updates.secretary = '';
+      if (currentDept.asstSecretary === teacherName) updates.asstSecretary = '';
+
+      await db.collection('sundaySchoolDepartments').doc(currentDept.id).update(updates);
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error removing teacher:", error);
+      alert("Failed to remove teacher.");
+    }
+    setIsSaving(false);
+  };
+
   const handleDeleteTeacherProfile = async (id: string, collectionName: string) => {
     if (!db || !window.confirm("Delete this teacher profile?") || !currentDept) return;
     setIsSaving(true);
@@ -601,8 +623,20 @@ const SundaySchool: React.FC = () => {
                                                       )}
                                                   </div>
                                                   {isAdmin && (
-                                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                          <Edit size={14} className="text-slate-400" />
+                                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                          <button 
+                                                              onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  handleRemoveTeacherFromDept(teacherName);
+                                                              }}
+                                                              className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 transition-colors border border-red-100"
+                                                              title="Remove from Department"
+                                                          >
+                                                              <Trash size={14} />
+                                                          </button>
+                                                          <div className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100">
+                                                              <Edit size={14} />
+                                                          </div>
                                                       </div>
                                                   )}
                                               </div>
