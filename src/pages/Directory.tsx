@@ -113,6 +113,29 @@ const Directory: React.FC = () => {
           });
         }
 
+        // 4. Fetch Staff (Pastors, Elders, Pro-Pastors, SS Teachers)
+        const staffCollections = [
+          { id: 'pastors', label: 'Pastor' },
+          { id: 'elders', label: 'Elder' },
+          { id: 'proPastors', label: 'Pro-Pastor' },
+          { id: 'ss_teachers', label: 'Sunday School' }
+        ];
+
+        for (const coll of staffCollections) {
+          const snapshot = await db.collection(coll.id).get();
+          snapshot.docs.forEach(doc => {
+            const staff = doc.data() as any;
+            membersList.push({
+              id: `staff-${coll.id}-${doc.id}`,
+              name: staff.name,
+              role: staff.role || coll.label,
+              phone: staff.phoneNumber || staff.phone,
+              source: coll.label === 'Sunday School' ? 'Sunday School' : 'Church Staff',
+              imageUrl: staff.imageUrl
+            });
+          });
+        }
+
         setAllMembers(membersList);
       } catch (error) {
         console.error("Error fetching directory members:", error);
