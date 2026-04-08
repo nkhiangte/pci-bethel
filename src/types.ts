@@ -220,6 +220,7 @@ export interface SSReportSegment {
     kal: number;
     kallo: number;
   };
+  chhimtu: number;
   thawhlawm: number;
 }
 

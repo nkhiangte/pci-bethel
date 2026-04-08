@@ -167,6 +167,7 @@ const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
 const EMPTY_SEGMENT: SSReportSegment = {
     zirtirtu: { kal: 0, kallo: 0 },
     zirtu: { kal: 0, kallo: 0 },
+    chhimtu: 0,
     thawhlawm: 0
 };
 
@@ -860,19 +861,7 @@ const SundaySchool: React.FC = () => {
                                           )}
                                       </div>
                                       
-                                      <div className="p-4 md:p-12 space-y-12 bg-white">
-                                          {/* Naupang Section - High Contrast Emerald */}
-                                          <div className="overflow-hidden rounded-3xl border-2 border-emerald-100 shadow-sm">
-                                              <div className="bg-emerald-800 px-8 py-4 flex items-center justify-between">
-                                                  <div className="flex items-center gap-3">
-                                                    <Sparkles className="text-emerald-400" size={20} />
-                                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white">Naupang Sunday School Report</h4>
-                                                  </div>
-                                                  <span className="bg-emerald-700/50 text-emerald-100 text-[10px] px-3 py-1 rounded-full font-bold uppercase border border-emerald-600">Department</span>
-                                              </div>
-                                              <ReportTable segment={report.naupang} theme="emerald" />
-                                          </div>
-
+                                       <div className="p-4 md:p-12 space-y-12 bg-white">
                                           {/* Puitling Section - High Contrast Slate */}
                                           <div className="overflow-hidden rounded-3xl border-2 border-slate-200 shadow-sm">
                                               <div className="bg-slate-800 px-8 py-4 flex items-center justify-between">
@@ -883,6 +872,18 @@ const SundaySchool: React.FC = () => {
                                                   <span className="bg-slate-700/50 text-slate-300 text-[10px] px-3 py-1 rounded-full font-bold uppercase border border-slate-600">Department</span>
                                               </div>
                                               <ReportTable segment={report.puitling} theme="slate" />
+                                          </div>
+
+                                          {/* Naupang Section - High Contrast Emerald */}
+                                          <div className="overflow-hidden rounded-3xl border-2 border-emerald-100 shadow-sm">
+                                              <div className="bg-emerald-800 px-8 py-4 flex items-center justify-between">
+                                                  <div className="flex items-center gap-3">
+                                                    <Sparkles className="text-emerald-400" size={20} />
+                                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white">Naupang Sunday School Report</h4>
+                                                  </div>
+                                                  <span className="bg-emerald-700/50 text-emerald-100 text-[10px] px-3 py-1 rounded-full font-bold uppercase border border-emerald-600">Department</span>
+                                              </div>
+                                              <ReportTable segment={report.naupang} theme="emerald" />
                                           </div>
 
                                           {/* Grand Summary Section - High Contrast Gradient */}
@@ -903,8 +904,8 @@ const SundaySchool: React.FC = () => {
                                                       <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10">
                                                           <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-2">Collective Attendance</p>
                                                           <p className="text-5xl font-black text-white">{
-                                                              (report.naupang.zirtirtu.kal + report.naupang.zirtu.kal) + 
-                                                              (report.puitling.zirtirtu.kal + report.puitling.zirtu.kal)
+                                                              (report.naupang.zirtirtu.kal + report.naupang.zirtu.kal + (report.naupang.chhimtu || 0)) + 
+                                                              (report.puitling.zirtirtu.kal + report.puitling.zirtu.kal + (report.puitling.chhimtu || 0))
                                                           }</p>
                                                           <div className="h-1.5 w-12 bg-church-500 mt-4 rounded-full"></div>
                                                       </div>
@@ -1004,18 +1005,18 @@ const SundaySchool: React.FC = () => {
                           <div className="grid md:grid-cols-2 gap-12">
                               <div className="space-y-6">
                                   <div className="flex items-center gap-2 mb-2">
-                                      <div className="w-1.5 h-6 bg-emerald-600 rounded-full"></div>
-                                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Naupang Report</h4>
-                                  </div>
-                                  <ReportEntrySection segment={editingReport.naupang!} onChange={(s) => setEditingReport({...editingReport, naupang: s})} theme="emerald" />
-                              </div>
-
-                              <div className="space-y-6">
-                                  <div className="flex items-center gap-2 mb-2">
                                       <div className="w-1.5 h-6 bg-slate-800 rounded-full"></div>
                                       <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Puitling Report</h4>
                                   </div>
                                   <ReportEntrySection segment={editingReport.puitling!} onChange={(s) => setEditingReport({...editingReport, puitling: s})} theme="slate" />
+                              </div>
+
+                              <div className="space-y-6">
+                                  <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-1.5 h-6 bg-emerald-600 rounded-full"></div>
+                                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Naupang Report</h4>
+                                  </div>
+                                  <ReportEntrySection segment={editingReport.naupang!} onChange={(s) => setEditingReport({...editingReport, naupang: s})} theme="emerald" />
                               </div>
                           </div>
 
@@ -1030,8 +1031,8 @@ const SundaySchool: React.FC = () => {
                                   <span className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-1">Total Attendance</span>
                                   <p className="text-3xl font-black">{
                                       (
-                                          (editingReport.naupang?.zirtirtu.kal || 0) + (editingReport.naupang?.zirtu.kal || 0) +
-                                          (editingReport.puitling?.zirtirtu.kal || 0) + (editingReport.puitling?.zirtu.kal || 0)
+                                          (editingReport.naupang?.zirtirtu.kal || 0) + (editingReport.naupang?.zirtu.kal || 0) + (editingReport.naupang?.chhimtu || 0) +
+                                          (editingReport.puitling?.zirtirtu.kal || 0) + (editingReport.puitling?.zirtu.kal || 0) + (editingReport.puitling?.chhimtu || 0)
                                       )
                                   }</p>
                               </div>
@@ -1082,9 +1083,15 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
                         <td className="px-8 py-6 text-center text-slate-400 font-bold">{segment.zirtu.kallo}</td>
                         <td className="px-8 py-6"></td>
                     </tr>
+                    <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className={`px-8 py-6 font-bold ${textTheme}`}>Chhimtu (Guest)</td>
+                        <td className={`px-8 py-6 text-center text-xl font-black ${textTheme}`}>{segment.chhimtu || 0}</td>
+                        <td className="px-8 py-6 text-center text-slate-400 font-bold">-</td>
+                        <td className="px-8 py-6"></td>
+                    </tr>
                     <tr className={`${totalBg} font-black border-t-2 border-slate-200`}>
                         <td className={`px-8 py-8 text-[11px] uppercase tracking-[0.3em] ${textTheme}`}>Total Attendance</td>
-                        <td className={`px-8 py-8 text-center text-3xl ${textTheme} tracking-tight`}>{segment.zirtirtu.kal + segment.zirtu.kal}</td>
+                        <td className={`px-8 py-8 text-center text-3xl ${textTheme} tracking-tight`}>{(segment.zirtirtu.kal + segment.zirtu.kal + (segment.chhimtu || 0))}</td>
                         <td className="px-8 py-8 text-center text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
                         <td className={`px-8 py-8 text-right ${textTheme}`}>
                             <div className="flex flex-col items-end">
@@ -1119,6 +1126,10 @@ const ReportEntrySection: React.FC<{
         onChange({ ...segment, thawhlawm: value });
     };
 
+    const updateChhimtu = (value: number) => {
+        onChange({ ...segment, chhimtu: value });
+    };
+
     return (
         <div className="space-y-6">
             <div className={`p-6 rounded-3xl border shadow-sm ${bgClass}`}>
@@ -1145,6 +1156,13 @@ const ReportEntrySection: React.FC<{
                         <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Kal lo Zat</label>
                         <input type="number" className={`w-full border rounded-xl p-3 font-black text-lg ${inputClass}`} value={segment.zirtu.kallo} onChange={e => update('zirtu', 'kallo', parseInt(e.target.value) || 0)} />
                     </div>
+                </div>
+            </div>
+            <div className={`p-6 rounded-3xl border shadow-sm ${bgClass}`}>
+                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 border-b pb-2 ${labelClass}`}>Chhimtu (Guest)</h5>
+                <div>
+                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Kal Zat</label>
+                    <input type="number" className={`w-full border rounded-xl p-3 font-black text-lg ${inputClass}`} value={segment.chhimtu || 0} onChange={e => updateChhimtu(parseInt(e.target.value) || 0)} />
                 </div>
             </div>
             <div className={`p-8 rounded-3xl border shadow-lg bg-white ${isEmerald ? 'border-emerald-200' : 'border-slate-200'}`}>
