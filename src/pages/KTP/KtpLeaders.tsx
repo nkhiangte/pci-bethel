@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Phone, MessageCircle, Plus, Edit, Trash2, X, Loader, UserSquare, Camera, User
+  Phone, MessageCircle, Plus, Edit, Trash2, X, Loader, UserSquare, Camera, User, Download
 } from 'lucide-react';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { KTPHruaitute, KTPGroup, KTPMember, CommitteeImage } from '../../types';
+import * as XLSX from 'xlsx';
 
 const MemberEditModal: React.FC<{
   member: Partial<KTPMember> | null;
