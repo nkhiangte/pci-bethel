@@ -52,6 +52,20 @@ const getYouTubeId = (url: string | undefined) => {
   return (match && match[2].length === 11) ? match[2] : null;
 };
 
+const getDirectImageUrl = (url: string) => {
+  if (!url) return '';
+  
+  // Google Drive conversion
+  // Standard: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // Direct: https://lh3.googleusercontent.com/d/FILE_ID
+  const driveMatch = url.match(/\/(?:d|open\?id)=([a-zA-Z0-9_-]+)/);
+  if (driveMatch && (url.includes('drive.google.com') || url.includes('docs.google.com'))) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+  
+  return url;
+};
+
 interface SortableGalleryItemProps {
   item: GalleryItem;
   isAdmin: boolean;
@@ -384,6 +398,15 @@ const Gallery: React.FC = () => {
         if (itemType === 'video') {
             await db.collection('gallery').add({
                 ...itemForm,
+                category: currentCategory,
+                folderId: currentFolderId || null,
+                order: items.length
+            });
+        } else if (selectedFiles.length === 0 && itemForm.imageUrl) {
+            // Manual URL path
+            await db.collection('gallery').add({
+                ...itemForm,
+                imageUrl: getDirectImageUrl(itemForm.imageUrl),
                 category: currentCategory,
                 folderId: currentFolderId || null,
                 order: items.length
@@ -1038,6 +1061,32 @@ const Gallery: React.FC = () => {
                           <p className="text-xs font-bold text-church-700">{Math.round(uploadProgress)}% Uploading...</p>
                         </div>
                       )}
+                    </div>
+                    
+                    <div className="mt-4">
+                      <div className="flex items-center my-4">
+                        <div className="flex-1 border-t border-slate-200"></div>
+                        <span className="px-3 text-xs font-bold text-slate-400 uppercase">OR</span>
+                        <div className="flex-1 border-t border-slate-200"></div>
+                      </div>
+                      
+                      <label className="block text-sm font-bold text-slate-700 mb-1">Image URL (Direct or Google Drive)</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <ExternalLink size={18} className="text-slate-400" />
+                        </div>
+                        <input 
+                          type="url"
+                          disabled={uploading || selectedFiles.length > 0}
+                          className="w-full border border-slate-300 rounded-lg p-3 pl-10 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
+                          placeholder="https://example.com/image.jpg"
+                          value={itemForm.imageUrl}
+                          onChange={e => setItemForm({...itemForm, imageUrl: e.target.value})}
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Tip: You can paste a Google Drive sharing link here.
+                      </p>
                     </div>
                   </div>
                 ) : (
