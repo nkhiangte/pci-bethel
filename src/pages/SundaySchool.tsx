@@ -255,6 +255,9 @@ const SundaySchool: React.FC = () => {
     if (!db?.collection || !currentDept) return;
     setIsSaving(true);
     try {
+      const oldName = teacherProfile?.name;
+      const newName = staff.name;
+
       // 1. Save the profile
       if (staff.id) {
         await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
@@ -262,10 +265,20 @@ const SundaySchool: React.FC = () => {
         await db.collection(collectionName).add(staff);
       }
 
-      // 2. If it's a new teacher or name changed, update the department's teacher list
-      // Note: This app uses names to link teachers to departments.
-      if (!currentDept.teachers.includes(staff.name)) {
-        const updatedTeachers = [...currentDept.teachers, staff.name];
+      // 2. If name changed, update all references in the department
+      if (oldName && oldName !== newName) {
+        const updatedTeachers = currentDept.teachers.map(name => name === oldName ? newName : name);
+        const updates: any = { teachers: updatedTeachers };
+        
+        if (currentDept.leader === oldName) updates.leader = newName;
+        if (currentDept.asstLeader === oldName) updates.asstLeader = newName;
+        if (currentDept.secretary === oldName) updates.secretary = newName;
+        if (currentDept.asstSecretary === oldName) updates.asstSecretary = newName;
+
+        await db.collection('sundaySchoolDepartments').doc(currentDept.id).update(updates);
+      } else if (!currentDept.teachers.includes(newName)) {
+        // New teacher being added
+        const updatedTeachers = [...currentDept.teachers, newName];
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
           teachers: updatedTeachers
         });

@@ -113,7 +113,24 @@ const Directory: React.FC = () => {
           });
         }
 
-        // 4. Fetch Staff (Pastors, Elders, Pro-Pastors, SS Teachers)
+        // 4. Fetch Sunday School Departments for mapping teachers to departments
+        const ssDeptsSnapshot = await db.collection('sundaySchoolDepartments').get();
+        const teacherToDeptMap: Record<string, string> = {};
+        ssDeptsSnapshot.docs.forEach(doc => {
+          const dept = doc.data() as any;
+          const deptName = dept.name || doc.id.charAt(0).toUpperCase() + doc.id.slice(1);
+          if (dept.teachers) {
+            dept.teachers.forEach((tName: string) => {
+              teacherToDeptMap[tName] = deptName;
+            });
+          }
+          if (dept.leader) teacherToDeptMap[dept.leader] = deptName;
+          if (dept.asstLeader) teacherToDeptMap[dept.asstLeader] = deptName;
+          if (dept.secretary) teacherToDeptMap[dept.secretary] = deptName;
+          if (dept.asstSecretary) teacherToDeptMap[dept.asstSecretary] = deptName;
+        });
+
+        // 5. Fetch Staff (Pastors, Elders, Pro-Pastors, SS Teachers)
         const staffCollections = [
           { id: 'pastors', label: 'Pastor' },
           { id: 'elders', label: 'Elder' },
@@ -125,12 +142,18 @@ const Directory: React.FC = () => {
           const snapshot = await db.collection(coll.id).get();
           snapshot.docs.forEach(doc => {
             const staff = doc.data() as any;
+            let source = coll.label === 'Sunday School' ? 'Sunday School' : 'Church Staff';
+            
+            if (coll.id === 'ss_teachers' && teacherToDeptMap[staff.name]) {
+              source = `Sunday School (${teacherToDeptMap[staff.name]})`;
+            }
+
             membersList.push({
               id: `staff-${coll.id}-${doc.id}`,
               name: staff.name,
               role: staff.role || coll.label,
               phone: staff.phoneNumber || staff.phone,
-              source: coll.label === 'Sunday School' ? 'Sunday School' : 'Church Staff',
+              source: source,
               imageUrl: staff.imageUrl
             });
           });
