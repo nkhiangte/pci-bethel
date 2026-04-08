@@ -406,7 +406,7 @@ const UpaBial: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8 items-start">
             
             {/* List Column */}
-            <div className="w-full lg:w-1/3 order-2 lg:order-1">
+            <div className="w-full lg:w-1/3 order-1 lg:order-1">
                 {isAdmin && (
                     <div className="flex flex-wrap justify-center gap-4 mb-6">
                         <button 
@@ -520,7 +520,7 @@ const UpaBial: React.FC = () => {
             </div>
 
             {/* Map Column (Sticky on Desktop) */}
-            <div className="w-full lg:w-2/3 order-1 lg:order-2 h-[500px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
+            <div className="w-full lg:w-2/3 order-2 lg:order-2 h-[500px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
                 <div 
                     ref={mapContainerRef} 
                     className={`w-full h-full bg-white rounded-2xl shadow-xl border-4 border-white overflow-hidden relative group transition-all duration-500 ${
