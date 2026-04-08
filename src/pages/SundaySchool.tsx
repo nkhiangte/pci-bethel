@@ -11,10 +11,147 @@ import {
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
   Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle,
-  ChevronUp, ChevronDown
+  GripVertical
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
+
+// dnd-kit imports
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  TouchSensor
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SortableTeacherCardProps {
+  teacherName: string;
+  index: number;
+  profile?: Staff;
+  isAdmin: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+}
+
+const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({ 
+  teacherName, 
+  index, 
+  profile, 
+  isAdmin, 
+  onEdit, 
+  onRemove 
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: teacherName });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 100 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      onClick={onEdit}
+      className={`bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group transition-all ${isAdmin ? 'cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md' : ''}`}
+    >
+      {isAdmin && (
+        <div 
+          {...attributes} 
+          {...listeners}
+          className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1 text-slate-300 hover:text-church-600 transition-opacity z-20"
+          onClick={e => e.stopPropagation()}
+        >
+          <GripVertical size={16} />
+        </div>
+      )}
+      
+      <div className={`w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100 ${isAdmin ? 'ml-4' : ''}`}>
+          {profile?.imageUrl ? (
+              <img 
+                src={profile.imageUrl} 
+                alt={teacherName} 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer" 
+                style={{ objectPosition: `${profile.imagePositionX ?? 50}% ${profile.imagePositionY ?? 0}%` }}
+              />
+          ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
+                  {teacherName.charAt(0)}
+              </div>
+          )}
+      </div>
+      <div className="flex-grow min-w-0">
+          <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
+          <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Teacher'}</p>
+          
+          {profile?.phoneNumber && (
+              <div className="flex items-center gap-2 mt-2">
+                  <div className="flex gap-1.5">
+                      <a 
+                        href={`tel:${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
+                        onClick={e => e.stopPropagation()} 
+                        className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors border border-church-100 shadow-sm"
+                        title="Call"
+                      >
+                          <Phone size={12} />
+                      </a>
+                      <a 
+                        href={`https://wa.me/91${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        onClick={e => e.stopPropagation()} 
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors border border-green-100 shadow-sm"
+                        title="WhatsApp"
+                      >
+                          <MessageCircle size={12} />
+                      </a>
+                  </div>
+                  <span className="text-slate-400 text-[10px] font-mono">{profile.phoneNumber}</span>
+              </div>
+          )}
+      </div>
+      {isAdmin && (
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+              <button 
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove();
+                  }}
+                  className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 transition-colors border border-red-100 h-fit"
+                  title="Remove from Department"
+              >
+                  <Trash size={14} />
+              </button>
+              <div className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 h-fit">
+                  <Edit size={14} />
+              </div>
+          </div>
+      )}
+    </div>
+  );
+};
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
     { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
@@ -37,6 +174,23 @@ const SundaySchool: React.FC = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   
   const [departments, setDepartments] = useState<SundaySchoolDepartment[]>([]);
   const [allTeachers, setAllTeachers] = useState<Staff[]>([]);
@@ -325,24 +479,25 @@ const SundaySchool: React.FC = () => {
     setIsSaving(false);
   };
 
-  const handleMoveTeacher = async (index: number, direction: 'up' | 'down') => {
-    if (!db || !currentDept) return;
-    
-    const newTeachers = [...currentDept.teachers];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (targetIndex < 0 || targetIndex >= newTeachers.length) return;
-    
-    // Swap
-    [newTeachers[index], newTeachers[targetIndex]] = [newTeachers[targetIndex], newTeachers[index]];
-    
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !currentDept) return;
+
+    const oldIndex = currentDept.teachers.indexOf(active.id as string);
+    const newIndex = currentDept.teachers.indexOf(over.id as string);
+
+    const newTeachers = arrayMove(currentDept.teachers, oldIndex, newIndex);
+
     try {
+      // Optimistic update
+      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, teachers: newTeachers } : d));
+      
       await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
         teachers: newTeachers
       });
-      fetchDepartments();
     } catch (error) {
-      console.error("Error moving teacher:", error);
+      console.error("Error reordering teachers:", error);
+      fetchDepartments(); // Revert on error
     }
   };
 
@@ -584,111 +739,39 @@ const SundaySchool: React.FC = () => {
                                       <p className="text-slate-500">No teachers listed in database.</p>
                                   </div>
                               ) : (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                      {currentDept.teachers.map((teacherName, i) => {
-                                          const profile = allTeachers.find(p => p.name === teacherName);
-                                          return (
-                                              <div 
-                                                key={i} 
-                                                onClick={() => {
-                                                    if (isAdmin) {
-                                                        const p = allTeachers.find(prof => prof.name === teacherName);
-                                                        setTeacherProfile(p || { id: '', name: teacherName, role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
-                                                        setIsTeacherEditModalOpen(true);
-                                                    }
-                                                }}
-                                                className={`bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-start gap-4 relative group transition-all ${isAdmin ? 'cursor-pointer hover:border-church-300 hover:bg-white hover:shadow-md' : ''}`}
-                                              >
-                                                  <div className="w-14 h-14 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-100">
-                                                      {profile?.imageUrl ? (
-                                                          <img 
-                                                            src={profile.imageUrl} 
-                                                            alt={teacherName} 
-                                                            className="w-full h-full object-cover" 
-                                                            referrerPolicy="no-referrer" 
-                                                            style={{ objectPosition: `${profile.imagePositionX ?? 50}% ${profile.imagePositionY ?? 0}%` }}
-                                                          />
-                                                      ) : (
-                                                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
-                                                              {teacherName.charAt(0)}
-                                                          </div>
-                                                      )}
-                                                  </div>
-                                                  <div className="flex-grow min-w-0">
-                                                      <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
-                                                      <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Teacher'}</p>
-                                                      
-                                                      {profile?.phoneNumber && (
-                                                          <div className="flex items-center gap-2 mt-2">
-                                                              <div className="flex gap-1.5">
-                                                                  <a 
-                                                                    href={`tel:${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
-                                                                    onClick={e => e.stopPropagation()} 
-                                                                    className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors border border-church-100 shadow-sm"
-                                                                    title="Call"
-                                                                  >
-                                                                      <Phone size={12} />
-                                                                  </a>
-                                                                  <a 
-                                                                    href={`https://wa.me/91${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
-                                                                    target="_blank" 
-                                                                    rel="noopener noreferrer" 
-                                                                    onClick={e => e.stopPropagation()} 
-                                                                    className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors border border-green-100 shadow-sm"
-                                                                    title="WhatsApp"
-                                                                  >
-                                                                      <MessageCircle size={12} />
-                                                                  </a>
-                                                              </div>
-                                                              <span className="text-slate-400 text-[10px] font-mono">{profile.phoneNumber}</span>
-                                                          </div>
-                                                      )}
-                                                  </div>
-                                                  {isAdmin && (
-                                                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                          <div className="flex flex-col gap-1">
-                                                              <button 
-                                                                  onClick={(e) => {
-                                                                      e.stopPropagation();
-                                                                      handleMoveTeacher(i, 'up');
-                                                                  }}
-                                                                  disabled={i === 0}
-                                                                  className="p-1 bg-white text-slate-400 rounded shadow-sm hover:text-church-600 disabled:opacity-30 border border-slate-100"
-                                                                  title="Move Up"
-                                                              >
-                                                                  <ChevronUp size={12} />
-                                                              </button>
-                                                              <button 
-                                                                  onClick={(e) => {
-                                                                      e.stopPropagation();
-                                                                      handleMoveTeacher(i, 'down');
-                                                                  }}
-                                                                  disabled={i === currentDept.teachers.length - 1}
-                                                                  className="p-1 bg-white text-slate-400 rounded shadow-sm hover:text-church-600 disabled:opacity-30 border border-slate-100"
-                                                                  title="Move Down"
-                                                              >
-                                                                  <ChevronDown size={12} />
-                                                              </button>
-                                                          </div>
-                                                          <button 
-                                                              onClick={(e) => {
-                                                                  e.stopPropagation();
-                                                                  handleRemoveTeacherFromDept(teacherName);
-                                                              }}
-                                                              className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 transition-colors border border-red-100 h-fit"
-                                                              title="Remove from Department"
-                                                          >
-                                                              <Trash size={14} />
-                                                          </button>
-                                                          <div className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 h-fit">
-                                                              <Edit size={14} />
-                                                          </div>
-                                                      </div>
-                                                  )}
-                                              </div>
-                                          );
-                                      })}
-                                  </div>
+                                  <DndContext 
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                  >
+                                    <SortableContext 
+                                      items={currentDept.teachers}
+                                      strategy={verticalListSortingStrategy}
+                                    >
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          {currentDept.teachers.map((teacherName, i) => {
+                                              const profile = allTeachers.find(p => p.name === teacherName);
+                                              return (
+                                                  <SortableTeacherCard 
+                                                    key={teacherName}
+                                                    teacherName={teacherName}
+                                                    index={i}
+                                                    profile={profile}
+                                                    isAdmin={isAdmin}
+                                                    onEdit={() => {
+                                                      if (isAdmin) {
+                                                          const p = allTeachers.find(prof => prof.name === teacherName);
+                                                          setTeacherProfile(p || { id: '', name: teacherName, role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
+                                                          setIsTeacherEditModalOpen(true);
+                                                      }
+                                                    }}
+                                                    onRemove={() => handleRemoveTeacherFromDept(teacherName)}
+                                                  />
+                                              );
+                                          })}
+                                      </div>
+                                    </SortableContext>
+                                  </DndContext>
                               )}
                           </div>
                       </div>
