@@ -45,7 +45,7 @@ interface ImagesPanelProps {
   isOfflineMode: boolean;
   galleryFolders: GalleryFolder[];
   galleryItems: GalleryItem[];
-  onAdd: () => void;
+  onAdd: (committeeId: string) => void;
   onEdit: (committeeId: string, image: CommitteeImage) => void;
   onDelete: (committeeId: string, imageId: string) => void;
   onImageClick: (url: string) => void;
@@ -113,7 +113,7 @@ const ImagesPanel: React.FC<ImagesPanelProps> = ({
           </h4>
           {isAdmin && !isOfflineMode && (
             <button 
-              onClick={() => onAdd()}
+              onClick={() => onAdd(committee.id)}
               className="text-xs font-semibold text-church-600 bg-church-100 px-3 py-1.5 rounded-lg hover:bg-church-200 flex items-center gap-1"
             >
               <Plus size={14} /> Add Image
@@ -317,7 +317,7 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ committee, isAdmin, isOffli
 interface ReportModalProps {
   committeeId: string;
   editingReport: CommitteeReport | null;
-  onSave: (committeeId: string, report: CommitteeReport, isNew: boolean) => Promise<void>;
+  onSave: (committeeId: string, report: CommitteeReport) => Promise<void>;
   onClose: () => void;
   loading: boolean;
 }
@@ -352,7 +352,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
       }
 
       const report: CommitteeReport = {
-        id: editingReport?.id || '',
+        id: editingReport?.id || Date.now().toString(),
         name,
         year,
         month: type === 'monthly' ? month : undefined,
@@ -362,9 +362,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
         uploadedAt: editingReport?.uploadedAt || new Date().toISOString(),
       };
 
-      // FIX #2: pass isNew flag so the handler can choose between
-      // Firestore auto-ID (new) vs existing document ID (edit)
-      await onSave(committeeId, report, !editingReport);
+      await onSave(committeeId, report);
     } catch (error) {
       console.error("Error saving report:", error);
       alert("Failed to save report.");
@@ -616,7 +614,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({ onImport, onClo
 interface ImageModalProps {
   committeeId: string;
   editingImage: CommitteeImage | null;
-  onSave: (committeeId: string, image: CommitteeImage, isNew: boolean) => Promise<void>;
+  onSave: (committeeId: string, image: CommitteeImage) => Promise<void>;
   onClose: () => void;
   loading: boolean;
 }
@@ -629,14 +627,6 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSa
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // FIX #14: revoke object URL to prevent memory leak
-  useEffect(() => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -647,7 +637,10 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSa
     }
 
     setFile(selectedFile);
-    setImageUrl('');
+    setImageUrl(''); // Clear URL if file is selected
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(selectedFile);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -684,14 +677,13 @@ const ImageModal: React.FC<ImageModalProps> = ({ committeeId, editingImage, onSa
       }
 
       const image: CommitteeImage = {
-        id: editingImage?.id || '',
+        id: editingImage?.id || Date.now().toString(),
         url: finalUrl,
         caption: caption.trim(),
         uploadedAt: editingImage?.uploadedAt || new Date().toISOString(),
       };
 
-      // FIX #3: pass isNew flag so the handler uses proper Firestore auto-ID for new images
-      await onSave(committeeId, image, !editingImage);
+      await onSave(committeeId, image);
     } catch (error) {
       console.error("Error saving image:", error);
       alert("Failed to save image. Please try again.");
@@ -902,9 +894,8 @@ const CommitteeDetail: React.FC = () => {
       }
 
       const committeeRef = db.collection('committees').doc(id);
-
-      // FIX #8: use local state instead of reading from Firestore again
-      let members = [...(committee?.members || [])];
+      const doc = await committeeRef.get();
+      let members = (doc.data() as any).members || [];
       
       const memberData = { ...editingMember, imageUrl };
 
@@ -926,9 +917,8 @@ const CommitteeDetail: React.FC = () => {
     if (!db || !id || !window.confirm(t.committeeDetail.members.deleteConfirm)) return;
     try {
       const committeeRef = db.collection('committees').doc(id);
-
-      // FIX #8: use local state instead of reading from Firestore again
-      const members = (committee?.members || []).filter((m: any) => m.id !== memberId);
+      const doc = await committeeRef.get();
+      const members = ((doc.data() as any).members || []).filter((m: any) => m.id !== memberId);
       await committeeRef.update({ members });
       setCommittee(prev => prev ? { ...prev, members } : null);
     } catch (error) { console.error("Error deleting member:", error); }
@@ -989,13 +979,9 @@ const CommitteeDetail: React.FC = () => {
       const doc = await committeeRef.get();
       const existingMembers = (doc.data() as any).members || [];
       
-      // FIX #4: use index to guarantee unique IDs across all imported members
       const membersToSave = [
         ...existingMembers,
-        ...newMembers.map((m, i) => ({
-          ...m,
-          id: `${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`
-        }))
+        ...newMembers.map(m => ({ ...m, id: Date.now().toString() + Math.random().toString(36).substring(7) }))
       ];
       
       await committeeRef.update({ members: membersToSave });
@@ -1008,18 +994,17 @@ const CommitteeDetail: React.FC = () => {
     setLoading(false);
   };
 
-  const handleSaveReport = async (committeeId: string, report: CommitteeReport, isNew: boolean) => {
+  const handleSaveReport = async (committeeId: string, report: CommitteeReport) => {
     if (!db) return;
     setLoading(true);
     try {
       const reportsRef = db.collection('committees').doc(committeeId).collection('committeeReports');
       
-      // FIX #2: use the isNew flag passed from ReportModal instead of guessing from report.id
-      if (isNew) {
+      if (report.id) {
+        await reportsRef.doc(report.id).set(report);
+      } else {
         const newDoc = reportsRef.doc();
         await newDoc.set({ ...report, id: newDoc.id });
-      } else {
-        await reportsRef.doc(report.id).set(report);
       }
       
       // Refresh data
@@ -1031,6 +1016,7 @@ const CommitteeDetail: React.FC = () => {
 
   const handleDeleteReport = async (committeeId: string, reportId: string) => {
     if (!db || !id) return;
+    // Using a simpler confirmation for now, or I should implement a custom modal
     if (!window.confirm("Delete this report?")) return;
     try {
       await db.collection('committees').doc(committeeId).collection('committeeReports').doc(reportId).delete();
@@ -1038,18 +1024,17 @@ const CommitteeDetail: React.FC = () => {
     } catch (error) { console.error("Error deleting report:", error); }
   };
 
-  const handleSaveImage = async (committeeId: string, image: CommitteeImage, isNew: boolean) => {
+  const handleSaveImage = async (committeeId: string, image: CommitteeImage) => {
     if (!db) return;
     setLoading(true);
     try {
       const imagesRef = db.collection('committees').doc(committeeId).collection('committeeImages');
       
-      // FIX #3: use the isNew flag passed from ImageModal instead of guessing from ID length
-      if (isNew) {
-        const newDoc = imagesRef.doc();
-        await newDoc.set({ ...image, id: newDoc.id });
+      if (image.id && image.id.length > 15) { // If it has a long ID, it's likely an existing or generated one
+         await imagesRef.doc(image.id).set(image);
       } else {
-        await imagesRef.doc(image.id).set(image);
+         const newDoc = imagesRef.doc();
+         await newDoc.set({ ...image, id: newDoc.id });
       }
       
       await fetchData();
@@ -1257,7 +1242,7 @@ const CommitteeDetail: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {committee.activities.map((activity: any) => (
+                  {committee.activities.map((activity) => (
                     <div key={activity.id} className="group p-8 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-6">
                       <div className="flex-shrink-0 w-16 h-16 bg-church-50 text-church-600 rounded-2xl flex flex-col items-center justify-center">
                         <span className="text-xs font-bold uppercase">{activity.date ? activity.date.split(' ')[0] : t.committeeDetail.activities.tba}</span>
@@ -1268,10 +1253,9 @@ const CommitteeDetail: React.FC = () => {
                             <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
                             <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
                           </div>
-                          {/* FIX #1: guard against non-string description crashing the page */}
                           <div 
                             className="text-slate-600 mt-2 leading-relaxed prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: typeof activity.description === 'string' ? activity.description : '' }}
+                            dangerouslySetInnerHTML={{ __html: activity.description }}
                           />
                         </div>
                       {isAdmin && (

@@ -24,8 +24,8 @@ export const ProtectedContact: React.FC<ProtectedContactProps> = ({
 
   // Simple obfuscation: the number is stored in state/props but not rendered as a link
   // until the user interacts.
-  const cleanPhone = phone.replace(/\D/g, '');
-  const formattedPhone = phone.trim();
+  const cleanPhone = (phone || '').toString().replace(/\D/g, '');
+  const formattedPhone = phone ? phone.toString().trim() : '';
 
   const handleReveal = (e: React.MouseEvent) => {
     e.preventDefault();

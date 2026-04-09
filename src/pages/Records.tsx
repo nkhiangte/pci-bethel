@@ -1055,7 +1055,7 @@ const Records: React.FC = () => {
                             ) : (
                                 TEMPLATE_HEADERS[activeTab].map(field => (
                                     <div key={field}>
-                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || field.replace(/([A-Z])/g, ' $1')}</label>
+                                        <label className="capitalize block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{t.records.theads[field as keyof typeof t.records.theads] || (field || '').replace(/([A-Z])/g, ' $1')}</label>
                                         {field === 'puipate' ? (
                                             <textarea 
                                                 className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none transition bg-slate-50 focus:bg-white h-24" 
