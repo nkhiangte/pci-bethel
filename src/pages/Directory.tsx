@@ -5,14 +5,49 @@ import { db } from '../services/firebase';
 import { CommitteeMember, KTPMember, Committee, Ministry, KTPHruaitute } from '../types';
 import { ProtectedContact } from '../components/ProtectedContact';
 
+interface RoleInfo {
+  role: string;
+  source: string;
+}
+
 interface DirectoryMember {
+  id: string;
+  name: string;
+  phone?: string;
+  imageUrl?: string;
+  roles: RoleInfo[];
+}
+
+interface FlatMember {
   id: string;
   name: string;
   role: string;
   phone?: string;
-  source: string; // e.g., "Finance Committee", "KTP", "Kohhran Hmeichhia"
+  source: string;
   imageUrl?: string;
 }
+
+const normalizeName = (name: string): string => {
+  if (!name) return '';
+  
+  // 1. Protect titles with periods
+  let normalized = name
+    .replace(/Dr\./g, '__DR__')
+    .replace(/Nl\./g, '__NL__')
+    .replace(/Tv\./g, '__TV__');
+    
+  // 2. Replace all other periods with space
+  normalized = normalized.replace(/\./g, ' ');
+  
+  // 3. Restore protected titles
+  normalized = normalized
+    .replace(/__DR__/g, 'Dr.')
+    .replace(/__NL__/g, 'Nl.')
+    .replace(/__TV__/g, 'Tv.');
+    
+  // 4. Clean up multiple spaces and trim
+  return normalized.replace(/\s+/g, ' ').trim();
+};
 
 const Directory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +58,7 @@ const Directory: React.FC = () => {
     const fetchAllMembers = async () => {
       setLoading(true);
       try {
-        const membersList: DirectoryMember[] = [];
+        const membersList: FlatMember[] = [];
 
         // 1. Fetch Committees
         const committeesSnapshot = await db.collection('committees').get();
@@ -160,7 +195,34 @@ const Directory: React.FC = () => {
           });
         }
 
-        setAllMembers(membersList);
+        // Group members by Name + Phone to avoid duplicates and show multiple roles
+        const grouped: Record<string, DirectoryMember> = {};
+        membersList.forEach(m => {
+          const normalizedName = normalizeName(m.name);
+          const nameKey = normalizedName.toLowerCase();
+          const phoneStr = String(m.phone || '').trim();
+          const key = `${nameKey}-${phoneStr}`;
+          
+          if (!grouped[key]) {
+            grouped[key] = {
+              id: m.id,
+              name: normalizedName, // Use normalized name for display consistency
+              phone: m.phone,
+              imageUrl: m.imageUrl,
+              roles: [{ role: m.role, source: m.source }]
+            };
+          } else {
+            const exists = grouped[key].roles.some(r => r.role === m.role && r.source === m.source);
+            if (!exists) {
+              grouped[key].roles.push({ role: m.role, source: m.source });
+            }
+            if (!grouped[key].imageUrl && m.imageUrl) {
+              grouped[key].imageUrl = m.imageUrl;
+            }
+          }
+        });
+
+        setAllMembers(Object.values(grouped));
       } catch (error) {
         console.error("Error fetching directory members:", error);
       } finally {
@@ -176,8 +238,10 @@ const Directory: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return allMembers.filter(m => 
       (m.name || '').toLowerCase().includes(term) || 
-      (m.role || '').toLowerCase().includes(term) ||
-      (m.source || '').toLowerCase().includes(term)
+      m.roles.some(r => 
+        (r.role || '').toLowerCase().includes(term) || 
+        (r.source || '').toLowerCase().includes(term)
+      )
     );
   }, [searchTerm, allMembers]);
 
@@ -235,8 +299,18 @@ const Directory: React.FC = () => {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="font-bold text-slate-900 truncate">{member.name || 'Unknown'}</h3>
-                      <p className="text-xs font-medium text-church-600 uppercase tracking-wider">{member.role || 'Member'}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{member.source}</p>
+                      <div className="mt-1 space-y-1">
+                        {member.roles.map((r, idx) => (
+                          <div key={idx} className="flex flex-col">
+                            <span className="text-[10px] font-black text-church-600 uppercase tracking-wider leading-none">
+                              {r.role || 'Member'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {r.source}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     {member.phone && (
                       <ProtectedContact 
