@@ -243,15 +243,59 @@ const SundaySchool: React.FC = () => {
     try {
         const snapshot = await db.collection('sundaySchoolDepartments').get();
         if (!snapshot.empty) {
-            const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as SundaySchoolDepartment[];
+            const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as any[];
             const merged = INITIAL_DEPARTMENTS_DATA.map(init => {
-                const found = fetchedData.find(f => f.id === init.id);
-                return found || { ...init, name: getDeptName(init.id) };
+                const found = fetchedData.find(f => f.id.toLowerCase() === init.id.toLowerCase());
+                if (found) {
+                    return {
+                        ...init,
+                        ...found,
+                        zirtirtute: found.zirtirtute || found.teachers || found.zirtirtu || [],
+                        students: found.students || found.studentCount || 0
+                    };
+                }
+                return { ...init, name: getDeptName(init.id) };
             });
             setDepartments(merged as SundaySchoolDepartment[]);
         } else {
-            const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
-            setDepartments(mappedData as SundaySchoolDepartment[]);
+            // Try to fetch from archives as a secondary fallback
+            try {
+                const archiveSnapshot = await db.collection('archives')
+                    .where('category', '==', 'Rawngbawltu te')
+                    .where('subCategory', '==', 'SUNDAY SCHOOL')
+                    .where('ss_year', '==', '2025')
+                    .get();
+                
+                if (!archiveSnapshot.empty) {
+                    const reconstructed = INITIAL_DEPARTMENTS_DATA.map(init => {
+                        const found = archiveSnapshot.docs.find((doc: any) => {
+                            const data = doc.data();
+                            return data.department?.toLowerCase() === init.id.toLowerCase();
+                        });
+                        
+                        if (found) {
+                            const data = found.data();
+                            return {
+                                ...init,
+                                leader: data.ss_dept_leader || '',
+                                asstLeader: data.ss_dept_asst_leader || '',
+                                secretary: data.ss_dept_secretary || '',
+                                zirtirtute: data.ss_dept_zirtirtute ? data.ss_dept_zirtirtute.split(', ').map((s: string) => s.trim()) : [],
+                                students: data.students || 0
+                            };
+                        }
+                        return { ...init, name: getDeptName(init.id) };
+                    });
+                    setDepartments(reconstructed as SundaySchoolDepartment[]);
+                } else {
+                    const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
+                    setDepartments(mappedData as SundaySchoolDepartment[]);
+                }
+            } catch (archiveError) {
+                console.error("Error fetching from archives:", archiveError);
+                const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
+                setDepartments(mappedData as SundaySchoolDepartment[]);
+            }
         }
 
         // Also fetch all zirtirtu profiles to display roles in the list
@@ -452,7 +496,7 @@ const SundaySchool: React.FC = () => {
 
       // 2. If name changed, update all references in the department
       if (oldName && oldName !== newName) {
-        const updatedZirtirtute = currentDept.zirtirtute.map(name => name === oldName ? newName : name);
+        const updatedZirtirtute = (currentDept.zirtirtute || []).map(name => name === oldName ? newName : name);
         const updates: any = { zirtirtute: updatedZirtirtute };
         
         if (currentDept.leader === oldName) updates.leader = newName;
@@ -461,9 +505,9 @@ const SundaySchool: React.FC = () => {
         if (currentDept.asstSecretary === oldName) updates.asstSecretary = newName;
 
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update(updates);
-      } else if (!currentDept.zirtirtute.includes(newName)) {
+      } else if (!(currentDept.zirtirtute || []).includes(newName)) {
         // New zirtirtu being added
-        const updatedZirtirtute = [...currentDept.zirtirtute, newName];
+        const updatedZirtirtute = [...(currentDept.zirtirtute || []), newName];
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
           zirtirtute: updatedZirtirtute
         });
@@ -483,7 +527,7 @@ const SundaySchool: React.FC = () => {
     if (!db || !currentDept || !window.confirm(`Remove ${zirtirtuName} from ${currentDept.name} department?`)) return;
     setIsSaving(true);
     try {
-      const updatedZirtirtute = currentDept.zirtirtute.filter(name => name !== zirtirtuName);
+      const updatedZirtirtute = (currentDept.zirtirtute || []).filter(name => name !== zirtirtuName);
       const updates: any = { zirtirtute: updatedZirtirtute };
       
       // Also clear leadership roles if they held them
@@ -505,10 +549,10 @@ const SundaySchool: React.FC = () => {
     const { active, over } = event;
     if (!over || active.id === over.id || !currentDept) return;
 
-    const oldIndex = currentDept.zirtirtute.indexOf(active.id as string);
-    const newIndex = currentDept.zirtirtute.indexOf(over.id as string);
+    const oldIndex = (currentDept.zirtirtute || []).indexOf(active.id as string);
+    const newIndex = (currentDept.zirtirtute || []).indexOf(over.id as string);
 
-    const newZirtirtute = arrayMove(currentDept.zirtirtute, oldIndex, newIndex);
+    const newZirtirtute = arrayMove(currentDept.zirtirtute || [], oldIndex, newIndex);
 
     try {
       // Optimistic update
@@ -536,7 +580,7 @@ const SundaySchool: React.FC = () => {
 
       // 3. Remove from department's zirtirtute list
       if (zirtirtuName) {
-        const updatedZirtirtute = currentDept.zirtirtute.filter(name => name !== zirtirtuName);
+        const updatedZirtirtute = (currentDept.zirtirtute || []).filter(name => name !== zirtirtuName);
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
           zirtirtute: updatedZirtirtute
         });
@@ -559,7 +603,7 @@ const SundaySchool: React.FC = () => {
     // Prepare data for Excel
     const excelData = [
       ['Name', 'Designation', 'Phone Number'],
-      ...currentDept.zirtirtute.map(zirtirtuName => {
+      ... (currentDept.zirtirtute || []).map(zirtirtuName => {
         const profile = allZirtirtute.find(t => t.name === zirtirtuName);
         return [
           zirtirtuName,
@@ -708,9 +752,34 @@ const SundaySchool: React.FC = () => {
                   /* DEPARTMENT INFO VIEW */
                   <div className="grid md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <div className="md:col-span-2 space-y-6">
+                          {/* Leadership Section */}
+                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                  <ShieldCheck className="text-church-600"/> Leadership
+                              </h3>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{leaderLabel}</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.leader || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{asstLeaderLabel}</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.asstLeader || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Secretary</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.secretary || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asst. Secretary</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.asstSecretary || 'Tarlan a awm lo'}</p>
+                                  </div>
+                              </div>
+                          </div>
+
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.zirtirtute.length || 0})</h3>
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.zirtirtute?.length || 0})</h3>
                                 {isAdmin && currentDept && (
                                     <div className="flex gap-2">
                                         <button 
@@ -755,7 +824,7 @@ const SundaySchool: React.FC = () => {
                                 )}
                               </div>
                               
-                              {!currentDept || currentDept.zirtirtute.length === 0 ? (
+                              {!currentDept || !currentDept.zirtirtute || currentDept.zirtirtute.length === 0 ? (
                                   <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                                       <Users size={48} className="mx-auto text-slate-300 mb-3" />
                                       <p className="text-slate-500">Zirtirtu tarlan a awm lo.</p>
@@ -767,11 +836,11 @@ const SundaySchool: React.FC = () => {
                                     onDragEnd={handleDragEnd}
                                   >
                                     <SortableContext 
-                                      items={currentDept.zirtirtute}
+                                      items={currentDept.zirtirtute || []}
                                       strategy={verticalListSortingStrategy}
                                     >
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                          {currentDept.zirtirtute.map((zirtirtuName, i) => {
+                                          {(currentDept.zirtirtute || []).map((zirtirtuName, i) => {
                                               const profile = allZirtirtute.find(p => p.name === zirtirtuName);
                                               return (
                                                   <SortableZirtirtuCard 
