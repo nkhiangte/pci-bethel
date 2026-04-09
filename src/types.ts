@@ -206,7 +206,7 @@ export interface SundaySchoolDepartment {
   asstLeader?: string;
   secretary?: string;
   asstSecretary?: string;
-  teachers: string[];
+  zirtirtute: string[];
   description: string;
   students: number;
 }
@@ -376,7 +376,7 @@ export interface ArchiveEntry {
   link: string;
   imageUrls?: string[];
   ss_year?: string;
-  ss_dept_teachers?: string;
+  ss_dept_zirtirtute?: string;
   ss_dept_leader?: string;
   ss_dept_asst_leader?: string;
   ss_dept_secretary?: string;

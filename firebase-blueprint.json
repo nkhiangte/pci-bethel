@@ -126,11 +126,11 @@
         "id": { "type": "string" },
         "name": { "type": "string" },
         "leader": { "type": "string" },
-        "teachers": { "type": "array", "items": { "type": "string" } },
+        "zirtirtute": { "type": "array", "items": { "type": "string" } },
         "description": { "type": "string" },
         "students": { "type": "integer" }
       },
-      "required": ["name", "leader", "teachers"]
+      "required": ["name", "leader", "zirtirtute"]
     },
     "SundaySchoolReport": {
       "title": "Sunday School Report",
@@ -401,7 +401,7 @@
     },
     "/ss_teachers/{teacherId}": {
       "schema": "Staff",
-      "description": "Collection of Sunday School teacher profiles"
+      "description": "Collection of Sunday School Zirtirtu profiles"
     },
     "/users/{userId}": {
       "schema": "UserProfile",

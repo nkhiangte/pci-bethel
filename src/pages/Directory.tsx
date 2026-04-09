@@ -149,24 +149,24 @@ const Directory: React.FC = () => {
           });
         }
 
-        // 4. Fetch Sunday School Departments for mapping teachers to departments
+        // 4. Fetch Sunday School Departments for mapping zirtirtute to departments
         const ssDeptsSnapshot = await db.collection('sundaySchoolDepartments').get();
-        const teacherToDeptMap: Record<string, string> = {};
+        const zirtirtuToDeptMap: Record<string, string> = {};
         ssDeptsSnapshot.docs.forEach(doc => {
           const dept = doc.data() as any;
           const deptName = dept.name || doc.id.charAt(0).toUpperCase() + doc.id.slice(1);
-          if (dept.teachers) {
-            dept.teachers.forEach((tName: string) => {
-              teacherToDeptMap[tName] = deptName;
+          if (dept.zirtirtute) {
+            dept.zirtirtute.forEach((tName: string) => {
+              zirtirtuToDeptMap[tName] = deptName;
             });
           }
-          if (dept.leader) teacherToDeptMap[dept.leader] = deptName;
-          if (dept.asstLeader) teacherToDeptMap[dept.asstLeader] = deptName;
-          if (dept.secretary) teacherToDeptMap[dept.secretary] = deptName;
-          if (dept.asstSecretary) teacherToDeptMap[dept.asstSecretary] = deptName;
+          if (dept.leader) zirtirtuToDeptMap[dept.leader] = deptName;
+          if (dept.asstLeader) zirtirtuToDeptMap[dept.asstLeader] = deptName;
+          if (dept.secretary) zirtirtuToDeptMap[dept.secretary] = deptName;
+          if (dept.asstSecretary) zirtirtuToDeptMap[dept.asstSecretary] = deptName;
         });
 
-        // 5. Fetch Staff (Pastors, Elders, Pro-Pastors, SS Teachers)
+        // 5. Fetch Staff (Pastors, Elders, Pro-Pastors, SS Zirtirtute)
         const staffCollections = [
           { id: 'pastors', label: 'Pastor' },
           { id: 'elders', label: 'Elder' },
@@ -180,8 +180,8 @@ const Directory: React.FC = () => {
             const staff = doc.data() as any;
             let source = coll.label === 'Sunday School' ? 'Sunday School' : 'Church Staff';
             
-            if (coll.id === 'ss_teachers' && teacherToDeptMap[staff.name]) {
-              source = `Sunday School (${teacherToDeptMap[staff.name]})`;
+            if (coll.id === 'ss_teachers' && zirtirtuToDeptMap[staff.name]) {
+              source = `Sunday School (${zirtirtuToDeptMap[staff.name]})`;
             }
 
             membersList.push({

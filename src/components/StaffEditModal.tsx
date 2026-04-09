@@ -16,6 +16,28 @@ interface StaffEditModalProps {
   collectionName: 'elders' | 'pastors' | 'proPastors' | 'ss_teachers';
 }
 
+const normalizeName = (name: string): string => {
+  if (!name) return '';
+  
+  // 1. Protect titles with periods
+  let normalized = name
+    .replace(/Dr\./g, '__DR__')
+    .replace(/Nl\./g, '__NL__')
+    .replace(/Tv\./g, '__TV__');
+    
+  // 2. Replace all other periods with space
+  normalized = normalized.replace(/\./g, ' ');
+  
+  // 3. Restore protected titles
+  normalized = normalized
+    .replace(/__DR__/g, 'Dr.')
+    .replace(/__NL__/g, 'Nl.')
+    .replace(/__TV__/g, 'Tv.');
+    
+  // 4. Clean up multiple spaces and trim
+  return normalized.replace(/\s+/g, ' ').trim();
+};
+
 const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave, onDelete, isLoading, showDeleteConfirm, setShowDeleteConfirm, collectionName }) => {
   const [formData, setFormData] = useState<Partial<Staff>>(staff);
   
@@ -44,7 +66,11 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
 
   const handleSaveClick = async () => {
     if (formData.name && formData.imageUrl && formData.role) {
-      await onSave(formData as Staff, collectionName);
+      const normalizedStaff = {
+        ...formData,
+        name: normalizeName(formData.name)
+      } as Staff;
+      await onSave(normalizedStaff, collectionName);
     } else {
       alert("Please fill in Name, Image URL, and Role.");
     }
@@ -309,7 +335,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     className="w-full border border-slate-300 rounded p-2.5"
                     value={formData.role || ''}
                     onChange={e => setFormData({ ...formData, role: e.target.value })}
-                    placeholder={collectionName === 'ss_teachers' ? "e.g., Teacher, Leader" : "e.g., Elder, Pastor"}
+                    placeholder={collectionName === 'ss_teachers' ? "e.g., Zirtirtu, Leader" : "e.g., Elder, Pastor"}
                     />
                 </div>
                 {collectionName !== 'ss_teachers' && (
@@ -459,7 +485,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
             <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-br-xl border-t">
             <button onClick={onClose} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-white transition">Cancel</button>
             <button onClick={handleSaveClick} disabled={isLoading} className="px-4 py-2 bg-church-600 text-white rounded-lg hover:bg-church-700 flex items-center transition shadow-sm disabled:opacity-50">
-                {isLoading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} {collectionName === 'ss_teachers' ? 'Save Profile' : 'Save Biography'}
+                {isLoading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} {collectionName === 'ss_teachers' ? 'Save Zirtirtu Profile' : 'Save Biography'}
             </button>
             </div>
         </div>

@@ -52,8 +52,8 @@ export const useEventSuggestions = () => {
             if (data.asstLeader) namesSet.add(data.asstLeader);
             if (data.secretary) namesSet.add(data.secretary);
             if (data.asstSecretary) namesSet.add(data.asstSecretary);
-            if (data.teachers) {
-              data.teachers.forEach(t => namesSet.add(t));
+            if (data.zirtirtute) {
+              data.zirtirtute.forEach(t => namesSet.add(t));
             }
           });
 

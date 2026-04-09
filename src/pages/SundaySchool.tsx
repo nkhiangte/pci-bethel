@@ -37,8 +37,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface SortableTeacherCardProps {
-  teacherName: string;
+interface SortableZirtirtuCardProps {
+  zirtirtuName: string;
   index: number;
   profile?: Staff;
   isAdmin: boolean;
@@ -46,8 +46,8 @@ interface SortableTeacherCardProps {
   onRemove: () => void;
 }
 
-const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({ 
-  teacherName, 
+const SortableZirtirtuCard: React.FC<SortableZirtirtuCardProps> = ({ 
+  zirtirtuName, 
   index, 
   profile, 
   isAdmin, 
@@ -61,7 +61,7 @@ const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({
     transform,
     transition,
     isDragging
-  } = useSortable({ id: teacherName });
+  } = useSortable({ id: zirtirtuName });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -92,26 +92,26 @@ const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({
           {profile?.imageUrl ? (
               <img 
                 src={profile.imageUrl} 
-                alt={teacherName} 
+                alt={zirtirtuName} 
                 className="w-full h-full object-cover" 
                 referrerPolicy="no-referrer" 
                 style={{ objectPosition: `${profile.imagePositionX ?? 50}% ${profile.imagePositionY ?? 0}%` }}
               />
           ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg bg-white">
-                  {teacherName.charAt(0)}
+                  {zirtirtuName.charAt(0)}
               </div>
           )}
       </div>
       <div className="flex-grow min-w-0">
-          <h4 className="font-bold text-slate-800 text-base truncate">{teacherName}</h4>
-          <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Teacher'}</p>
+          <h4 className="font-bold text-slate-800 text-base truncate">{zirtirtuName}</h4>
+          <p className="text-church-600 font-medium text-xs mb-1 truncate">{profile?.role || 'Zirtirtu'}</p>
           
           {profile?.phoneNumber && (
               <div className="flex items-center gap-2 mt-2">
                   <ProtectedContact 
                       phone={profile.phoneNumber} 
-                      name={teacherName} 
+                      name={zirtirtuName} 
                       variant="icon-only" 
                   />
                   <span className="text-slate-400 text-[10px] font-mono">{profile.phoneNumber}</span>
@@ -140,14 +140,14 @@ const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({
 };
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
-    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 },
-    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', teachers: [], description: '', students: 0 }
+    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
+    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 }
 ];
 
 const EMPTY_SEGMENT: SSReportSegment = {
@@ -155,6 +155,28 @@ const EMPTY_SEGMENT: SSReportSegment = {
     zirtu: { kal: 0, kallo: 0 },
     chhimtu: 0,
     thawhlawm: 0
+};
+
+const normalizeName = (name: string): string => {
+  if (!name) return '';
+  
+  // 1. Protect titles with periods
+  let normalized = name
+    .replace(/Dr\./g, '__DR__')
+    .replace(/Nl\./g, '__NL__')
+    .replace(/Tv\./g, '__TV__');
+    
+  // 2. Replace all other periods with space
+  normalized = normalized.replace(/\./g, ' ');
+  
+  // 3. Restore protected titles
+  normalized = normalized
+    .replace(/__DR__/g, 'Dr.')
+    .replace(/__NL__/g, 'Nl.')
+    .replace(/__TV__/g, 'Tv.');
+    
+  // 4. Clean up multiple spaces and trim
+  return normalized.replace(/\s+/g, ' ').trim();
 };
 
 const SundaySchool: React.FC = () => {
@@ -180,7 +202,7 @@ const SundaySchool: React.FC = () => {
   );
   
   const [departments, setDepartments] = useState<SundaySchoolDepartment[]>([]);
-  const [allTeachers, setAllTeachers] = useState<Staff[]>([]);
+  const [allZirtirtute, setAllZirtirtute] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Weekly Report States
@@ -194,11 +216,11 @@ const SundaySchool: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Partial<SundaySchoolDepartment> | null>(null);
 
-  // Teacher Profile States
-  const [selectedTeacherName, setSelectedTeacherName] = useState<string | null>(null);
-  const [teacherProfile, setTeacherProfile] = useState<Staff | null>(null);
+  // Zirtirtu Profile States
+  const [selectedZirtirtuName, setSelectedZirtirtuName] = useState<string | null>(null);
+  const [zirtirtuProfile, setZirtirtuProfile] = useState<Staff | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [isTeacherEditModalOpen, setIsTeacherEditModalOpen] = useState(false);
+  const [isZirtirtuEditModalOpen, setIsZirtirtuEditModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -232,7 +254,7 @@ const SundaySchool: React.FC = () => {
             setDepartments(mappedData as SundaySchoolDepartment[]);
         }
 
-        // Also fetch all teacher profiles to display roles in the list
+        // Also fetch all zirtirtu profiles to display roles in the list
         // Fetch from all staff collections to include Elders/Pastors who might be teaching
         const staffColls = ['ss_teachers', 'elders', 'pastors', 'proPastors'];
         let combinedStaff: Staff[] = [];
@@ -243,7 +265,7 @@ const SundaySchool: React.FC = () => {
           combinedStaff = [...combinedStaff, ...data];
         }
         
-        setAllTeachers(combinedStaff);
+        setAllZirtirtute(combinedStaff);
     } catch (e) {
         console.error("Error fetching departments:", e);
         const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
@@ -280,29 +302,29 @@ const SundaySchool: React.FC = () => {
   }, [departmentId, fetchReports]);
 
   useEffect(() => {
-    const fetchTeacherProfile = async () => {
-      if (!selectedTeacherName || !db?.collection) {
-        setTeacherProfile(null);
+    const fetchZirtirtuProfile = async () => {
+      if (!selectedZirtirtuName || !db?.collection) {
+        setZirtirtuProfile(null);
         return;
       }
       setLoadingProfile(true);
       try {
-        const snap = await db.collection('ss_teachers').where('name', '==', selectedTeacherName).limit(1).get();
+        const snap = await db.collection('ss_teachers').where('name', '==', selectedZirtirtuName).limit(1).get();
         if (!snap.empty) {
-          setTeacherProfile({ id: snap.docs[0].id, ...snap.docs[0].data() } as Staff);
+          setZirtirtuProfile({ id: snap.docs[0].id, ...snap.docs[0].data() } as Staff);
         } else {
-          setTeacherProfile(null);
+          setZirtirtuProfile(null);
         }
       } catch (e) {
         console.error("Profile fetch error:", e);
       }
       setLoadingProfile(false);
     };
-    fetchTeacherProfile();
-  }, [selectedTeacherName]);
+    fetchZirtirtuProfile();
+  }, [selectedZirtirtuName]);
 
-  const handleClearTeachersExceptPuitling = async () => {
-      if (!db || !db.collection || !window.confirm("This will remove ALL teachers and leadership from all departments EXCEPT Puitling. Are you sure?")) return;
+  const handleClearZirtirtuteExceptPuitling = async () => {
+      if (!db || !db.collection || !window.confirm("This will remove ALL zirtirtute and leadership from all departments EXCEPT Puitling. Are you sure?")) return;
       setIsSeeding(true);
       try {
           const batch = db.batch();
@@ -310,7 +332,7 @@ const SundaySchool: React.FC = () => {
           deptsToClear.forEach(id => {
               const docRef = db.collection('sundaySchoolDepartments').doc(id);
               batch.update(docRef, { 
-                  teachers: [],
+                  zirtirtute: [],
                   leader: '',
                   asstLeader: '',
                   secretary: '',
@@ -319,7 +341,7 @@ const SundaySchool: React.FC = () => {
           });
           await batch.commit();
           fetchDepartments();
-          alert("Teachers and leadership cleared successfully (Puitling preserved)!");
+          alert("Zirtirtute and leadership cleared successfully (Puitling preserved)!");
       } catch(e: any) {
           console.error(e);
           alert(`Failed to clear data: ${e.message}`);
@@ -349,7 +371,15 @@ const SundaySchool: React.FC = () => {
   const handleSaveDept = async () => {
       if (!db || !db.collection || !editingDept || !editingDept.id) return;
       try {
-          await db.collection('sundaySchoolDepartments').doc(editingDept.id).set(editingDept, { merge: true });
+          const normalizedDept = {
+              ...editingDept,
+              leader: normalizeName(editingDept.leader || ''),
+              asstLeader: normalizeName(editingDept.asstLeader || ''),
+              secretary: normalizeName(editingDept.secretary || ''),
+              asstSecretary: normalizeName(editingDept.asstSecretary || ''),
+              zirtirtute: (editingDept.zirtirtute || []).map(n => normalizeName(n))
+          };
+          await db.collection('sundaySchoolDepartments').doc(editingDept.id).set(normalizedDept, { merge: true });
           setIsEditModalOpen(false);
           fetchDepartments();
       } catch (e: any) {
@@ -401,24 +431,29 @@ const SundaySchool: React.FC = () => {
       }
   };
 
-  const handleSaveTeacherProfile = async (staff: Staff, collectionName: string) => {
+  const handleSaveZirtirtuProfile = async (staff: Staff, collectionName: string) => {
     if (!db?.collection || !currentDept) return;
     setIsSaving(true);
     try {
-      const oldName = teacherProfile?.name;
-      const newName = staff.name;
+      const oldName = zirtirtuProfile?.name;
+      const newName = normalizeName(staff.name);
+      
+      const normalizedStaff = {
+        ...staff,
+        name: newName
+      };
 
       // 1. Save the profile
       if (staff.id) {
-        await db.collection(collectionName).doc(staff.id).set(staff, { merge: true });
+        await db.collection(collectionName).doc(staff.id).set(normalizedStaff, { merge: true });
       } else {
-        await db.collection(collectionName).add(staff);
+        await db.collection(collectionName).add(normalizedStaff);
       }
 
       // 2. If name changed, update all references in the department
       if (oldName && oldName !== newName) {
-        const updatedTeachers = currentDept.teachers.map(name => name === oldName ? newName : name);
-        const updates: any = { teachers: updatedTeachers };
+        const updatedZirtirtute = currentDept.zirtirtute.map(name => name === oldName ? newName : name);
+        const updates: any = { zirtirtute: updatedZirtirtute };
         
         if (currentDept.leader === oldName) updates.leader = newName;
         if (currentDept.asstLeader === oldName) updates.asstLeader = newName;
@@ -426,42 +461,42 @@ const SundaySchool: React.FC = () => {
         if (currentDept.asstSecretary === oldName) updates.asstSecretary = newName;
 
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update(updates);
-      } else if (!currentDept.teachers.includes(newName)) {
-        // New teacher being added
-        const updatedTeachers = [...currentDept.teachers, newName];
+      } else if (!currentDept.zirtirtute.includes(newName)) {
+        // New zirtirtu being added
+        const updatedZirtirtute = [...currentDept.zirtirtute, newName];
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
-          teachers: updatedTeachers
+          zirtirtute: updatedZirtirtute
         });
       }
 
-      setIsTeacherEditModalOpen(false);
-      setTeacherProfile(staff);
+      setIsZirtirtuEditModalOpen(false);
+      setZirtirtuProfile(normalizedStaff);
       fetchDepartments(); // Refresh to show new image/role
     } catch (error) {
-      console.error("Error saving teacher profile:", error);
-      alert("Failed to save teacher profile.");
+      console.error("Error saving zirtirtu profile:", error);
+      alert("Failed to save zirtirtu profile.");
     }
     setIsSaving(false);
   };
 
-  const handleRemoveTeacherFromDept = async (teacherName: string) => {
-    if (!db || !currentDept || !window.confirm(`Remove ${teacherName} from ${currentDept.name} department?`)) return;
+  const handleRemoveZirtirtuFromDept = async (zirtirtuName: string) => {
+    if (!db || !currentDept || !window.confirm(`Remove ${zirtirtuName} from ${currentDept.name} department?`)) return;
     setIsSaving(true);
     try {
-      const updatedTeachers = currentDept.teachers.filter(name => name !== teacherName);
-      const updates: any = { teachers: updatedTeachers };
+      const updatedZirtirtute = currentDept.zirtirtute.filter(name => name !== zirtirtuName);
+      const updates: any = { zirtirtute: updatedZirtirtute };
       
       // Also clear leadership roles if they held them
-      if (currentDept.leader === teacherName) updates.leader = '';
-      if (currentDept.asstLeader === teacherName) updates.asstLeader = '';
-      if (currentDept.secretary === teacherName) updates.secretary = '';
-      if (currentDept.asstSecretary === teacherName) updates.asstSecretary = '';
+      if (currentDept.leader === zirtirtuName) updates.leader = '';
+      if (currentDept.asstLeader === zirtirtuName) updates.asstLeader = '';
+      if (currentDept.secretary === zirtirtuName) updates.secretary = '';
+      if (currentDept.asstSecretary === zirtirtuName) updates.asstSecretary = '';
 
       await db.collection('sundaySchoolDepartments').doc(currentDept.id).update(updates);
       fetchDepartments();
     } catch (error) {
-      console.error("Error removing teacher:", error);
-      alert("Failed to remove teacher.");
+      console.error("Error removing zirtirtu:", error);
+      alert("Failed to remove zirtirtu.");
     }
     setIsSaving(false);
   };
@@ -470,45 +505,45 @@ const SundaySchool: React.FC = () => {
     const { active, over } = event;
     if (!over || active.id === over.id || !currentDept) return;
 
-    const oldIndex = currentDept.teachers.indexOf(active.id as string);
-    const newIndex = currentDept.teachers.indexOf(over.id as string);
+    const oldIndex = currentDept.zirtirtute.indexOf(active.id as string);
+    const newIndex = currentDept.zirtirtute.indexOf(over.id as string);
 
-    const newTeachers = arrayMove(currentDept.teachers, oldIndex, newIndex);
+    const newZirtirtute = arrayMove(currentDept.zirtirtute, oldIndex, newIndex);
 
     try {
       // Optimistic update
-      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, teachers: newTeachers } : d));
+      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, zirtirtute: newZirtirtute } : d));
       
       await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
-        teachers: newTeachers
+        zirtirtute: newZirtirtute
       });
     } catch (error) {
-      console.error("Error reordering teachers:", error);
+      console.error("Error reordering zirtirtute:", error);
       fetchDepartments(); // Revert on error
     }
   };
 
-  const handleDeleteTeacherProfile = async (id: string, collectionName: string) => {
-    if (!db || !window.confirm("Delete this teacher profile?") || !currentDept) return;
+  const handleDeleteZirtirtuProfile = async (id: string, collectionName: string) => {
+    if (!db || !window.confirm("Delete this zirtirtu profile?") || !currentDept) return;
     setIsSaving(true);
     try {
-      // 1. Get the teacher profile to know their name
+      // 1. Get the zirtirtu profile to know their name
       const profileDoc = await db.collection(collectionName).doc(id).get();
-      const teacherName = profileDoc.data()?.name;
+      const zirtirtuName = profileDoc.data()?.name;
 
       // 2. Delete the profile
       await db.collection(collectionName).doc(id).delete();
 
-      // 3. Remove from department's teachers list
-      if (teacherName) {
-        const updatedTeachers = currentDept.teachers.filter(name => name !== teacherName);
+      // 3. Remove from department's zirtirtute list
+      if (zirtirtuName) {
+        const updatedZirtirtute = currentDept.zirtirtute.filter(name => name !== zirtirtuName);
         await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
-          teachers: updatedTeachers
+          zirtirtute: updatedZirtirtute
         });
       }
 
-      setTeacherProfile(null);
-      setIsTeacherEditModalOpen(false);
+      setZirtirtuProfile(null);
+      setIsZirtirtuEditModalOpen(false);
       setShowDeleteConfirm(null);
       fetchDepartments(); // Refresh
     } catch (error) {
@@ -524,11 +559,11 @@ const SundaySchool: React.FC = () => {
     // Prepare data for Excel
     const excelData = [
       ['Name', 'Designation', 'Phone Number'],
-      ...currentDept.teachers.map(teacherName => {
-        const profile = allTeachers.find(t => t.name === teacherName);
+      ...currentDept.zirtirtute.map(zirtirtuName => {
+        const profile = allZirtirtute.find(t => t.name === zirtirtuName);
         return [
-          teacherName,
-          profile?.role || 'Teacher',
+          zirtirtuName,
+          profile?.role || 'Zirtirtu',
           profile?.phoneNumber || profile?.phone || ''
         ];
       })
@@ -536,23 +571,23 @@ const SundaySchool: React.FC = () => {
 
     const worksheet = XLSX.utils.aoa_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers List");
-    XLSX.writeFile(workbook, `${currentDept.name}_Teachers_List.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Zirtirtute List");
+    XLSX.writeFile(workbook, `${currentDept.name}_Zirtirtute_List.xlsx`);
   };
 
   const handleDownloadTemplate = () => {
     const data = [
       ['Name', 'Designation', 'Phone Number'],
-      ['Lalnunmawii', 'Teacher', '9876543210'],
-      ['Hruaitluanga', 'Asst. Teacher', '9876543211']
+      ['Lalnunmawii', 'Zirtirtu', '9876543210'],
+      ['Hruaitluanga', 'Asst. Zirtirtu', '9876543211']
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers Template");
-    XLSX.writeFile(workbook, "SundaySchool_Teachers_Template.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Zirtirtute Template");
+    XLSX.writeFile(workbook, "SundaySchool_Zirtirtute_Template.xlsx");
   };
 
-  const handleImportTeachers = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportZirtirtute = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       const normalizedId = departmentId?.toLowerCase();
       const currentDept = departments.find(d => d.id === normalizedId) || departments[0];
@@ -565,7 +600,7 @@ const SundaySchool: React.FC = () => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
           
-          const importedTeachers: { name: string, designation: string, phone: string }[] = [];
+          const importedZirtirtute: { name: string, designation: string, phone: string }[] = [];
           
           // Skip header row if it looks like one
           const firstRow = jsonData[0];
@@ -574,28 +609,28 @@ const SundaySchool: React.FC = () => {
           for (let i = startIndex; i < jsonData.length; i++) {
               const row = jsonData[i];
               if (row && row.length > 0) {
-                  const name = String(row[0] || '').trim();
-                  const designation = String(row[1] || 'Teacher').trim();
+                  const name = normalizeName(String(row[0] || '').trim());
+                  const designation = String(row[1] || 'Zirtirtu').trim();
                   const phone = String(row[2] || '').trim();
                   
                   if (name) {
-                      importedTeachers.push({ name, designation, phone });
+                      importedZirtirtute.push({ name, designation, phone });
                   }
               }
           }
 
-          if (importedTeachers.length === 0) {
+          if (importedZirtirtute.length === 0) {
               alert("No valid data found in the Excel file.");
               return;
           }
 
-          if (window.confirm(`Found ${importedTeachers.length} teachers. This will update their profiles and REPLACE the existing teacher list for ${currentDept.name}. Proceed?`)) {
+          if (window.confirm(`Found ${importedZirtirtute.length} zirtirtute. This will update their profiles and REPLACE the existing zirtirtu list for ${currentDept.name}. Proceed?`)) {
               if (db && db.collection) {
                   setLoading(true);
                   
                   // Update/Create profiles in ss_teachers
                   // We do this sequentially to avoid batch query issues, though it's slower
-                  for (const t of importedTeachers) {
+                  for (const t of importedZirtirtute) {
                       const snap = await db.collection('ss_teachers').where('name', '==', t.name).limit(1).get();
                       if (!snap.empty) {
                           await db.collection('ss_teachers').doc(snap.docs[0].id).update({ 
@@ -614,11 +649,11 @@ const SundaySchool: React.FC = () => {
                       }
                   }
                   
-                  // Update department teachers list
-                  const teacherNames = importedTeachers.map(t => t.name);
-                  await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({ teachers: teacherNames });
+                  // Update department zirtirtute list
+                  const zirtirtuNames = importedZirtirtute.map(t => t.name);
+                  await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({ zirtirtute: zirtirtuNames });
                   
-                  alert("Teachers imported and profiles updated successfully!");
+                  alert("Zirtirtute imported and profiles updated successfully!");
                   fetchDepartments();
               } else {
                   alert("Database connection unavailable.");
@@ -675,7 +710,7 @@ const SundaySchool: React.FC = () => {
                       <div className="md:col-span-2 space-y-6">
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.teachers.length || 0})</h3>
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.zirtirtute.length || 0})</h3>
                                 {isAdmin && currentDept && (
                                     <div className="flex gap-2">
                                         <button 
@@ -687,12 +722,12 @@ const SundaySchool: React.FC = () => {
                                         </button>
                                         <button 
                                             onClick={() => {
-                                                setTeacherProfile({ id: '', name: '', role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
-                                                setIsTeacherEditModalOpen(true);
+                                                setZirtirtuProfile({ id: '', name: '', role: 'Zirtirtu', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
+                                                setIsZirtirtuEditModalOpen(true);
                                             }}
                                             className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
                                         >
-                                            <PlusCircle size={18} /> Add Teacher
+                                            <PlusCircle size={18} /> Add Zirtirtu
                                         </button>
                                         <button 
                                             onClick={() => { setEditingDept(currentDept); setIsEditModalOpen(true); }} 
@@ -711,19 +746,19 @@ const SundaySchool: React.FC = () => {
                                         <button 
                                             onClick={() => importInputRef.current?.click()} 
                                             className="p-2 bg-green-50 text-green-700 rounded-xl border border-green-200 hover:bg-green-100 shadow-sm transition" 
-                                            title="Import Teachers"
+                                            title="Import Zirtirtute"
                                         >
                                             <Upload size={18} />
                                         </button>
-                                        <input type="file" ref={importInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleImportTeachers} />
+                                        <input type="file" ref={importInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleImportZirtirtute} />
                                     </div>
                                 )}
                               </div>
                               
-                              {!currentDept || currentDept.teachers.length === 0 ? (
+                              {!currentDept || currentDept.zirtirtute.length === 0 ? (
                                   <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                                       <Users size={48} className="mx-auto text-slate-300 mb-3" />
-                                      <p className="text-slate-500">No teachers listed in database.</p>
+                                      <p className="text-slate-500">Zirtirtu tarlan a awm lo.</p>
                                   </div>
                               ) : (
                                   <DndContext 
@@ -732,27 +767,27 @@ const SundaySchool: React.FC = () => {
                                     onDragEnd={handleDragEnd}
                                   >
                                     <SortableContext 
-                                      items={currentDept.teachers}
+                                      items={currentDept.zirtirtute}
                                       strategy={verticalListSortingStrategy}
                                     >
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                          {currentDept.teachers.map((teacherName, i) => {
-                                              const profile = allTeachers.find(p => p.name === teacherName);
+                                          {currentDept.zirtirtute.map((zirtirtuName, i) => {
+                                              const profile = allZirtirtute.find(p => p.name === zirtirtuName);
                                               return (
-                                                  <SortableTeacherCard 
-                                                    key={teacherName}
-                                                    teacherName={teacherName}
+                                                  <SortableZirtirtuCard 
+                                                    key={zirtirtuName}
+                                                    zirtirtuName={zirtirtuName}
                                                     index={i}
                                                     profile={profile}
                                                     isAdmin={isAdmin}
                                                     onEdit={() => {
                                                       if (isAdmin) {
-                                                          const p = allTeachers.find(prof => prof.name === teacherName);
-                                                          setTeacherProfile(p || { id: '', name: teacherName, role: 'Teacher', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
-                                                          setIsTeacherEditModalOpen(true);
+                                                          const p = allZirtirtute.find(prof => prof.name === zirtirtuName);
+                                                          setZirtirtuProfile(p || { id: '', name: zirtirtuName, role: 'Zirtirtu', imageUrl: '', description: '', qualification: '', biography: '' } as Staff);
+                                                          setIsZirtirtuEditModalOpen(true);
                                                       }
                                                     }}
-                                                    onRemove={() => handleRemoveTeacherFromDept(teacherName)}
+                                                    onRemove={() => handleRemoveZirtirtuFromDept(zirtirtuName)}
                                                   />
                                               );
                                           })}
@@ -785,8 +820,8 @@ const SundaySchool: React.FC = () => {
 
                           {isAdmin && (
                               <div className="space-y-2">
-                                  <button onClick={handleClearTeachersExceptPuitling} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition shadow-sm">
-                                      <Trash size={16} /> Clear Teachers (Excl. Puitling)
+                                  <button onClick={handleClearZirtirtuteExceptPuitling} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition shadow-sm">
+                                      <Trash size={16} /> Clear Zirtirtute (Excl. Puitling)
                                   </button>
                                   <button onClick={handleSeed} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-red-50 text-red-700 border border-red-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition shadow-sm">
                                       <Database size={16} /> {isSeeding ? 'Resetting...' : 'Factory Reset Firebase'}
@@ -934,8 +969,8 @@ const SundaySchool: React.FC = () => {
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Description</label><textarea className="w-full border border-slate-200 p-3 rounded-xl h-24 focus:ring-2 focus:ring-church-500 outline-none resize-none" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} /></div>
                           <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Teachers (comma separated)</label>
-                            <textarea className="w-full border border-slate-200 p-3 rounded-xl h-32 focus:ring-2 focus:ring-church-500 outline-none font-sans text-sm" value={editingDept.teachers?.join(', ') || ''} onChange={e => setEditingDept({...editingDept, teachers: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} placeholder="Hruaitluanga, Lalnunmawii, etc." />
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirtirtute (comma separated)</label>
+                            <textarea className="w-full border border-slate-200 p-3 rounded-xl h-32 focus:ring-2 focus:ring-church-500 outline-none font-sans text-sm" value={editingDept.zirtirtute?.join(', ') || ''} onChange={e => setEditingDept({...editingDept, zirtirtute: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} placeholder="Hruaitluanga, Lalnunmawii, etc." />
                           </div>
                       </div>
                       <div className="p-8 border-t bg-slate-50 flex justify-end gap-3">
@@ -946,15 +981,15 @@ const SundaySchool: React.FC = () => {
               </div>
           )}
 
-          {/* Teacher Profile View Modal Removed */}
+          {/* Zirtirtu Profile View Modal Removed */}
 
-          {/* Teacher Edit Modal */}
-          {isTeacherEditModalOpen && (
+          {/* Zirtirtu Edit Modal */}
+          {isZirtirtuEditModalOpen && (
               <StaffEditModal
-                  staff={teacherProfile || { name: selectedTeacherName!, role: 'Teacher' }}
-                  onClose={() => setIsTeacherEditModalOpen(false)}
-                  onSave={handleSaveTeacherProfile}
-                  onDelete={handleDeleteTeacherProfile}
+                  staff={zirtirtuProfile || { name: selectedZirtirtuName!, role: 'Zirtirtu' }}
+                  onClose={() => setIsZirtirtuEditModalOpen(false)}
+                  onSave={handleSaveZirtirtuProfile}
+                  onDelete={handleDeleteZirtirtuProfile}
                   isLoading={isSaving}
                   showDeleteConfirm={showDeleteConfirm}
                   setShowDeleteConfirm={setShowDeleteConfirm}
@@ -1119,7 +1154,7 @@ const ReportEntrySection: React.FC<{
     return (
         <div className="space-y-6">
             <div className={`p-6 rounded-3xl border shadow-sm ${bgClass}`}>
-                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 border-b pb-2 ${labelClass}`}>Zirtirtu (Teachers)</h5>
+                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 border-b pb-2 ${labelClass}`}>Zirtirtu</h5>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Kal Zat</label>
