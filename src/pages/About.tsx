@@ -9,6 +9,7 @@ import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
 import { translations } from '../translations';
+import { ProtectedContact } from '../components/ProtectedContact';
 
 // Define the structure for the editable content
 interface AboutPageContent {
@@ -435,15 +436,14 @@ const About: React.FC = () => {
                                      </div>
                                 )}
                                 
-                                {/* Contact Buttons */}
                                 {selectedLeader.phoneNumber && (
-                                    <div className="flex gap-2 justify-center md:justify-start mt-3">
-                                        <a href={`tel:${selectedLeader.phoneNumber}`} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
-                                            <Phone size={12} /> Call
-                                        </a>
-                                        <a href={`https://wa.me/${selectedLeader.phoneNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold transition">
-                                            <MessageCircle size={12} /> WhatsApp
-                                        </a>
+                                    <div className="mt-3">
+                                        <ProtectedContact 
+                                            phone={selectedLeader.phoneNumber} 
+                                            name={selectedLeader.name} 
+                                            variant="full" 
+                                            className="max-w-[280px]"
+                                        />
                                     </div>
                                 )}
                             </div>

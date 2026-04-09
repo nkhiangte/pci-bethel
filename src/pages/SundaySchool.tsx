@@ -13,6 +13,7 @@ import {
   Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle,
   GripVertical
 } from 'lucide-react';
+import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
 
@@ -108,26 +109,11 @@ const SortableTeacherCard: React.FC<SortableTeacherCardProps> = ({
           
           {profile?.phoneNumber && (
               <div className="flex items-center gap-2 mt-2">
-                  <div className="flex gap-1.5">
-                      <a 
-                        href={`tel:${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
-                        onClick={e => e.stopPropagation()} 
-                        className="p-1.5 bg-church-50 text-church-600 rounded-lg hover:bg-church-100 transition-colors border border-church-100 shadow-sm"
-                        title="Call"
-                      >
-                          <Phone size={12} />
-                      </a>
-                      <a 
-                        href={`https://wa.me/91${profile.phoneNumber.replace(/[^0-9]/g, '')}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        onClick={e => e.stopPropagation()} 
-                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors border border-green-100 shadow-sm"
-                        title="WhatsApp"
-                      >
-                          <MessageCircle size={12} />
-                      </a>
-                  </div>
+                  <ProtectedContact 
+                      phone={profile.phoneNumber} 
+                      name={teacherName} 
+                      variant="icon-only" 
+                  />
                   <span className="text-slate-400 text-[10px] font-mono">{profile.phoneNumber}</span>
               </div>
           )}

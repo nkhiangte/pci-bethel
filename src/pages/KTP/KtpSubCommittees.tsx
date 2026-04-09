@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Phone, MessageCircle, Loader } from 'lucide-react';
+import ProtectedContact from '../../components/ProtectedContact';
 import { db } from '../../services/firebase';
 import { KTPHruaitute, KTPSubCommittee } from '../../types';
 
@@ -40,12 +41,11 @@ const KtpSubCommittees: React.FC = () => {
                 </div>
                 {member.phone && (
                   <div className="flex items-center gap-1 shrink-0">
-                    <a href={`tel:${member.phone.replace(/\s+/g, '')}`} className="p-1.5 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition" title={`Call ${member.name}`}>
-                      <Phone size={12} />
-                    </a>
-                    <a href={`https://wa.me/91${member.phone.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 transition" title={`WhatsApp ${member.name}`}>
-                      <MessageCircle size={12} />
-                    </a>
+                    <ProtectedContact 
+                      phone={member.phone} 
+                      name={member.name} 
+                      variant="icon-only" 
+                    />
                   </div>
                 )}
               </li>

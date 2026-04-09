@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Phone, MessageCircle, Users, Loader, User } from 'lucide-react';
 import { db } from '../services/firebase';
 import { CommitteeMember, KTPMember, Committee, Ministry, KTPHruaitute } from '../types';
+import { ProtectedContact } from '../components/ProtectedContact';
 
 interface DirectoryMember {
   id: string;
@@ -238,24 +239,11 @@ const Directory: React.FC = () => {
                       <p className="text-xs text-slate-500 mt-0.5">{member.source}</p>
                     </div>
                     {member.phone && (
-                      <div className="flex items-center gap-2">
-                        <a 
-                          href={`tel:${member.phone}`}
-                          className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition-colors"
-                          title="Call"
-                        >
-                          <Phone size={18} />
-                        </a>
-                        <a 
-                          href={`https://wa.me/91${String(member.phone).replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-colors"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle size={18} />
-                        </a>
-                      </div>
+                      <ProtectedContact 
+                        phone={String(member.phone)} 
+                        name={member.name} 
+                        variant="icon-only" 
+                      />
                     )}
                   </div>
                 ))}

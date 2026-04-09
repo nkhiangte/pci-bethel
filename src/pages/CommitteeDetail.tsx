@@ -34,6 +34,7 @@ import {
   Phone,
   MessageCircle
 } from 'lucide-react';
+import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -1194,12 +1195,11 @@ const CommitteeDetail: React.FC = () => {
                         {member.phone && (
                           <div className="flex items-center gap-2">
                             <span className="text-slate-600 text-sm font-medium">{member.phone}</span>
-                            <a href={`tel:${member.phone}`} className="p-1.5 bg-church-100 text-church-600 rounded-lg hover:bg-church-200 transition-colors" title="Call">
-                              <Phone size={14} />
-                            </a>
-                            <a href={`https://wa.me/91${(member.phone || '').toString().replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors" title="WhatsApp">
-                              <MessageCircle size={14} />
-                            </a>
+                            <ProtectedContact 
+                              phone={member.phone} 
+                              name={member.name} 
+                              variant="icon-only" 
+                            />
                           </div>
                         )}
                       </div>

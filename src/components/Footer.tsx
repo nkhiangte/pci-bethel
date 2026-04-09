@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Youtube, MapPin, Phone, Mail, Lock, LogOut, MessageCircle } from 'lucide-react';
+import ProtectedContact from './ProtectedContact';
 import { CHURCH_NAME } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,19 +57,12 @@ const Footer: React.FC = () => {
                 <span>Bethel Veng, Champhai,<br/>Mizoram 796321</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center">
-                  <Phone size={18} className="mr-2 flex-shrink-0" />
-                  <a href="tel:+919862012345" className="hover:text-white transition">+91 98620 12345</a>
-                </div>
-                <a 
-                  href="https://wa.me/919862012345" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="p-1.5 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30 transition"
-                  title="WhatsApp"
-                >
-                  <MessageCircle size={14} />
-                </a>
+                <ProtectedContact 
+                  phone="+91 98620 12345" 
+                  name={CHURCH_NAME} 
+                  variant="full"
+                  className="bg-transparent border-none p-0 text-slate-300 hover:text-white"
+                />
               </div>
               <div className="flex items-center">
                 <Mail size={18} className="mr-2 flex-shrink-0" />
@@ -97,7 +91,7 @@ const Footer: React.FC = () => {
             <p className="text-xs text-church-200 font-medium uppercase tracking-wider">Property of Bethel Presbyterian Kohhran</p>
             <p className="text-[10px] text-church-300 mt-1">Archives & Library Committee</p>
             <p className="text-xs text-white mt-2 font-medium">
-              Powered by <a href="tel:9612447703" className="hover:text-church-200 transition-colors underline decoration-white/50">PrisMark</a>
+              Powered by <ProtectedContact phone="9612447703" name="PrisMark" variant="text-only" className="inline underline decoration-white/50 hover:text-church-200" />
             </p>
         </div>
       </div>
