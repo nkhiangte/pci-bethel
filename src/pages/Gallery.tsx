@@ -93,6 +93,7 @@ const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin
 
   const videoId = item.videoUrl ? getYouTubeId(item.videoUrl) : null;
   const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : item.imageUrl;
+  const isDriveLink = !!item.driveUrl;
 
   return (
     <div
@@ -101,21 +102,36 @@ const SortableGalleryItem: React.FC<SortableGalleryItemProps> = ({ item, isAdmin
       className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
     >
       <div 
-        className="aspect-square overflow-hidden cursor-pointer relative"
-        onClick={() => onPreview(item)}
+        className="aspect-square overflow-hidden cursor-pointer relative bg-slate-100 flex items-center justify-center"
+        onClick={() => {
+          if (isDriveLink) {
+            window.open(item.driveUrl, '_blank', 'noopener,noreferrer');
+          } else {
+            onPreview(item);
+          }
+        }}
       >
-        <img 
-          src={thumbnailUrl} 
-          alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
-        {item.videoUrl && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <Play size={24} className="text-church-600 ml-1" fill="currentColor" />
-            </div>
+        {isDriveLink ? (
+          <div className="flex flex-col items-center justify-center text-church-600 group-hover:scale-110 transition-transform duration-500">
+            <ExternalLink size={48} className="mb-2" />
+            <span className="font-bold text-sm">Google Drive</span>
           </div>
+        ) : (
+          <>
+            <img 
+              src={thumbnailUrl} 
+              alt={item.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              referrerPolicy="no-referrer"
+            />
+            {item.videoUrl && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <Play size={24} className="text-church-600 ml-1" fill="currentColor" />
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
       <div className="p-4 flex justify-between items-start">
@@ -205,7 +221,7 @@ const Gallery: React.FC = () => {
   // Modal states
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
-  const [itemType, setItemType] = useState<'photo' | 'video'>('photo');
+  const [itemType, setItemType] = useState<'photo' | 'video' | 'drive'>('photo');
   const [isEditingItem, setIsEditingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -214,7 +230,7 @@ const Gallery: React.FC = () => {
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   
   const [folderForm, setFolderForm] = useState<Partial<GalleryFolder>>({ name: '', date: new Date().toISOString().split('T')[0] });
-  const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', videoUrl: '', date: new Date().toISOString().split('T')[0] });
+  const [itemForm, setItemForm] = useState<Partial<GalleryItem>>({ title: '', imageUrl: '', videoUrl: '', driveUrl: '', date: new Date().toISOString().split('T')[0] });
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [categoryThumbnails, setCategoryThumbnails] = useState<Record<string, string>>({});
 
@@ -390,6 +406,7 @@ const Gallery: React.FC = () => {
     
     if (itemType === 'photo' && selectedFiles.length === 0 && !itemForm.imageUrl) return;
     if (itemType === 'video' && !itemForm.videoUrl) return;
+    if (itemType === 'drive' && !itemForm.driveUrl) return;
 
     setUploading(true);
     setUploadProgress(0);
@@ -397,7 +414,18 @@ const Gallery: React.FC = () => {
     try {
         if (itemType === 'video') {
             await db.collection('gallery').add({
-                ...itemForm,
+                title: itemForm.title,
+                date: itemForm.date,
+                videoUrl: itemForm.videoUrl,
+                category: currentCategory,
+                folderId: currentFolderId || null,
+                order: items.length
+            });
+        } else if (itemType === 'drive') {
+            await db.collection('gallery').add({
+                title: itemForm.title,
+                date: itemForm.date,
+                driveUrl: itemForm.driveUrl,
                 category: currentCategory,
                 folderId: currentFolderId || null,
                 order: items.length
@@ -405,7 +433,8 @@ const Gallery: React.FC = () => {
         } else if (selectedFiles.length === 0 && itemForm.imageUrl) {
             // Manual URL path
             await db.collection('gallery').add({
-                ...itemForm,
+                title: itemForm.title,
+                date: itemForm.date,
                 imageUrl: getDirectImageUrl(itemForm.imageUrl),
                 category: currentCategory,
                 folderId: currentFolderId || null,
@@ -444,8 +473,8 @@ const Gallery: React.FC = () => {
                 const order = items.length + i;
 
                 await db.collection('gallery').add({
-                    ...itemForm,
                     title: totalFiles > 1 ? `${itemForm.title} (${i + 1})` : itemForm.title,
+                    date: itemForm.date,
                     imageUrl: downloadUrl,
                     category: currentCategory,
                     folderId: currentFolderId || null,
@@ -499,11 +528,14 @@ const Gallery: React.FC = () => {
     if (!editingItem || !editingItem.title) return;
     
     try {
-        await db.collection('gallery').doc(editingItem.id).update({
+        const updateData: any = {
             title: editingItem.title,
             date: editingItem.date,
-            videoUrl: editingItem.videoUrl || null
-        });
+        };
+        if (editingItem.videoUrl !== undefined) updateData.videoUrl = editingItem.videoUrl || null;
+        if (editingItem.driveUrl !== undefined) updateData.driveUrl = editingItem.driveUrl || null;
+
+        await db.collection('gallery').doc(editingItem.id).update(updateData);
         setIsEditingItem(false);
         setEditingItem(null);
     } catch (error) {
@@ -977,6 +1009,12 @@ const Gallery: React.FC = () => {
                 >
                   Video
                 </button>
+                <button 
+                  onClick={() => setItemType('drive')}
+                  className={`flex-1 py-3 text-sm font-bold transition ${itemType === 'drive' ? 'text-church-600 border-b-2 border-church-600 bg-church-50/50' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Drive Link
+                </button>
               </div>
 
               <form onSubmit={handleSaveItem} className="p-6 space-y-4">
@@ -987,13 +1025,26 @@ const Gallery: React.FC = () => {
                     type="text"
                     disabled={uploading}
                     className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
-                    placeholder={`e.g. ${itemType === 'photo' ? 'Group Photo' : 'Worship Video'}`}
+                    placeholder={`e.g. ${itemType === 'photo' ? 'Group Photo' : itemType === 'video' ? 'Worship Video' : 'Google Drive Folder'}`}
                     value={itemForm.title}
                     onChange={e => setItemForm({...itemForm, title: e.target.value})}
                   />
                 </div>
                 
-                {itemType === 'photo' ? (
+                {itemType === 'drive' ? (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Google Drive URL</label>
+                    <input 
+                      type="url"
+                      required
+                      disabled={uploading}
+                      className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none transition disabled:bg-slate-50"
+                      placeholder="https://drive.google.com/..."
+                      value={itemForm.driveUrl || ''}
+                      onChange={e => setItemForm({...itemForm, driveUrl: e.target.value})}
+                    />
+                  </div>
+                ) : itemType === 'photo' ? (
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Upload Photos</label>
                     <div className="mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-church-400 transition-colors relative overflow-hidden">
