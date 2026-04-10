@@ -23,7 +23,8 @@ import {
   intermediateSyllabus, 
   seniorSyllabus, 
   sacramentSyllabus, 
-  juniorSyllabus 
+  juniorSyllabus,
+  puitlingSyllabus 
 } from '../constants/sundaySchoolSyllabus';
 import { getNextSundayLesson } from '../services/syllabusService';
 
@@ -848,7 +849,8 @@ const SundaySchool: React.FC = () => {
                               intermediate: intermediateSyllabus,
                               senior: seniorSyllabus,
                               sacrament: sacramentSyllabus,
-                              junior: juniorSyllabus
+                              junior: juniorSyllabus,
+                              puitling: puitlingSyllabus
                             };
                             const currentSyllabus = syllabuses[departmentId || ''];
                             

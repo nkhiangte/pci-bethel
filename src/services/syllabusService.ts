@@ -5,7 +5,8 @@ import {
   intermediateSyllabus, 
   seniorSyllabus, 
   sacramentSyllabus, 
-  juniorSyllabus 
+  juniorSyllabus,
+  puitlingSyllabus 
 } from '../constants/sundaySchoolSyllabus';
 
 export const seedSyllabus = async () => {
@@ -19,7 +20,8 @@ export const seedSyllabus = async () => {
       { id: 'intermediate', data: intermediateSyllabus },
       { id: 'senior', data: seniorSyllabus },
       { id: 'sacrament', data: sacramentSyllabus },
-      { id: 'junior', data: juniorSyllabus }
+      { id: 'junior', data: juniorSyllabus },
+      { id: 'puitling', data: puitlingSyllabus }
     ];
 
     allSyllabuses.forEach(({ id, data }) => {
@@ -74,7 +76,8 @@ export const getNextSundayLesson = async (departmentId: string) => {
       intermediate: intermediateSyllabus,
       senior: seniorSyllabus,
       sacrament: sacramentSyllabus,
-      junior: juniorSyllabus
+      junior: juniorSyllabus,
+      puitling: puitlingSyllabus
     };
 
     if (syllabuses[departmentId]) {
