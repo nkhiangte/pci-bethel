@@ -192,6 +192,15 @@ const normalizeName = (name: string): string => {
   return normalized.replace(/\s+/g, ' ').trim();
 };
 
+const formatDate = (dateStr: string | undefined) => {
+  if (!dateStr || dateStr === 'Tarlan a awm lo') return dateStr || 'Tarlan a awm lo';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+};
+
 const SundaySchool: React.FC = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
   const { t } = useLanguage();
@@ -796,21 +805,25 @@ const SundaySchool: React.FC = () => {
                                       </div>
                                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date</span>
-                                          <p className="text-lg font-bold text-slate-800">{currentDept?.lessonDate || 'Tarlan a awm lo'}</p>
+                                          <p className="text-lg font-bold text-slate-800">{formatDate(currentDept?.lessonDate)}</p>
                                       </div>
                                   </div>
                                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
                                       <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
                                   </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thuvawn</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.memoryVerse || 'Tarlan a awm lo'}</p>
-                                  </div>
+                                  {departmentId === 'puitling' && (
+                                    <>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thuvawn</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.memoryVerse || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                    </>
+                                  )}
                               </div>
                           </div>
                           
@@ -832,9 +845,14 @@ const SundaySchool: React.FC = () => {
                                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
                                     <h3 className="text-xl font-black text-slate-800 mb-6">Syllabus Calendar</h3>
                                     <div className="space-y-2">
+                                        <div className="grid grid-cols-4 gap-4 p-3 border-b-2 border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            <div>Date</div>
+                                            <div>Zirlai No.</div>
+                                            <div className="col-span-2">Zirlai</div>
+                                        </div>
                                         {currentSyllabus.map((item, index) => (
                                             <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm">
-                                                <div className="font-bold text-church-700">{item.date}</div>
+                                                <div className="font-bold text-church-700">{formatDate(item.date)}</div>
                                                 <div className="font-bold text-slate-600">{item.lessonNumber}</div>
                                                 <div className="col-span-2 text-slate-800">{item.lessonName}</div>
                                             </div>
@@ -1120,10 +1138,12 @@ const SundaySchool: React.FC = () => {
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai No.</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonNumber || ''} onChange={e => setEditingDept({...editingDept, lessonNumber: e.target.value})} /></div>
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</label><input type="date" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonDate || ''} onChange={e => setEditingDept({...editingDept, lessonDate: e.target.value})} /></div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bible Chang</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.bibleVerse || ''} onChange={e => setEditingDept({...editingDept, bibleVerse: e.target.value})} /></div>
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thuvawn</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.memoryVerse || ''} onChange={e => setEditingDept({...editingDept, memoryVerse: e.target.value})} /></div>
-                          </div>
+                          {departmentId === 'puitling' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bible Chang</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.bibleVerse || ''} onChange={e => setEditingDept({...editingDept, bibleVerse: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thuvawn</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.memoryVerse || ''} onChange={e => setEditingDept({...editingDept, memoryVerse: e.target.value})} /></div>
+                            </div>
+                          )}
                           <div>
                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Hriattirna</label>
                               <Suspense fallback={<div>Loading editor...</div>}>
