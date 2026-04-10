@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../services/firebase';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { db, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Save, Plus, Trash } from 'lucide-react';
+
+const ReactQuill = lazy(() => import('react-quill'));
 
 const SundaySchoolDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -15,26 +16,34 @@ const SundaySchoolDashboard: React.FC = () => {
   useEffect(() => {
     // Fetch description and leaders from Firestore
     const fetchData = async () => {
-      const doc = await db.collection('sundaySchoolSettings').doc('dashboard').get();
-      if (doc.exists) {
-        const data = doc.data();
-        setDescription(data?.description || '');
-        setLeaders(data?.leaders || []);
+      try {
+        const doc = await db.collection('sundaySchoolSettings').doc('dashboard').get();
+        if (doc.exists) {
+          const data = doc.data();
+          setDescription(data?.description || '');
+          setLeaders(data?.leaders || []);
+        }
+        
+        // Fetch departments
+        const deptsSnapshot = await db.collection('sundaySchoolDepartments').get();
+        setDepartments(deptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, 'sundaySchoolSettings/dashboard or sundaySchoolDepartments');
       }
-      
-      // Fetch departments
-      const deptsSnapshot = await db.collection('sundaySchoolDepartments').get();
-      setDepartments(deptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
     fetchData();
   }, []);
 
   const handleSave = async () => {
-    await db.collection('sundaySchoolSettings').doc('dashboard').set({
-      description,
-      leaders
-    });
-    alert('Saved!');
+    try {
+      await db.collection('sundaySchoolSettings').doc('dashboard').set({
+        description,
+        leaders
+      });
+      alert('Saved!');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'sundaySchoolSettings/dashboard');
+    }
   };
 
   const addLeader = () => {
@@ -53,7 +62,9 @@ const SundaySchoolDashboard: React.FC = () => {
       {isAdmin && (
         <div className="bg-white p-6 rounded-lg shadow mb-6">
           <h2 className="text-xl font-bold mb-4">Edit Description</h2>
-          <ReactQuill theme="snow" value={description} onChange={setDescription} className="mb-4" />
+          <Suspense fallback={<div>Loading editor...</div>}>
+            <ReactQuill theme="snow" value={description} onChange={setDescription} className="mb-4" />
+          </Suspense>
           
           <h2 className="text-xl font-bold mb-4">Manage Leaders</h2>
           <div className="flex gap-2 mb-4">
