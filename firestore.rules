@@ -198,6 +198,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /sundaySchoolSyllabus/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /ss_teachers/{docId} {
       allow read: if true;
       allow write: if isAdmin();

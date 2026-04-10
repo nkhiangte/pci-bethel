@@ -1,10 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { db, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import 'react-quill/dist/quill.snow.css';
-import { Save, Plus, Trash } from 'lucide-react';
+import 'react-quill-new/dist/quill.snow.css';
+import { Save, Plus, Trash, Database } from 'lucide-react';
+import { seedSyllabus } from '../services/syllabusService';
 
-const ReactQuill = lazy(() => import('react-quill'));
+const ReactQuill = lazy(() => import('react-quill-new'));
 
 const SundaySchoolDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -12,6 +13,7 @@ const SundaySchoolDashboard: React.FC = () => {
   const [leaders, setLeaders] = useState<any[]>([]);
   const [newLeader, setNewLeader] = useState({ name: '', role: '' });
   const [departments, setDepartments] = useState<any[]>([]);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     // Fetch description and leaders from Firestore
@@ -46,6 +48,19 @@ const SundaySchoolDashboard: React.FC = () => {
     }
   };
 
+  const handleSeedSyllabus = async () => {
+    if (!window.confirm('This will seed the syllabus data to Firestore. Continue?')) return;
+    setIsSeeding(true);
+    try {
+      await seedSyllabus();
+      alert('Syllabus seeded successfully!');
+    } catch (error) {
+      alert('Failed to seed syllabus');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const addLeader = () => {
     setLeaders([...leaders, newLeader]);
     setNewLeader({ name: '', role: '' });
@@ -66,7 +81,7 @@ const SundaySchoolDashboard: React.FC = () => {
             <ReactQuill theme="snow" value={description} onChange={setDescription} className="mb-4" />
           </Suspense>
           
-          <h2 className="text-xl font-bold mb-4">Manage Leaders</h2>
+          <h2 className="text-xl font-bold mb-4">Manage Sunday School Hotute</h2>
           <div className="flex gap-2 mb-4">
             <input placeholder="Name" value={newLeader.name} onChange={e => setNewLeader({...newLeader, name: e.target.value})} className="border p-2 rounded" />
             <input placeholder="Role" value={newLeader.role} onChange={e => setNewLeader({...newLeader, role: e.target.value})} className="border p-2 rounded" />
@@ -81,9 +96,18 @@ const SundaySchoolDashboard: React.FC = () => {
             ))}
           </ul>
           
-          <button onClick={handleSave} className="bg-green-500 text-white p-3 rounded mt-4 flex items-center gap-2">
-            <Save /> Save Changes
-          </button>
+          <div className="flex gap-4 mt-4">
+            <button onClick={handleSave} className="bg-green-500 text-white p-3 rounded flex items-center gap-2 hover:bg-green-600 transition-colors">
+              <Save /> Save Changes
+            </button>
+            <button 
+              onClick={handleSeedSyllabus} 
+              disabled={isSeeding}
+              className="bg-purple-500 text-white p-3 rounded flex items-center gap-2 hover:bg-purple-600 transition-colors disabled:opacity-50"
+            >
+              <Database /> {isSeeding ? 'Seeding...' : 'Seed Syllabus to Firestore'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -91,7 +115,7 @@ const SundaySchoolDashboard: React.FC = () => {
         <h2 className="text-xl font-bold mb-4">Sunday School Description</h2>
         <div dangerouslySetInnerHTML={{ __html: description }} />
         
-        <h2 className="text-xl font-bold mt-6 mb-4">Leaders</h2>
+        <h2 className="text-xl font-bold mt-6 mb-4">Sunday School Hotute</h2>
         <ul>
           {leaders.map((l, i) => (
             <li key={i}>{l.name} - {l.role}</li>

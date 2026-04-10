@@ -214,6 +214,7 @@ export interface SundaySchoolDepartment {
   time?: string;
   lessonNumber?: string;
   lessonDate?: string;
+  lessonName?: string;
   bibleVerse?: string;
   memoryVerse?: string;
   announcements?: string;

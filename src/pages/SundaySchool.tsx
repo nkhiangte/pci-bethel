@@ -16,9 +16,11 @@ import {
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
+import { beginnerSyllabus } from '../constants/beginnerSyllabus';
+import { getNextSundayLesson } from '../services/syllabusService';
 
-const ReactQuill = lazy(() => import('react-quill'));
+const ReactQuill = lazy(() => import('react-quill-new'));
 
 // dnd-kit imports
 import {
@@ -143,14 +145,14 @@ const SortableZirtirtuCard: React.FC<SortableZirtirtuCardProps> = ({
 };
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
-    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' }
+    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' }
 ];
 
 const EMPTY_SEGMENT: SSReportSegment = {
@@ -245,21 +247,23 @@ const SundaySchool: React.FC = () => {
 
     try {
         const snapshot = await db.collection('sundaySchoolDepartments').get();
+        let fetchedDepts: SundaySchoolDepartment[] = [];
+
         if (!snapshot.empty) {
             const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as any[];
-            const merged = INITIAL_DEPARTMENTS_DATA.map(init => {
+            fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(init => {
                 const found = fetchedData.find(f => f.id.toLowerCase() === init.id.toLowerCase());
                 if (found) {
                     return {
                         ...init,
                         ...found,
                         zirtirtute: found.zirtirtute || found.teachers || found.zirtirtu || [],
-                        students: found.students || found.studentCount || 0
+                        students: found.students || found.studentCount || 0,
+                        name: getDeptName(init.id)
                     };
                 }
                 return { ...init, name: getDeptName(init.id) };
-            });
-            setDepartments(merged as SundaySchoolDepartment[]);
+            }) as SundaySchoolDepartment[];
         } else {
             // Try to fetch from archives as a secondary fallback
             try {
@@ -270,7 +274,7 @@ const SundaySchool: React.FC = () => {
                     .get();
                 
                 if (!archiveSnapshot.empty) {
-                    const reconstructed = INITIAL_DEPARTMENTS_DATA.map(init => {
+                    fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(init => {
                         const found = archiveSnapshot.docs.find((doc: any) => {
                             const data = doc.data();
                             return data.department?.toLowerCase() === init.id.toLowerCase();
@@ -284,22 +288,38 @@ const SundaySchool: React.FC = () => {
                                 asstLeader: data.ss_dept_asst_leader || '',
                                 secretary: data.ss_dept_secretary || '',
                                 zirtirtute: data.ss_dept_zirtirtute ? data.ss_dept_zirtirtute.split(', ').map((s: string) => s.trim()) : [],
-                                students: data.students || 0
+                                students: data.students || 0,
+                                name: getDeptName(init.id)
                             };
                         }
                         return { ...init, name: getDeptName(init.id) };
-                    });
-                    setDepartments(reconstructed as SundaySchoolDepartment[]);
+                    }) as SundaySchoolDepartment[];
                 } else {
-                    const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
-                    setDepartments(mappedData as SundaySchoolDepartment[]);
+                    fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
                 }
             } catch (archiveError) {
                 console.error("Error fetching from archives:", archiveError);
-                const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
-                setDepartments(mappedData as SundaySchoolDepartment[]);
+                fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
             }
         }
+
+        // Auto-fill next Sunday lesson if blank
+        const updatedWithSyllabus = await Promise.all(fetchedDepts.map(async (dept) => {
+            if (!dept.lessonNumber || dept.lessonNumber === '') {
+                const nextLesson = await getNextSundayLesson(dept.id);
+                if (nextLesson) {
+                    return {
+                        ...dept,
+                        lessonNumber: nextLesson.lessonNumber,
+                        lessonDate: nextLesson.date,
+                        lessonName: nextLesson.lessonName
+                    };
+                }
+            }
+            return dept;
+        }));
+
+        setDepartments(updatedWithSyllabus);
 
         // Also fetch all zirtirtu profiles to display roles in the list
         // Fetch from all staff collections to include Elders/Pastors who might be teaching
@@ -732,6 +752,8 @@ const SundaySchool: React.FC = () => {
 
   const isPuitling = currentDept?.id === 'puitling';
 
+  const isBeginner = departmentId === 'beginner';
+
   return (
       <div className="py-12 bg-slate-50 min-h-screen">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -797,6 +819,10 @@ const SundaySchool: React.FC = () => {
                                       </div>
                                   </div>
                                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
                                       <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
                                   </div>
@@ -806,6 +832,21 @@ const SundaySchool: React.FC = () => {
                                   </div>
                               </div>
                           </div>
+                          
+                          {isBeginner && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
+                                <h3 className="text-xl font-black text-slate-800 mb-6">Syllabus Calendar</h3>
+                                <div className="space-y-2">
+                                    {beginnerSyllabus.map((item, index) => (
+                                        <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm">
+                                            <div className="font-bold text-church-700">{item.date}</div>
+                                            <div className="font-bold text-slate-600">{item.lessonNumber}</div>
+                                            <div className="col-span-2 text-slate-800">{item.lessonName}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                          )}
 
                           {/* Hriattirna Section */}
                           {currentDept?.announcements && currentDept.announcements !== '<p><br></p>' && (
@@ -1075,7 +1116,8 @@ const SundaySchool: React.FC = () => {
                           <div className="grid grid-cols-2 gap-4">
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inkhawm Tan Hun</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.time || ''} onChange={e => setEditingDept({...editingDept, time: e.target.value})} /></div>
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
-                          </div>
+                           </div>
+                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai Hming</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonName || ''} onChange={e => setEditingDept({...editingDept, lessonName: e.target.value})} /></div>
                           <div className="grid grid-cols-2 gap-4">
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai No.</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonNumber || ''} onChange={e => setEditingDept({...editingDept, lessonNumber: e.target.value})} /></div>
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</label><input type="date" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonDate || ''} onChange={e => setEditingDept({...editingDept, lessonDate: e.target.value})} /></div>
