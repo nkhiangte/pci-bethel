@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,8 +16,9 @@ import {
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+
+const ReactQuill = lazy(() => import('react-quill'));
 
 // dnd-kit imports
 import {
@@ -142,14 +143,14 @@ const SortableZirtirtuCard: React.FC<SortableZirtirtuCardProps> = ({
 };
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
-    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
-    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' }
+    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonNumber: '', lessonDate: '', bibleVerse: '', memoryVerse: '', announcements: '' }
 ];
 
 const EMPTY_SEGMENT: SSReportSegment = {
@@ -782,12 +783,18 @@ const SundaySchool: React.FC = () => {
                           {/* Kar tin zirlai Section */}
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
-                                  <BookOpen className="text-church-600"/> Kar Tin Zirlai
+                                  <BookOpen className="text-church-600"/> Zirlai No. & Date
                               </h3>
                               <div className="space-y-4">
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai No.</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.lessonNumber || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.lessonDate || 'Tarlan a awm lo'}</p>
+                                      </div>
                                   </div>
                                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
@@ -1069,14 +1076,19 @@ const SundaySchool: React.FC = () => {
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inkhawm Tan Hun</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.time || ''} onChange={e => setEditingDept({...editingDept, time: e.target.value})} /></div>
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
                           </div>
-                          <div className="grid grid-cols-3 gap-4">
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai Hming</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonName || ''} onChange={e => setEditingDept({...editingDept, lessonName: e.target.value})} /></div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai No.</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonNumber || ''} onChange={e => setEditingDept({...editingDept, lessonNumber: e.target.value})} /></div>
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</label><input type="date" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonDate || ''} onChange={e => setEditingDept({...editingDept, lessonDate: e.target.value})} /></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bible Chang</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.bibleVerse || ''} onChange={e => setEditingDept({...editingDept, bibleVerse: e.target.value})} /></div>
                               <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thuvawn</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.memoryVerse || ''} onChange={e => setEditingDept({...editingDept, memoryVerse: e.target.value})} /></div>
                           </div>
                           <div>
                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Hriattirna</label>
-                              <ReactQuill theme="snow" value={editingDept.announcements || ''} onChange={val => setEditingDept({...editingDept, announcements: val})} className="bg-white rounded-xl" />
+                              <Suspense fallback={<div>Loading editor...</div>}>
+                                <ReactQuill theme="snow" value={editingDept.announcements || ''} onChange={val => setEditingDept({...editingDept, announcements: val})} className="bg-white rounded-xl" />
+                              </Suspense>
                           </div>
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Description</label><textarea className="w-full border border-slate-200 p-3 rounded-xl h-24 focus:ring-2 focus:ring-church-500 outline-none resize-none" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} /></div>
                           <div>

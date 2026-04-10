@@ -212,7 +212,8 @@ export interface SundaySchoolDepartment {
   ageGroup?: string;
   room?: string;
   time?: string;
-  lessonName?: string;
+  lessonNumber?: string;
+  lessonDate?: string;
   bibleVerse?: string;
   memoryVerse?: string;
   announcements?: string;
