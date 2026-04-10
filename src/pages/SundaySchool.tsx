@@ -246,106 +246,78 @@ const SundaySchool: React.FC = () => {
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
-    if (!db || !db.collection) {
-        const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
-        setDepartments(mappedData as SundaySchoolDepartment[]);
-        setLoading(false);
-        return;
-    }
-
+    let fetchedDepts: SundaySchoolDepartment[] = [];
+    
     try {
-        const snapshot = await db.collection('sundaySchoolDepartments').get();
-        let fetchedDepts: SundaySchoolDepartment[] = [];
-
-        if (!snapshot.empty) {
-            const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as any[];
-            fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(init => {
-                const found = fetchedData.find(f => f.id.toLowerCase() === init.id.toLowerCase());
-                if (found) {
-                    return {
-                        ...init,
-                        ...found,
-                        zirtirtute: found.zirtirtute || found.teachers || found.zirtirtu || [],
-                        students: found.students || found.studentCount || 0,
-                        name: getDeptName(init.id)
-                    };
-                }
-                return { ...init, name: getDeptName(init.id) };
-            }) as SundaySchoolDepartment[];
+        if (!db || !db.collection) {
+            fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
         } else {
-            // Try to fetch from archives as a secondary fallback
-            try {
-                const archiveSnapshot = await db.collection('archives')
-                    .where('category', '==', 'Rawngbawltu te')
-                    .where('subCategory', '==', 'SUNDAY SCHOOL')
-                    .where('ss_year', '==', '2025')
-                    .get();
-                
-                if (!archiveSnapshot.empty) {
-                    fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(init => {
-                        const found = archiveSnapshot.docs.find((doc: any) => {
-                            const data = doc.data();
-                            return data.department?.toLowerCase() === init.id.toLowerCase();
-                        });
-                        
-                        if (found) {
-                            const data = found.data();
-                            return {
-                                ...init,
-                                leader: data.ss_dept_leader || '',
-                                asstLeader: data.ss_dept_asst_leader || '',
-                                secretary: data.ss_dept_secretary || '',
-                                zirtirtute: data.ss_dept_zirtirtute ? data.ss_dept_zirtirtute.split(', ').map((s: string) => s.trim()) : [],
-                                students: data.students || 0,
-                                name: getDeptName(init.id)
-                            };
-                        }
-                        return { ...init, name: getDeptName(init.id) };
-                    }) as SundaySchoolDepartment[];
-                } else {
-                    fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
-                }
-            } catch (archiveError) {
-                console.error("Error fetching from archives:", archiveError);
+            const snapshot = await db.collection('sundaySchoolDepartments').get();
+            if (!snapshot.empty) {
+                const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as any[];
+                fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(init => {
+                    const found = fetchedData.find(f => f.id.toLowerCase() === init.id.toLowerCase());
+                    if (found) {
+                        return {
+                            ...init,
+                            ...found,
+                            zirtirtute: found.zirtirtute || found.teachers || found.zirtirtu || [],
+                            students: found.students || found.studentCount || 0,
+                            name: getDeptName(init.id)
+                        };
+                    }
+                    return { ...init, name: getDeptName(init.id) };
+                }) as SundaySchoolDepartment[];
+            } else {
                 fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
             }
         }
-
-        // Auto-fill next Sunday lesson if blank
-        const updatedWithSyllabus = await Promise.all(fetchedDepts.map(async (dept) => {
-            if (!dept.lessonNumber || dept.lessonNumber === '') {
-                const nextLesson = await getNextSundayLesson(dept.id);
-                if (nextLesson) {
-                    return {
-                        ...dept,
-                        lessonNumber: nextLesson.lessonNumber,
-                        lessonDate: nextLesson.date,
-                        lessonName: nextLesson.lessonName
-                    };
-                }
-            }
-            return dept;
-        }));
-
-        setDepartments(updatedWithSyllabus);
-
-        // Also fetch all zirtirtu profiles to display roles in the list
-        // Fetch from all staff collections to include Elders/Pastors who might be teaching
-        const staffColls = ['ss_teachers', 'elders', 'pastors', 'proPastors'];
-        let combinedStaff: Staff[] = [];
-        
-        for (const coll of staffColls) {
-          const snap = await db.collection(coll).get();
-          const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff));
-          combinedStaff = [...combinedStaff, ...data];
-        }
-        
-        setAllZirtirtute(combinedStaff);
     } catch (e) {
-        console.error("Error fetching departments:", e);
-        const mappedData = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) }));
-        setDepartments(mappedData as SundaySchoolDepartment[]);
+        console.error("Error fetching departments from Firestore:", e);
+        fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
     }
+
+    // Auto-fill next Sunday lesson if blank
+    console.log("Auto-filling syllabus for departments...");
+    const updatedWithSyllabus = await Promise.all(fetchedDepts.map(async (dept) => {
+        const isLessonBlank = !dept.lessonNumber || dept.lessonNumber.trim() === '' || dept.lessonNumber === 'Tarlan a awm lo';
+        if (isLessonBlank) {
+            console.log(`Attempting to auto-fill lesson for ${dept.id}`);
+            const nextLesson = await getNextSundayLesson(dept.id);
+            if (nextLesson) {
+                console.log(`Auto-filled ${dept.id} with:`, nextLesson.lessonName);
+                return {
+                    ...dept,
+                    lessonNumber: nextLesson.lessonNumber,
+                    lessonDate: nextLesson.date,
+                    lessonName: nextLesson.lessonName
+                };
+            } else {
+                console.log(`No lesson found for ${dept.id}`);
+            }
+        }
+        return dept;
+    }));
+
+    setDepartments(updatedWithSyllabus);
+
+    // Fetch teachers profiles
+    try {
+        if (db && db.collection) {
+            const staffColls = ['ss_teachers', 'elders', 'pastors', 'proPastors'];
+            let combinedStaff: Staff[] = [];
+            
+            for (const coll of staffColls) {
+              const snap = await db.collection(coll).get();
+              const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff));
+              combinedStaff = [...combinedStaff, ...data];
+            }
+            setAllZirtirtute(combinedStaff);
+        }
+    } catch (staffError) {
+        console.error("Error fetching staff profiles:", staffError);
+    }
+    
     setLoading(false);
   }, [getDeptName]);
 
@@ -367,8 +339,9 @@ const SundaySchool: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    console.log("Fetching departments for:", departmentId);
     fetchDepartments();
-  }, [fetchDepartments]);
+  }, [fetchDepartments, departmentId]);
 
   useEffect(() => {
       if (departmentId === 'report') {

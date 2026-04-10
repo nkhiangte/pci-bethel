@@ -48,27 +48,29 @@ export const getNextSundayLesson = async (departmentId: string) => {
     const today = new Date();
     // Find next Sunday
     const nextSunday = new Date(today);
-    nextSunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
+    // If today is Sunday, we might want today's lesson or next week's.
+    // Usually, on Sunday morning, people want today's lesson.
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    const daysUntilSunday = (7 - today.getDay()) % 7;
+    nextSunday.setDate(today.getDate() + daysUntilSunday);
     
-    const dateStr = nextSunday.toISOString().split('T')[0];
+    // Use local time for YYYY-MM-DD to avoid timezone shifts
+    const y = nextSunday.getFullYear();
+    const m = String(nextSunday.getMonth() + 1).padStart(2, '0');
+    const d = String(nextSunday.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
     
+    console.log(`Fetching lesson for ${departmentId} on ${dateStr}`);
+
     // Try composite ID first
     const docId = `${departmentId}_${dateStr}`;
     const doc = await db.collection('sundaySchoolSyllabus').doc(docId).get();
     
     if (doc.exists) {
+      console.log(`Found lesson in Firestore:`, doc.data());
       return doc.data();
     }
 
-    // Fallback to legacy date-only ID (for backward compatibility if needed)
-    const legacyDoc = await db.collection('sundaySchoolSyllabus').doc(dateStr).get();
-    if (legacyDoc.exists) {
-      const data = legacyDoc.data();
-      if (data?.department === departmentId) {
-          return data;
-      }
-    }
-    
     // Fallback to local constants
     const syllabuses: Record<string, any[]> = {
       beginner: beginnerSyllabus,
@@ -81,9 +83,14 @@ export const getNextSundayLesson = async (departmentId: string) => {
     };
 
     if (syllabuses[departmentId]) {
-      return syllabuses[departmentId].find(item => item.date === dateStr);
+      const localLesson = syllabuses[departmentId].find(item => item.date === dateStr);
+      if (localLesson) {
+        console.log(`Found lesson in local constants:`, localLesson);
+        return localLesson;
+      }
     }
     
+    console.log(`No lesson found for ${departmentId} on ${dateStr}`);
     return null;
   } catch (error) {
     console.error('Error fetching next Sunday lesson:', error);
