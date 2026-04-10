@@ -209,6 +209,13 @@ export interface SundaySchoolDepartment {
   zirtirtute: string[];
   description: string;
   students: number;
+  ageGroup?: string;
+  room?: string;
+  time?: string;
+  lessonName?: string;
+  bibleVerse?: string;
+  memoryVerse?: string;
+  announcements?: string;
 }
 
 export interface SSReportSegment {

@@ -16,6 +16,8 @@ import {
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 // dnd-kit imports
 import {
@@ -140,14 +142,14 @@ const SortableZirtirtuCard: React.FC<SortableZirtirtuCardProps> = ({
 };
 
 const INITIAL_DEPARTMENTS_DATA: Omit<SundaySchoolDepartment, 'name'>[] = [
-    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 },
-    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0 }
+    { id: 'pre-beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'beginner', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'primary', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'junior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'intermediate', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'sacrament', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'senior', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' },
+    { id: 'puitling', leader: '', asstLeader: '', secretary: '', asstSecretary: '', zirtirtute: [], description: '', students: 0, ageGroup: '', room: '', time: '', lessonName: '', bibleVerse: '', memoryVerse: '', announcements: '' }
 ];
 
 const EMPTY_SEGMENT: SSReportSegment = {
@@ -752,6 +754,62 @@ const SundaySchool: React.FC = () => {
                       <div className="md:col-span-2 space-y-6">
                           {/* Leadership Section Removed */}
 
+                          {/* Pawl Info Section */}
+                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                  <Info className="text-church-600"/> Pawl Info
+                              </h3>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Age Group / Class</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.ageGroup || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Room Awmna</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.room || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inkhawm Tan Hun</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.time || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Zah</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.students || 0}</p>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Kar tin zirlai Section */}
+                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                  <BookOpen className="text-church-600"/> Kar Tin Zirlai
+                              </h3>
+                              <div className="space-y-4">
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
+                                  </div>
+                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thuvawn</span>
+                                      <p className="text-lg font-bold text-slate-800">{currentDept?.memoryVerse || 'Tarlan a awm lo'}</p>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Hriattirna Section */}
+                          {currentDept?.announcements && currentDept.announcements !== '<p><br></p>' && (
+                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                      <MessageCircle className="text-church-600"/> Hriattirna
+                                  </h3>
+                                  <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentDept.announcements }} />
+                              </div>
+                          )}
+
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <div className="flex justify-between items-center mb-6">
                                   <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.zirtirtute?.length || 0})</h3>
@@ -1003,7 +1061,23 @@ const SundaySchool: React.FC = () => {
                       </div>
                       <div className="p-8 space-y-5 overflow-y-auto max-h-[70vh]">
                           {/* Leadership Fields Removed */}
-                          <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Age Group / Class</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.ageGroup || ''} onChange={e => setEditingDept({...editingDept, ageGroup: e.target.value})} /></div>
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Room Awmna</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.room || ''} onChange={e => setEditingDept({...editingDept, room: e.target.value})} /></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inkhawm Tan Hun</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.time || ''} onChange={e => setEditingDept({...editingDept, time: e.target.value})} /></div>
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4">
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirlai Hming</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.lessonName || ''} onChange={e => setEditingDept({...editingDept, lessonName: e.target.value})} /></div>
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bible Chang</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.bibleVerse || ''} onChange={e => setEditingDept({...editingDept, bibleVerse: e.target.value})} /></div>
+                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thuvawn</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.memoryVerse || ''} onChange={e => setEditingDept({...editingDept, memoryVerse: e.target.value})} /></div>
+                          </div>
+                          <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Hriattirna</label>
+                              <ReactQuill theme="snow" value={editingDept.announcements || ''} onChange={val => setEditingDept({...editingDept, announcements: val})} className="bg-white rounded-xl" />
+                          </div>
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Description</label><textarea className="w-full border border-slate-200 p-3 rounded-xl h-24 focus:ring-2 focus:ring-church-500 outline-none resize-none" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} /></div>
                           <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Zirtirtute (comma separated)</label>
