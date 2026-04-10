@@ -42,6 +42,7 @@ import AdminThawhlawm from './pages/AdminThawhlawm';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import SundaySchool from './pages/SundaySchool';
+import SundaySchoolDashboard from './pages/SundaySchoolDashboard';
 import Statistics from './pages/Statistics';
 import Records from './pages/Records';
 import Archives from './pages/Archives'; 
@@ -84,6 +85,7 @@ const App: React.FC = () => {
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/committees" element={<Departments />} />
                 <Route path="/committees/:id" element={<CommitteeDetail />} />
+                <Route path="/sundayschool/dashboard" element={<SundaySchoolDashboard />} />
                 <Route path="/sundayschool/:departmentId" element={<SundaySchool />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
