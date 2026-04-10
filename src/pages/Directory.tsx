@@ -201,7 +201,9 @@ const Directory: React.FC = () => {
           const normalizedName = normalizeName(m.name);
           const nameKey = normalizedName.toLowerCase();
           const phoneStr = String(m.phone || '').trim();
-          const key = `${nameKey}-${phoneStr}`;
+          // Use only name as the key to group by person, assuming name is unique enough or phone is often missing.
+          // If name is not unique enough, we might need a better identifier.
+          const key = nameKey; 
           
           if (!grouped[key]) {
             grouped[key] = {
@@ -218,6 +220,10 @@ const Directory: React.FC = () => {
             }
             if (!grouped[key].imageUrl && m.imageUrl) {
               grouped[key].imageUrl = m.imageUrl;
+            }
+            // Update phone if it's missing in the grouped entry but present in the current member
+            if (!grouped[key].phone && m.phone) {
+              grouped[key].phone = m.phone;
             }
           }
         });

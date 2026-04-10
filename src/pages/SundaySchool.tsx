@@ -728,8 +728,6 @@ const SundaySchool: React.FC = () => {
   );
 
   const isPuitling = currentDept?.id === 'puitling';
-  const leaderLabel = isPuitling ? 'Superintendent' : 'Leader';
-  const asstLeaderLabel = isPuitling ? 'Asst. Superintendent' : 'Asst. Leader';
 
   return (
       <div className="py-12 bg-slate-50 min-h-screen">
@@ -752,30 +750,7 @@ const SundaySchool: React.FC = () => {
                   /* DEPARTMENT INFO VIEW */
                   <div className="grid md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <div className="md:col-span-2 space-y-6">
-                          {/* Leadership Section */}
-                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
-                                  <ShieldCheck className="text-church-600"/> Leadership
-                              </h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{leaderLabel}</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.leader || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{asstLeaderLabel}</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.asstLeader || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Secretary</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.secretary || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asst. Secretary</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.asstSecretary || 'Tarlan a awm lo'}</p>
-                                  </div>
-                              </div>
-                          </div>
+                          {/* Leadership Section Removed */}
 
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                               <div className="flex justify-between items-center mb-6">
@@ -1027,14 +1002,7 @@ const SundaySchool: React.FC = () => {
                           <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-white rounded-full text-slate-400"><X size={24}/></button>
                       </div>
                       <div className="p-8 space-y-5 overflow-y-auto max-h-[70vh]">
-                          <div className="grid grid-cols-2 gap-4">
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{leaderLabel}</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.leader || ''} onChange={e => setEditingDept({...editingDept, leader: e.target.value})} /></div>
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{asstLeaderLabel}</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.asstLeader || ''} onChange={e => setEditingDept({...editingDept, asstLeader: e.target.value})} /></div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Secretary</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.secretary || ''} onChange={e => setEditingDept({...editingDept, secretary: e.target.value})} /></div>
-                              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Asst. Secretary</label><input className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.asstSecretary || ''} onChange={e => setEditingDept({...editingDept, asstSecretary: e.target.value})} /></div>
-                          </div>
+                          {/* Leadership Fields Removed */}
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Students Registered</label><input type="number" className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none" value={editingDept.students || 0} onChange={e => setEditingDept({...editingDept, students: parseInt(e.target.value) || 0})} /></div>
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Description</label><textarea className="w-full border border-slate-200 p-3 rounded-xl h-24 focus:ring-2 focus:ring-church-500 outline-none resize-none" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} /></div>
                           <div>
