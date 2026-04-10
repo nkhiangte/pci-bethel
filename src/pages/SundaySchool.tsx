@@ -18,6 +18,13 @@ import * as XLSX from 'xlsx';
 import StaffEditModal from '../components/StaffEditModal';
 import 'react-quill-new/dist/quill.snow.css';
 import { beginnerSyllabus } from '../constants/beginnerSyllabus';
+import { 
+  primarySyllabus, 
+  intermediateSyllabus, 
+  seniorSyllabus, 
+  sacramentSyllabus, 
+  juniorSyllabus 
+} from '../constants/sundaySchoolSyllabus';
 import { getNextSundayLesson } from '../services/syllabusService';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
@@ -833,20 +840,36 @@ const SundaySchool: React.FC = () => {
                               </div>
                           </div>
                           
-                          {isBeginner && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
-                                <h3 className="text-xl font-black text-slate-800 mb-6">Syllabus Calendar</h3>
-                                <div className="space-y-2">
-                                    {beginnerSyllabus.map((item, index) => (
-                                        <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm">
-                                            <div className="font-bold text-church-700">{item.date}</div>
-                                            <div className="font-bold text-slate-600">{item.lessonNumber}</div>
-                                            <div className="col-span-2 text-slate-800">{item.lessonName}</div>
-                                        </div>
-                                    ))}
+                          {/* Syllabus Calendar Section */}
+                          {(() => {
+                            const syllabuses: Record<string, any[]> = {
+                              beginner: beginnerSyllabus,
+                              primary: primarySyllabus,
+                              intermediate: intermediateSyllabus,
+                              senior: seniorSyllabus,
+                              sacrament: sacramentSyllabus,
+                              junior: juniorSyllabus
+                            };
+                            const currentSyllabus = syllabuses[departmentId || ''];
+                            
+                            if (currentSyllabus) {
+                              return (
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
+                                    <h3 className="text-xl font-black text-slate-800 mb-6">Syllabus Calendar</h3>
+                                    <div className="space-y-2">
+                                        {currentSyllabus.map((item, index) => (
+                                            <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm">
+                                                <div className="font-bold text-church-700">{item.date}</div>
+                                                <div className="font-bold text-slate-600">{item.lessonNumber}</div>
+                                                <div className="col-span-2 text-slate-800">{item.lessonName}</div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                          )}
+                              );
+                            }
+                            return null;
+                          })()}
 
                           {/* Hriattirna Section */}
                           {currentDept?.announcements && currentDept.announcements !== '<p><br></p>' && (

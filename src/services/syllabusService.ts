@@ -1,18 +1,36 @@
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { beginnerSyllabus } from '../constants/beginnerSyllabus';
+import { 
+  primarySyllabus, 
+  intermediateSyllabus, 
+  seniorSyllabus, 
+  sacramentSyllabus, 
+  juniorSyllabus 
+} from '../constants/sundaySchoolSyllabus';
 
 export const seedSyllabus = async () => {
   try {
     const batch = db.batch();
     const syllabusRef = db.collection('sundaySchoolSyllabus');
     
-    // Clear existing or just add
-    // For simplicity, we'll just set them by date as ID
-    beginnerSyllabus.forEach((item) => {
-      const docRef = syllabusRef.doc(item.date);
-      batch.set(docRef, {
-        ...item,
-        department: 'beginner' // Currently we only have beginner syllabus
+    const allSyllabuses = [
+      { id: 'beginner', data: beginnerSyllabus },
+      { id: 'primary', data: primarySyllabus },
+      { id: 'intermediate', data: intermediateSyllabus },
+      { id: 'senior', data: seniorSyllabus },
+      { id: 'sacrament', data: sacramentSyllabus },
+      { id: 'junior', data: juniorSyllabus }
+    ];
+
+    allSyllabuses.forEach(({ id, data }) => {
+      data.forEach((item) => {
+        // Use composite ID to avoid overwriting between departments
+        const docId = `${id}_${item.date}`;
+        const docRef = syllabusRef.doc(docId);
+        batch.set(docRef, {
+          ...item,
+          department: id
+        });
       });
     });
     
@@ -29,26 +47,38 @@ export const getNextSundayLesson = async (departmentId: string) => {
     // Find next Sunday
     const nextSunday = new Date(today);
     nextSunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
-    if (today.getDay() === 0) {
-        // If today is Sunday, we might want today's lesson or next Sunday's.
-        // Usually, people want today's lesson on Sunday.
-    } else {
-        // nextSunday is already set correctly for non-Sundays
-    }
     
     const dateStr = nextSunday.toISOString().split('T')[0];
     
-    const doc = await db.collection('sundaySchoolSyllabus').doc(dateStr).get();
+    // Try composite ID first
+    const docId = `${departmentId}_${dateStr}`;
+    const doc = await db.collection('sundaySchoolSyllabus').doc(docId).get();
+    
     if (doc.exists) {
-      const data = doc.data();
-      if (data?.department === departmentId || departmentId === 'beginner') {
+      return doc.data();
+    }
+
+    // Fallback to legacy date-only ID (for backward compatibility if needed)
+    const legacyDoc = await db.collection('sundaySchoolSyllabus').doc(dateStr).get();
+    if (legacyDoc.exists) {
+      const data = legacyDoc.data();
+      if (data?.department === departmentId) {
           return data;
       }
     }
     
-    // Fallback to local constant if firestore fails or is empty
-    if (departmentId === 'beginner') {
-        return beginnerSyllabus.find(item => item.date === dateStr);
+    // Fallback to local constants
+    const syllabuses: Record<string, any[]> = {
+      beginner: beginnerSyllabus,
+      primary: primarySyllabus,
+      intermediate: intermediateSyllabus,
+      senior: seniorSyllabus,
+      sacrament: sacramentSyllabus,
+      junior: juniorSyllabus
+    };
+
+    if (syllabuses[departmentId]) {
+      return syllabuses[departmentId].find(item => item.date === dateStr);
     }
     
     return null;
