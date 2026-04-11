@@ -23,6 +23,105 @@ const Calendar: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
 
+  const [isSaving, setIsSaving] = useState(false);
+
+  const synodEvents2026: Partial<CalendarEvent>[] = [
+    { title: 'Kumthar Ni', date: '2026-01-01', type: 'holiday' },
+    { title: 'Kumthar Chawlh', date: '2026-01-02', type: 'holiday' },
+    { title: 'Kumthar Chawlh', date: '2026-01-03', type: 'holiday' },
+    { title: 'Kumthar Chawlh', date: '2026-01-04', type: 'holiday' },
+    { title: 'Kumthar Chawlh', date: '2026-01-05', type: 'holiday' },
+    { title: 'Kumthar Chawlh', date: '2026-01-06', type: 'holiday' },
+    { title: 'Synod Office Hawn Ni', date: '2026-01-07', type: 'other' },
+    { title: 'Presbyterian Kohhran Din Tan Ni', date: '2026-01-11', type: 'event' },
+    { title: 'Republic Day', date: '2026-01-26', type: 'holiday' },
+    { title: 'Bial KTP Conference', date: '2026-01-23', type: 'event' },
+    { title: 'Bial KTP Conference', date: '2026-01-24', type: 'event' },
+    { title: 'Bial KTP Conference', date: '2026-01-25', type: 'event' },
+    { title: 'Bial Kohhran Hmeichhe Inkhawmpui', date: '2026-02-06', type: 'event' },
+    { title: 'Bial Kohhran Hmeichhe Inkhawmpui', date: '2026-02-07', type: 'event' },
+    { title: 'Bial Kohhran Hmeichhe Inkhawmpui', date: '2026-02-08', type: 'event' },
+    { title: 'Synod Finance Committee', date: '2026-02-12', type: 'meeting' },
+    { title: 'KTP Day', date: '2026-02-16', type: 'event' },
+    { title: 'State Day', date: '2026-02-20', type: 'holiday' },
+    { title: 'MSSU Day', date: '2026-02-20', type: 'event' },
+    { title: 'Synod Executive Committee', date: '2026-02-24', type: 'meeting' },
+    { title: 'Synod Executive Committee', date: '2026-02-25', type: 'meeting' },
+    { title: 'Synod Executive Committee', date: '2026-02-26', type: 'meeting' },
+    { title: 'KTP General Conference', date: '2026-02-26', type: 'event' },
+    { title: 'KTP General Conference', date: '2026-02-27', type: 'event' },
+    { title: 'KTP General Conference', date: '2026-02-28', type: 'event' },
+    { title: 'KTP General Conference', date: '2026-03-01', type: 'event' },
+    { title: 'Kohhran Hmeichhe Rorel Inkhawm', date: '2026-03-06', type: 'meeting' },
+    { title: 'Kohhran Hmeichhe Rorel Inkhawm', date: '2026-03-07', type: 'meeting' },
+    { title: 'Kohhran Hmeichhe Rorel Inkhawm', date: '2026-03-08', type: 'meeting' },
+    { title: 'Chanchin Tha Thlen Ni', date: '2026-03-15', type: 'event' },
+    { title: 'Tumkau Ni', date: '2026-03-29', type: 'event' },
+    { title: 'Good Friday', date: '2026-04-03', type: 'holiday' },
+    { title: 'Harhna Thlen Ni', date: '2026-04-04', type: 'event' },
+    { title: 'Easter Sunday', date: '2026-04-05', type: 'event' },
+    { title: 'Easter Monday', date: '2026-04-06', type: 'holiday' },
+    { title: 'Bial Inkhawmpui', date: '2026-04-24', type: 'event' },
+    { title: 'Bial Inkhawmpui', date: '2026-04-25', type: 'event' },
+    { title: 'Bial Inkhawmpui', date: '2026-04-26', type: 'event' },
+    { title: 'PCI General Assembly', date: '2026-05-01', type: 'event' },
+    { title: 'PCI General Assembly', date: '2026-05-02', type: 'event' },
+    { title: 'PCI General Assembly', date: '2026-05-03', type: 'event' },
+    { title: 'Pentikos Ni', date: '2026-05-24', type: 'event' },
+    { title: 'Synod Executive Committee', date: '2026-06-02', type: 'meeting' },
+    { title: 'Synod Executive Committee', date: '2026-06-03', type: 'meeting' },
+    { title: 'Synod Executive Committee', date: '2026-06-04', type: 'meeting' },
+    { title: 'YMA Day', date: '2026-06-15', type: 'holiday' },
+    { title: 'Rualbanlote Ni', date: '2026-06-21', type: 'event' },
+    { title: 'Remna Ni', date: '2026-06-30', type: 'holiday' },
+    { title: 'Health Sunday & Hospital Sunday', date: '2026-07-05', type: 'event' },
+    { title: 'Kohhran Pavalai Pawl Din tan Ni', date: '2026-07-21', type: 'event' },
+    { title: 'Independence Day', date: '2026-08-15', type: 'holiday' },
+    { title: 'Ramthar Ni', date: '2026-08-31', type: 'holiday' },
+    { title: 'Naupang Inkhawmpui', date: '2026-09-13', type: 'event' },
+    { title: 'Senior Department Inkhawmpui', date: '2026-09-20', type: 'event' },
+    { title: 'Kristian Chhungkaw Ni & Nu leh Pa Ni', date: '2026-09-27', type: 'event' },
+    { title: 'Presbytery Inkhawmpui', date: '2026-10-08', type: 'event' },
+    { title: 'Presbytery Inkhawmpui', date: '2026-10-09', type: 'event' },
+    { title: 'Presbytery Inkhawmpui', date: '2026-10-10', type: 'event' },
+    { title: 'Presbytery Inkhawmpui', date: '2026-10-11', type: 'event' },
+    { title: 'NEICC Tawngtai rual', date: '2026-10-18', type: 'event' },
+    { title: 'Sunday School Committee', date: '2026-10-21', type: 'meeting' },
+    { title: 'Khawvel Sunday School Ni', date: '2026-11-01', type: 'event' },
+    { title: 'Kohhran Hmeichhe Ni', date: '2026-11-27', type: 'event' },
+    { title: 'Bible Sunday', date: '2026-12-06', type: 'event' },
+    { title: 'MSSU Pathian Thu Exam Ni', date: '2026-12-20', type: 'event' },
+    { title: 'Krismas Chawlh', date: '2026-12-21', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-22', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-23', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-24', type: 'holiday' },
+    { title: 'Krismas Ni', date: '2026-12-25', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-26', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-27', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-28', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-29', type: 'holiday' },
+    { title: 'Krismas Chawlh', date: '2026-12-30', type: 'holiday' },
+    { title: 'Kumtawp Ni', date: '2026-12-31', type: 'holiday' },
+  ];
+
+  const handleSeedSynodCalendar = async () => {
+    if (!isAdmin || !db || !window.confirm('This will seed the 2026 Synod Calendar events. Existing events on the same dates will remain. Continue?')) return;
+    
+    setIsSaving(true);
+    try {
+      const batch = synodEvents2026.map(event => addDoc(collection(db, 'calendar_events'), {
+        ...event,
+        description: event.description || 'Synod Calendar Event'
+      }));
+      await Promise.all(batch);
+      alert('Synod Calendar seeded successfully!');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'calendar_events');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (!db) return;
     const unsubscribe = onSnapshot(collection(db, 'calendar_events'), (snapshot) => {
@@ -179,6 +278,15 @@ const Calendar: React.FC = () => {
               Church Calendar
             </h1>
             <p className="text-slate-500 mt-1">View upcoming events and schedules.</p>
+            {isAdmin && (
+              <button 
+                onClick={handleSeedSynodCalendar}
+                disabled={isSaving}
+                className="mt-4 px-4 py-2 bg-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-300 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? 'Seeding...' : 'Seed 2026 Synod Calendar'}
+              </button>
+            )}
           </div>
           
           <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
