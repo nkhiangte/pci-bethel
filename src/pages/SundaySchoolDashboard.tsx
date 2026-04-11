@@ -7,6 +7,26 @@ import { seedSyllabus } from '../services/syllabusService';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'blockquote', 'code-block'],
+    ['clean']
+  ],
+  clipboard: {
+    matchVisual: false,
+  }
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'blockquote', 'code-block'
+];
+
 const SundaySchoolDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
   const [description, setDescription] = useState('');
@@ -86,7 +106,14 @@ const SundaySchoolDashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow mb-6">
           <h2 className="text-xl font-bold mb-4">Edit Description</h2>
           <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill theme="snow" value={description} onChange={setDescription} className="mb-4" />
+            <ReactQuill 
+              theme="snow" 
+              value={description} 
+              onChange={setDescription} 
+              modules={quillModules}
+              formats={quillFormats}
+              className="mb-4" 
+            />
           </Suspense>
           
           <h2 className="text-xl font-bold mb-4">Manage Sunday School Hotute</h2>

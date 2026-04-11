@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill-new';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import 'react-quill-new/dist/quill.snow.css';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -9,7 +8,28 @@ import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle } from 'lucide-react';
 
-// Replace this with your actual ImgBB API key from https://api.imgbb.com/
+const ReactQuill = lazy(() => import('react-quill-new'));
+
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'blockquote', 'code-block'],
+    ['clean']
+  ],
+  clipboard: {
+    matchVisual: false,
+  }
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'blockquote', 'code-block'
+];
+
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49'; 
 
 const getYouTubeId = (url: string | undefined) => {
@@ -584,14 +604,18 @@ const Announcements: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.content}</label>
-                        <div className="bg-white rounded-lg overflow-hidden border border-slate-300">
-                            <ReactQuill 
-                                theme="snow" 
-                                value={editForm.content || ''} 
-                                onChange={(content) => setEditForm({...editForm, content})}
-                                placeholder={t.announcements.form.placeholders.content}
-                                className="h-48"
-                            />
+                        <div className="bg-white rounded-lg overflow-hidden border border-slate-300 min-h-[200px]">
+                            <Suspense fallback={<div className="p-4 text-slate-400 flex items-center gap-2"><Loader className="animate-spin" size={16} /> Loading editor...</div>}>
+                                <ReactQuill 
+                                    theme="snow" 
+                                    value={editForm.content || ''} 
+                                    onChange={(content) => setEditForm(prev => ({ ...prev, content }))}
+                                    placeholder={t.announcements.form.placeholders.content}
+                                    modules={quillModules}
+                                    formats={quillFormats}
+                                    className="h-48"
+                                />
+                            </Suspense>
                         </div>
                         <div className="h-12"></div> {/* Spacer for Quill toolbar/overflow */}
                     </div>

@@ -31,6 +31,26 @@ import { QuarterlySyllabusItem, quarterlySyllabusData } from '../constants/quart
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'blockquote', 'code-block'],
+    ['clean']
+  ],
+  clipboard: {
+    matchVisual: false,
+  }
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'blockquote', 'code-block'
+];
+
 // dnd-kit imports
 import {
   DndContext, 
@@ -1331,7 +1351,14 @@ const SundaySchool: React.FC = () => {
                           <div>
                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Hriattirna</label>
                               <Suspense fallback={<div>Loading editor...</div>}>
-                                <ReactQuill theme="snow" value={editingDept.announcements || ''} onChange={val => setEditingDept({...editingDept, announcements: val})} className="bg-white rounded-xl" />
+                                <ReactQuill 
+                                  theme="snow" 
+                                  value={editingDept.announcements || ''} 
+                                  onChange={val => setEditingDept(prev => prev ? ({ ...prev, announcements: val }) : null)} 
+                                  modules={quillModules}
+                                  formats={quillFormats}
+                                  className="bg-white rounded-xl" 
+                                />
                               </Suspense>
                           </div>
                           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Description</label><textarea className="w-full border border-slate-200 p-3 rounded-xl h-24 focus:ring-2 focus:ring-church-500 outline-none resize-none" value={editingDept.description || ''} onChange={e => setEditingDept({...editingDept, description: e.target.value})} /></div>
