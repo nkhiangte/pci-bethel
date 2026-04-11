@@ -27,6 +27,7 @@ import {
   puitlingSyllabus 
 } from '../constants/sundaySchoolSyllabus';
 import { getNextSundayLesson } from '../services/syllabusService';
+import { QuarterlySyllabusItem, quarterlySyllabusData } from '../constants/quarterlySyllabus';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
@@ -237,6 +238,7 @@ const SundaySchool: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Partial<SundaySchoolDepartment> | null>(null);
+  const [quarterlySyllabus, setQuarterlySyllabus] = useState<QuarterlySyllabusItem[]>([]);
 
   // Zirtirtu Profile States
   const [selectedZirtirtuName, setSelectedZirtirtuName] = useState<string | null>(null);
@@ -353,6 +355,28 @@ const SundaySchool: React.FC = () => {
   }, [fetchDepartments, departmentId]);
 
   useEffect(() => {
+    const fetchQuarterlySyllabus = async () => {
+      if (!departmentId || departmentId === 'report' || !db?.collection) {
+        setQuarterlySyllabus([]);
+        return;
+      }
+      try {
+        const doc = await db.collection('sundaySchoolQuarterlySyllabus').doc(departmentId).get();
+        if (doc.exists) {
+          setQuarterlySyllabus(doc.data().items || []);
+        } else {
+          // Fallback to local constants
+          setQuarterlySyllabus(quarterlySyllabusData[departmentId] || []);
+        }
+      } catch (e) {
+        console.error("Error fetching quarterly syllabus:", e);
+        setQuarterlySyllabus(quarterlySyllabusData[departmentId] || []);
+      }
+    };
+    fetchQuarterlySyllabus();
+  }, [departmentId]);
+
+  useEffect(() => {
       if (departmentId === 'report') {
           fetchReports();
       }
@@ -421,6 +445,20 @@ const SundaySchool: React.FC = () => {
       } catch(e: any) {
           console.error(e);
           alert(`Failed to save data to Firebase: ${e.message}`);
+      }
+      setIsSeeding(false);
+  };
+
+  const handleSeedSyllabus = async () => {
+      if (!db || !db.collection || !window.confirm("This will seed/update the Sunday School Syllabus (weekly and quarterly) in Firebase. Continue?")) return;
+      setIsSeeding(true);
+      try {
+          const { seedSyllabus } = await import('../services/syllabusService');
+          await seedSyllabus();
+          alert("Syllabus seeded successfully!");
+      } catch(e: any) {
+          console.error(e);
+          alert(`Failed to seed syllabus: ${e.message}`);
       }
       setIsSeeding(false);
   };
@@ -827,6 +865,44 @@ const SundaySchool: React.FC = () => {
                               </div>
                           </div>
                           
+                          {/* Quarterly Syllabus Section */}
+                          {quarterlySyllabus.length > 0 && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
+                                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                    <Sparkles className="text-church-600"/> Thla thum chhung zir (2026)
+                                </h3>
+                                <div className="space-y-6">
+                                    {quarterlySyllabus.map((item, index) => (
+                                        <div key={index} className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <h4 className="text-sm font-black text-church-700 uppercase tracking-widest mb-4 border-b border-church-100 pb-2">{item.period}</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hla</span>
+                                                    <p className="text-sm font-bold text-slate-800">{item.hla}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thu</span>
+                                                    <p className="text-sm font-bold text-slate-800">{item.thu}</p>
+                                                </div>
+                                                {item.thuInchhang && (
+                                                    <div>
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thu inchhang</span>
+                                                        <p className="text-sm font-bold text-slate-800">{item.thuInchhang}</p>
+                                                    </div>
+                                                )}
+                                                {item.solfaZir && (
+                                                    <div>
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Solfa zir</span>
+                                                        <p className="text-sm font-bold text-slate-800">{item.solfaZir}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                          )}
+                          
                           {/* Syllabus Calendar Section */}
                           {(() => {
                             const syllabuses: Record<string, any[]> = {
@@ -988,6 +1064,9 @@ const SundaySchool: React.FC = () => {
                               <div className="space-y-2">
                                   <button onClick={handleClearZirtirtuteExceptPuitling} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition shadow-sm">
                                       <Trash size={16} /> Clear Zirtirtute (Excl. Puitling)
+                                  </button>
+                                  <button onClick={handleSeedSyllabus} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-church-50 text-church-700 border border-church-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-church-100 transition shadow-sm">
+                                      <Database size={16} /> {isSeeding ? 'Seeding...' : 'Seed Syllabus to Firestore'}
                                   </button>
                                   <button onClick={handleSeed} disabled={isSeeding} className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-red-50 text-red-700 border border-red-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition shadow-sm">
                                       <Database size={16} /> {isSeeding ? 'Resetting...' : 'Factory Reset Firebase'}

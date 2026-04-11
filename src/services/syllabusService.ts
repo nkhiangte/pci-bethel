@@ -8,11 +8,13 @@ import {
   juniorSyllabus,
   puitlingSyllabus 
 } from '../constants/sundaySchoolSyllabus';
+import { quarterlySyllabusData } from '../constants/quarterlySyllabus';
 
 export const seedSyllabus = async () => {
   try {
     const batch = db.batch();
     const syllabusRef = db.collection('sundaySchoolSyllabus');
+    const quarterlyRef = db.collection('sundaySchoolQuarterlySyllabus');
     
     const allSyllabuses = [
       { id: 'beginner', data: beginnerSyllabus },
@@ -35,11 +37,20 @@ export const seedSyllabus = async () => {
         });
       });
     });
+
+    // Seed Quarterly Syllabus
+    Object.entries(quarterlySyllabusData).forEach(([deptId, items]) => {
+      const docRef = quarterlyRef.doc(deptId);
+      batch.set(docRef, {
+        departmentId: deptId,
+        items: items
+      });
+    });
     
     await batch.commit();
     console.log('Syllabus seeded successfully');
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'sundaySchoolSyllabus');
+    handleFirestoreError(error, OperationType.WRITE, 'sundaySchoolSyllabus or sundaySchoolQuarterlySyllabus');
   }
 };
 
