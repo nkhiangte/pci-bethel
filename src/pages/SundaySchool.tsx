@@ -1201,53 +1201,53 @@ const SundaySchool: React.FC = () => {
                           <div className="space-y-24">
                               {reports.map((report) => (
                                   <div key={report.id} className="bg-white rounded-[3rem] shadow-2xl border border-slate-200 overflow-hidden group">
-                                      <div className="bg-slate-900 text-white px-8 py-8 md:px-12 flex justify-between items-center border-b border-slate-800">
-                                          <div className="flex items-center gap-6">
-                                              <div className="bg-church-600 p-4 rounded-2xl shadow-lg ring-4 ring-church-600/20">
-                                                <Calendar size={28} className="text-white" />
+                                      <div className="bg-slate-900 text-white px-6 py-6 md:px-12 md:py-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800">
+                                          <div className="flex items-center gap-4 md:gap-6">
+                                              <div className="bg-church-600 p-3 md:p-4 rounded-2xl shadow-lg ring-4 ring-church-600/20">
+                                                <Calendar size={24} className="text-white md:w-7 md:h-7" />
                                               </div>
                                               <div>
-                                                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Kohhran Service Report</p>
-                                                <span className="font-serif font-black text-2xl md:text-3xl tracking-tight">
+                                                <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400 mb-1">Kohhran Service Report</p>
+                                                <span className="font-serif font-black text-xl md:text-3xl tracking-tight">
                                                     {new Date(report.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                                 </span>
                                               </div>
                                           </div>
                                           {isAdmin && (
-                                              <div className="flex gap-2">
-                                                  <button onClick={() => { setEditingReport(report); setIsReportModalOpen(true); }} className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition text-slate-300 hover:text-white border border-white/10" title="Edit"><Edit size={20}/></button>
-                                                  <button onClick={() => handleDeleteReport(report.id!)} className="p-4 bg-red-500/10 hover:bg-red-500/30 rounded-2xl transition text-red-400 hover:text-red-300 border border-red-500/10" title="Delete"><Trash size={20}/></button>
+                                              <div className="flex gap-2 self-end sm:self-auto">
+                                                  <button onClick={() => { setEditingReport(report); setIsReportModalOpen(true); }} className="p-3 md:p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition text-slate-300 hover:text-white border border-white/10" title="Edit"><Edit size={18}/></button>
+                                                  <button onClick={() => handleDeleteReport(report.id!)} className="p-3 md:p-4 bg-red-500/10 hover:bg-red-500/30 rounded-2xl transition text-red-400 hover:text-red-300 border border-red-500/10" title="Delete"><Trash size={18}/></button>
                                               </div>
                                           )}
                                       </div>
                                       
-                                       <div className="p-4 md:p-12 space-y-12 bg-white">
+                                       <div className="p-4 md:p-12 space-y-8 md:space-y-12 bg-white">
                                           {/* Puitling Section - High Contrast Slate */}
                                           <div className="overflow-hidden rounded-3xl border-2 border-slate-200 shadow-sm">
-                                              <div className="bg-slate-800 px-8 py-4 flex items-center justify-between">
-                                                  <div className="flex items-center gap-3">
-                                                    <Users className="text-slate-400" size={20} />
-                                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white">Puitling Sunday School Report</h4>
+                                              <div className="bg-slate-800 px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
+                                                  <div className="flex items-center gap-2 md:gap-3">
+                                                    <Users className="text-slate-400" size={18} />
+                                                    <h4 className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-white">Puitling Sunday School Report</h4>
                                                   </div>
-                                                  <span className="bg-slate-700/50 text-slate-300 text-[10px] px-3 py-1 rounded-full font-bold uppercase border border-slate-600">Department</span>
+                                                  <span className="bg-slate-700/50 text-slate-300 text-[8px] md:text-[10px] px-2 py-1 rounded-full font-bold uppercase border border-slate-600 hidden sm:inline-block">Department</span>
                                               </div>
                                               <ReportTable segment={report.puitling} theme="slate" />
                                           </div>
 
                                           {/* Naupang Section - High Contrast Emerald */}
                                           <div className="overflow-hidden rounded-3xl border-2 border-emerald-100 shadow-sm">
-                                              <div className="bg-emerald-800 px-8 py-4 flex items-center justify-between">
-                                                  <div className="flex items-center gap-3">
-                                                    <Sparkles className="text-emerald-400" size={20} />
-                                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white">Naupang Sunday School Report</h4>
+                                              <div className="bg-emerald-800 px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
+                                                  <div className="flex items-center gap-2 md:gap-3">
+                                                    <Sparkles className="text-emerald-400" size={18} />
+                                                    <h4 className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-white">Naupang Sunday School Report</h4>
                                                   </div>
-                                                  <span className="bg-emerald-700/50 text-emerald-100 text-[10px] px-3 py-1 rounded-full font-bold uppercase border border-emerald-600">Department</span>
+                                                  <span className="bg-emerald-700/50 text-emerald-100 text-[8px] md:text-[10px] px-2 py-1 rounded-full font-bold uppercase border border-emerald-600 hidden sm:inline-block">Department</span>
                                               </div>
                                               <ReportTable segment={report.naupang} theme="emerald" />
                                           </div>
 
                                           {/* Grand Summary Section - High Contrast Gradient */}
-                                          <div className="mt-12 bg-gradient-to-br from-church-900 to-slate-900 rounded-[2.5rem] p-8 md:p-14 shadow-2xl relative overflow-hidden group">
+                                          <div className="mt-8 md:mt-12 bg-gradient-to-br from-church-900 to-slate-900 rounded-[2.5rem] p-6 md:p-14 shadow-2xl relative overflow-hidden group">
                                               <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-125"></div>
                                               <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
                                                   <div className="flex items-center gap-6">
@@ -1261,17 +1261,17 @@ const SundaySchool: React.FC = () => {
                                                   </div>
                                                   
                                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-8 md:gap-16">
-                                                      <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10">
-                                                          <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-2">Collective Attendance</p>
-                                                          <p className="text-5xl font-black text-white">{
+                                                      <div className="bg-white/5 backdrop-blur-md p-5 md:p-6 rounded-3xl border border-white/10">
+                                                          <p className="text-[9px] md:text-[10px] font-black text-church-300 uppercase tracking-widest mb-2">Collective Attendance</p>
+                                                          <p className="text-3xl md:text-5xl font-black text-white">{
                                                               (report.naupang.zirtirtu.kal + report.naupang.zirtu.kal + (report.naupang.chhimtu || 0)) + 
                                                               (report.puitling.zirtirtu.kal + report.puitling.zirtu.kal + (report.puitling.chhimtu || 0))
                                                           }</p>
                                                           <div className="h-1.5 w-12 bg-church-500 mt-4 rounded-full"></div>
                                                       </div>
-                                                      <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10">
-                                                          <p className="text-[10px] font-black text-church-300 uppercase tracking-widest mb-2">Total Thawhlawm</p>
-                                                          <p className="text-5xl font-black font-mono text-church-400">₹ {
+                                                      <div className="bg-white/5 backdrop-blur-md p-5 md:p-6 rounded-3xl border border-white/10">
+                                                          <p className="text-[9px] md:text-[10px] font-black text-church-300 uppercase tracking-widest mb-2">Total Thawhlawm</p>
+                                                          <p className="text-3xl md:text-5xl font-black font-mono text-church-400">₹ {
                                                               (report.naupang.thawhlawm + report.puitling.thawhlawm).toLocaleString()
                                                           }</p>
                                                           <div className="h-1.5 w-12 bg-church-400 mt-4 rounded-full"></div>
@@ -1438,42 +1438,42 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[300px]">
                 <thead>
-                    <tr className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.25em] border-b border-slate-100">
-                        <th className="px-8 py-5">Hming / Role</th>
-                        <th className="px-8 py-5 text-center">Kal Zat</th>
-                        <th className="px-8 py-5 text-center">Kal lo Zat</th>
-                        <th className="px-8 py-5 text-right"></th>
+                    <tr className="bg-slate-50 text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.25em] border-b border-slate-100">
+                        <th className="px-4 md:px-8 py-3 md:py-5">Hming / Role</th>
+                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal</th>
+                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal lo</th>
+                        <th className="px-2 md:px-8 py-3 md:py-5 text-right"></th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                     <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className={`px-8 py-6 font-bold ${textTheme}`}>Zirtirtu</td>
-                        <td className={`px-8 py-6 text-center text-xl font-black ${textTheme}`}>{segment.zirtirtu.kal}</td>
-                        <td className="px-8 py-6 text-center text-slate-400 font-bold">{segment.zirtirtu.kallo}</td>
-                        <td className="px-8 py-6"></td>
+                        <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Zirtirtu</td>
+                        <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.zirtirtu.kal}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtirtu.kallo}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className={`${accentBg} hover:bg-slate-100/30 transition-colors`}>
-                        <td className={`px-8 py-6 font-bold ${textTheme}`}>Zirtu</td>
-                        <td className={`px-8 py-6 text-center text-xl font-black ${textTheme}`}>{segment.zirtu.kal}</td>
-                        <td className="px-8 py-6 text-center text-slate-400 font-bold">{segment.zirtu.kallo}</td>
-                        <td className="px-8 py-6"></td>
+                        <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Zirtu</td>
+                        <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.zirtu.kal}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtu.kallo}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className={`px-8 py-6 font-bold ${textTheme}`}>Chhimtu (Guest)</td>
-                        <td className={`px-8 py-6 text-center text-xl font-black ${textTheme}`}>{segment.chhimtu || 0}</td>
-                        <td className="px-8 py-6 text-center text-slate-400 font-bold">-</td>
-                        <td className="px-8 py-6"></td>
+                        <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Chhimtu</td>
+                        <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.chhimtu || 0}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">-</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className={`${totalBg} font-black border-t-2 border-slate-200`}>
-                        <td className={`px-8 py-8 text-[11px] uppercase tracking-[0.3em] ${textTheme}`}>Total Attendance</td>
-                        <td className={`px-8 py-8 text-center text-3xl ${textTheme} tracking-tight`}>{(segment.zirtirtu.kal + segment.zirtu.kal + (segment.chhimtu || 0))}</td>
-                        <td className="px-8 py-8 text-center text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
-                        <td className={`px-8 py-8 text-right ${textTheme}`}>
+                        <td className={`px-4 md:px-8 py-6 md:py-8 text-[9px] md:text-[11px] uppercase tracking-[0.1em] md:tracking-[0.3em] ${textTheme}`}>Total</td>
+                        <td className={`px-2 md:px-8 py-6 md:py-8 text-center text-xl md:text-3xl ${textTheme} tracking-tight`}>{(segment.zirtirtu.kal + segment.zirtu.kal + (segment.chhimtu || 0))}</td>
+                        <td className="px-2 md:px-8 py-6 md:py-8 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
+                        <td className={`px-4 md:px-8 py-6 md:py-8 text-right ${textTheme}`}>
                             <div className="flex flex-col items-end">
-                                <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-1 font-black">Thawhlawm</span>
-                                <span className="font-mono text-3xl font-black tracking-tighter">₹ {segment.thawhlawm.toLocaleString()}</span>
+                                <span className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] text-slate-400 mb-1 font-black">Thawhlawm</span>
+                                <span className="font-mono text-lg md:text-3xl font-black tracking-tighter">₹ {segment.thawhlawm.toLocaleString()}</span>
                             </div>
                         </td>
                     </tr>

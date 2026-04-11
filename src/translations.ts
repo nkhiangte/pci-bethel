@@ -51,7 +51,7 @@ export const translations = {
     home: {
       verseOfTheDay: 'Vawiin Chang Thlan',
       newsTitle: 'Chanchin Thar & Updates',
-      viewAll: 'En Zawng Zawng',
+      viewAll: 'En vek rawh',
       puipate: 'Kohhran Committee',
       viewFullSchedule: 'Programme En Kim Rawh',
       ministersMonth: 'Thla tina Rawngbawltute',
@@ -522,7 +522,7 @@ export const translations = {
     home: {
       verseOfTheDay: 'Vawiin Chang Thlan',
       newsTitle: 'Chanchin Thar',
-      viewAll: 'En Zawng Zawng',
+      viewAll: 'En vek rawh',
       puipate: 'Kohhran Committee',
       viewFullSchedule: 'Programme En Kim Rawh',
       ministersMonth: 'Thla tina Rawngbawltute',
