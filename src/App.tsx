@@ -6,6 +6,7 @@ import Chatbot from './components/Chatbot';
 import Home from './pages/Home';
 import About from './pages/About';
 import Events from './pages/Events';
+import Calendar from './pages/Calendar';
 import Announcements from './pages/Announcements';
 import Departments from './pages/Departments';
 import Login from './pages/Login';
@@ -82,6 +83,7 @@ const App: React.FC = () => {
                 <Route path="/articles" element={<Articles />} /> 
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
+                <Route path="/calendar" element={<Calendar />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/committees" element={<Departments />} />
                 <Route path="/committees/:id" element={<CommitteeDetail />} />

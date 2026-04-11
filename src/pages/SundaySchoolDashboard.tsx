@@ -72,7 +72,15 @@ const SundaySchoolDashboard: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Sunday School Dashboard</h1>
+      <div className="flex items-center gap-4 mb-6">
+          <img 
+              src="https://firebasestorage.googleapis.com/v0/b/bethelpci.firebasestorage.app/o/committee_logos%2F1775482969296_mss.jpg?alt=media&token=6a190ac6-0db1-4ca8-bd0e-2a0c4474fa38" 
+              alt="Sunday School Logo" 
+              className="w-16 h-16 rounded-2xl object-cover shadow-sm border border-slate-200"
+              referrerPolicy="no-referrer"
+          />
+          <h1 className="text-3xl font-bold">Sunday School Dashboard</h1>
+      </div>
       
       {isAdmin && (
         <div className="bg-white p-6 rounded-lg shadow mb-6">

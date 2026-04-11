@@ -800,13 +800,21 @@ const SundaySchool: React.FC = () => {
               <div className="mb-8">
                   <Link to="/" className="text-sm font-bold text-slate-500 hover:text-church-600 mb-4 inline-block">&larr; Back to Home</Link>
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                      <div>
-                          <h1 className="text-4xl font-serif font-black text-church-900 leading-tight">
-                              {isReportView ? 'Sunday School Weekly Reports' : `${currentDept?.name} Department`}
-                          </h1>
-                          <p className="text-slate-500 mt-1 text-lg font-medium">
-                              {isReportView ? 'Breakdown of Naupang and Puitling department reports.' : (currentDept?.description || 'Sunday School department details.')}
-                          </p>
+                      <div className="flex items-center gap-4">
+                          <img 
+                              src="https://firebasestorage.googleapis.com/v0/b/bethelpci.firebasestorage.app/o/committee_logos%2F1775482969296_mss.jpg?alt=media&token=6a190ac6-0db1-4ca8-bd0e-2a0c4474fa38" 
+                              alt="Sunday School Logo" 
+                              className="w-16 h-16 rounded-2xl object-cover shadow-sm border border-slate-200"
+                              referrerPolicy="no-referrer"
+                          />
+                          <div>
+                              <h1 className="text-4xl font-serif font-black text-church-900 leading-tight">
+                                  {isReportView ? 'Sunday School Weekly Reports' : `${currentDept?.name} Department`}
+                              </h1>
+                              <p className="text-slate-500 mt-1 text-lg font-medium">
+                                  {isReportView ? 'Breakdown of Naupang and Puitling department reports.' : (currentDept?.description || 'Sunday School department details.')}
+                              </p>
+                          </div>
                       </div>
                   </div>
               </div>
@@ -1174,9 +1182,12 @@ const SundaySchool: React.FC = () => {
                   <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
                           <div className="flex items-center gap-4">
-                              <div className="p-4 bg-church-50 rounded-2xl text-church-600 shadow-inner">
-                                  <ClipboardList size={32} />
-                              </div>
+                              <img 
+                                  src="https://firebasestorage.googleapis.com/v0/b/bethelpci.firebasestorage.app/o/committee_logos%2F1775482969296_mss.jpg?alt=media&token=6a190ac6-0db1-4ca8-bd0e-2a0c4474fa38" 
+                                  alt="Sunday School Logo" 
+                                  className="w-12 h-12 rounded-xl object-cover shadow-sm border border-slate-200"
+                                  referrerPolicy="no-referrer"
+                              />
                               <div>
                                   <h3 className="text-2xl font-serif font-black text-slate-800">Weekly Reports</h3>
                                   <p className="text-slate-500 font-medium">Naupang & Puitling Department Summaries</p>
