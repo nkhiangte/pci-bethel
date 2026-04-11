@@ -203,7 +203,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /sundaySchoolQuarterlySyllabus/{docId} {
+    match /sundaySchoolQuarterlySyllabus/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }

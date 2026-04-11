@@ -360,6 +360,42 @@
         "amounts": { "type": "object" }
       },
       "required": ["name", "totalAmount", "status", "timestamp"]
+    },
+    "SundaySchoolSyllabus": {
+      "title": "Sunday School Syllabus",
+      "description": "Weekly Sunday School lesson details",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "lessonNumber": { "type": "string" },
+        "lessonName": { "type": "string" },
+        "department": { "type": "string" },
+        "bibleVerse": { "type": "string" },
+        "memoryVerse": { "type": "string" }
+      },
+      "required": ["date", "lessonNumber", "lessonName", "department"]
+    },
+    "SundaySchoolQuarterlySyllabus": {
+      "title": "Sunday School Quarterly Syllabus",
+      "description": "Quarterly study materials for Sunday School",
+      "type": "object",
+      "properties": {
+        "departmentId": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "period": { "type": "string" },
+              "hla": { "type": "string" },
+              "thu": { "type": "string" },
+              "thuInchhang": { "type": "string" },
+              "solfaZir": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["departmentId", "items"]
     }
   },
   "firestore": {
@@ -394,6 +430,14 @@
     "/sundaySchoolDepartments/{deptId}": {
       "schema": "SundaySchoolDepartment",
       "description": "Collection of Sunday School departments"
+    },
+    "/sundaySchoolSyllabus/{docId}": {
+      "schema": "SundaySchoolSyllabus",
+      "description": "Collection of weekly Sunday School lessons"
+    },
+    "/sundaySchoolQuarterlySyllabus/{deptId}": {
+      "schema": "SundaySchoolQuarterlySyllabus",
+      "description": "Collection of quarterly Sunday School materials"
     },
     "/sundaySchoolWeeklyReports/{reportId}": {
       "schema": "SundaySchoolReport",

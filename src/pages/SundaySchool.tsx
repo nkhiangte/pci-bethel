@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment, Staff } from '../types';
 import { 
   Users, UserCheck, Edit, Save, X, Loader, Database, 
@@ -203,7 +203,7 @@ const formatDate = (dateStr: string | undefined) => {
 };
 
 const SundaySchool: React.FC = () => {
-  const { departmentId } = useParams<{ departmentId: string }>();
+  const { departmentId, section } = useParams<{ departmentId: string; section?: string }>();
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
 
@@ -263,6 +263,14 @@ const SundaySchool: React.FC = () => {
         if (!db || !db.collection) {
             fetchedDepts = INITIAL_DEPARTMENTS_DATA.map(d => ({ ...d, name: getDeptName(d.id) })) as SundaySchoolDepartment[];
         } else {
+            // Test connection
+            try {
+                await db.collection('test').doc('connection').get({ source: 'server' });
+            } catch (connErr: any) {
+                if (connErr.message?.includes('offline')) {
+                    console.error("Please check your Firebase configuration. The client is offline.");
+                }
+            }
             const snapshot = await db.collection('sundaySchoolDepartments').get();
             if (!snapshot.empty) {
                 const fetchedData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as any[];
@@ -369,6 +377,9 @@ const SundaySchool: React.FC = () => {
           setQuarterlySyllabus(quarterlySyllabusData[departmentId] || []);
         }
       } catch (e) {
+        if (e && typeof e === 'object' && 'code' in e && e.code === 'permission-denied') {
+          handleFirestoreError(e, OperationType.GET, `sundaySchoolQuarterlySyllabus/${departmentId}`);
+        }
         console.error("Error fetching quarterly syllabus:", e);
         setQuarterlySyllabus(quarterlySyllabusData[departmentId] || []);
       }
@@ -456,6 +467,7 @@ const SundaySchool: React.FC = () => {
           const { seedSyllabus } = await import('../services/syllabusService');
           await seedSyllabus();
           alert("Syllabus seeded successfully!");
+          fetchDepartments();
       } catch(e: any) {
           console.error(e);
           alert(`Failed to seed syllabus: ${e.message}`);
@@ -803,79 +815,150 @@ const SundaySchool: React.FC = () => {
                   /* DEPARTMENT INFO VIEW */
                   <div className="grid md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
                       <div className="md:col-span-2 space-y-6">
-                          {/* Leadership Section Removed */}
-
-                          {/* Pawl Info Section */}
-                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
-                                  <Info className="text-church-600"/> Pawl Info
-                              </h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Age Group / Class</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.ageGroup || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Room Awmna</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.room || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inkhawm Tan Hun</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.time || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Zah</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.students || 0}</p>
-                                  </div>
-                              </div>
+                          {/* Navigation Tabs */}
+                          <div className="flex flex-wrap gap-2 mb-4">
+                              <Link 
+                                  to={`/sundayschool/${departmentId}`} 
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${!section ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                              >
+                                  Main Info
+                              </Link>
+                              <Link 
+                                  to={`/sundayschool/${departmentId}/quarterly`} 
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'quarterly' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                              >
+                                  Thla thum zir
+                              </Link>
+                              <Link 
+                                  to={`/sundayschool/${departmentId}/calendar`} 
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'calendar' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                              >
+                                  Syllabus Calendar
+                              </Link>
+                              <Link 
+                                  to={`/sundayschool/${departmentId}/teachers`} 
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'teachers' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                              >
+                                  Zirtirtute
+                              </Link>
                           </div>
 
-                          {/* Kar tin zirlai Section */}
-                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
-                                  <BookOpen className="text-church-600"/> Zirlai No. & Date
-                              </h3>
-                              <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
+                          {!section && (
+                            <>
+                              {/* Pawl Info Section */}
+                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                      <Info className="text-church-600"/> Pawl Info
+                                  </h3>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai No.</span>
-                                          <p className="text-lg font-bold text-slate-800">{currentDept?.lessonNumber || 'Tarlan a awm lo'}</p>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Age Group / Class</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.ageGroup || 'Tarlan a awm lo'}</p>
                                       </div>
                                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date</span>
-                                          <p className="text-lg font-bold text-slate-800">{formatDate(currentDept?.lessonDate)}</p>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Room Awmna</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.room || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inkhawm Tan Hun</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.time || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Zah</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.students || 0}</p>
                                       </div>
                                   </div>
-                                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
-                                      <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
-                                  </div>
-                                  {departmentId === 'puitling' && (
-                                    <>
-                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
-                                          <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
-                                      </div>
-                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thuvawn</span>
-                                          <p className="text-lg font-bold text-slate-800">{currentDept?.memoryVerse || 'Tarlan a awm lo'}</p>
-                                      </div>
-                                    </>
-                                  )}
                               </div>
-                          </div>
-                          
+
+                              {/* Kar tin zirlai Section */}
+                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                      <BookOpen className="text-church-600"/> Zirlai No. & Date
+                                  </h3>
+                                  <div className="space-y-4">
+                                      <div className="grid grid-cols-2 gap-4">
+                                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai No.</span>
+                                              <p className="text-lg font-bold text-slate-800">{currentDept?.lessonNumber || 'Tarlan a awm lo'}</p>
+                                          </div>
+                                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date</span>
+                                              <p className="text-lg font-bold text-slate-800">{formatDate(currentDept?.lessonDate)}</p>
+                                          </div>
+                                      </div>
+                                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Zirlai Hming</span>
+                                          <p className="text-lg font-bold text-slate-800">{currentDept?.lessonName || 'Tarlan a awm lo'}</p>
+                                      </div>
+                                      {departmentId === 'puitling' && (
+                                        <>
+                                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bible Chang</span>
+                                              <p className="text-lg font-bold text-slate-800">{currentDept?.bibleVerse || 'Tarlan a awm lo'}</p>
+                                          </div>
+                                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Thuvawn</span>
+                                              <p className="text-lg font-bold text-slate-800">{currentDept?.memoryVerse || 'Tarlan a awm lo'}</p>
+                                          </div>
+                                        </>
+                                      )}
+                                  </div>
+                              </div>
+
+                              {/* Quick Links Section */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                  <Link to={`/sundayschool/${departmentId}/quarterly`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                      <Sparkles className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
+                                      <h4 className="font-bold text-slate-800">Thla thum zir</h4>
+                                      <p className="text-xs text-slate-500 mt-1">Quarterly study materials</p>
+                                  </Link>
+                                  <Link to={`/sundayschool/${departmentId}/calendar`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                      <Calendar className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
+                                      <h4 className="font-bold text-slate-800">Syllabus Calendar</h4>
+                                      <p className="text-xs text-slate-500 mt-1">Full year schedule</p>
+                                  </Link>
+                                  <Link to={`/sundayschool/${departmentId}/teachers`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                      <Users className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
+                                      <h4 className="font-bold text-slate-800">Zirtirtute</h4>
+                                      <p className="text-xs text-slate-500 mt-1">Department teachers</p>
+                                  </Link>
+                              </div>
+
+                              {/* Hriattirna Section */}
+                              {currentDept?.announcements && currentDept.announcements !== '<p><br></p>' && (
+                                  <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                      <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
+                                          <MessageCircle className="text-church-600"/> Hriattirna
+                                      </h3>
+                                      <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentDept.announcements }} />
+                                  </div>
+                              )}
+                            </>
+                          )}
+
                           {/* Quarterly Syllabus Section */}
-                          {quarterlySyllabus.length > 0 && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
+                          {section === 'quarterly' && quarterlySyllabus.length > 0 && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right-4 duration-300">
                                 <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
                                     <Sparkles className="text-church-600"/> Thla thum chhung zir (2026)
                                 </h3>
                                 <div className="space-y-6">
-                                    {quarterlySyllabus.map((item, index) => (
-                                        <div key={index} className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                            <h4 className="text-sm font-black text-church-700 uppercase tracking-widest mb-4 border-b border-church-100 pb-2">{item.period}</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {quarterlySyllabus.map((item, index) => {
+                                        const currentMonth = new Date().getMonth();
+                                        const currentQuarterIndex = Math.floor(currentMonth / 3);
+                                        const isCurrentQuarter = index === currentQuarterIndex;
+                                        
+                                        return (
+                                            <div key={index} className={`p-6 rounded-2xl border transition-all duration-300 ${isCurrentQuarter ? 'bg-church-50 border-church-200 shadow-md ring-1 ring-church-200 scale-[1.02]' : 'bg-slate-50 border-slate-100'}`}>
+                                                <div className="flex justify-between items-center mb-4 border-b border-church-100 pb-2">
+                                                    <h4 className="text-sm font-black text-church-700 uppercase tracking-widest">{item.period}</h4>
+                                                    {isCurrentQuarter && (
+                                                        <span className="px-2 py-1 bg-church-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                                                            <Sparkles size={10} /> Current Quarter
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hla</span>
                                                     <p className="text-sm font-bold text-slate-800">{item.hla}</p>
@@ -896,15 +979,16 @@ const SundaySchool: React.FC = () => {
                                                         <p className="text-sm font-bold text-slate-800">{item.solfaZir}</p>
                                                     </div>
                                                 )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                           )}
                           
                           {/* Syllabus Calendar Section */}
-                          {(() => {
+                          {section === 'calendar' && (() => {
                             const syllabuses: Record<string, any[]> = {
                               beginner: beginnerSyllabus,
                               primary: primarySyllabus,
@@ -918,7 +1002,7 @@ const SundaySchool: React.FC = () => {
                             
                             if (currentSyllabus) {
                               return (
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mt-8">
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right-4 duration-300">
                                     <h3 className="text-xl font-black text-slate-800 mb-6">Syllabus Calendar</h3>
                                     <div className="space-y-2">
                                         <div className="grid grid-cols-4 gap-4 p-3 border-b-2 border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -926,13 +1010,30 @@ const SundaySchool: React.FC = () => {
                                             <div>Zirlai No.</div>
                                             <div className="col-span-2">Zirlai</div>
                                         </div>
-                                        {currentSyllabus.map((item, index) => (
-                                            <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm">
-                                                <div className="font-bold text-church-700">{formatDate(item.date)}</div>
-                                                <div className="font-bold text-slate-600">{item.lessonNumber}</div>
-                                                <div className="col-span-2 text-slate-800">{item.lessonName}</div>
-                                            </div>
-                                        ))}
+                                        {(() => {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            
+                                            // Find the first lesson that is today or in the future
+                                            const upcomingIndex = currentSyllabus.findIndex(item => {
+                                                const itemDate = new Date(item.date);
+                                                return itemDate >= today;
+                                            });
+
+                                            return currentSyllabus.map((item, index) => {
+                                                const isUpcoming = index === upcomingIndex;
+                                                return (
+                                                    <div key={index} className={`grid grid-cols-4 gap-4 p-3 border-b border-slate-100 text-sm transition-all duration-300 ${isUpcoming ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100 rounded-xl scale-[1.01] z-10' : ''}`}>
+                                                        <div className={`font-bold ${isUpcoming ? 'text-amber-700' : 'text-church-700'}`}>
+                                                            {formatDate(item.date)}
+                                                            {isUpcoming && <span className="ml-2 text-[8px] font-black uppercase tracking-widest bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">Upcoming</span>}
+                                                        </div>
+                                                        <div className={`font-bold ${isUpcoming ? 'text-amber-600' : 'text-slate-600'}`}>{item.lessonNumber}</div>
+                                                        <div className={`col-span-2 ${isUpcoming ? 'text-amber-900 font-bold' : 'text-slate-800'}`}>{item.lessonName}</div>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                               );
@@ -940,17 +1041,9 @@ const SundaySchool: React.FC = () => {
                             return null;
                           })()}
 
-                          {/* Hriattirna Section */}
-                          {currentDept?.announcements && currentDept.announcements !== '<p><br></p>' && (
-                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 mb-6">
-                                      <MessageCircle className="text-church-600"/> Hriattirna
-                                  </h3>
-                                  <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentDept.announcements }} />
-                              </div>
-                          )}
-
-                          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                          {/* Zirtirtute Section */}
+                          {section === 'teachers' && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right-4 duration-300">
                               <div className="flex justify-between items-center mb-6">
                                   <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><UserCheck className="text-church-600"/> Zirtirtute ({currentDept?.zirtirtute?.length || 0})</h3>
                                 {isAdmin && currentDept && (
@@ -1038,6 +1131,7 @@ const SundaySchool: React.FC = () => {
                                   </DndContext>
                               )}
                           </div>
+                          )}
                       </div>
 
                       <div className="space-y-6">
