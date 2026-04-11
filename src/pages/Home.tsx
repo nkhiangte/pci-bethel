@@ -170,7 +170,9 @@ const Home: React.FC = () => {
                     <div className="p-6 flex-1 flex flex-col">
                         <p className="text-xs font-bold text-slate-400 mb-2">{item.date}</p>
                         <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{item.title}</h3>
-                        <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed flex-1">{item.content}</p>
+                        <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed flex-1">
+                            {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
+                        </p>
                         <div className="mt-4 flex items-center text-xs font-bold text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
                             Read More <ChevronRight size={12} className="ml-1"/>
                         </div>
