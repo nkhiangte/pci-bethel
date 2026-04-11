@@ -195,6 +195,52 @@ const Directory: React.FC = () => {
           });
         }
 
+        // 6. Fetch Inkhawm Chanvo
+        const chanvoSnapshot = await db.collection('inkhawmChanvo').get();
+        
+        const formatChanvoRole = (mainTitle: string, subTitle?: string) => {
+          const formatWord = (word: string) => {
+            let w = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            if (w.endsWith('tute')) {
+              w = w.slice(0, -2);
+            }
+            return w;
+          };
+          const formattedMain = mainTitle.split(' ').map(formatWord).join(' ');
+          return subTitle ? `${subTitle} ${formattedMain}` : formattedMain;
+        };
+
+        chanvoSnapshot.docs.forEach(doc => {
+          const chanvo = doc.data() as any;
+          const mainTitle = chanvo.title || doc.id;
+          
+          if (chanvo.members && Array.isArray(chanvo.members)) {
+            chanvo.members.forEach((memberName: string, idx: number) => {
+              membersList.push({
+                id: `chanvo-${doc.id}-${idx}`,
+                name: memberName,
+                role: formatChanvoRole(mainTitle),
+                source: 'Inkhawm Chanvo'
+              });
+            });
+          }
+
+          if (chanvo.subGroups && Array.isArray(chanvo.subGroups)) {
+            chanvo.subGroups.forEach((subGroup: any, subIdx: number) => {
+              if (subGroup.members && Array.isArray(subGroup.members)) {
+                subGroup.members.forEach((memberName: string, idx: number) => {
+                  membersList.push({
+                    id: `chanvo-${doc.id}-${subIdx}-${idx}`,
+                    name: memberName,
+                    role: formatChanvoRole(mainTitle, subGroup.title),
+                    source: 'Inkhawm Chanvo'
+                  });
+                });
+              }
+            });
+          }
+        });
+
         // Group members by Name + Phone to avoid duplicates and show multiple roles
         const grouped: Record<string, DirectoryMember> = {};
         membersList.forEach(m => {
