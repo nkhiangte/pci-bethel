@@ -821,6 +821,9 @@ const CommitteeDetail: React.FC = () => {
   
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
+  const [activityImageFile, setActivityImageFile] = useState<File | null>(null);
+  const [activityImageUrl, setActivityImageUrl] = useState('');
+  const [uploadingActivityImage, setUploadingActivityImage] = useState(false);
   
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<CommitteeReport | null>(null);
@@ -926,24 +929,62 @@ const CommitteeDetail: React.FC = () => {
 
   const handleSaveActivity = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !id || !editingActivity) return;
+    if (!db || !id || !editingActivity || !committee) return;
     setLoading(true);
     try {
+      let imageUrl = editingActivity.imageUrl || '';
+      
+      // Handle Image Upload for Activity
+      if (activityImageFile) {
+        setUploadingActivityImage(true);
+        const storageRef = storage.ref(`committee_activities/${id}_${Date.now()}`);
+        await storageRef.put(activityImageFile);
+        imageUrl = await storageRef.getDownloadURL();
+      } else if (activityImageUrl) {
+        imageUrl = activityImageUrl;
+      }
+
       const committeeRef = db.collection('committees').doc(id);
       const doc = await committeeRef.get();
       let activities = (doc.data() as any).activities || [];
       
+      const activityData = { ...editingActivity, imageUrl, id: editingActivity.id || Date.now().toString() };
+
       if (editingActivity.id) {
-        activities = activities.map((a: any) => a.id === editingActivity.id ? editingActivity : a);
+        activities = activities.map((a: any) => a.id === editingActivity.id ? activityData : a);
       } else {
-        activities.push({ ...editingActivity, id: Date.now().toString() });
+        activities.push(activityData);
       }
       
       await committeeRef.update({ activities });
+      
+      // Sync to Announcements (Hriattirna)
+      try {
+        const announcementData = {
+          title: `[${committee.name}] ${activityData.title}`,
+          content: activityData.description,
+          date: activityData.date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          category: committee.name,
+          images: imageUrl ? [imageUrl] : [],
+          createdAt: new Date().toISOString(),
+          author: committee.name
+        };
+        
+        // Check if we should update an existing announcement or create a new one
+        // For simplicity, we create a new announcement for each activity update/creation
+        // to ensure it appears at the top of Hriattirna.
+        await db.collection('announcements').add(announcementData);
+      } catch (annError) {
+        console.error("Error syncing to announcements:", annError);
+      }
+
       setCommittee(prev => prev ? { ...prev, activities } : null);
       setIsActivityModalOpen(false);
+      setActivityImageFile(null);
+      setActivityImageUrl('');
     } catch (error) { console.error("Error saving activity:", error); }
     setLoading(false);
+    setUploadingActivityImage(false);
   };
 
   const handleDeleteActivity = async (activityId: string) => {
@@ -1253,6 +1294,19 @@ const CommitteeDetail: React.FC = () => {
                             <h4 className="text-xl font-bold text-slate-800">{activity.title}</h4>
                             <span className="text-sm text-slate-400 font-medium">{activity.date}</span>
                           </div>
+                          
+                          {activity.imageUrl && (
+                            <div className="mt-4 mb-4 rounded-xl overflow-hidden border border-slate-100 max-w-md">
+                              <img 
+                                src={activity.imageUrl} 
+                                alt={activity.title} 
+                                className="w-full h-auto object-cover cursor-pointer hover:scale-105 transition-transform duration-500" 
+                                onClick={() => setEnlargedImage(activity.imageUrl)}
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+
                           <div 
                             className="text-slate-600 mt-2 leading-relaxed prose prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: activity.description }}
@@ -1393,12 +1447,57 @@ const CommitteeDetail: React.FC = () => {
                     </div>
                     <div className="h-12"></div> {/* Spacer for Quill toolbar/overflow */}
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Activity Image</label>
+                    <div className="space-y-3">
+                      <div className="flex flex-col items-center">
+                        <div className="w-full aspect-video rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                          {activityImageFile ? (
+                            <img src={URL.createObjectURL(activityImageFile)} alt="Preview" className="w-full h-full object-cover" />
+                          ) : editingActivity?.imageUrl ? (
+                            <img src={editingActivity.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                          ) : activityImageUrl ? (
+                            <img src={activityImageUrl} alt="URL Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-center">
+                              <Camera className="text-slate-400 mx-auto mb-2" size={32} />
+                              <p className="text-xs text-slate-500">Upload or paste URL below</p>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Upload className="text-white" size={24} />
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setActivityImageFile(e.target.files[0]);
+                                setActivityImageUrl('');
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <input 
+                        className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none text-xs" 
+                        placeholder="Or paste image URL here..." 
+                        value={activityImageUrl} 
+                        onChange={e => {
+                          setActivityImageUrl(e.target.value);
+                          setActivityImageFile(null);
+                        }} 
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
                 <button type="button" onClick={() => setIsActivityModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">{t.committeeDetail.modals.cancel}</button>
-                <button type="submit" disabled={loading} className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all">
-                  {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} {t.committeeDetail.modals.save}
+                <button type="submit" disabled={loading || uploadingActivityImage} className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all">
+                  {loading || uploadingActivityImage ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} {t.committeeDetail.modals.save}
                 </button>
               </div>
             </form>
