@@ -298,19 +298,19 @@ const Directory: React.FC = () => {
   }, [searchTerm, allMembers]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Directory</h1>
-        <p className="text-slate-600">Rawngbawltu hrang hranga hruaitute leh member-te zawnna</p>
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
+      <div className="text-center mb-4 md:mb-10">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1 md:mb-2">Directory</h1>
+        <p className="text-sm md:text-base text-slate-600 leading-tight">Rawngbawltu hrang hranga hruaitute leh member-te zawnna</p>
       </div>
 
-      <div className="relative mb-8">
+      <div className="relative mb-4 md:mb-8">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-slate-400" />
         </div>
         <input
           type="text"
-          className="block w-full pl-11 pr-4 py-4 border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-church-500 focus:border-church-500 text-lg transition-all"
+          className="block w-full pl-11 pr-4 py-3 md:py-4 border border-slate-200 rounded-xl md:rounded-2xl shadow-sm focus:ring-2 focus:ring-church-500 focus:border-church-500 text-base md:text-lg transition-all"
           placeholder="Enter name to search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
