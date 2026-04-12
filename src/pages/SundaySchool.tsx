@@ -1482,6 +1482,7 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
                         <th className="px-4 md:px-8 py-3 md:py-5">Hming / Role</th>
                         <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal</th>
                         <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal lo</th>
+                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Total</th>
                         <th className="px-2 md:px-8 py-3 md:py-5 text-right"></th>
                     </tr>
                 </thead>
@@ -1490,24 +1491,28 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
                         <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Zirtirtu</td>
                         <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.zirtirtu.kal}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtirtu.kallo}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black text-slate-600">{segment.zirtirtu.kal + segment.zirtirtu.kallo}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className={`${accentBg} hover:bg-slate-100/30 transition-colors`}>
                         <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Zirtu</td>
                         <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.zirtu.kal}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtu.kallo}</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black text-slate-600">{segment.zirtu.kal + segment.zirtu.kallo}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className="hover:bg-slate-50/50 transition-colors">
                         <td className={`px-4 md:px-8 py-4 md:py-6 text-xs md:text-base font-bold ${textTheme}`}>Chhimtu</td>
                         <td className={`px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black ${textTheme}`}>{segment.chhimtu || 0}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6 text-center text-sm md:text-base text-slate-400 font-bold">-</td>
+                        <td className="px-2 md:px-8 py-4 md:py-6 text-center text-lg md:text-xl font-black text-slate-600">{segment.chhimtu || 0}</td>
                         <td className="px-2 md:px-8 py-4 md:py-6"></td>
                     </tr>
                     <tr className={`${totalBg} font-black border-t-2 border-slate-200`}>
                         <td className={`px-4 md:px-8 py-6 md:py-8 text-[9px] md:text-[11px] uppercase tracking-[0.1em] md:tracking-[0.3em] ${textTheme}`}>Total</td>
                         <td className={`px-2 md:px-8 py-6 md:py-8 text-center text-xl md:text-3xl ${textTheme} tracking-tight`}>{(segment.zirtirtu.kal + segment.zirtu.kal + (segment.chhimtu || 0))}</td>
                         <td className="px-2 md:px-8 py-6 md:py-8 text-center text-sm md:text-base text-slate-400 font-bold">{segment.zirtirtu.kallo + segment.zirtu.kallo}</td>
+                        <td className={`px-2 md:px-8 py-6 md:py-8 text-center text-xl md:text-3xl ${textTheme} tracking-tight`}>{(segment.zirtirtu.kal + segment.zirtu.kal + (segment.chhimtu || 0)) + (segment.zirtirtu.kallo + segment.zirtu.kallo)}</td>
                         <td className={`px-4 md:px-8 py-6 md:py-8 text-right ${textTheme}`}>
                             <div className="flex flex-col items-end">
                                 <span className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] text-slate-400 mb-1 font-black">Thawhlawm</span>
