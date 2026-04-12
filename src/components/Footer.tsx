@@ -29,9 +29,6 @@ const Footer: React.FC = () => {
           {/* Column 1: Info */}
           <div>
             <h3 className="text-white text-lg font-bold mb-4">{CHURCH_NAME}</h3>
-            <p className="text-sm leading-relaxed mb-4">
-              {t.footer.churchDesc}
-            </p>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-white transition"><Facebook size={20} /></a>
               <a href="#" className="hover:text-white transition"><Youtube size={20} /></a>

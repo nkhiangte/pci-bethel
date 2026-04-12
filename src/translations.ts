@@ -44,7 +44,6 @@ export const translations = {
       hasAccount: 'Already have an account?',
     },
     footer: {
-      churchDesc: 'A community of believers united in faith and service.',
       quickLinks: 'Quick Links',
       contactUs: 'Contact Us',
       rightsReserved: 'All rights reserved.',
@@ -516,7 +515,6 @@ export const translations = {
       hasAccount: 'Account i nei tawh?',
     },
     footer: {
-      churchDesc: 'Rinna leh rawngbawlnaa inlungrual.',
       quickLinks: 'Quick Links',
       contactUs: 'Biakpawhna',
       rightsReserved: 'All rights reserved.',
