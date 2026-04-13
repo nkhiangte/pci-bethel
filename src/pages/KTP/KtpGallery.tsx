@@ -238,7 +238,17 @@ const KtpGallery: React.FC = () => {
         .where('category', '==', currentCategory)
         .onSnapshot((snapshot: any) => {
             const folderData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-            folderData.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+            folderData.sort((a: any, b: any) => {
+                const getYear = (text: string) => {
+                  if (!text) return 0;
+                  const matches = text.match(/\b(19|20)\d{2}\b/g);
+                  return matches ? Math.max(...matches.map(m => parseInt(m, 10))) : 0;
+                };
+                const yearA = getYear(a.name);
+                const yearB = getYear(b.name);
+                if (yearA !== yearB) return yearB - yearA;
+                return (b.date || '').localeCompare(a.date || '');
+            });
             
             setFolders(folderData);
             
@@ -281,6 +291,15 @@ const KtpGallery: React.FC = () => {
             );
             
             const sortedItems = [...filteredItems].sort((a: any, b: any) => {
+                const getYear = (text: string) => {
+                  if (!text) return 0;
+                  const matches = text.match(/\b(19|20)\d{2}\b/g);
+                  return matches ? Math.max(...matches.map(m => parseInt(m, 10))) : 0;
+                };
+                const yearA = getYear(a.title);
+                const yearB = getYear(b.title);
+                if (yearA !== yearB) return yearB - yearA;
+
                 const orderA = a.order !== undefined ? a.order : 999999;
                 const orderB = b.order !== undefined ? b.order : 999999;
                 
