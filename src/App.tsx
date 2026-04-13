@@ -106,6 +106,7 @@ const App: React.FC = () => {
               <Route path="yearly-reports" element={<KtpYearlyReports />} />
             </Route>
             <Route path="gallery" element={<KtpGallery />} />
+            <Route path="gallery/:folderId" element={<KtpGallery />} />
             <Route path="productions" element={<KtpProductions />} />
             <Route path="whoswho" element={<KtpWhosWho />} />
           </Route>

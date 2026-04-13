@@ -730,39 +730,39 @@ const Gallery: React.FC = () => {
                     >
                       <div className="mb-3 flex justify-center">
                         {(() => {
-                          const getFirstItemInFolder = (folderId: string): GalleryItem | undefined => {
-                            const directItems = allItems.filter(item => item.folderId === folderId);
-                            if (directItems.length > 0) return directItems[0];
-                            
-                            const subfolders = folders.filter(f => f.parentId === folderId);
-                            for (const subfolder of subfolders) {
-                              const item = getFirstItemInFolder(subfolder.id);
-                              if (item) return item;
-                            }
-                            return undefined;
-                          };
+                      const getAllItemsInFolder = (folderId: string): GalleryItem[] => {
+                        let folderItems = allItems.filter(item => item.folderId === folderId);
+                        
+                        const subfolders = folders.filter(f => f.parentId === folderId);
+                        for (const subfolder of subfolders) {
+                          folderItems = [...folderItems, ...getAllItemsInFolder(subfolder.id)];
+                        }
+                        return folderItems;
+                      };
 
-                          const firstItem = getFirstItemInFolder(folder.id);
-                          
-                          if (firstItem) {
-                            const videoId = firstItem.videoUrl ? getYouTubeId(firstItem.videoUrl) : null;
-                            const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : firstItem.imageUrl;
-                            
-                            return (
-                              <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden shadow-inner bg-slate-100">
-                                <img 
-                                  src={thumbnailUrl} 
-                                  alt={folder.name} 
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-                                <div className="absolute bottom-0 right-0 p-1 bg-white/80 rounded-tl-lg">
-                                  <Folder size={12} className="text-amber-500" fill="currentColor" />
-                                </div>
-                              </div>
-                            );
-                          }
+                      const folderItems = getAllItemsInFolder(folder.id);
+                      
+                      if (folderItems.length > 0) {
+                        // Choose a random item for the thumbnail
+                        const randomItem = folderItems[Math.floor(Math.random() * folderItems.length)];
+                        const videoId = randomItem.videoUrl ? getYouTubeId(randomItem.videoUrl) : null;
+                        const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : randomItem.imageUrl;
+                        
+                        return (
+                          <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden shadow-inner bg-slate-100">
+                            <img 
+                              src={thumbnailUrl} 
+                              alt={folder.name} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                            <div className="absolute bottom-0 right-0 p-1 bg-white/80 rounded-tl-lg">
+                              <Folder size={12} className="text-amber-500" fill="currentColor" />
+                            </div>
+                          </div>
+                        );
+                      }
                           
                           return (
                             <Folder size={48} className="text-amber-400 group-hover:scale-110 transition-transform" fill="currentColor" fillOpacity={0.2} />
