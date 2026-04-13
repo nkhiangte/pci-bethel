@@ -48,7 +48,20 @@ const SundaySchoolDashboard: React.FC = () => {
         
         // Fetch departments
         const deptsSnapshot = await db.collection('sundaySchoolDepartments').get();
-        setDepartments(deptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const fetchedDepts = deptsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const order = ['pre-beginner', 'beginner', 'primary', 'junior', 'intermediate', 'sacrament', 'senior', 'puitling'];
+        fetchedDepts.sort((a: any, b: any) => {
+          const indexA = order.indexOf((a.name || '').toLowerCase());
+          const indexB = order.indexOf((b.name || '').toLowerCase());
+          
+          if (indexA === -1 && indexB === -1) return (a.name || '').localeCompare(b.name || '');
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+        
+        setDepartments(fetchedDepts);
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, 'sundaySchoolSettings/dashboard or sundaySchoolDepartments');
       }
