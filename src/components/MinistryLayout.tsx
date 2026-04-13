@@ -128,6 +128,9 @@ const MinistryLayout: React.FC<MinistryLayoutProps> = ({ ministryId, navLinks })
                   src={currentImage || ''}
                   alt={fellowship.name}
                   className="w-full h-full object-contain rounded-full"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${fellowship.acronym || 'Logo'}&background=0f172a&color=fff&size=256`;
+                  }}
                 />
               </div>
               {isAdmin && (

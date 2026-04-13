@@ -42,6 +42,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminThawhlawm from './pages/AdminThawhlawm';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import SundaySchool from './pages/SundaySchool';
 import SundaySchoolDashboard from './pages/SundaySchoolDashboard';
 import Statistics from './pages/Statistics';
@@ -59,7 +60,8 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <HashRouter>
+        <ErrorBoundary>
+          <HashRouter>
           <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
 
             {/* Banner is the background of the navbar — fixed so it never moves on scroll */}
@@ -146,8 +148,9 @@ const App: React.FC = () => {
             <Footer />
           </div>
         </HashRouter>
-      </AuthProvider>
-    </LanguageProvider>
+      </ErrorBoundary>
+    </AuthProvider>
+  </LanguageProvider>
   );
 };
 

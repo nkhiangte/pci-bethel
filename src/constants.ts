@@ -74,7 +74,7 @@ const DATA = {
         description: 'Rawngbawl tura Chhandam',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Thawhṭanni @ 7:00 PM',
-        image: 'https://i.ibb.co/L8yPzCq/ktp-logo.png'
+        image: 'https://ui-avatars.com/api/?name=KTP&background=0284c7&color=fff&size=256'
       },
       {
         id: 'kpvm',
@@ -83,7 +83,7 @@ const DATA = {
         description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
         leader: 'Pi Lalhlimpuii (Leader)',
         schedule: 'Thawhlehni @ 1:30 PM',
-        image: 'https://i.ibb.co/k2x1G2Q/hmeichhia.jpg'
+        image: 'https://ui-avatars.com/api/?name=KH&background=be185d&color=fff&size=256'
       },
       {
         id: 'pavlai',
@@ -92,7 +92,7 @@ const DATA = {
         description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
-        image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
+        image: 'https://ui-avatars.com/api/?name=KPP&background=15803d&color=fff&size=256'
       }
     ] as Ministry[],
     pastors: [
@@ -227,7 +227,7 @@ const DATA = {
         description: 'Rawngbawl tura Chhandam',
         leader: 'Tv. Lalrinfela (Leader)',
         schedule: 'Thawhṭanni @ 7:00 PM',
-        image: 'https://i.ibb.co/L8yPzCq/ktp-logo.png'
+        image: 'https://ui-avatars.com/api/?name=KTP&background=0284c7&color=fff&size=256'
       },
       {
         id: 'kpvm',
@@ -236,7 +236,7 @@ const DATA = {
         description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
         leader: 'Pi Lalhlimpuii (Leader)',
         schedule: 'Thawhlehni @ 1:30 PM',
-        image: 'https://i.ibb.co/k2x1G2Q/hmeichhia.jpg'
+        image: 'https://ui-avatars.com/api/?name=KH&background=be185d&color=fff&size=256'
       },
       {
         id: 'pavlai',
@@ -245,7 +245,7 @@ const DATA = {
         description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
         leader: 'Pu R. Lalmalsawma (Leader)',
         schedule: 'Zirtawpni @ 7:00 PM',
-        image: 'https://i.ibb.co/YcX6K0T/pavalai.jpg'
+        image: 'https://ui-avatars.com/api/?name=KPP&background=15803d&color=fff&size=256'
       }
     ] as Ministry[],
     pastors: [

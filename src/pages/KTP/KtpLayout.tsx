@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useParams } from 'react-router-dom';
 import { 
   Book, Users, DollarSign, List, History, 
@@ -20,6 +20,23 @@ const KtpLayout: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const doc = await db.collection('ministries').doc('ktp').get();
+        if (doc.exists) {
+          const data = doc.data();
+          if (data?.image) {
+            setCustomImage(data.image);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching KTP logo:', err);
+      }
+    };
+    fetchLogo();
+  }, []);
 
   const currentImage = customImage || fellowship?.image;
 
@@ -86,6 +103,9 @@ const KtpLayout: React.FC = () => {
                   src={currentImage}
                   alt={fellowship.name}
                   className="w-full h-full object-contain rounded-full"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=KTP&background=0284c7&color=fff&size=256`;
+                  }}
                 />
               </div>
               {isAdmin && (
