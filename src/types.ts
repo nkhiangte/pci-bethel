@@ -368,9 +368,31 @@ export interface GalleryItem {
   title: string;
   imageUrl?: string;
   videoUrl?: string;
-  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos' | 'Inkhawmpui';
+  driveUrl?: string;
+  category: 'Committees' | 'Kohhran Chetna' | 'Kohhran Hunpui' | 'Videos' | 'Inkhawmpui' | 'Kristian Ṭhalai Pawl (KTP)';
   folderId?: string;
   date: string;
+  order?: number;
+}
+
+export interface ProductionFolder {
+  id: string;
+  name: string;
+  category: string;
+  date: string;
+  description?: string;
+  parentId?: string;
+}
+
+export interface ProductionItem {
+  id: string;
+  title: string;
+  type: 'image' | 'video' | 'text';
+  imageUrl?: string;
+  videoUrl?: string;
+  content?: string;
+  date: string;
+  folderId?: string;
   order?: number;
 }
 

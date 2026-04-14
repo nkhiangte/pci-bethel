@@ -21,7 +21,7 @@ const KtpLayout: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchLogo = async () => {
       try {
         const doc = await db.collection('ministries').doc('ktp').get();
@@ -29,6 +29,9 @@ const KtpLayout: React.FC = () => {
           const data = doc.data();
           if (data?.image) {
             setCustomImage(data.image);
+          } else if (data?.imageUrl) {
+            // Fallback for different field name
+            setCustomImage(data.imageUrl);
           }
         }
       } catch (err) {

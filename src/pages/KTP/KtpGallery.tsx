@@ -230,7 +230,7 @@ const KtpGallery: React.FC = () => {
     })
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     setLoading(true);
     
     // Fetch folders for KTP
