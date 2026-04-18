@@ -28,5 +28,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["src"]
+  "exclude": ["src", "android", "dist", "node_modules"]
 }
