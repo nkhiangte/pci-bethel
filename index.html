@@ -86,6 +86,15 @@
         backface-visibility: hidden;
       }
 
+      @keyframes scroll-vertical {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(calc(-50% - 0.75rem)); }
+      }
+
+      .animate-scroll-vertical {
+        animation: scroll-vertical 40s linear infinite;
+      }
+
       /* Real 3D thickness using shadow layers */
       .token-3d {
         box-shadow: 

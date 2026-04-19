@@ -145,40 +145,39 @@ const Home: React.FC = () => {
         </div>
         
         {latestNews.length > 0 ? (
-            <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {latestNews.map((item) => (
-                <Link key={item.id} to="/announcements" className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col h-full shrink-0 w-80 sm:w-96 snap-start">
-                    {item.imageUrls && item.imageUrls.length > 0 ? (
-                        <div className="h-40 bg-slate-200 overflow-hidden relative">
-                            <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
-                                {item.category}
+            <div className="relative h-[480px] overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100 p-6 group">
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
+                
+                <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused]">
+                    {[...latestNews, ...latestNews].map((item, index) => (
+                        <Link key={`${item.id}-${index}`} to="/announcements" className="group/card flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
+                            {item.imageUrls && item.imageUrls.length > 0 ? (
+                                <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
+                                    <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
+                                </div>
+                            ) : item.imageUrl ? (
+                                <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
+                                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
+                                </div>
+                            ) : (
+                                <div className="h-24 w-full sm:w-32 bg-church-50 flex items-center justify-center shrink-0 rounded-lg border border-church-100">
+                                     <Radio size={24} className="text-church-300" />
+                                </div>
+                            )}
+                            <div className="flex-1 flex flex-col justify-center">
+                                <div className="flex items-center flex-wrap gap-2 mb-1">
+                                    <span className="text-[10px] font-bold text-church-600 bg-church-50 px-2 py-0.5 rounded uppercase tracking-wider">{item.category}</span>
+                                    <span className="text-xs font-bold text-slate-400">{item.date}</span>
+                                </div>
+                                <h3 className="font-bold text-slate-900 mb-1 line-clamp-2 leading-snug group-hover/card:text-church-700 transition-colors">{item.title}</h3>
+                                <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
+                                    {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
+                                </p>
                             </div>
-                        </div>
-                    ) : item.imageUrl ? (
-                        <div className="h-40 bg-slate-200 overflow-hidden relative">
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-800 uppercase tracking-wider shadow-sm">
-                                {item.category}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="h-20 bg-church-50 flex items-center justify-center border-b border-church-100">
-                             <div className="text-[10px] font-bold text-church-400 uppercase tracking-wider">{item.category}</div>
-                        </div>
-                    )}
-                    <div className="p-6 flex-1 flex flex-col">
-                        <p className="text-xs font-bold text-slate-400 mb-2">{item.date}</p>
-                        <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-church-700 transition-colors">{item.title}</h3>
-                        <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed flex-1">
-                            {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
-                        </p>
-                        <div className="mt-4 flex items-center text-xs font-bold text-church-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                            Read More <ChevronRight size={12} className="ml-1"/>
-                        </div>
-                    </div>
-                </Link>
-            ))}
+                        </Link>
+                    ))}
+                </div>
             </div>
         ) : (
             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
