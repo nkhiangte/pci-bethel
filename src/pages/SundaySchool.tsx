@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { db, handleFirestoreError, OperationType } from '../services/firebase';
+import { db, storage, handleFirestoreError, OperationType } from '../services/firebase';
 import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment, Staff } from '../types';
 import { 
   Users, UserCheck, Edit, Save, X, Loader, Database, 
@@ -258,6 +258,12 @@ const SundaySchool: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Partial<SundaySchoolDepartment> | null>(null);
+  
+  // Group Photo States
+  const [isUploadingGroupPhoto, setIsUploadingGroupPhoto] = useState(false);
+  const [groupPhotoUrlInput, setGroupPhotoUrlInput] = useState('');
+  const [showPhotoInput, setShowPhotoInput] = useState(false);
+  const groupPhotoFileRef = useRef<HTMLInputElement>(null);
   const [quarterlySyllabus, setQuarterlySyllabus] = useState<QuarterlySyllabusItem[]>([]);
 
   // Zirtirtu Profile States
@@ -795,6 +801,71 @@ const SundaySchool: React.FC = () => {
       }
   };
 
+  const handleGroupPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const normalizedId = departmentId?.toLowerCase();
+    const currentDept = departments.find(d => d.id === normalizedId);
+    
+    if (!file || !currentDept) return;
+    
+    setIsUploadingGroupPhoto(true);
+    try {
+      const storageRef = storage.ref(`sunday_school_groups/${currentDept.id}_${Date.now()}`);
+      await storageRef.put(file);
+      const url = await storageRef.getDownloadURL();
+      
+      await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+        groupPhotoUrl: url
+      });
+      
+      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, groupPhotoUrl: url } : d));
+      setShowPhotoInput(false);
+    } catch (error: any) {
+      console.error('Failed to upload group photo:', error);
+      alert('Failed to upload photo: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUploadingGroupPhoto(false);
+      if (groupPhotoFileRef.current) groupPhotoFileRef.current.value = '';
+    }
+  };
+
+  const handleSaveGroupPhotoUrl = async () => {
+    const normalizedId = departmentId?.toLowerCase();
+    const currentDept = departments.find(d => d.id === normalizedId);
+    if (!currentDept || !groupPhotoUrlInput.trim()) return;
+
+    setIsUploadingGroupPhoto(true);
+    try {
+      await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+        groupPhotoUrl: groupPhotoUrlInput.trim()
+      });
+      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, groupPhotoUrl: groupPhotoUrlInput.trim() } : d));
+      setGroupPhotoUrlInput('');
+      setShowPhotoInput(false);
+    } catch (error: any) {
+      console.error('Failed to save group photo URL:', error);
+      alert('Failed to save photo URL: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUploadingGroupPhoto(false);
+    }
+  };
+
+  const handleRemoveGroupPhoto = async () => {
+    const normalizedId = departmentId?.toLowerCase();
+    const currentDept = departments.find(d => d.id === normalizedId);
+    if (!currentDept || !window.confirm("Remove this group photograph?")) return;
+
+    try {
+      await db.collection('sundaySchoolDepartments').doc(currentDept.id).update({
+        groupPhotoUrl: ''
+      });
+      setDepartments(prev => prev.map(d => d.id === currentDept.id ? { ...d, groupPhotoUrl: '' } : d));
+    } catch (error: any) {
+      console.error('Failed to remove group photo:', error);
+      alert('Failed to remove photo: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader className="animate-spin text-church-500"/></div>;
   
   const isReportView = departmentId === 'report';
@@ -1115,6 +1186,50 @@ const SundaySchool: React.FC = () => {
                                         </button>
                                         <input type="file" ref={importInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleImportZirtirtute} />
                                     </div>
+                                )}
+                              </div>
+                              
+                              {/* Group Photo Section */}
+                              <div className="mb-8 relative">
+                                {currentDept?.groupPhotoUrl ? (
+                                  <div className="relative group rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+                                    <img src={currentDept.groupPhotoUrl} alt={`${currentDept?.name} Group`} className="w-full h-auto object-cover max-h-[400px]" />
+                                    {isAdmin && (
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-4">
+                                        <button onClick={() => setShowPhotoInput(!showPhotoInput)} className="px-4 py-2 bg-white text-slate-800 font-bold rounded-lg hover:bg-slate-100 shadow-lg flex items-center gap-2"><Edit size={16}/> Change Photo</button>
+                                        <button onClick={handleRemoveGroupPhoto} className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 shadow-lg flex items-center gap-2"><Trash size={16} /> Remove</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  isAdmin && (
+                                     <button onClick={() => setShowPhotoInput(!showPhotoInput)} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl text-slate-500 hover:bg-slate-50 hover:text-church-600 hover:border-church-200 transition font-medium flex items-center justify-center gap-2">
+                                        <Camera size={24} /> Add Group Photograph
+                                     </button>
+                                  )
+                                )}
+
+                                {isAdmin && showPhotoInput && (
+                                  <div className="mt-4 p-5 bg-slate-50 rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="text-sm font-bold text-slate-700">Update Group Photograph</h4>
+                                        <button onClick={() => setShowPhotoInput(false)} className="text-slate-400 hover:text-slate-600"><X size={18}/></button>
+                                    </div>
+                                    <div className="flex flex-col gap-4">
+                                      <div className="flex items-center gap-4">
+                                        <input type="file" ref={groupPhotoFileRef} accept="image/*" onChange={handleGroupPhotoUpload} className="hidden" />
+                                        <button disabled={isUploadingGroupPhoto} onClick={() => groupPhotoFileRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 font-medium rounded-lg hover:bg-emerald-100 border border-emerald-100 disabled:opacity-50 transition w-full justify-center sm:w-auto">
+                                          {isUploadingGroupPhoto ? <Loader className="animate-spin" size={18} /> : <FileUp size={18} />}
+                                          Upload File
+                                        </button>
+                                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest hidden sm:block">OR</span>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <input type="url" value={groupPhotoUrlInput} onChange={e => setGroupPhotoUrlInput(e.target.value)} placeholder="Paste image URL here..." className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-church-500 outline-none" />
+                                        <button disabled={isUploadingGroupPhoto || !groupPhotoUrlInput.trim()} onClick={handleSaveGroupPhotoUrl} className="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-900 transition disabled:opacity-50 flex items-center gap-2"><Save size={16}/> Save Link</button>
+                                      </div>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                               

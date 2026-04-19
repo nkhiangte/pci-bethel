@@ -218,6 +218,7 @@ export interface SundaySchoolDepartment {
   bibleVerse?: string;
   memoryVerse?: string;
   announcements?: string;
+  groupPhotoUrl?: string;
 }
 
 export interface SSReportSegment {
