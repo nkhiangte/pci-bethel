@@ -32,7 +32,8 @@ import {
   FileDown,
   Upload,
   Phone,
-  MessageCircle
+  MessageCircle,
+  BookOpen
 } from 'lucide-react';
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
@@ -833,6 +834,7 @@ const CommitteeDetail: React.FC = () => {
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+  const [selectedMemberBio, setSelectedMemberBio] = useState<CommitteeMember | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!id || !db) return;
@@ -1243,6 +1245,15 @@ const CommitteeDetail: React.FC = () => {
                             />
                           </div>
                         )}
+
+                        {member.biography && (
+                          <button 
+                            onClick={() => setSelectedMemberBio(member)}
+                            className="mt-2 text-xs font-bold text-church-600 hover:underline flex items-center gap-1"
+                          >
+                            <BookOpen size={12} /> View Bio
+                          </button>
+                        )}
                       </div>
                       
                       {isAdmin && (
@@ -1401,6 +1412,25 @@ const CommitteeDetail: React.FC = () => {
                     <label className="block text-sm font-bold text-slate-700 mb-1">Image URL</label>
                     <input className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none text-xs text-slate-500" placeholder="https://..." value={editingMember?.imageUrl || ''} onChange={e => setEditingMember({...editingMember!, imageUrl: e.target.value})} />
                   </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Biography (Rich Text)</label>
+                    <div className="bg-white rounded-xl overflow-hidden border border-slate-300">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={editingMember?.biography || ''} 
+                        onChange={(content) => setEditingMember({...editingMember!, biography: content})}
+                        className="h-32"
+                        modules={{
+                          toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['link', 'clean']
+                          ]
+                        }}
+                      />
+                    </div>
+                    <div className="h-10"></div>
+                  </div>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
@@ -1540,6 +1570,43 @@ const CommitteeDetail: React.FC = () => {
           <button onClick={() => setEnlargedImage(null)} className="absolute top-4 right-4 text-white hover:text-slate-300 transition-colors">
             <X size={32} />
           </button>
+        </div>
+      )}
+
+      {/* Member Biography Modal */}
+      {selectedMemberBio && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setSelectedMemberBio(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100">
+                  {selectedMemberBio.imageUrl ? (
+                    <img src={selectedMemberBio.imageUrl} alt={selectedMemberBio.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Users className="w-full h-full p-2 text-slate-300" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">{selectedMemberBio.name}</h3>
+                  <p className="text-church-600 text-sm font-medium">{selectedMemberBio.role}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedMemberBio(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-8 overflow-y-auto">
+              <article 
+                className="prose prose-slate max-w-none ql-editor"
+                dangerouslySetInnerHTML={{ __html: selectedMemberBio.biography || '' }}
+              />
+            </div>
+            <div className="p-4 bg-slate-50 border-t flex justify-end">
+              <button onClick={() => setSelectedMemberBio(null)} className="px-6 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

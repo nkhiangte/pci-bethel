@@ -463,9 +463,10 @@ const About: React.FC = () => {
                             </div>
                             
                             {selectedLeader.biography ? (
-                                <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                    {selectedLeader.biography}
-                                </article>
+                                <article 
+                                    className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed ql-editor !p-0"
+                                    dangerouslySetInnerHTML={{ __html: selectedLeader.biography }}
+                                />
                             ) : (
                                 <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                                     <BookOpen size={40} className="mx-auto text-slate-300 mb-4" />

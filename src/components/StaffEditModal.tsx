@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { Staff } from '../types';
 import { Loader, Save, X, Trash2, AlertCircle, Move, ZoomIn, BookOpen, PlusCircle, Phone, Hand, Upload, Crop, Check, RotateCcw, Camera, Image as ImageIcon } from 'lucide-react';
 
@@ -462,12 +464,23 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onClose, onSave,
                     <label className="block text-sm font-bold text-church-700 mb-1 flex items-center gap-2">
                         <BookOpen size={16} /> Detailed Biography (Firebase)
                     </label>
-                    <textarea
-                    className="w-full border border-slate-300 rounded p-2.5 h-48 font-serif"
-                    value={formData.biography || ''}
-                    onChange={e => setFormData({ ...formData, biography: e.target.value })}
-                    placeholder="Write the full life story, service history, and personal testimony here. This text is saved to Firebase."
-                    />
+                    <div className="bg-white border rounded-lg overflow-hidden border-slate-300">
+                        <ReactQuill
+                            theme="snow"
+                            value={formData.biography || ''}
+                            onChange={content => setFormData({ ...formData, biography: content })}
+                            className="h-64 font-serif"
+                            modules={{
+                                toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    ['link', 'clean']
+                                ]
+                            }}
+                        />
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1 italic">Rich text is saved to Firebase. Use formatting for better readability.</p>
                 </div>
             )}
             {staff.id && (

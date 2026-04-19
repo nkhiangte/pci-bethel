@@ -460,6 +460,7 @@ export interface CommitteeMember {
   role: string;
   phone?: string;
   imageUrl?: string;
+  biography?: string;
 }
 
 export interface CommitteeImage {

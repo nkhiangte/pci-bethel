@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Missionary, ServiceHistory } from '../types';
@@ -390,9 +392,10 @@ const Missionaries: React.FC = () => {
                                 <BookOpen size={20} className="text-church-600" />
                                 <div className="h-px bg-slate-200 flex-1"></div>
                             </div>
-                            <div className="prose prose-lg prose-slate max-w-none font-serif leading-relaxed text-slate-700 whitespace-pre-wrap first-letter:text-5xl first-letter:font-bold first-letter:text-church-900 first-letter:mr-1 first-letter:float-left">
-                                {selectedMissionary.bio || "Biography details not available."}
-                            </div>
+                            <div 
+                                className="prose prose-lg prose-slate max-w-none font-serif leading-relaxed text-slate-700 ql-editor first-letter:text-5xl first-letter:font-bold first-letter:text-church-900 first-letter:mr-1 first-letter:float-left"
+                                dangerouslySetInnerHTML={{ __html: selectedMissionary.bio || "Biography details not available." }}
+                            />
                         </div>
                     </div>
                 </div>
@@ -520,8 +523,24 @@ const Missionaries: React.FC = () => {
                         )}
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Biography</label>
-                            <textarea className="w-full border p-3 rounded-lg h-48 font-serif text-sm leading-relaxed" value={editingMissionary.bio || ''} onChange={e => setEditingMissionary({...editingMissionary, bio: e.target.value})} placeholder="Write the missionary's biography here..." />
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Biography (Rich Text)</label>
+                            <div className="bg-white rounded-xl overflow-hidden border border-slate-300">
+                                <ReactQuill 
+                                    theme="snow" 
+                                    value={editingMissionary.bio || ''} 
+                                    onChange={content => setEditingMissionary({...editingMissionary, bio: content})} 
+                                    placeholder="Write the missionary's biography here..."
+                                    className="h-48"
+                                    modules={{
+                                        toolbar: [
+                                            ['bold', 'italic', 'underline'],
+                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                            ['link', 'clean']
+                                        ]
+                                    }}
+                                />
+                            </div>
+                            <div className="h-10"></div>
                         </div>
                     </div>
 

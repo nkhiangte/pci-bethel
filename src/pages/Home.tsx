@@ -43,7 +43,7 @@ const Home: React.FC = () => {
         const dutyDoc = await db.collection('weeklyDuties').doc('current').get();
         if (dutyDoc.exists) setWeeklyDuty(dutyDoc.data() as WeeklyDuty);
 
-        const newsSnap = await db.collection('announcements').orderBy('date', 'desc').limit(3).get();
+        const newsSnap = await db.collection('announcements').orderBy('date', 'desc').limit(10).get();
         const newsData = newsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Announcement[];
         setLatestNews(newsData);
 
@@ -145,9 +145,9 @@ const Home: React.FC = () => {
         </div>
         
         {latestNews.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {latestNews.map((item) => (
-                <Link key={item.id} to="/announcements" className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col h-full">
+                <Link key={item.id} to="/announcements" className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition flex flex-col h-full shrink-0 w-80 sm:w-96 snap-start">
                     {item.imageUrls && item.imageUrls.length > 0 ? (
                         <div className="h-40 bg-slate-200 overflow-hidden relative">
                             <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
@@ -417,7 +417,10 @@ const Home: React.FC = () => {
                 </div>
                 <div className="p-8 md:p-12 overflow-y-auto bg-white flex-1">
                     {selectedLeader.biography ? (
-                        <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedLeader.biography}</article>
+                        <article 
+                            className="prose-slate max-w-none font-serif text-slate-700 leading-relaxed ql-editor !p-0"
+                            dangerouslySetInnerHTML={{ __html: selectedLeader.biography }}
+                        />
                     ) : <p className="text-center text-slate-500 italic">{t.home.noBiography}</p>}
                 </div>
             </div>
