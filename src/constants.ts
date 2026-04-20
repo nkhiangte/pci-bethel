@@ -2,7 +2,7 @@
 import { Announcement, Event, Ministry, Staff, WeeklyDuty, Sermon } from './types';
 import { Language } from './translations';
 
-export const CHURCH_NAME = "Mizoram Synod (PCI) Champhai Bethel Kohhran";
+export const CHURCH_NAME = "Champhai Bethel Kohhran";
 
 // DATA STORES
 const DATA = {

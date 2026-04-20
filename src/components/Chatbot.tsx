@@ -61,10 +61,10 @@ const Chatbot: React.FC = () => {
         const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\n");
 
         const systemPrompt = `
-          You are a helpful and polite AI assistant for the "Mizoram Synod (PCI) Champhai Bethel Kohhran" website.
+          You are a helpful and polite AI assistant for the "Champhai Bethel Kohhran" website.
           
           CONTEXT:
-          - Church Name: Mizoram Synod (Presbyterian Church of India) Champhai Bethel Kohhran.
+          - Church Name: Champhai Bethel Kohhran.
           - Location: Bethel Veng, Champhai, Mizoram.
           - Service Times: ${programsStr}
           - Current Week Info: ${scheduleStr}

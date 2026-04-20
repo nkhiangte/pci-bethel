@@ -3,7 +3,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
 import { WeeklyDuty, Announcement, Staff } from '../types';
 import { db } from '../services/firebase';
-import { useVerseOfTheDay } from '../hooks/useVerseOfTheDay';
 import { useAuth } from '../contexts/AuthContext';
 import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, Clock, ChevronRight, Edit, Plus, X, BookOpen, Quote, ShieldCheck, Phone, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -19,8 +18,6 @@ const Home: React.FC = () => {
   const [pastors, setPastors] = useState<Staff[]>([]);
   const [proPastors, setProPastors] = useState<Staff[]>([]);
   const [elders, setElders] = useState<Staff[]>([]);
-  
-  const { verse, loading: verseLoading, error: verseError } = useVerseOfTheDay(language);
 
   // --- Home Admin & Modal States ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -112,19 +109,6 @@ const Home: React.FC = () => {
       if (selectedLeader?.id === id) setSelectedLeader(null);
     } catch (error) { alert(t.stats.deleteFail); }
     setIsSaving(false);
-  };
-
-  const renderVerseContent = () => {
-    if (verseLoading) return <div className="animate-pulse flex flex-col items-center"><div className="h-4 bg-yellow-200 rounded w-3/4 mb-2"></div><div className="h-4 bg-yellow-200 rounded w-1/2"></div></div>;
-    if (verseError) return null;
-    if (verse) {
-      const verseParts = verse.match(/(.*) - ([\w\s]+ \d+:\d+.*)/);
-      if (verseParts) {
-        return <><p className="text-lg md:text-xl italic text-yellow-900 font-serif mb-2">"{verseParts[1]}"</p><p className="text-sm font-bold text-yellow-700 uppercase tracking-widest">{verseParts[2]}</p></>;
-      }
-      return <p className="text-lg italic text-yellow-900 font-serif">"{verse}"</p>;
-    }
-    return null;
   };
 
   const allPastoralLeaders = [
@@ -374,12 +358,6 @@ const Home: React.FC = () => {
                {t.home.viewAllLeaders} <ChevronRight size={16} className="ml-2" />
             </Link>
          </div>
-      </section>
-
-      {/* Verse of the Day */}
-      <section className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center shadow-sm">
-        <h3 className="text-xs font-black text-yellow-600 uppercase tracking-[0.2em] mb-4">{t.home.verseOfTheDay}</h3>
-        {renderVerseContent()}
       </section>
 
       {/* --- MODALS --- */}
