@@ -11,6 +11,16 @@ export interface ContactInfo {
 export const findContactByName = async (name: string): Promise<ContactInfo | null> => {
   if (!db || !db.collection) return null;
 
+  // Helper to normalize names by stripping common Mizo titles and extra whitespace
+  const normalizeName = (n: string) => {
+      if (!n) return '';
+      return n.toLowerCase()
+          .replace(/^(upa|tv\.|nl\.|pu|pi|dr\.|rev\.)\s+/g, '') // remove titles
+          .trim();
+  };
+
+  const searchName = normalizeName(name);
+
   try {
     // 1. Search in KTP Leaders
     const ktpSnap = await db.collection('ktpLeaders').get();
@@ -28,7 +38,7 @@ export const findContactByName = async (name: string): Promise<ContactInfo | nul
         });
       }
 
-      const found = allMembers.find(m => m.name?.toLowerCase() === name.toLowerCase() && m.phone);
+      const found = allMembers.find(m => normalizeName(m.name) === searchName && m.phone);
       if (found) return { name: found.name, phone: found.phone, source: 'KTP' };
     }
 
@@ -37,7 +47,7 @@ export const findContactByName = async (name: string): Promise<ContactInfo | nul
     for (const doc of committeeSnap.docs) {
       const data = doc.data();
       if (data.members) {
-        const found = data.members.find((m: any) => m.name?.toLowerCase() === name.toLowerCase() && m.phone);
+        const found = data.members.find((m: any) => normalizeName(m.name) === searchName && m.phone);
         if (found) return { name: found.name, phone: found.phone, source: 'Committee' };
       }
     }
@@ -47,20 +57,23 @@ export const findContactByName = async (name: string): Promise<ContactInfo | nul
     for (const doc of ministrySnap.docs) {
       const data = doc.data();
       if (data.leaders) {
-        const found = data.leaders.find((m: any) => m.name?.toLowerCase() === name.toLowerCase() && m.phone);
+        const found = data.leaders.find((m: any) => normalizeName(m.name) === searchName && m.phone);
         if (found) return { name: found.name, phone: found.phone, source: 'Ministry' };
       }
       if (data.members) {
-        const found = data.members.find((m: any) => (typeof m === 'object' && m.name?.toLowerCase() === name.toLowerCase() && m.phone));
+        const found = data.members.find((m: any) => (typeof m === 'object' && normalizeName(m.name) === searchName && m.phone));
         if (found) return { name: found.name, phone: found.phone, source: 'Ministry' };
       }
     }
 
     // 4. Search in Users (if they have phone stored)
-    const userSnap = await db.collection('users').where('displayName', '==', name).get();
-    if (!userSnap.empty) {
-      const userData = userSnap.docs[0].data();
-      if (userData.phone) return { name: userData.displayName, phone: userData.phone, source: 'User Profile' };
+    // For users table we might need to fetch all and filter in JS if titles are used inconsistently
+    const userSnap = await db.collection('users').get();
+    for (const doc of userSnap.docs) {
+       const data = doc.data();
+       if (data.displayName && normalizeName(data.displayName) === searchName && data.phone) {
+           return { name: data.displayName, phone: data.phone, source: 'User Profile' };
+       }
     }
 
   } catch (error) {
