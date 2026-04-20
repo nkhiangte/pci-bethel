@@ -106,17 +106,21 @@ const Contact: React.FC = () => {
             className="grayscale-[20%]"
             title="Church Location"
         ></iframe>
-        {isAdmin && (
-            <button 
-                onClick={handleEditClick} 
-                className="absolute bottom-4 right-4 bg-white text-church-600 px-4 py-2 rounded-lg shadow-lg font-bold flex items-center hover:bg-church-50 transition z-10"
-            >
-                <Edit size={18} className="mr-2" /> Edit Location & Info
-            </button>
-        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
+        
+        {isAdmin && (
+            <div className="flex justify-end mb-4">
+                <button 
+                    onClick={handleEditClick} 
+                    className="bg-church-600 text-white px-5 py-2.5 rounded-lg shadow-lg font-bold flex items-center hover:bg-church-700 transition z-10"
+                >
+                    <Edit size={18} className="mr-2" /> Edit Location & Info
+                </button>
+            </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Location Card */}
             <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">

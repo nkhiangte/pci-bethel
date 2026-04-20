@@ -1,16 +1,40 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Youtube, MapPin, Phone, Mail, Lock, LogOut, MessageCircle } from 'lucide-react';
 import ProtectedContact from './ProtectedContact';
 import { CHURCH_NAME } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { auth } from '../services/firebase';
+import { auth, db } from '../services/firebase';
+
+const INITIAL_CONTACT_DATA = {
+  addressLine1: "Bethel Veng, Champhai",
+  addressLine2: "Mizoram 796321",
+  phone: "+91 98620 12345",
+  email: "office@bethelkohhran.pci"
+};
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
   const { currentUser } = useAuth();
+  const [contactData, setContactData] = useState(INITIAL_CONTACT_DATA);
+
+  useEffect(() => {
+    const fetchContactData = async () => {
+      if (db && db.collection) {
+        try {
+          const doc = await db.collection('settings').doc('contact').get();
+          if (doc.exists) {
+            setContactData((prev) => ({ ...prev, ...doc.data() }));
+          }
+        } catch (error) {
+          console.error("Error fetching contact info:", error);
+        }
+      }
+    };
+    fetchContactData();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -51,11 +75,11 @@ const Footer: React.FC = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-start">
                 <MapPin size={18} className="mr-2 mt-0.5 flex-shrink-0" />
-                <span>Bethel Veng, Champhai,<br/>Mizoram 796321</span>
+                <span>{contactData.addressLine1},<br/>{contactData.addressLine2}</span>
               </div>
               <div className="flex items-center gap-3">
                 <ProtectedContact 
-                  phone="+91 98620 12345" 
+                  phone={contactData.phone} 
                   name={CHURCH_NAME} 
                   variant="full"
                   className="bg-transparent border-none p-0 text-slate-300 hover:text-white"
@@ -63,7 +87,7 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center">
                 <Mail size={18} className="mr-2 flex-shrink-0" />
-                <span>office@bethelkohhran.pci</span>
+                <span>{contactData.email}</span>
               </div>
             </div>
           </div>

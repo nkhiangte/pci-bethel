@@ -37,7 +37,6 @@ interface AboutPageContent {
 const About: React.FC = () => {
   const { t, language } = useLanguage();
   const { isAdmin } = useAuth();
-  const { pastors: staticPastors, elders: staticElders, proPastors: staticProPastors } = getConstants(language);
 
   // State for dynamic page content
   const [content, setContent] = useState<Partial<AboutPageContent>>({});
@@ -64,9 +63,9 @@ const About: React.FC = () => {
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     if (!db || !db.collection) {
-      setPastors(staticPastors);
-      setProPastors(staticProPastors);
-      setElders(staticElders);
+      setPastors([]);
+      setProPastors([]);
+      setElders([]);
       setLoading(false);
       return;
     }
@@ -84,24 +83,24 @@ const About: React.FC = () => {
       }
 
       const getUniqueData = (snap: any) => {
-          if (snap.empty) return null;
+          if (snap.empty) return [];
           const data = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
           return data.filter((item: any, index: number, self: any[]) =>
             index === self.findIndex((t) => t.name === item.name)
           );
       };
 
-      setPastors(getUniqueData(pSnap) || staticPastors);
-      setProPastors(getUniqueData(ppSnap) || staticProPastors);
-      setElders(getUniqueData(eSnap) || staticElders);
+      setPastors(getUniqueData(pSnap));
+      setProPastors(getUniqueData(ppSnap));
+      setElders(getUniqueData(eSnap));
     } catch (error) {
       console.error("Error fetching page data:", error);
-      setPastors(staticPastors);
-      setProPastors(staticProPastors);
-      setElders(staticElders);
+      setPastors([]);
+      setProPastors([]);
+      setElders([]);
     }
     setLoading(false);
-  }, [staticPastors, staticProPastors, staticElders]);
+  }, []);
 
   useEffect(() => {
     fetchAllData();
@@ -190,9 +189,9 @@ const About: React.FC = () => {
       en_missionText: content.en_missionText || translations.en.about.missionText,
       en_faithTitle: content.en_faithTitle || translations.en.about.faithTitle,
       en_faithText: content.en_faithText || translations.en.about.faithText,
-      stats_families: content.stats_families || 440,
-      stats_members: content.stats_members || 2094,
-      stats_sundayschool: content.stats_sundayschool || 1773,
+      stats_families: content.stats_families || 0,
+      stats_members: content.stats_members || 0,
+      stats_sundayschool: content.stats_sundayschool || 0,
   });
 
   return (
@@ -240,9 +239,9 @@ const About: React.FC = () => {
 
         {/* Stats */}
         <StatsCounter 
-            families={content.stats_families || 440}
-            members={content.stats_members || 2094}
-            sundaySchoolStudents={content.stats_sundayschool || 1773}
+            families={content.stats_families || 0}
+            members={content.stats_members || 0}
+            sundaySchoolStudents={content.stats_sundayschool || 0}
         />
 
         {/* Leaders Section */}
