@@ -41,6 +41,7 @@ import AdminMinistries from './pages/AdminMinistries';
 import AdminDuties from './pages/AdminDuties'; 
 import AdminUsers from './pages/AdminUsers'; 
 import AdminThawhlawm from './pages/AdminThawhlawm';
+import AdminSettings from './pages/AdminSettings';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -139,6 +140,7 @@ const App: React.FC = () => {
                 <Route path="/admin/duties" element={<AdminDuties />} /> 
                 <Route path="/admin/users" element={<AdminUsers />} /> 
                 <Route path="/admin/thawhlawm" element={<AdminThawhlawm />} /> 
+                <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/records" element={<Records />} /> 
                 <Route path="/directory" element={<Directory />} /> 
