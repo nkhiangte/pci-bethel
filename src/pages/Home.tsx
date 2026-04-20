@@ -151,7 +151,7 @@ const Home: React.FC = () => {
                 
                 <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused]">
                     {[...latestNews, ...latestNews].map((item, index) => (
-                        <Link key={`${item.id}-${index}`} to="/announcements" className="group/card flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
+                        <Link key={`${item.id}-${index}`} to={`/announcements/${item.id}`} className="group/card flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
                             {item.imageUrls && item.imageUrls.length > 0 ? (
                                 <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
                                     <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />

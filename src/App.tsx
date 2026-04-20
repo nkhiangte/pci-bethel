@@ -8,6 +8,7 @@ import About from './pages/About';
 import Events from './pages/Events';
 import Calendar from './pages/Calendar';
 import Announcements from './pages/Announcements';
+import AnnouncementDetail from './pages/AnnouncementDetail';
 import Departments from './pages/Departments';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -87,6 +88,7 @@ const App: React.FC = () => {
                 <Route path="/events" element={<Events />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/announcements" element={<Announcements />} />
+                <Route path="/announcements/:id" element={<AnnouncementDetail />} />
                 <Route path="/committees" element={<Departments />} />
                 <Route path="/committees/:id" element={<CommitteeDetail />} />
                 <Route path="/sundayschool/dashboard" element={<SundaySchoolDashboard />} />

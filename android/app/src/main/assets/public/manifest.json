@@ -1,0 +1,23 @@
+{
+  "short_name": "Bethel",
+  "name": "PCI Champhai Bethel Kohhran",
+  "description": "Official app for PCI Champhai Bethel Kohhran",
+  "icons": [
+    {
+      "src": "https://wsrv.nl/?url=i.ibb.co/mVw3Ftpw/PCI-logo.png&w=192&h=192&fit=contain",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://wsrv.nl/?url=i.ibb.co/mVw3Ftpw/PCI-logo.png&w=512&h=512&fit=contain",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#F0F8FF",
+  "background_color": "#ffffff"
+}

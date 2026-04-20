@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import 'react-quill-new/dist/quill.snow.css';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -306,7 +307,9 @@ const Announcements: React.FC = () => {
                     )}
 
                     <div className="mb-1 text-sm text-slate-500 font-medium">{item.date}</div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">{item.title}</h2>
+                    <Link to={`/announcements/${item.id}`} className="hover:text-church-600 transition-colors">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">{item.title}</h2>
+                    </Link>
                     <div className="flex items-center mb-4">
                         <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
                             item.category === 'Sunna' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'
