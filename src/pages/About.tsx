@@ -568,8 +568,8 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
         onSave(formData);
     };
 
-    const FormField: React.FC<{ label: string, name: keyof AboutPageContent, isTextarea?: boolean }> = ({ label, name, isTextarea = false }) => (
-        <div>
+    const renderField = (label: string, name: keyof AboutPageContent, isTextarea = false) => (
+        <div key={name}>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
             {isTextarea ? (
                 <textarea name={name} value={(formData as any)[name] || ''} onChange={handleChange} className="w-full border p-2 rounded-lg h-24" />
@@ -591,14 +591,14 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                         {/* English Column Only */}
                         <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
                             <h4 className="font-bold text-center text-slate-600">English Content</h4>
-                            <FormField label="Title" name="en_title" />
-                            <FormField label="Subtitle" name="en_subtitle" />
-                            <FormField label="History Title" name="en_historyTitle" />
-                            <FormField label="History Text" name="en_historyText" isTextarea />
-                            <FormField label="Mission Title" name="en_missionTitle" />
-                            <FormField label="Mission Text" name="en_missionText" isTextarea />
-                            <FormField label="Faith Title" name="en_faithTitle" />
-                            <FormField label="Faith Text" name="en_faithText" isTextarea />
+                            {renderField("Title", "en_title")}
+                            {renderField("Subtitle", "en_subtitle")}
+                            {renderField("History Title", "en_historyTitle")}
+                            {renderField("History Text", "en_historyText", true)}
+                            {renderField("Mission Title", "en_missionTitle")}
+                            {renderField("Mission Text", "en_missionText", true)}
+                            {renderField("Faith Title", "en_faithTitle")}
+                            {renderField("Faith Text", "en_faithText", true)}
                         </div>
                     </div>
                     {/* Statistics Section */}
