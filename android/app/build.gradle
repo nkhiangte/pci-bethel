@@ -20,6 +20,18 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Added signingConfig block to hook into local.properties if present
+            signingConfig signingConfigs.create("release") {
+                def propFile = rootProject.file('local.properties')
+                if (propFile.exists()) {
+                    def props = new Properties()
+                    props.load(new FileInputStream(propFile))
+                    storeFile = rootProject.file("app/" + props['RELEASE_STORE_FILE'])
+                    storePassword = props['RELEASE_STORE_PASSWORD']
+                    keyAlias = props['RELEASE_KEY_ALIAS']
+                    keyPassword = props['RELEASE_KEY_PASSWORD']
+                }
+            }
         }
     }
 }

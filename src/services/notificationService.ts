@@ -95,6 +95,26 @@ export const getReminderTemplate = async (language: 'en' | 'mizo' = 'mizo'): Pro
   return `Hello {name}, \n\nThis is a reminder from Bethel Church. You are assigned as {role} for the upcoming service on {date} ({event}). \n\nPlease let us know if you are available. \n\nBethel Church App`;
 };
 
+export const sendTwilioMessage = async (phone: string, message: string, type: 'whatsapp' | 'sms') => {
+  try {
+    const response = await fetch('/api/send-reminder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ phone, message, type })
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send message');
+    }
+    return data;
+  } catch (error: any) {
+    console.error('Twilio Error:', error);
+    throw error;
+  }
+};
 export const updateReminderTemplate = async (template: string, language: 'en' | 'mizo' = 'mizo') => {
   if (!db || !db.collection) return;
   await db.collection('settings').doc(`reminder_template_${language}`).set({ template }, { merge: true });

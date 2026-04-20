@@ -6,7 +6,7 @@ import { WeeklyDuty } from '../types';
 import { getConstants } from '../constants';
 import { Loader, Save, ArrowLeft, Plus, Trash, GripVertical, Share2, Copy, Check, MessageCircle, Send, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { findContactByName, getWhatsAppLink, generateReminderMessage, getReminderTemplate } from '../services/notificationService';
+import { findContactByName, getWhatsAppLink, generateReminderMessage, getReminderTemplate, sendTwilioMessage } from '../services/notificationService';
 
 const AdminDuties: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -104,6 +104,35 @@ const AdminDuties: React.FC = () => {
 
   // --- Notification Logic ---
 
+  const [sendingTwilio, setSendingTwilio] = useState(false);
+
+  const sendTwilioWhatsApp = async (name: string, role: string) => {
+      if (!duties || !name || !name.trim()) return;
+      
+      const contact = await findContactByName(name.trim());
+      if (!contact || !contact.phone) {
+          alert(`Could not find a phone number for ${name}. They might not be stored in KTP or Committee lists!`);
+          return;
+      }
+      
+      const message = generateReminderMessage(
+        template,
+        name.trim(),
+        duties.weekRange,
+        duties.month,
+        role
+      );
+
+      setSendingTwilio(true);
+      try {
+          await sendTwilioMessage(contact.phone, message, 'whatsapp');
+          alert(`Automated WhatsApp sent to ${name} successfully!`);
+      } catch (err: any) {
+          alert(`Error sending WhatsApp: ${err.message}. Please check your Twilio configuration.`);
+      }
+      setSendingTwilio(false);
+  };
+
   const sendIndividualWhatsApp = async (name: string, role: string) => {
       if (!duties || !name || !name.trim()) return;
       
@@ -174,9 +203,17 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                   onChange={e => handleFieldChange(fieldKey, e.target.value)} 
               />
               <button 
+                  onClick={() => sendTwilioWhatsApp(duties?.[fieldKey] as string, label)}
+                  disabled={sendingTwilio}
+                  className="p-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition border border-blue-200 disabled:opacity-50"
+                  title={`Send Automated WhatsApp (No Personal Number)`}
+              >
+                  <Send size={20} />
+              </button>
+              <button 
                   onClick={() => sendIndividualWhatsApp(duties?.[fieldKey] as string, label)}
                   className="p-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition border border-green-200"
-                  title={`Send WhatsApp to ${label}`}
+                  title={`Open Personal WhatsApp App`}
               >
                   <MessageCircle size={20} />
               </button>
@@ -186,22 +223,40 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
 
   // Reusable Component for Array Notifications
   const NotifyList = ({ names, role }: { names: string[], role: string }) => (
-    <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+    <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col gap-3">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <Send size={10} /> Notify Individual {role}
         </p>
-        <div className="flex flex-wrap gap-2">
-            {names.map((name, i) => (
-                <button 
-                    key={i}
-                    onClick={() => sendIndividualWhatsApp(name, role)}
-                    className="flex items-center gap-1.5 bg-white text-slate-600 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-200 border border-slate-200 transition shadow-sm"
-                >
-                    {name} <MessageCircle size={12} className="opacity-50" />
-                </button>
-            ))}
-            {names.length === 0 && <span className="text-xs text-slate-400 italic">No names added yet.</span>}
+        <div>
+            <p className="text-xs text-slate-500 mb-1">Open Private WhatsApp:</p>
+            <div className="flex flex-wrap gap-2">
+                {names.map((name, i) => (
+                    <button 
+                        key={i}
+                        onClick={() => sendIndividualWhatsApp(name, role)}
+                        className="flex items-center gap-1.5 bg-white text-slate-600 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-200 border border-slate-200 transition shadow-sm"
+                    >
+                        {name} <MessageCircle size={12} className="opacity-50" />
+                    </button>
+                ))}
+            </div>
         </div>
+        <div>
+            <p className="text-xs text-slate-500 mb-1 font-bold">Send Automated WhatsApp (Server):</p>
+            <div className="flex flex-wrap gap-2">
+                {names.map((name, i) => (
+                    <button 
+                        key={i}
+                        onClick={() => sendTwilioWhatsApp(name, role)}
+                        disabled={sendingTwilio}
+                        className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold hover:bg-blue-100 hover:border-blue-300 border border-blue-200 transition shadow-sm disabled:opacity-50"
+                    >
+                        {name} <Send size={12} className="opacity-70" />
+                    </button>
+                ))}
+            </div>
+        </div>
+        {names.length === 0 && <span className="text-xs text-slate-400 italic">No names added yet.</span>}
     </div>
   );
 
@@ -298,7 +353,10 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label (e.g. Tantu)" value={item.label} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'label', e.target.value)} />
                                       <div className="flex-1 flex gap-2">
                                           <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('sundaySchool', idx, 'value', e.target.value)} />
-                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                          <button onClick={() => sendTwilioWhatsApp(item.value, item.label)} disabled={sendingTwilio} className="p-2 text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-100 disabled:opacity-50" title="Send Automated WhatsApp">
+                                              <Send size={16} />
+                                          </button>
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Open Private WhatsApp">
                                               <MessageCircle size={16} />
                                           </button>
                                       </div>
@@ -321,7 +379,10 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('morning', idx, 'label', e.target.value)} />
                                       <div className="flex-1 flex gap-2">
                                           <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('morning', idx, 'value', e.target.value)} />
-                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                          <button onClick={() => sendTwilioWhatsApp(item.value, item.label)} disabled={sendingTwilio} className="p-2 text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-100 disabled:opacity-50" title="Send Automated WhatsApp">
+                                              <Send size={16} />
+                                          </button>
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Open Private WhatsApp">
                                               <MessageCircle size={16} />
                                           </button>
                                       </div>
@@ -344,7 +405,10 @@ _Hriattirna: A chunga hming tarlante khan mawhphurhna theuh i hlen ang u._`;
                                       <input className="w-1/3 border p-2 rounded text-sm font-bold text-slate-500" placeholder="Label" value={item.label} onChange={e => handleProgramFieldChange('evening', idx, 'label', e.target.value)} />
                                       <div className="flex-1 flex gap-2">
                                           <input className="flex-1 border p-2 rounded text-sm" placeholder="Value" value={item.value} onChange={e => handleProgramFieldChange('evening', idx, 'value', e.target.value)} />
-                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Notify">
+                                          <button onClick={() => sendTwilioWhatsApp(item.value, item.label)} disabled={sendingTwilio} className="p-2 text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-100 disabled:opacity-50" title="Send Automated WhatsApp">
+                                              <Send size={16} />
+                                          </button>
+                                          <button onClick={() => sendIndividualWhatsApp(item.value, item.label)} className="p-2 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-100" title="Open Private WhatsApp">
                                               <MessageCircle size={16} />
                                           </button>
                                       </div>
