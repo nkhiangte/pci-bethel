@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url><loc>https://www.cpibethel.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/about</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/events</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/announcements</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/gallery</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/contact</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/committees</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/articles</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/missionaries</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/upa-bial</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/statistics</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/records</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/directory</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/archives</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/inkhawm-chanvo</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/thawhlawm</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+
+  <!-- KTP -->
+  <url><loc>https://www.cpibethel.com/ktp/leaders</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/ktp/sub-committees</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/ktp/members</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/ktp/gallery</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/ktp/history</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/ktp/productions</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+
+  <!-- KPP -->
+  <url><loc>https://www.cpibethel.com/kpp/leaders</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/kpp/members</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/kpp/gallery</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
+
+  <!-- Kohhran Hmeichhia -->
+  <url><loc>https://www.cpibethel.com/kohhran-hmeichhia/leaders</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/kohhran-hmeichhia/members</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/kohhran-hmeichhia/reports</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.cpibethel.com/kohhran-hmeichhia/gallery</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
+
+</urlset>
