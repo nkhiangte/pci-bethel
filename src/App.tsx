@@ -63,7 +63,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <AuthProvider>
         <ErrorBoundary>
-          <HashRouter>
+          <BrowserRouter>
           <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
 
             {/* Banner is the background of the navbar — fixed so it never moves on scroll */}
@@ -152,7 +152,7 @@ const App: React.FC = () => {
             <Chatbot />
             <Footer />
           </div>
-        </HashRouter>
+        </BrowserRouter>
       </ErrorBoundary>
     </AuthProvider>
   </LanguageProvider>
