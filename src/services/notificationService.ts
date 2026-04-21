@@ -11,12 +11,14 @@ export interface ContactInfo {
 export const findContactByName = async (name: string): Promise<ContactInfo | null> => {
   if (!db || !db.collection) return null;
 
-  // Helper to normalize names by stripping common Mizo titles and extra whitespace
+  // Helper to normalize names by stripping common Mizo titles, punctuation, and all spaces
   const normalizeName = (n: string) => {
       if (!n) return '';
       return n.toLowerCase()
-          .replace(/^(upa|tv\.|nl\.|pu|pi|dr\.|rev\.)\s+/g, '') // remove titles
-          .trim();
+          // flexibly catch titles with or without periods (e.g. "tv ", "tv. ", "upa ")
+          .replace(/\b(upa|tv|nl|pu|pi|dr|rev)\.?\s+/g, '') 
+          // remove all spaces, dots, and commas to match "H. Lalfakawma" with "H Lalfakawma" or "H.Lalfakawma"
+          .replace(/[\.\,\s]/g, '');
   };
 
   const searchName = normalizeName(name);
