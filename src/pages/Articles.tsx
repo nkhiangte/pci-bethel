@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
@@ -222,7 +224,7 @@ const Articles: React.FC = () => {
                             </div>
 
                             <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-grow">
-                                {article.content}
+                                {article.content.replace(/<[^>]*>?/gm, '')}
                             </p>
 
                             <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
@@ -300,9 +302,10 @@ const Articles: React.FC = () => {
                         </div>
                     )}
 
-                    <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 whitespace-pre-wrap leading-relaxed">
-                        {selectedArticle.content}
-                    </article>
+                    <article 
+                        className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content"
+                        dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+                    />
 
                     {selectedArticle.videoUrl && (
                         <div className="mt-10 pt-8 border-t border-slate-100">
@@ -393,12 +396,26 @@ const Articles: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.content}</label>
-                        <textarea 
-                            className="w-full border p-2.5 rounded-lg h-64 focus:ring-2 focus:ring-church-500 outline-none font-mono text-sm" 
-                            value={editingArticle.content || ''} 
-                            onChange={e => setEditingArticle({...editingArticle, content: e.target.value})} 
-                            placeholder={t.articles.form.placeholders.content}
-                        />
+                        <div className="bg-white rounded-lg overflow-hidden border">
+                            <ReactQuill 
+                                theme="snow"
+                                value={editingArticle.content || ''}
+                                onChange={content => setEditingArticle({...editingArticle, content})}
+                                className="h-64 mb-12"
+                                placeholder={t.articles.form.placeholders.content}
+                                modules={{
+                                    toolbar: [
+                                        [{ 'header': [1, 2, 3, false] }],
+                                        ['bold', 'italic', 'underline', 'strike'],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                        ['blockquote', 'code-block'],
+                                        ['link', 'clean'],
+                                        [{ 'color': [] }, { 'background': [] }],
+                                        [{ 'align': [] }]
+                                    ],
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.pci.champhai.bethel',
+  appId: 'com.pcibethel.app',
   appName: 'pci-champhai-bethel-kohhran',
   webDir: 'dist'
 };
