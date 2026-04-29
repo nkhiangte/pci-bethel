@@ -328,7 +328,7 @@ const Announcements: React.FC = () => {
 
                         {/* Multiple Videos Display */}
                         {displayVideos.length > 0 && (
-                            <div className={`grid gap-3 px-4 pb-4 ${displayVideos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            <div className={`grid gap-3 px-4 pb-4 grid-cols-1 ${displayVideos.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                                 {displayVideos.map((url, vIdx) => {
                                     const vidId = getYouTubeId(url);
                                     if (!vidId) return null;
@@ -362,7 +362,7 @@ const Announcements: React.FC = () => {
 
                         {/* Image Grid Display */}
                         {displayImages.length > 0 && (
-                            <div className={`grid gap-3 p-4 pt-0 ${displayImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            <div className={`grid gap-3 p-4 pt-0 grid-cols-1 ${displayImages.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                                 {displayImages.map((url, idx) => (
                                     <div key={idx} className="flex flex-col">
                                         <div 
@@ -456,7 +456,7 @@ const Announcements: React.FC = () => {
                             placeholder={t.announcements.form.placeholders.title}
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.date}</label>
                             <input 

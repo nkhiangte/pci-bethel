@@ -267,7 +267,7 @@ const Articles: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm overflow-y-auto">
             <div className="max-w-3xl mx-auto min-h-screen bg-slate-50 shadow-2xl relative">
                 {/* Modal Header */}
-                <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10">
+                <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-4 flex justify-between items-center z-10">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                         <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${selectedArticle.category === 'Sermon' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                             {selectedArticle.category}
@@ -281,8 +281,8 @@ const Articles: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-8 md:px-12 md:py-12">
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-6 leading-tight">
+        <div className="px-4 py-8 md:px-12 md:py-12">
+                    <h1 className="text-2xl md:text-4xl font-serif font-bold text-slate-900 mb-6 leading-tight">
                         {selectedArticle.title}
                     </h1>
                     
@@ -303,7 +303,7 @@ const Articles: React.FC = () => {
                     )}
 
                     <article 
-                        className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content"
+                        className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content overflow-hidden break-words"
                         dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
                     />
 
@@ -345,7 +345,7 @@ const Articles: React.FC = () => {
                         />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">{t.articles.form.author}</label>
                             <input 
