@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { getConstants } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -8,8 +9,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle } from 'lucide-react';
-
-const ReactQuill = lazy(() => import('react-quill-new'));
 
 const quillModules = {
   toolbar: [
@@ -607,20 +606,17 @@ const Announcements: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">{t.announcements.form.content}</label>
-                        <div className="bg-white rounded-lg overflow-hidden border border-slate-300 min-h-[200px]">
-                            <Suspense fallback={<div className="p-4 text-slate-400 flex items-center gap-2"><Loader className="animate-spin" size={16} /> Loading editor...</div>}>
-                                <ReactQuill 
-                                    theme="snow" 
-                                    value={editForm.content || ''} 
-                                    onChange={(content) => setEditForm(prev => ({ ...prev, content }))}
-                                    placeholder={t.announcements.form.placeholders.content}
-                                    modules={quillModules}
-                                    formats={quillFormats}
-                                    className="h-48"
-                                />
-                            </Suspense>
+                        <div className="bg-white rounded-lg border border-slate-300">
+                            <ReactQuill 
+                                theme="snow" 
+                                value={editForm.content || ''} 
+                                onChange={(content) => setEditForm(prev => ({ ...prev, content }))}
+                                placeholder={t.announcements.form.placeholders.content}
+                                modules={quillModules}
+                                formats={quillFormats}
+                                className="h-64 mb-12"
+                            />
                         </div>
-                        <div className="h-12"></div> {/* Spacer for Quill toolbar/overflow */}
                     </div>
                 </div>
                 <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50">
