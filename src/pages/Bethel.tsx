@@ -4,7 +4,7 @@ import {
   FolderOpen, FileText, Plus, Trash2, Loader, 
   FileUp, Eye, Download, X, ChevronRight, Newspaper, Info, Search
 } from 'lucide-react';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BethelFolder, BethelPdf } from '../types';
@@ -21,6 +21,14 @@ const Bethel: React.FC = () => {
   const [addingFolder, setAddingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<BethelPdf | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const currentFolder = navigationStack.length > 0 ? navigationStack[navigationStack.length - 1] : null;
   const currentFolderId = currentFolder?.id || null;
 
@@ -28,14 +36,12 @@ const Bethel: React.FC = () => {
     setLoading(true);
     if (!db?.collection) { setLoading(false); return; }
     try {
-      // For simplicity, we fetch the folders at the current level
-      // In a real large app, we'd use a where query on parentId
       const snapshot = await db.collection('bethelFolders').get();
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BethelFolder));
       docs.sort((a, b) => b.date.localeCompare(a.date));
       setFolders(docs);
     } catch (e) {
-      console.error("Error fetching folders:", e);
+      handleFirestoreError(e, OperationType.GET, 'bethelFolders');
     }
     setLoading(false);
   }, []);
@@ -45,14 +51,14 @@ const Bethel: React.FC = () => {
     try {
       const query = folderId 
         ? db.collection('bethelPdfs').where('folderId', '==', folderId)
-        : db.collection('bethelPdfs').where('folderId', '==', 'root'); // Should handle root null cases
+        : db.collection('bethelPdfs').where('folderId', '==', 'root');
       
       const snapshot = await query.get();
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BethelPdf));
       docs.sort((a, b) => b.date.localeCompare(a.date));
       setPdfs(docs);
     } catch (e) {
-      console.error("Error fetching PDFs:", e);
+      handleFirestoreError(e, OperationType.GET, 'bethelPdfs');
     }
   }, []);
 
@@ -65,7 +71,7 @@ const Bethel: React.FC = () => {
     if (!newFolderName.trim()) return;
     
     try {
-      const docRef = await db.collection('bethelFolders').add({
+      await db.collection('bethelFolders').add({
         name: newFolderName,
         date: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -75,7 +81,7 @@ const Bethel: React.FC = () => {
       setAddingFolder(false);
       await fetchFolders();
     } catch (e) {
-      alert('Failed to add folder.');
+      handleFirestoreError(e, OperationType.CREATE, 'bethelFolders');
     }
   };
 
@@ -100,7 +106,7 @@ const Bethel: React.FC = () => {
       await db.collection('bethelFolders').doc(folder.id).delete();
       await fetchFolders();
     } catch (e) {
-      alert('Failed to delete folder.');
+      handleFirestoreError(e, OperationType.DELETE, `bethelFolders/${folder.id}`);
     }
   };
 
@@ -139,9 +145,7 @@ const Bethel: React.FC = () => {
       setUploadProgress('');
       await fetchPdfs(currentFolderId);
     } catch (err) {
-      console.error(err);
-      alert('Upload failed.');
-      setUploadProgress('');
+      handleFirestoreError(err, OperationType.CREATE, 'bethelPdfs');
     }
 
     setUploading(false);
@@ -161,7 +165,7 @@ const Bethel: React.FC = () => {
       await db.collection('bethelPdfs').doc(pdf.id).delete();
       await fetchPdfs(currentFolderId);
     } catch (e) {
-      alert('Failed to delete PDF.');
+      handleFirestoreError(e, OperationType.DELETE, `bethelPdfs/${pdf.id}`);
     }
     setDeletingId(null);
   };
