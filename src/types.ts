@@ -428,6 +428,7 @@ export interface BethelFolder {
   name: string;
   date: string;
   description?: string;
+  parentId?: string | null;
 }
 
 export interface BethelPdf {
