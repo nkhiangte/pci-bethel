@@ -15,6 +15,7 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: t.nav.home, path: '/' },
+    { name: t.nav.bethel, path: '/bethel' },
     { name: t.nav.upaBial, path: '/upa-bial' },
     { name: t.nav.departments, path: '/committees' },
     { 

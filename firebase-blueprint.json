@@ -396,6 +396,33 @@
         }
       },
       "required": ["departmentId", "items"]
+    },
+    "BethelFolder": {
+      "title": "Bethel Folder",
+      "description": "Folders for organizing Bethel Newspapers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "date"]
+    },
+    "BethelPdf": {
+      "title": "Bethel PDF",
+      "description": "PDF files for Bethel Newspaper",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "storagePath": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "folderId": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "url", "folderId"]
     }
   },
   "firestore": {
@@ -494,6 +521,14 @@
     "/thawhlawm/{contributionId}": {
       "schema": "Contribution",
       "description": "Collection of online contributions"
+    },
+    "/bethelFolders/{folderId}": {
+      "schema": "BethelFolder",
+      "description": "Collection of Bethel Newspaper folders"
+    },
+    "/bethelPdfs/{pdfId}": {
+      "schema": "BethelPdf",
+      "description": "Collection of Bethel Newspaper PDFs"
     }
   }
 }

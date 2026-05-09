@@ -57,6 +57,7 @@ import Missionaries from './pages/Missionaries';
 import Thawhlawm from './pages/Thawhlawm';
 import CommitteeDetail from './pages/CommitteeDetail';
 import Directory from './pages/Directory';
+import Bethel from './pages/Bethel';
 
 const App: React.FC = () => {
   return (
@@ -147,6 +148,7 @@ const App: React.FC = () => {
                 <Route path="/archives" element={<Archives />} />
                 <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
                 <Route path="/thawhlawm" element={<Thawhlawm />} />
+                <Route path="/bethel" element={<Bethel />} />
               </Routes>
             </main>
             <Chatbot />

@@ -423,6 +423,22 @@ export interface ArchiveEntry {
   tenureYears?: string;
 }
 
+export interface BethelFolder {
+  id: string;
+  name: string;
+  date: string;
+  description?: string;
+}
+
+export interface BethelPdf {
+  id: string;
+  name: string;
+  url: string;
+  date: string;
+  folderId: string;
+  uploadedAt: string;
+}
+
 export interface Article {
   id: string;
   title: string;
