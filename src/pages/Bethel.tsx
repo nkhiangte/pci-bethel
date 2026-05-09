@@ -232,28 +232,28 @@ const Bethel: React.FC = () => {
       {viewingPdf && <PdfViewerModal pdf={viewingPdf} onClose={() => setViewingPdf(null)} />}
       
       {/* Header Section */}
-      <section className="bg-church-900 text-white pt-24 pb-16 relative overflow-hidden">
+      <section className="bg-church-900 text-white pt-20 pb-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <Newspaper size={400} className="absolute -right-20 -bottom-20 rotate-12" />
+          <Newspaper size={300} className="absolute -right-10 -bottom-10 rotate-12" />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-yellow-500/30">
-                <Newspaper size={14} /> Weekly Bulletin
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 border border-yellow-500/30">
+                <Newspaper size={12} /> Weekly Bulletin
               </div>
-              <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">{t.bethel.title}</h1>
-              <p className="text-church-100 text-lg leading-relaxed max-w-xl">
+              <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">{t.bethel.title}</h1>
+              <p className="text-church-100 text-sm md:text-base leading-relaxed max-w-xl opacity-90">
                 {t.bethel.description}
               </p>
             </div>
             
-            <div className="flex flex-col gap-3">
-               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                 <div className="flex items-center gap-3 text-sm">
-                   <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-400">
-                     <Info size={20} />
+            <div className="flex flex-col gap-3 shrink-0">
+               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+                 <div className="flex items-center gap-3 text-xs">
+                   <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                     <Info size={16} />
                    </div>
                    <div>
                      <p className="font-bold">Digital Archive</p>
@@ -266,11 +266,11 @@ const Bethel: React.FC = () => {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-8">
+      <div className="max-w-7xl mx-auto px-4 -mt-6">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 min-h-[600px] flex flex-col">
           
           {/* Breadcrumbs / Toolbar */}
-          <div className="p-6 border-b border-slate-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-4 border-b border-slate-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center flex-wrap gap-2 text-sm">
               <button 
                 onClick={navigateToRoot}
@@ -330,7 +330,7 @@ const Bethel: React.FC = () => {
             </div>
           </div>
 
-          <main className="flex-1 p-6 md:p-8 bg-slate-50/30 overflow-y-auto">
+          <main className="flex-1 p-4 md:p-6 bg-slate-50/30 overflow-y-auto">
             {addingFolder && (
                <div className="max-w-md mb-8 bg-white p-6 rounded-3xl border-2 border-church-200 shadow-xl animate-in zoom-in-95 duration-200">
                  <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
