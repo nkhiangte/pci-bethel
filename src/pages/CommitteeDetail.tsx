@@ -330,6 +330,7 @@ interface PropertyPanelProps {
   onAdd: () => void;
   onEdit: (record: PropertyRecord) => void;
   onDelete: (id: string) => void;
+  onDeleteSelected: (ids: string[]) => void;
   onImport: () => void;
   committeeName: string;
 }
@@ -342,10 +343,32 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   onAdd, 
   onEdit, 
   onDelete,
+  onDeleteSelected,
   onImport,
   committeeName
 }) => {
   const { t } = useLanguage();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(propertyRecords.map(r => r.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    onDeleteSelected(selectedIds);
+    setSelectedIds([]);
+  };
 
   const handleExportExcel = () => {
     const data = propertyRecords.map((r, i) => ({
@@ -389,9 +412,22 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
             <BookOpen size={24} />
           </div>
-          <h3 className="text-xl font-bold text-slate-800">{t.committeeDetail.sections.propertyRecord}</h3>
+          <div>
+            <h3 className="text-xl font-bold text-slate-800">{t.committeeDetail.sections.propertyRecord}</h3>
+            {selectedIds.length > 0 && (
+              <p className="text-xs text-church-600 font-bold">{selectedIds.length} items selected</p>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {selectedIds.length > 0 && isAdmin && !isOfflineMode && (
+            <button 
+              onClick={handleDeleteSelected}
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md font-bold text-xs"
+            >
+              <Trash size={16} /> Delete Selected ({selectedIds.length})
+            </button>
+          )}
           <button 
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-xs"
@@ -433,6 +469,16 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
               <tr>
+                {isAdmin && !isOfflineMode && (
+                  <th className="p-4 w-10">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-church-600 focus:ring-church-500 w-4 h-4"
+                      checked={selectedIds.length === propertyRecords.length && propertyRecords.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                )}
                 <th className="p-4">{t.committeeDetail.property.sNo}</th>
                 <th className="p-4">{t.committeeDetail.property.particulars}</th>
                 <th className="p-4">{t.committeeDetail.property.price}</th>
@@ -443,7 +489,20 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {propertyRecords.map((record, index) => (
-                <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                <tr 
+                  key={record.id} 
+                  className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(record.id) ? 'bg-church-50/50' : ''}`}
+                >
+                  {isAdmin && !isOfflineMode && (
+                    <td className="p-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-church-600 focus:ring-church-500 w-4 h-4"
+                        checked={selectedIds.includes(record.id)}
+                        onChange={() => handleSelectRow(record.id)}
+                      />
+                    </td>
+                  )}
                   <td className="p-4 text-slate-500 font-medium">{index + 1}</td>
                   <td className="p-4 text-slate-800 font-bold">{record.particulars}</td>
                   <td className="p-4 text-slate-600">{record.price}</td>
@@ -1527,6 +1586,21 @@ const CommitteeDetail: React.FC = () => {
     }
   };
 
+  const handleDeleteSelectedProperty = async (recordIds: string[]) => {
+    if (!db || !id || !window.confirm(`Delete ${recordIds.length} property records?`)) return;
+    try {
+      const propertyRef = db.collection('committees').doc(id).collection('propertyRecords');
+      const batch = db.batch();
+      recordIds.forEach(rid => {
+        batch.delete(propertyRef.doc(rid));
+      });
+      await batch.commit();
+      await fetchData();
+    } catch (error) {
+      console.error("Error deleting selected properties:", error);
+    }
+  };
+
   const handleImportProperty = async (newRecords: PropertyRecord[]) => {
     if (!db || !id) return;
     setLoading(true);
@@ -1819,6 +1893,7 @@ const CommitteeDetail: React.FC = () => {
                 onAdd={() => { setEditingProperty(null); setIsPropertyModalOpen(true); }}
                 onEdit={(record) => { setEditingProperty(record); setIsPropertyModalOpen(true); }}
                 onDelete={handleDeleteProperty}
+                onDeleteSelected={handleDeleteSelectedProperty}
                 onImport={() => setIsImportPropertyModalOpen(true)}
                 committeeName={committee.name}
               />
