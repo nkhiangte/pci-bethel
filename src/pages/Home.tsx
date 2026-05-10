@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getConstants } from '../constants';
 import { WeeklyDuty, Announcement, Staff } from '../types';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, Clock, ChevronRight, Edit, Plus, X, BookOpen, Quote, ShieldCheck, Phone, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -26,6 +26,7 @@ const Home: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [selectedLeader, setSelectedLeader] = useState<Staff | null>(null);
+  const [visitorCount, setVisitorCount] = useState<number>(0);
 
   // --- Data Fetching ---
   const fetchData = useCallback(async () => {
@@ -66,6 +67,40 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData, language]);
+
+  useEffect(() => {
+    const trackVisitor = async () => {
+      if (!db || !db.collection) return;
+      
+      const statsRef = db.collection('stats').doc('visitors');
+      
+      try {
+        const doc = await statsRef.get().catch(err => handleFirestoreError(err, OperationType.GET, 'stats/visitors'));
+        let currentCount = 0;
+        
+        if (doc.exists) {
+          currentCount = doc.data()?.count || 0;
+          setVisitorCount(currentCount);
+        }
+
+        const sessionKey = 'bethel_v3_visited';
+        const hasVisited = sessionStorage.getItem(sessionKey);
+        if (!hasVisited) {
+          const newCount = currentCount + 1;
+          await statsRef.set({ 
+            count: newCount,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true }).catch(err => handleFirestoreError(err, OperationType.WRITE, 'stats/visitors'));
+          setVisitorCount(newCount);
+          sessionStorage.setItem(sessionKey, 'true');
+        }
+      } catch (error) {
+        console.error("Visitor tracking error:", error);
+      }
+    };
+
+    trackVisitor();
+  }, []);
 
   // --- Staff Admin Handlers ---
   const handleAddNew = (collection: 'pastors' | 'elders' | 'proPastors') => {
@@ -403,6 +438,21 @@ const Home: React.FC = () => {
             </div>
         </div>
       )}
+
+      {/* Visitor Counter Section */}
+      <section className="py-12 border-t border-slate-100 bg-slate-50/50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-12 h-12 bg-church-50 text-church-600 rounded-2xl flex items-center justify-center mb-4">
+              <Users size={24} />
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t.nav.visitors}</p>
+            <div className="text-3xl font-black text-slate-900 tabular-nums">
+              {visitorCount.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      </section>
 
     </div>
   );

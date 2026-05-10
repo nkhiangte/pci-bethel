@@ -199,6 +199,18 @@ export interface MinutesYear {
 
 export type ChurchRecord = BaptismRecord | WeddingRecord | DeathRecord | InkhawmpuiRecord | GospelCampingRecord | PemDawnsawnRecord;
 
+export interface SundaySchoolSectionMember {
+  id: string;
+  name: string;
+}
+
+export interface SundaySchoolSection {
+  id: string;
+  name: string;
+  members: SundaySchoolSectionMember[];
+  order?: number;
+}
+
 export interface SundaySchoolDepartment {
   id: string;
   name: string;

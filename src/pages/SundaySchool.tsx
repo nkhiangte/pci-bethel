@@ -4,17 +4,19 @@ import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db, storage, handleFirestoreError, OperationType } from '../services/firebase';
-import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment, Staff } from '../types';
+import { SundaySchoolDepartment, SSWeeklyReport, SSReportSegment, Staff, SundaySchoolSection, SundaySchoolSectionMember } from '../types';
 import { 
   Users, UserCheck, Edit, Save, X, Loader, Database, 
   FileUp, ClipboardList, Calendar, Info, Plus, Trash, 
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
   Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle,
-  GripVertical
+  GripVertical, FileSpreadsheet, FileType, Search
 } from 'lucide-react';
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import StaffEditModal from '../components/StaffEditModal';
 import 'react-quill-new/dist/quill.snow.css';
 import { beginnerSyllabus } from '../constants/beginnerSyllabus';
@@ -274,7 +276,18 @@ const SundaySchool: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
+  // Section (Pawl) States
+  const [ssSections, setSsSections] = useState<SundaySchoolSection[]>([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+  const [editingSection, setEditingSection] = useState<Partial<SundaySchoolSection> | null>(null);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<Partial<SundaySchoolSectionMember> & { sectionId: string } | null>(null);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  
   const importInputRef = useRef<HTMLInputElement>(null);
+  const sectionMemberImportRef = useRef<HTMLInputElement>(null);
 
   const getDeptName = useCallback((id: string) => {
       // @ts-ignore
@@ -365,6 +378,186 @@ const SundaySchool: React.FC = () => {
     
     setLoading(false);
   }, [getDeptName]);
+
+  const fetchSections = useCallback(async () => {
+    if (!db || !db.collection || !departmentId) return;
+    setLoadingSections(true);
+    try {
+      const snap = await db.collection('sundaySchoolDepartments')
+        .doc(departmentId)
+        .collection('sections')
+        .orderBy('name')
+        .get();
+      const sections = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SundaySchoolSection));
+      setSsSections(sections);
+      if (sections.length > 0 && !activeSectionId) {
+        setActiveSectionId(sections[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+    }
+    setLoadingSections(false);
+  }, [departmentId, activeSectionId]);
+
+  useEffect(() => {
+    if (section === 'sections') {
+      fetchSections();
+    }
+  }, [section, fetchSections]);
+
+  const handleSaveSection = async () => {
+    if (!db || !db.collection || !departmentId || !editingSection?.name) return;
+    setIsSaving(true);
+    try {
+      if (editingSection.id) {
+        await db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(editingSection.id).update({
+          name: editingSection.name
+        });
+      } else {
+        await db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').add({
+          name: editingSection.name,
+          members: [],
+          createdAt: new Date().toISOString()
+        });
+      }
+      setIsSectionModalOpen(false);
+      fetchSections();
+    } catch (error) {
+      console.error("Error saving section:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleDeleteSection = async (sectionId: string) => {
+    if (!db || !db.collection || !departmentId || !window.confirm("Delete this section and all its members?")) return;
+    try {
+      await db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(sectionId).delete();
+      if (activeSectionId === sectionId) setActiveSectionId(null);
+      fetchSections();
+    } catch (error) {
+      console.error("Error deleting section:", error);
+    }
+  };
+
+  const handleSaveMember = async () => {
+    if (!db || !db.collection || !departmentId || !editingMember || !editingMember.name || !editingMember.sectionId) return;
+    setIsSaving(true);
+    try {
+      const sectionRef = db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(editingMember.sectionId);
+      const sectionData = ssSections.find(s => s.id === editingMember.sectionId);
+      if (!sectionData) throw new Error("Section data not found");
+
+      let updatedMembers = [...(sectionData.members || [])];
+      
+      if (editingMember.id) {
+        // Edit existing
+        updatedMembers = updatedMembers.map(m => m.id === editingMember.id ? { id: m.id, name: editingMember.name! } : m);
+      } else {
+        // Add new
+        updatedMembers.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: editingMember.name
+        });
+      }
+
+      await sectionRef.update({ members: updatedMembers });
+      setIsMemberModalOpen(false);
+      fetchSections();
+    } catch (error) {
+      console.error("Error saving member:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleDeleteMember = async (sectionId: string, memberId: string) => {
+    if (!db || !db.collection || !departmentId || !window.confirm("Remove this member?")) return;
+    try {
+      const sectionRef = db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(sectionId);
+      const sectionData = ssSections.find(s => s.id === sectionId);
+      if (sectionData) {
+        const updatedMembers = sectionData.members.filter(m => m.id !== memberId);
+        await sectionRef.update({ members: updatedMembers });
+        fetchSections();
+      }
+    } catch (error) {
+      console.error("Error deleting member:", error);
+    }
+  };
+
+  const handleImportMembers = async (e: React.ChangeEvent<HTMLInputElement>, targetSectionId: string) => {
+    const file = e.target.files?.[0];
+    if (!file || !db || !departmentId || !targetSectionId) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      
+      const importedMembers: SundaySchoolSectionMember[] = [];
+      const startIndex = jsonData[0] && String(jsonData[0][0]).toLowerCase().includes('name') ? 1 : 0;
+
+      for (let i = startIndex; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (row && row[0]) {
+          importedMembers.push({
+            id: Math.random().toString(36).substr(2, 9),
+            name: String(row[0]).trim()
+          });
+        }
+      }
+
+      if (importedMembers.length === 0) {
+        alert("No valid data found.");
+        return;
+      }
+
+      if (window.confirm(`Import ${importedMembers.length} members?`)) {
+        const sectionRef = db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(targetSectionId);
+        const sectionData = ssSections.find(s => s.id === targetSectionId);
+        const existingMembers = sectionData?.members || [];
+        await sectionRef.update({ members: [...existingMembers, ...importedMembers] });
+        fetchSections();
+        alert("Members imported successfully!");
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      alert("Failed to import members.");
+    } finally {
+      if (sectionMemberImportRef.current) sectionMemberImportRef.current.value = '';
+    }
+  };
+
+  const exportSectionToExcel = (section: SundaySchoolSection) => {
+    const data = section.members.map((m, i) => ({
+      'S.No': i + 1,
+      'Name': m.name
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, section.name);
+    XLSX.writeFile(workbook, `${section.name}_Members.xlsx`);
+  };
+
+  const exportSectionToPDF = (section: SundaySchoolSection) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text(section.name, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Sunday School Section Members - ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    autoTable(doc, {
+      startY: 40,
+      head: [['Sl.No', 'Name']],
+      body: section.members.map((m, i) => [i + 1, m.name]),
+      headStyles: { fillColor: [44, 62, 80], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { top: 40 },
+    });
+    
+    doc.save(`${section.name}_Members.pdf`);
+  };
 
   const fetchReports = useCallback(async () => {
     if (!db || !db.collection) return;
@@ -922,12 +1115,21 @@ const SundaySchool: React.FC = () => {
                               >
                                   Main Info
                               </Link>
-                              <Link 
-                                  to={`/sundayschool/${departmentId}/quarterly`} 
-                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'quarterly' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
-                              >
-                                  Thla thum zir
-                              </Link>
+                              {isPuitling ? (
+                                  <Link 
+                                      to={`/sundayschool/${departmentId}/sections`} 
+                                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'sections' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                                  >
+                                      Pawl (Section)
+                                  </Link>
+                              ) : (
+                                  <Link 
+                                      to={`/sundayschool/${departmentId}/quarterly`} 
+                                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'quarterly' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
+                                  >
+                                      Thla thum zir
+                                  </Link>
+                              )}
                               <Link 
                                   to={`/sundayschool/${departmentId}/calendar`} 
                                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${section === 'calendar' ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
@@ -1006,11 +1208,19 @@ const SundaySchool: React.FC = () => {
 
                               {/* Quick Links Section */}
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                  <Link to={`/sundayschool/${departmentId}/quarterly`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-                                      <Sparkles className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
-                                      <h4 className="font-bold text-slate-800">Thla thum zir</h4>
-                                      <p className="text-xs text-slate-500 mt-1">Quarterly study materials</p>
-                                  </Link>
+                                  {isPuitling ? (
+                                    <Link to={`/sundayschool/${departmentId}/sections`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                        <Database className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
+                                        <h4 className="font-bold text-slate-800">Pawl (Section)</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Manage Sunday School Sections</p>
+                                    </Link>
+                                  ) : (
+                                    <Link to={`/sundayschool/${departmentId}/quarterly`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                                        <Sparkles className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
+                                        <h4 className="font-bold text-slate-800">Thla thum zir</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Quarterly study materials</p>
+                                    </Link>
+                                  )}
                                   <Link to={`/sundayschool/${departmentId}/calendar`} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
                                       <Calendar className="text-church-600 mb-3 group-hover:scale-110 transition-transform" />
                                       <h4 className="font-bold text-slate-800">Syllabus Calendar</h4>
@@ -1033,6 +1243,187 @@ const SundaySchool: React.FC = () => {
                                   </div>
                               )}
                             </>
+                          )}
+
+                          {/* Pawl (Section) Management Section */}
+                          {section === 'sections' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                                  <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                                    <Database className="text-church-600"/> Pawl (Sections)
+                                  </h3>
+                                  {isAdmin && (
+                                    <button 
+                                      onClick={() => {
+                                        setEditingSection({ name: '' });
+                                        setIsSectionModalOpen(true);
+                                      }}
+                                      className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition shadow-lg shadow-church-100 font-bold text-sm"
+                                    >
+                                      <PlusCircle size={18} /> Add New Pawl
+                                    </button>
+                                  )}
+                                </div>
+
+                                {loadingSections ? (
+                                  <div className="py-12 flex justify-center"><Loader className="animate-spin text-church-500" /></div>
+                                ) : ssSections.length === 0 ? (
+                                  <div className="py-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                                    <Database size={48} className="mx-auto text-slate-300 mb-3" />
+                                    <p className="text-slate-500">No sections found. Add one to get started.</p>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {ssSections.map(s => (
+                                      <div key={s.id} className="group relative">
+                                        <button 
+                                          onClick={() => setActiveSectionId(s.id)}
+                                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${activeSectionId === s.id ? 'bg-church-600 text-white border-church-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-church-400'}`}
+                                        >
+                                          {s.name} ({s.members?.length || 0})
+                                        </button>
+                                        {isAdmin && (
+                                          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition flex gap-1">
+                                            <button 
+                                              onClick={() => { setEditingSection(s); setIsSectionModalOpen(true); }}
+                                              className="p-1 bg-white border border-slate-200 rounded-full text-blue-600 hover:bg-blue-50 shadow-sm"
+                                            >
+                                              <Edit size={12} />
+                                            </button>
+                                            <button 
+                                              onClick={() => handleDeleteSection(s.id)}
+                                              className="p-1 bg-white border border-slate-200 rounded-full text-red-600 hover:bg-red-50 shadow-sm"
+                                            >
+                                              <Trash size={12} />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {activeSectionId && ssSections.find(s => s.id === activeSectionId) && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                  {(() => {
+                                    const section = ssSections.find(s => s.id === activeSectionId)!;
+                                    const filteredMembers = section.members.filter(m => 
+                                      m.name.toLowerCase().includes(memberSearchQuery.toLowerCase())
+                                    );
+
+                                    return (
+                                      <>
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                          <div className="flex items-center gap-4 w-full md:w-auto">
+                                            <h3 className="text-xl font-bold text-slate-800">{section.name} Members</h3>
+                                            <div className="relative flex-1 md:w-64 max-w-xs">
+                                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                              <input 
+                                                type="text" 
+                                                placeholder="Search name..." 
+                                                value={memberSearchQuery}
+                                                onChange={e => setMemberSearchQuery(e.target.value)}
+                                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-church-500 outline-none"
+                                              />
+                                            </div>
+                                          </div>
+                                          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                            <button 
+                                              onClick={() => exportSectionToExcel(section)}
+                                              className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold text-xs border border-emerald-100 transition"
+                                            >
+                                              <FileSpreadsheet size={16} /> Excel
+                                            </button>
+                                            <button 
+                                              onClick={() => exportSectionToPDF(section)}
+                                              className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 font-bold text-xs border border-amber-100 transition"
+                                            >
+                                              <FileType size={16} /> PDF
+                                            </button>
+                                            {isAdmin && (
+                                              <>
+                                                <button 
+                                                  onClick={() => sectionMemberImportRef.current?.click()}
+                                                  className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-700 rounded-xl hover:bg-slate-100 font-bold text-xs border border-slate-200 transition"
+                                                >
+                                                  <FileUp size={16} /> Import
+                                                </button>
+                                                <button 
+                                                  onClick={() => {
+                                                    setEditingMember({ name: '', sectionId: section.id });
+                                                    setIsMemberModalOpen(true);
+                                                  }}
+                                                  className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 font-bold text-xs transition shadow-sm"
+                                                >
+                                                  <Plus size={16} /> Add Member
+                                                </button>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <input 
+                                          type="file" 
+                                          ref={sectionMemberImportRef} 
+                                          className="hidden" 
+                                          accept=".xlsx, .xls, .csv" 
+                                          onChange={(e) => handleImportMembers(e, section.id)} 
+                                        />
+
+                                        <div className="overflow-x-auto">
+                                          <table className="w-full">
+                                            <thead>
+                                              <tr className="border-b-2 border-slate-50 text-left">
+                                                <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Sl.No</th>
+                                                <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Name</th>
+                                                {isAdmin && <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>}
+                                              </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                              {filteredMembers.length === 0 ? (
+                                                <tr>
+                                                  <td colSpan={3} className="py-12 text-center text-slate-400 italic">No members found.</td>
+                                                </tr>
+                                              ) : (
+                                                filteredMembers.map((m, i) => (
+                                                  <tr key={m.id} className="hover:bg-slate-50 transition-colors group">
+                                                    <td className="py-4 px-4 text-sm font-bold text-slate-400">{i + 1}</td>
+                                                    <td className="py-4 px-4 text-sm font-bold text-slate-800">{m.name}</td>
+                                                    {isAdmin && (
+                                                      <td className="py-4 px-4 text-right">
+                                                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                                                          <button 
+                                                            onClick={() => {
+                                                              setEditingMember({ ...m, sectionId: section.id });
+                                                              setIsMemberModalOpen(true);
+                                                            }}
+                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                                          >
+                                                            <Edit size={14} />
+                                                          </button>
+                                                          <button 
+                                                            onClick={() => handleDeleteMember(section.id, m.id)}
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                          >
+                                                            <Trash size={14} />
+                                                          </button>
+                                                        </div>
+                                                      </td>
+                                                    )}
+                                                  </tr>
+                                                ))
+                                              )}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              )}
+                            </div>
                           )}
 
                           {/* Quarterly Syllabus Section */}
@@ -1577,6 +1968,72 @@ const SundaySchool: React.FC = () => {
                       </div>
                   </div>
               </div>
+          )}
+          {/* Section Modal */}
+          {isSectionModalOpen && editingSection && (
+            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
+                <div className="p-6 border-b flex justify-between items-center bg-church-50">
+                  <h3 className="text-xl font-black text-church-900 uppercase tracking-widest">{editingSection.id ? 'Edit Pawl' : 'Add New Pawl'}</h3>
+                  <button onClick={() => setIsSectionModalOpen(false)} className="p-2 hover:bg-white rounded-full text-slate-400"><X size={20}/></button>
+                </div>
+                <div className="p-8 space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pawl Name (e.g. Section A)</label>
+                    <input 
+                      className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none font-bold" 
+                      value={editingSection.name} 
+                      onChange={e => setEditingSection({...editingSection, name: e.target.value})}
+                      placeholder="Enter section name"
+                    />
+                  </div>
+                </div>
+                <div className="p-6 border-t bg-slate-50 flex justify-end gap-3">
+                  <button onClick={() => setIsSectionModalOpen(false)} className="px-6 py-2 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white transition">Cancel</button>
+                  <button 
+                    disabled={isSaving || !editingSection.name} 
+                    onClick={handleSaveSection} 
+                    className="px-6 py-2 bg-church-600 text-white rounded-xl font-bold hover:bg-church-700 transition flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader className="animate-spin" size={16}/> : <Save size={16}/>} Save Section
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Member Modal */}
+          {isMemberModalOpen && editingMember && (
+            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
+                <div className="p-6 border-b flex justify-between items-center bg-church-50">
+                  <h3 className="text-xl font-black text-church-900 uppercase tracking-widest">{editingMember.id ? 'Edit Member' : 'Add New Member'}</h3>
+                  <button onClick={() => setIsMemberModalOpen(false)} className="p-2 hover:bg-white rounded-full text-slate-400"><X size={20}/></button>
+                </div>
+                <div className="p-8 space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Member Name</label>
+                    <input 
+                      className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 outline-none font-bold" 
+                      value={editingMember.name} 
+                      onChange={e => setEditingMember({...editingMember, name: e.target.value})}
+                      placeholder="Enter full name"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="p-6 border-t bg-slate-50 flex justify-end gap-3">
+                  <button onClick={() => setIsMemberModalOpen(false)} className="px-6 py-2 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white transition">Cancel</button>
+                  <button 
+                    disabled={isSaving || !editingMember.name} 
+                    onClick={handleSaveMember} 
+                    className="px-6 py-2 bg-church-600 text-white rounded-xl font-bold hover:bg-church-700 transition flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader className="animate-spin" size={16}/> : <Save size={16}/>} Save Member
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
       </div>
   );

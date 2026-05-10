@@ -437,9 +437,43 @@
         "remarks": { "type": "string" }
       },
       "required": ["particulars", "price", "dateOfPurchase"]
+    },
+    "SundaySchoolSection": {
+      "title": "Sunday School Section",
+      "description": "Pawl (Section) within a Sunday School department",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          }
+        },
+        "order": { "type": "integer" }
+      },
+      "required": ["name"]
+    },
+      "title": "Visitor Stats",
+      "description": "Statistics about site visitors",
+      "type": "object",
+      "properties": {
+        "count": { "type": "number" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["count"]
     }
   },
   "firestore": {
+    "/stats/visitors": {
+      "schema": "VisitorStats",
+      "description": "Global visitor counter"
+    },
     "/announcements/{announcementId}": {
       "schema": "Announcement",
       "description": "Collection of church announcements"
@@ -547,6 +581,10 @@
     "/committees/{committeeId}/propertyRecords/{recordId}": {
       "schema": "PropertyRecord",
       "description": "Subcollection for committee property records"
+    },
+    "/sundaySchoolDepartments/{deptId}/sections/{sectionId}": {
+      "schema": "SundaySchoolSection",
+      "description": "Pawl (Section) within a Sunday School department"
     }
   }
 }

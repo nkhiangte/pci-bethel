@@ -27,6 +27,7 @@ export const translations = {
       contact: 'Contact',
       directory: 'Directory',
       bethel: 'Bethel',
+      visitors: 'Total Visitors',
     },
     bethel: {
       title: 'Bethel Newspaper',
@@ -530,6 +531,7 @@ export const translations = {
       contact: 'Biakpawhna',
       directory: 'Directory',
       bethel: 'Bethel',
+      visitors: 'Tlawm zat',
     },
     bethel: {
       title: 'Bethel Newspaper',

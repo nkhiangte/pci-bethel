@@ -2,6 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
 
     // ===============================
     // Helper functions
@@ -27,6 +31,10 @@ service cloud.firestore {
     // ===============================
     // Publicly readable collections
     // ===============================
+
+    match /stats/{allDocs=**} {
+      allow read, write: if true;
+    }
 
     match /announcements/{docId} {
       allow read: if true;
@@ -199,6 +207,11 @@ service cloud.firestore {
     }
 
     match /resources/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /sundaySchoolDepartments/{deptId}/sections/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
