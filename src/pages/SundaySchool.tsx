@@ -285,6 +285,8 @@ const SundaySchool: React.FC = () => {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Partial<SundaySchoolSectionMember> & { sectionId: string } | null>(null);
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   
   const importInputRef = useRef<HTMLInputElement>(null);
   const sectionMemberImportRef = useRef<HTMLInputElement>(null);
@@ -402,8 +404,48 @@ const SundaySchool: React.FC = () => {
   useEffect(() => {
     if (section === 'sections') {
       fetchSections();
+    } else {
+      setSelectedMemberIds([]);
     }
   }, [section, fetchSections]);
+
+  useEffect(() => {
+    setSelectedMemberIds([]);
+  }, [activeSectionId]);
+
+  const handleSelectAllMembers = (members: SundaySchoolSectionMember[], checked: boolean) => {
+    if (checked) {
+      setSelectedMemberIds(members.map(m => m.id));
+    } else {
+      setSelectedMemberIds([]);
+    }
+  };
+
+  const handleSelectMemberRow = (id: string) => {
+    setSelectedMemberIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelectedMembers = async (sectionId: string) => {
+    if (!db || !db.collection || !departmentId || selectedMemberIds.length === 0) return;
+    if (!window.confirm(`Delete ${selectedMemberIds.length} selected members?`)) return;
+
+    setIsSaving(true);
+    try {
+      const sectionRef = db.collection('sundaySchoolDepartments').doc(departmentId).collection('sections').doc(sectionId);
+      const sectionData = ssSections.find(s => s.id === sectionId);
+      if (sectionData) {
+        const updatedMembers = sectionData.members.filter(m => !selectedMemberIds.includes(m.id));
+        await sectionRef.update({ members: updatedMembers });
+        setSelectedMemberIds([]);
+        fetchSections();
+      }
+    } catch (error) {
+      console.error("Error deleting selected members:", error);
+    }
+    setIsSaving(false);
+  };
 
   const handleSaveSection = async () => {
     if (!db || !db.collection || !departmentId || !editingSection?.name) return;
@@ -1248,6 +1290,47 @@ const SundaySchool: React.FC = () => {
                           {/* Pawl (Section) Management Section */}
                           {section === 'sections' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                              {/* Global Search Bar */}
+                              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                <div className="relative">
+                                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                  <input 
+                                    type="text" 
+                                    placeholder="Search any name across all Pawls..." 
+                                    value={globalSearchQuery}
+                                    onChange={e => setGlobalSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-bold focus:ring-2 focus:ring-church-500 outline-none transition-all"
+                                  />
+                                </div>
+                                {globalSearchQuery && (
+                                  <div className="mt-4 max-h-64 overflow-y-auto divide-y divide-slate-50">
+                                    {(() => {
+                                      const results = ssSections.flatMap(s => 
+                                        s.members
+                                          .filter(m => m.name.toLowerCase().includes(globalSearchQuery.toLowerCase()))
+                                          .map(m => ({ ...m, sectionName: s.name, sectionId: s.id }))
+                                      );
+                                      
+                                      if (results.length === 0) return <p className="py-4 text-center text-slate-400 italic">No matches found for "{globalSearchQuery}"</p>;
+                                      
+                                      return results.map(res => (
+                                        <div 
+                                          key={`${res.sectionId}-${res.id}`} 
+                                          className="py-3 flex justify-between items-center hover:bg-slate-50 cursor-pointer px-2 rounded-lg"
+                                          onClick={() => {
+                                            setActiveSectionId(res.sectionId);
+                                            setGlobalSearchQuery('');
+                                          }}
+                                        >
+                                          <span className="font-bold text-slate-800">{res.name}</span>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">{res.sectionName}</span>
+                                        </div>
+                                      ));
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
+
                               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                                   <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
@@ -1330,6 +1413,14 @@ const SundaySchool: React.FC = () => {
                                             </div>
                                           </div>
                                           <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                            {selectedMemberIds.length > 0 && isAdmin && (
+                                              <button 
+                                                onClick={() => handleDeleteSelectedMembers(section.id)}
+                                                className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold text-xs shadow-md transition"
+                                              >
+                                                <Trash size={16} /> Delete Selected ({selectedMemberIds.length})
+                                              </button>
+                                            )}
                                             <button 
                                               onClick={() => exportSectionToExcel(section)}
                                               className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold text-xs border border-emerald-100 transition"
@@ -1376,6 +1467,16 @@ const SundaySchool: React.FC = () => {
                                           <table className="w-full">
                                             <thead>
                                               <tr className="border-b-2 border-slate-50 text-left">
+                                                {isAdmin && (
+                                                  <th className="py-4 px-4 w-10">
+                                                    <input 
+                                                      type="checkbox" 
+                                                      className="rounded border-slate-300 text-church-600 focus:ring-church-500 w-4 h-4"
+                                                      checked={selectedMemberIds.length === filteredMembers.length && filteredMembers.length > 0}
+                                                      onChange={(e) => handleSelectAllMembers(filteredMembers, e.target.checked)}
+                                                    />
+                                                  </th>
+                                                )}
                                                 <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Sl.No</th>
                                                 <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Name</th>
                                                 {isAdmin && <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>}
@@ -1384,11 +1485,24 @@ const SundaySchool: React.FC = () => {
                                             <tbody className="divide-y divide-slate-50">
                                               {filteredMembers.length === 0 ? (
                                                 <tr>
-                                                  <td colSpan={3} className="py-12 text-center text-slate-400 italic">No members found.</td>
+                                                  <td colSpan={isAdmin ? 4 : 3} className="py-12 text-center text-slate-400 italic">No members found.</td>
                                                 </tr>
                                               ) : (
                                                 filteredMembers.map((m, i) => (
-                                                  <tr key={m.id} className="hover:bg-slate-50 transition-colors group">
+                                                  <tr 
+                                                    key={m.id} 
+                                                    className={`hover:bg-slate-50 transition-colors group ${selectedMemberIds.includes(m.id) ? 'bg-church-50/50' : ''}`}
+                                                  >
+                                                    {isAdmin && (
+                                                      <td className="py-4 px-4">
+                                                        <input 
+                                                          type="checkbox" 
+                                                          className="rounded border-slate-300 text-church-600 focus:ring-church-500 w-4 h-4"
+                                                          checked={selectedMemberIds.includes(m.id)}
+                                                          onChange={() => handleSelectMemberRow(m.id)}
+                                                        />
+                                                      </td>
+                                                    )}
                                                     <td className="py-4 px-4 text-sm font-bold text-slate-400">{i + 1}</td>
                                                     <td className="py-4 px-4 text-sm font-bold text-slate-800">{m.name}</td>
                                                     {isAdmin && (
