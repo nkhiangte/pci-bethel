@@ -1330,6 +1330,16 @@ const CommitteeDetail: React.FC = () => {
           .catch((err: any) => handleFirestoreError(err, OperationType.LIST, propertyPath));
         const propertyRecords = propertySnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as PropertyRecord[];
         
+        // Sort property records from latest to earliest
+        propertyRecords.sort((a, b) => {
+          const parseDate = (dateStr: string) => {
+            if (!dateStr) return 0;
+            const [day, month, year] = dateStr.split('/').map(Number);
+            return new Date(year, month - 1, day).getTime();
+          };
+          return parseDate(b.dateOfPurchase) - parseDate(a.dateOfPurchase);
+        });
+        
         setCommittee({ ...committeeData, reports, images, propertyRecords });
       } else {
         navigate('/committees');
