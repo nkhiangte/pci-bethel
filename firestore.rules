@@ -63,6 +63,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /committees/{committeeId}/propertyRecords/{recordId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /elders/{docId} {
       allow read: if true;
       allow write: if isAdmin();

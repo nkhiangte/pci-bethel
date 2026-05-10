@@ -243,7 +243,8 @@ const Departments: React.FC = () => {
     }
 
     try {
-        const snapshot = await db.collection('committees').get();
+        const snapshot = await db.collection('committees').get()
+          .catch((err: any) => handleFirestoreError(err, OperationType.LIST, 'committees'));
         let fetchedData = !snapshot.empty 
           ? snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Committee[]
           : [];

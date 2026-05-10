@@ -506,6 +506,14 @@ export interface CommitteeReport {
   uploadedBy?: string;
 }
 
+export interface PropertyRecord {
+  id: string;
+  particulars: string;
+  price: string;
+  dateOfPurchase: string;
+  remarks: string;
+}
+
 export interface Committee {
   id: string;
   name: string;
@@ -516,5 +524,6 @@ export interface Committee {
   activities?: CommitteeActivity[];
   images?: CommitteeImage[];
   reports?: CommitteeReport[];
+  propertyRecords?: PropertyRecord[];
   order?: number;
 }

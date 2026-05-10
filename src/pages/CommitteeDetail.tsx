@@ -8,9 +8,10 @@ import {
   CommitteeReport, 
   CommitteeImage,
   GalleryFolder,
-  GalleryItem
+  GalleryItem,
+  PropertyRecord
 } from '../types';
-import { db, storage } from '../services/firebase';
+import { db, storage, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
@@ -37,6 +38,14 @@ import {
 } from 'lucide-react';
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -313,6 +322,163 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ committee, isAdmin, isOffli
   );
 };
 
+interface PropertyPanelProps {
+  committeeId: string;
+  propertyRecords: PropertyRecord[];
+  isAdmin: boolean;
+  isOfflineMode: boolean;
+  onAdd: () => void;
+  onEdit: (record: PropertyRecord) => void;
+  onDelete: (id: string) => void;
+  onImport: () => void;
+  committeeName: string;
+}
+
+const PropertyPanel: React.FC<PropertyPanelProps> = ({ 
+  committeeId, 
+  propertyRecords, 
+  isAdmin, 
+  isOfflineMode, 
+  onAdd, 
+  onEdit, 
+  onDelete,
+  onImport,
+  committeeName
+}) => {
+  const { t } = useLanguage();
+
+  const handleExportExcel = () => {
+    const data = propertyRecords.map((r, i) => ({
+      'S/NO': i + 1,
+      'PARTICULARS': r.particulars,
+      'PRICE': r.price,
+      'DATE OF PURCHASE': r.dateOfPurchase,
+      'REMARKS': r.remarks
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Property Records");
+    XLSX.writeFile(workbook, `${committeeName}_Property_Records.xlsx`);
+  };
+
+  const handleExportPdf = () => {
+    const doc = new jsPDF();
+    doc.text(`${committeeName} Property Records`, 14, 15);
+    
+    const tableData = propertyRecords.map((r, i) => [
+      i + 1,
+      r.particulars,
+      r.price,
+      r.dateOfPurchase,
+      r.remarks
+    ]);
+
+    doc.autoTable({
+      head: [['S/NO', 'PARTICULARS', 'PRICE', 'DATE OF PURCHASE', 'REMARKS']],
+      body: tableData,
+      startY: 20,
+    });
+
+    doc.save(`${committeeName}_Property_Records.pdf`);
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+            <BookOpen size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800">{t.committeeDetail.sections.propertyRecord}</h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-all border border-emerald-100 font-bold text-xs"
+          >
+            <FileDown size={16} /> Excel
+          </button>
+          <button 
+            onClick={handleExportPdf}
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-all border border-red-100 font-bold text-xs"
+          >
+            <Download size={16} /> PDF
+          </button>
+          {isAdmin && !isOfflineMode && (
+            <>
+              <button 
+                onClick={onImport}
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all font-bold text-xs"
+              >
+                <Upload size={16} /> {t.committeeDetail.admin.import}
+              </button>
+              <button 
+                onClick={onAdd}
+                className="flex items-center gap-2 px-4 py-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition-all shadow-lg shadow-church-100 font-bold text-sm"
+              >
+                <PlusCircle size={18} /> {t.committeeDetail.property.addRecord}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {propertyRecords.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+          <BookOpen size={48} className="mx-auto text-slate-300 mb-3" />
+          <p className="text-sm text-slate-500">{t.committeeDetail.property.noRecords}</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr>
+                <th className="p-4">{t.committeeDetail.property.sNo}</th>
+                <th className="p-4">{t.committeeDetail.property.particulars}</th>
+                <th className="p-4">{t.committeeDetail.property.price}</th>
+                <th className="p-4">{t.committeeDetail.property.dateOfPurchase}</th>
+                <th className="p-4">{t.committeeDetail.property.remarks}</th>
+                {isAdmin && !isOfflineMode && <th className="p-4 text-center">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {propertyRecords.map((record, index) => (
+                <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 text-slate-500 font-medium">{index + 1}</td>
+                  <td className="p-4 text-slate-800 font-bold">{record.particulars}</td>
+                  <td className="p-4 text-slate-600">{record.price}</td>
+                  <td className="p-4 text-slate-600">{record.dateOfPurchase}</td>
+                  <td className="p-4 text-slate-600 italic max-w-xs truncate">{record.remarks}</td>
+                  {isAdmin && !isOfflineMode && (
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => onEdit(record)}
+                          className="p-1.5 text-church-600 hover:bg-church-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => onDelete(record.id)}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Modals ──────────────────────────────────────────────────────────────────
 
 interface ReportModalProps {
@@ -481,6 +647,207 @@ const ReportModal: React.FC<ReportModalProps> = ({ committeeId, editingReport, o
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+interface PropertyRecordModalProps {
+  committeeId: string;
+  editingRecord: PropertyRecord | null;
+  onSave: (record: PropertyRecord) => Promise<void>;
+  onClose: () => void;
+  loading: boolean;
+}
+
+const PropertyRecordModal: React.FC<PropertyRecordModalProps> = ({ editingRecord, onSave, onClose, loading }) => {
+  const { t } = useLanguage();
+  const [particulars, setParticulars] = useState(editingRecord?.particulars || '');
+  const [price, setPrice] = useState(editingRecord?.price || '');
+  const [dateOfPurchase, setDateOfPurchase] = useState(editingRecord?.dateOfPurchase || '');
+  const [remarks, setRemarks] = useState(editingRecord?.remarks || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      id: editingRecord?.id || '',
+      particulars,
+      price,
+      dateOfPurchase,
+      remarks
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <form onSubmit={handleSubmit}>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800">{editingRecord?.id ? t.committeeDetail.property.editRecord : t.committeeDetail.property.addRecord}</h3>
+              <button type="button" onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.property.particulars}</label>
+                <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={particulars} onChange={e => setParticulars(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.property.price}</label>
+                <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={price} onChange={e => setPrice(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.property.dateOfPurchase}</label>
+                <input required className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" value={dateOfPurchase} onChange={e => setDateOfPurchase(e.target.value)} placeholder="DD/MM/YYYY" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t.committeeDetail.property.remarks}</label>
+                <textarea className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-church-500 outline-none" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">{t.committeeDetail.modals.cancel}</button>
+            <button type="submit" disabled={loading} className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all">
+              {loading ? <Loader className="animate-spin w-4 h-4" /> : <Save size={18} />} {t.committeeDetail.modals.save}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+interface ImportPropertyModalProps {
+  onImport: (records: PropertyRecord[]) => Promise<void>;
+  onClose: () => void;
+  loading: boolean;
+}
+
+const ImportPropertyModal: React.FC<ImportPropertyModalProps> = ({ onImport, onClose, loading }) => {
+  const { t } = useLanguage();
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<PropertyRecord[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+        
+        const records: PropertyRecord[] = data.map(row => ({
+          id: '',
+          particulars: row.Particulars || row.PARTICULARS || row.particulars || '',
+          price: (row.Price || row.PRICE || row.price || '').toString(),
+          dateOfPurchase: row['Date of Purchase'] || row['DATE OF PURCHASE'] || row.date_of_purchase || row.dateOfPurchase || '',
+          remarks: row.Remarks || row.REMARKS || row.remarks || '',
+        })).filter(r => r.particulars);
+        
+        setPreview(records);
+      } catch (error) {
+        console.error("Error parsing file:", error);
+        alert("Failed to parse file. Please ensure it's a valid Excel or CSV file.");
+      }
+    };
+    reader.readAsBinaryString(selectedFile);
+  };
+
+  const handleDownloadTemplate = () => {
+    const template = [
+      { Particulars: 'Office Table', Price: '5000', 'Date of Purchase': '10/05/2026', Remarks: 'Good condition' },
+      { Particulars: 'HP Laptop', Price: '45000', 'Date of Purchase': '12/04/2026', Remarks: 'New' }
+    ];
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Property Template");
+    XLSX.writeFile(wb, "property_records_template.xlsx");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-800">{t.committeeDetail.admin.import} Property Records</h3>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-church-50 p-4 rounded-xl border border-church-100 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-church-800">{t.committeeDetail.property.template}</p>
+                <p className="text-xs text-church-600">Use this template to format your property list correctly.</p>
+              </div>
+              <button 
+                onClick={handleDownloadTemplate}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-church-600 rounded-lg border border-church-200 hover:bg-church-100 transition-all font-bold text-sm"
+              >
+                <FileDown size={16} /> Template
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Select File (Excel or CSV)</label>
+              <input 
+                type="file" 
+                accept=".xlsx, .xls, .csv"
+                onChange={handleFileChange}
+                className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-church-500 outline-none"
+              />
+            </div>
+
+            {preview.length > 0 && (
+              <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 sticky top-0 font-bold text-slate-700 uppercase">
+                    <tr>
+                      <th className="p-3">Particulars</th>
+                      <th className="p-3">Price</th>
+                      <th className="p-3">Date</th>
+                      <th className="p-3">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-600">
+                    {preview.map((r, i) => (
+                      <tr key={i}>
+                        <td className="p-3">{r.particulars}</td>
+                        <td className="p-3">{r.price}</td>
+                        <td className="p-3">{r.dateOfPurchase}</td>
+                        <td className="p-3 truncate max-w-[150px]">{r.remarks}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-50 flex justify-end gap-3 px-6">
+          <button onClick={onClose} className="px-6 py-2.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">{t.committeeDetail.modals.cancel}</button>
+          <button 
+            onClick={() => onImport(preview)}
+            disabled={loading || preview.length === 0}
+            className="px-8 py-2.5 bg-church-600 text-white font-bold rounded-xl hover:bg-church-700 flex items-center gap-2 shadow-lg shadow-church-200 disabled:opacity-50 transition-all"
+          >
+            {loading ? <Loader className="animate-spin w-4 h-4" /> : <Upload size={18} />}
+            Import {preview.length} Records
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -832,6 +1199,10 @@ const CommitteeDetail: React.FC = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<CommitteeImage | null>(null);
 
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<PropertyRecord | null>(null);
+  const [isImportPropertyModalOpen, setIsImportPropertyModalOpen] = useState(false);
+
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
   const [selectedMemberBio, setSelectedMemberBio] = useState<CommitteeMember | null>(null);
@@ -841,14 +1212,21 @@ const CommitteeDetail: React.FC = () => {
     setLoading(true);
     try {
       // Fetch Gallery data for syncing
-      const gFoldersSnap = await db.collection('gallery_folders').where('category', '==', 'Committees').get();
+      const gFoldersPath = 'gallery_folders';
+      const gFoldersSnap = await db.collection(gFoldersPath).where('category', '==', 'Committees').get()
+        .catch((err: any) => handleFirestoreError(err, OperationType.LIST, gFoldersPath));
       setGalleryFolders(gFoldersSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
 
-      const gItemsSnap = await db.collection('gallery').where('category', '==', 'Committees').get();
+      const gItemsPath = 'gallery';
+      const gItemsSnap = await db.collection(gItemsPath).where('category', '==', 'Committees').get()
+        .catch((err: any) => handleFirestoreError(err, OperationType.LIST, gItemsPath));
       setGalleryItems(gItemsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
 
       // Fetch Committee
-      const doc = await db.collection('committees').doc(id).get();
+      const committeePath = `committees/${id}`;
+      const doc = await db.collection('committees').doc(id).get()
+        .catch((err: any) => handleFirestoreError(err, OperationType.GET, committeePath));
+      
       if (doc.exists || id === 'static-kohhran') {
         let committeeData: Committee;
         
@@ -865,13 +1243,22 @@ const CommitteeDetail: React.FC = () => {
         }
         
         // Fetch subcollections
-        const reportsSnap = await db.collection('committees').doc(id).collection('committeeReports').get();
+        const reportsPath = `committees/${id}/committeeReports`;
+        const reportsSnap = await db.collection('committees').doc(id).collection('committeeReports').get()
+          .catch((err: any) => handleFirestoreError(err, OperationType.LIST, reportsPath));
         const reports = reportsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as CommitteeReport[];
         
-        const imagesSnap = await db.collection('committees').doc(id).collection('committeeImages').get();
+        const imagesPath = `committees/${id}/committeeImages`;
+        const imagesSnap = await db.collection('committees').doc(id).collection('committeeImages').get()
+          .catch((err: any) => handleFirestoreError(err, OperationType.LIST, imagesPath));
         const images = imagesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as CommitteeImage[];
+
+        const propertyPath = `committees/${id}/propertyRecords`;
+        const propertySnap = await db.collection('committees').doc(id).collection('propertyRecords').get()
+          .catch((err: any) => handleFirestoreError(err, OperationType.LIST, propertyPath));
+        const propertyRecords = propertySnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as PropertyRecord[];
         
-        setCommittee({ ...committeeData, reports, images });
+        setCommittee({ ...committeeData, reports, images, propertyRecords });
       } else {
         navigate('/committees');
       }
@@ -1096,6 +1483,59 @@ const CommitteeDetail: React.FC = () => {
     } catch (error) { console.error("Error deleting image:", error); }
   };
 
+  const handleSaveProperty = async (record: PropertyRecord) => {
+    if (!db || !id) return;
+    setLoading(true);
+    try {
+      const propertyRef = db.collection('committees').doc(id).collection('propertyRecords');
+      if (record.id) {
+        await propertyRef.doc(record.id).set(record);
+      } else {
+        const newDoc = propertyRef.doc();
+        await newDoc.set({ ...record, id: newDoc.id });
+      }
+      setIsPropertyModalOpen(false);
+      setEditingProperty(null);
+      await fetchData();
+    } catch (error) {
+      console.error("Error saving property:", error);
+      alert("Failed to save property record.");
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteProperty = async (recordId: string) => {
+    if (!db || !id || !window.confirm(t.committeeDetail.property.deleteConfirm)) return;
+    try {
+      await db.collection('committees').doc(id).collection('propertyRecords').doc(recordId).delete();
+      await fetchData();
+    } catch (error) {
+      console.error("Error deleting property:", error);
+    }
+  };
+
+  const handleImportProperty = async (newRecords: PropertyRecord[]) => {
+    if (!db || !id) return;
+    setLoading(true);
+    try {
+      const propertyRef = db.collection('committees').doc(id).collection('propertyRecords');
+      const batch = db.batch();
+      
+      newRecords.forEach(record => {
+        const doc = propertyRef.doc();
+        batch.set(doc, { ...record, id: doc.id });
+      });
+      
+      await batch.commit();
+      setIsImportPropertyModalOpen(false);
+      await fetchData();
+    } catch (error) {
+      console.error("Error importing property:", error);
+      alert("Failed to import property records.");
+    }
+    setLoading(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -1142,6 +1582,7 @@ const CommitteeDetail: React.FC = () => {
                 { key: 'members', label: t.committeeDetail.tabs.members, icon: Users, id: 'members' },
                 { key: 'activities', label: t.committeeDetail.tabs.activities, icon: Calendar, id: 'activities' },
                 { key: 'reports', label: t.committeeDetail.tabs.reports, icon: FileText, id: 'reports' },
+                { key: 'property', label: t.committeeDetail.tabs.propertyRecord, icon: BookOpen, id: 'property' },
               ] as const
             ).map(({ key, label, icon: Icon, id }) => (
               <button
@@ -1354,6 +1795,21 @@ const CommitteeDetail: React.FC = () => {
                 onDelete={handleDeleteReport}
               />
             </section>
+
+            {/* Property Section */}
+            <section id="property" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <PropertyPanel 
+                committeeId={id!}
+                propertyRecords={committee.propertyRecords || []}
+                isAdmin={isAdmin}
+                isOfflineMode={isOfflineMode}
+                onAdd={() => { setEditingProperty(null); setIsPropertyModalOpen(true); }}
+                onEdit={(record) => { setEditingProperty(record); setIsPropertyModalOpen(true); }}
+                onDelete={handleDeleteProperty}
+                onImport={() => setIsImportPropertyModalOpen(true)}
+                committeeName={committee.name}
+              />
+            </section>
           </div>
         </div>
       </div>
@@ -1559,6 +2015,24 @@ const CommitteeDetail: React.FC = () => {
         <ImportMembersModal 
           onImport={handleImportMembers}
           onClose={() => setIsImportModalOpen(false)}
+          loading={loading}
+        />
+      )}
+
+      {isPropertyModalOpen && (
+        <PropertyRecordModal 
+          committeeId={id!}
+          editingRecord={editingProperty}
+          onSave={handleSaveProperty}
+          onClose={() => { setIsPropertyModalOpen(false); setEditingProperty(null); }}
+          loading={loading}
+        />
+      )}
+
+      {isImportPropertyModalOpen && (
+        <ImportPropertyModal 
+          onImport={handleImportProperty}
+          onClose={() => setIsImportPropertyModalOpen(false)}
           loading={loading}
         />
       )}

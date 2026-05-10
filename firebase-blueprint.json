@@ -424,6 +424,19 @@
         "uploadedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "url", "folderId"]
+    },
+    "PropertyRecord": {
+      "title": "Property Record",
+      "description": "Inventory of assets for a committee",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "particulars": { "type": "string" },
+        "price": { "type": "string" },
+        "dateOfPurchase": { "type": "string" },
+        "remarks": { "type": "string" }
+      },
+      "required": ["particulars", "price", "dateOfPurchase"]
     }
   },
   "firestore": {
@@ -530,6 +543,10 @@
     "/bethelPdfs/{pdfId}": {
       "schema": "BethelPdf",
       "description": "Collection of Bethel Newspaper PDFs"
+    },
+    "/committees/{committeeId}/propertyRecords/{recordId}": {
+      "schema": "PropertyRecord",
+      "description": "Subcollection for committee property records"
     }
   }
 }
