@@ -747,13 +747,26 @@ const ImportPropertyModal: React.FC<ImportPropertyModalProps> = ({ onImport, onC
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws) as any[];
         
-        const records: PropertyRecord[] = data.map(row => ({
-          id: '',
-          particulars: row.Particulars || row.PARTICULARS || row.particulars || '',
-          price: (row.Price || row.PRICE || row.price || '').toString(),
-          dateOfPurchase: row['Date of Purchase'] || row['DATE OF PURCHASE'] || row.date_of_purchase || row.dateOfPurchase || '',
-          remarks: row.Remarks || row.REMARKS || row.remarks || '',
-        })).filter(r => r.particulars);
+        const excelDateToJSDate = (serial: number) => {
+          const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+
+        const records: PropertyRecord[] = data.map(row => {
+          const rawDate = row['Date of Purchase'] || row['DATE OF PURCHASE'] || row.date_of_purchase || row.dateOfPurchase || '';
+          const formattedDate = typeof rawDate === 'number' ? excelDateToJSDate(rawDate) : String(rawDate);
+
+          return {
+            id: '',
+            particulars: row.Particulars || row.PARTICULARS || row.particulars || '',
+            price: (row.Price || row.PRICE || row.price || '').toString(),
+            dateOfPurchase: formattedDate,
+            remarks: row.Remarks || row.REMARKS || row.remarks || '',
+          };
+        }).filter(r => r.particulars);
         
         setPreview(records);
       } catch (error) {
