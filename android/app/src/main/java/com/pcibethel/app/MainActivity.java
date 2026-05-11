@@ -1,4 +1,4 @@
-package com.pci.champhai.bethel;
+package com.pcibethel.app;
 
 import com.getcapacitor.BridgeActivity;
 
