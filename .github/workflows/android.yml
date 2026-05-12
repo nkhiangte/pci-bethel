@@ -33,27 +33,20 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Restore Gradle Wrapper Jar
-        run: |
-          mkdir -p android/gradle/wrapper
-          curl -L https://github.com/gradle/gradle/raw/v8.7/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
-          if [ ! -s android/gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Failed to download gradle-wrapper.jar, trying fallback..."
-            curl -L https://github.com/gradle/gradle/raw/v8.5/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
-          fi
-          ls -l android/gradle/wrapper/gradle-wrapper.jar
-
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
-          build-root-directory: android
 
       - name: Execute Gradle Bundle
         run: |
+          mkdir -p android/app/libs
+          mkdir -p android/capacitor-cordova-android-plugins/src/main/libs
+          # Ensure node_modules plugin libs exist if referenced
+          mkdir -p node_modules/@capacitor/app/android/libs || true
+          mkdir -p node_modules/@capacitor/android/capacitor/libs || true
           cd android
-          chmod +x gradlew
-          ./gradlew clean bundleRelease --no-daemon --stacktrace --info
+          gradle clean bundleRelease --no-daemon --stacktrace --info
 
       - name: Sign AAB
         id: sign_app
