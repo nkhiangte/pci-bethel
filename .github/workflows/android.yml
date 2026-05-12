@@ -41,6 +41,9 @@ jobs:
       - name: Execute Gradle Bundle
         run: |
           mkdir -p android/app/libs
+          mkdir -p android/capacitor-cordova-android-plugins/src/main/libs
+          mkdir -p node_modules/@capacitor/app/android/libs
+          mkdir -p node_modules/@capacitor/android/capacitor/libs
           cd android
           gradle clean bundleRelease --no-daemon --stacktrace --info
 
