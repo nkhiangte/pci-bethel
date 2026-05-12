@@ -33,6 +33,11 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Restore Gradle Wrapper Jar
+        run: |
+          mkdir -p android/gradle/wrapper
+          curl -L https://raw.githubusercontent.com/ionic-team/capacitor/main/android/template/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
+
       - name: Build with Gradle
         run: |
           cd android
