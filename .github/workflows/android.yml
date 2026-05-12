@@ -36,7 +36,12 @@ jobs:
       - name: Restore Gradle Wrapper Jar
         run: |
           mkdir -p android/gradle/wrapper
-          curl -L https://raw.githubusercontent.com/ionic-team/capacitor/main/android/template/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
+          curl -L https://github.com/gradle/gradle/raw/v8.14.3/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
+          if [ ! -s android/gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "Failed to download gradle-wrapper.jar, trying fallback..."
+            curl -L https://github.com/gradle/gradle/raw/v8.5/gradle/wrapper/gradle-wrapper.jar -o android/gradle/wrapper/gradle-wrapper.jar
+          fi
+          ls -l android/gradle/wrapper/gradle-wrapper.jar
 
       - name: Build with Gradle
         run: |
