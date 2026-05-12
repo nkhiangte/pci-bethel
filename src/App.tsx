@@ -1,5 +1,6 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { App as CapApp } from '@capacitor/app';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
@@ -59,46 +60,62 @@ import CommitteeDetail from './pages/CommitteeDetail';
 import Directory from './pages/Directory';
 import Bethel from './pages/Bethel';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleBackButton = CapApp.addListener('backButton', ({ canGoBack }) => {
+      if (canGoBack) {
+        window.history.back();
+      } else if (location.pathname !== '/') {
+        // If we are not at home and cannot go back further in history, go to home
+        navigate('/', { replace: true });
+      } else {
+        // If we are at home and no more history, exit the app
+        CapApp.exitApp();
+      }
+    });
+
+    return () => {
+      handleBackButton.then(h => h.remove());
+    };
+  }, [navigate, location]);
+
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <ErrorBoundary>
-          <BrowserRouter>
-          <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Banner is the background of the navbar — fixed so it never moves on scroll */}
+      <div
+        className="sticky top-0 z-50"
+        style={{
+          backgroundImage: 'url(https://i.ibb.co/V06hg04Q/WEBBAN.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <Navbar />
+      </div>
 
-            {/* Banner is the background of the navbar — fixed so it never moves on scroll */}
-            <div
-              className="sticky top-0 z-50"
-              style={{
-                backgroundImage: 'url(https://i.ibb.co/V06hg04Q/WEBBAN.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center top',
-                backgroundRepeat: 'no-repeat',
-              }}
-            >
-              <Navbar />
-            </div>
-
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/upa-bial" element={<UpaBial />} />
-                <Route path="/missionaries" element={<Missionaries />} />
-                <Route path="/articles" element={<Articles />} /> 
-                <Route path="/about" element={<About />} />
-                <Route path="/events" element={<Events />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/announcements" element={<Announcements />} />
-                <Route path="/announcements/:id" element={<AnnouncementDetail />} />
-                <Route path="/committees" element={<Departments />} />
-                <Route path="/committees/:id" element={<CommitteeDetail />} />
-                <Route path="/sundayschool/dashboard" element={<SundaySchoolDashboard />} />
-                <Route path="/sundayschool/:departmentId/:section?" element={<SundaySchool />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/fellowship/:id" element={<Fellowship />} />
-          
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/upa-bial" element={<UpaBial />} />
+          <Route path="/missionaries" element={<Missionaries />} />
+          <Route path="/articles" element={<Articles />} /> 
+          <Route path="/about" element={<About />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+          <Route path="/committees" element={<Departments />} />
+          <Route path="/committees/:id" element={<CommitteeDetail />} />
+          <Route path="/sundayschool/dashboard" element={<SundaySchoolDashboard />} />
+          <Route path="/sundayschool/:departmentId/:section?" element={<SundaySchool />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/fellowship/:id" element={<Fellowship />} />
+    
           {/* KTP Routes */}
           <Route path="/ktp" element={<KtpLayout />}>
             <Route index element={<Navigate to="/ktp/leaders" replace />} />
@@ -134,30 +151,40 @@ const App: React.FC = () => {
             <Route path="reports" element={<KhReports />} />
             <Route path="gallery" element={<KhGallery />} />
           </Route>
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/gallery/*" element={<Gallery />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/ministries" element={<AdminMinistries />} />
-                <Route path="/admin/duties" element={<AdminDuties />} /> 
-                <Route path="/admin/users" element={<AdminUsers />} /> 
-                <Route path="/admin/thawhlawm" element={<AdminThawhlawm />} /> 
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/statistics" element={<Statistics />} />
-                <Route path="/records" element={<Records />} /> 
-                <Route path="/directory" element={<Directory />} /> 
-                <Route path="/archives" element={<Archives />} />
-                <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
-                <Route path="/thawhlawm" element={<Thawhlawm />} />
-                <Route path="/bethel" element={<Bethel />} />
-              </Routes>
-            </main>
-            <Chatbot />
-            <Footer />
-          </div>
-        </BrowserRouter>
-      </ErrorBoundary>
-    </AuthProvider>
-  </LanguageProvider>
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/gallery/*" element={<Gallery />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/ministries" element={<AdminMinistries />} />
+          <Route path="/admin/duties" element={<AdminDuties />} /> 
+          <Route path="/admin/users" element={<AdminUsers />} /> 
+          <Route path="/admin/thawhlawm" element={<AdminThawhlawm />} /> 
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/records" element={<Records />} /> 
+          <Route path="/directory" element={<Directory />} /> 
+          <Route path="/archives" element={<Archives />} />
+          <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
+          <Route path="/thawhlawm" element={<Thawhlawm />} />
+          <Route path="/bethel" element={<Bethel />} />
+        </Routes>
+      </main>
+      <Chatbot />
+      <Footer />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <LanguageProvider>
+      <AuthProvider>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </ErrorBoundary>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };
 
