@@ -27,8 +27,8 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      - name: Install Capacitor CLI
-        run: npm install @capacitor/cli @capacitor/android @capacitor/app --legacy-peer-deps
+      - name: Generate Assets
+        run: npx @capacitor/assets generate --android --assetPath assets
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -41,10 +41,6 @@ jobs:
       - name: Execute Gradle Bundle
         run: |
           mkdir -p android/app/libs
-          mkdir -p android/capacitor-cordova-android-plugins/src/main/libs
-          # Ensure node_modules plugin libs exist if referenced
-          mkdir -p node_modules/@capacitor/app/android/libs || true
-          mkdir -p node_modules/@capacitor/android/capacitor/libs || true
           cd android
           gradle clean bundleRelease --no-daemon --stacktrace --info
 
