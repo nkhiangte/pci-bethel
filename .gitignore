@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.npm
+package-lock.json
+
+# Build output
+dist/
+build/
+bin/
+obj/
+out/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# Capacitor
+android/app/build/
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.log
+
+# Firebase
+.firebase/
+firestore.rules.test.ts
+DRAFT_firestore.rules
+
+# Gradle
+.gradle/
+local.properties

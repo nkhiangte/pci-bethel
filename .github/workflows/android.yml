@@ -15,6 +15,12 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
@@ -31,7 +37,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease --stacktrace --info
 
       - name: Sign AAB
         id: sign_app
