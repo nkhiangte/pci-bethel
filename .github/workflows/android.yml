@@ -45,8 +45,7 @@ jobs:
           mkdir -p node_modules/@capacitor/app/android/libs
           mkdir -p node_modules/@capacitor/android/capacitor/libs
           cd android
-          chmod +x gradlew
-          ./gradlew clean bundleRelease --no-daemon --stacktrace --info
+          gradle clean bundleRelease --no-daemon --stacktrace --info
 
       - name: Sign AAB
         id: sign_app
