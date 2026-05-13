@@ -369,10 +369,42 @@ const Bethel: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-12">
+                {/* Latest PDF Embedded (Only at Root) */}
+                {navigationStack.length === 0 && pdfs.length > 0 && (
+                  <section className="mb-12 animate-in fade-in duration-500">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-black text-church-600 uppercase tracking-[0.2em]">Latest Issue: {pdfs[0].name}</h3>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <a href={pdfs[0].url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg text-sm font-bold hover:bg-yellow-400 transition shadow-sm">
+                          <Download size={16} /> Download
+                        </a>
+                        {isAdmin && (
+                          <button 
+                            onClick={() => handleDeletePdf(pdfs[0])} 
+                            disabled={deletingId === pdfs[0].id} 
+                            className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-bold hover:bg-red-200 transition shadow-sm disabled:opacity-50"
+                          >
+                            {deletingId === pdfs[0].id ? <Loader className="animate-spin" size={16} /> : <Trash2 size={16} />} Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-slate-800 rounded-3xl overflow-hidden h-[75vh] min-h-[600px] shadow-2xl border border-slate-200 relative group">
+                      <iframe 
+                        src={`${pdfs[0].url}#toolbar=1`} 
+                        className="w-full h-full border-none absolute inset-0"
+                        title={pdfs[0].name}
+                      />
+                    </div>
+                  </section>
+                )}
+
                 {/* Folders Selection */}
                 <section>
                    <div className="flex items-center gap-3 mb-6">
-                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Folders</h3>
+                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">{navigationStack.length === 0 ? "Archives" : "Folders"}</h3>
                      <div className="flex-1 h-px bg-slate-200"></div>
                    </div>
                    
@@ -413,28 +445,29 @@ const Bethel: React.FC = () => {
                 </section>
 
                 {/* PDFs Selection */}
-                <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Documents</h3>
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                  </div>
-
-                  {pdfs.length === 0 ? (
-                    <div className="text-center py-12 bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl">
-                      <FileText className="mx-auto mb-4 text-slate-200" size={48} />
-                      <p className="text-slate-400 text-sm italic">No PDFs uploaded in this scope.</p>
-                      {isAdmin && (
-                        <button 
-                          onClick={() => fileInputRef.current?.click()}
-                          className="mt-4 text-church-600 font-bold text-sm hover:underline"
-                        >
-                          Upload first PDF
-                        </button>
-                      )}
+                {((navigationStack.length === 0 && pdfs.length > 1) || navigationStack.length > 0 || (navigationStack.length === 0 && pdfs.length === 0 && isAdmin)) && (
+                  <section>
+                    <div className="flex items-center gap-3 mb-6">
+                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Documents</h3>
+                      <div className="flex-1 h-px bg-slate-200"></div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {pdfs.map((pdf, idx) => (
+
+                    {(navigationStack.length === 0 ? pdfs.slice(1) : pdfs).length === 0 ? (
+                      <div className="text-center py-12 bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl">
+                        <FileText className="mx-auto mb-4 text-slate-200" size={48} />
+                        <p className="text-slate-400 text-sm italic">No PDFs uploaded in this scope.</p>
+                        {isAdmin && (
+                          <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="mt-4 text-church-600 font-bold text-sm hover:underline"
+                          >
+                            Upload first PDF
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(navigationStack.length === 0 ? pdfs.slice(1) : pdfs).map((pdf, idx) => (
                         <div 
                           key={pdf.id}
                           className="flex items-center gap-4 p-5 bg-white border border-slate-100 rounded-3xl hover:border-church-400 hover:shadow-xl transition-all group"
@@ -460,6 +493,7 @@ const Bethel: React.FC = () => {
                     </div>
                   )}
                 </section>
+                )}
               </div>
             )}
           </main>
