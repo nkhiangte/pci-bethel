@@ -46,6 +46,42 @@ const Bethel: React.FC = () => {
     setLoading(false);
   }, []);
 
+  const autoArchiveOldPdfs = useCallback(async (oldPdfs: BethelPdf[]) => {
+    if (!isAdmin || !db?.collection) return;
+    try {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      
+      for (const pdf of oldPdfs) {
+        const pdfDate = new Date(pdf.uploadedAt || pdf.date);
+        const folderName = `${monthNames[pdfDate.getMonth()]} ${pdfDate.getFullYear()}`;
+        
+        const folderSnapshot = await db.collection('bethelFolders')
+          .where('parentId', '==', null)
+          .where('name', '==', folderName)
+          .get();
+          
+        let targetFolderId = '';
+        if (folderSnapshot.empty) {
+          const newFolderRef = await db.collection('bethelFolders').add({
+            name: folderName,
+            date: pdf.date,
+            createdAt: new Date().toISOString(),
+            parentId: null
+          });
+          targetFolderId = newFolderRef.id;
+        } else {
+          targetFolderId = folderSnapshot.docs[0].id;
+        }
+        
+        await db.collection('bethelPdfs').doc(pdf.id).update({
+          folderId: targetFolderId
+        });
+      }
+    } catch (e) {
+      console.error("Failed to auto-archive PDFs", e);
+    }
+  }, [isAdmin]);
+
   const fetchPdfs = useCallback(async (folderId: string | null) => {
     if (!db?.collection) return;
     try {
@@ -56,11 +92,30 @@ const Bethel: React.FC = () => {
       const snapshot = await query.get();
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BethelPdf));
       docs.sort((a, b) => b.date.localeCompare(a.date));
-      setPdfs(docs);
+      
+      let displayDocs = docs;
+
+      if (!folderId) {
+        const now = new Date();
+        const recentSunday = new Date(now);
+        recentSunday.setHours(0, 0, 0, 0);
+        recentSunday.setDate(now.getDate() - now.getDay());
+
+        const toArchive = docs.filter(pdf => new Date(pdf.uploadedAt || pdf.date) < recentSunday);
+        displayDocs = docs.filter(pdf => new Date(pdf.uploadedAt || pdf.date) >= recentSunday);
+        
+        if (isAdmin && toArchive.length > 0) {
+          autoArchiveOldPdfs(toArchive).then(() => {
+            fetchFolders();
+          });
+        }
+      }
+
+      setPdfs(displayDocs);
     } catch (e) {
       handleFirestoreError(e, OperationType.GET, 'bethelPdfs');
     }
-  }, []);
+  }, [isAdmin, fetchFolders, autoArchiveOldPdfs]);
 
   useEffect(() => {
     fetchFolders();
