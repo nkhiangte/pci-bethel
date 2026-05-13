@@ -33,7 +33,7 @@ const Chatbot: React.FC = () => {
   useEffect(() => {
     const initChat = async () => {
       try {
-        const apiKey = process.env.API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             console.error("API Key missing for Chatbot");
             setError("Service unavailable (Config Error)");
