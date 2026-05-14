@@ -388,9 +388,12 @@ const SundaySchool: React.FC = () => {
       const snap = await db.collection('sundaySchoolDepartments')
         .doc(departmentId)
         .collection('sections')
-        .orderBy('name')
         .get();
       const sections = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SundaySchoolSection));
+      
+      // Perform natural sorting so 'Pawl 2' comes before 'Pawl 10'
+      sections.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+      
       setSsSections(sections);
       if (sections.length > 0 && !activeSectionId) {
         setActiveSectionId(sections[0].id);
