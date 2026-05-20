@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../translations';
 import StatsTable from '../../components/StatsTable';
-import { TrendingUp, Users } from 'lucide-react';
+import { TrendingUp, Users, FileText } from 'lucide-react';
+import KhYearlyReportsTab from './KhYearlyReportsTab';
 
 const KhReports: React.FC = () => {
   const { isAdmin } = useAuth();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'buhfaitham' | 'nitin-inkhawm'>('buhfaitham');
+  const [activeTab, setActiveTab] = useState<'buhfaitham' | 'nitin-inkhawm' | 'yearly'>('buhfaitham');
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm space-y-8">
-      <div className="flex border-b border-slate-100 gap-8">
+      <div className="flex border-b border-slate-100 gap-8 overflow-x-auto">
         <button
           onClick={() => setActiveTab('buhfaitham')}
-          className={`pb-4 text-sm font-bold flex items-center gap-2 border-b-4 transition-all ${
+          className={`pb-4 text-sm font-bold whitespace-nowrap flex items-center gap-2 border-b-4 transition-all ${
             activeTab === 'buhfaitham' ? 'border-church-600 text-church-600' : 'border-transparent text-slate-400 hover:text-church-600'
           }`}
         >
@@ -23,12 +24,21 @@ const KhReports: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('nitin-inkhawm')}
-          className={`pb-4 text-sm font-bold flex items-center gap-2 border-b-4 transition-all ${
+          className={`pb-4 text-sm font-bold whitespace-nowrap flex items-center gap-2 border-b-4 transition-all ${
             activeTab === 'nitin-inkhawm' ? 'border-church-600 text-church-600' : 'border-transparent text-slate-400 hover:text-church-600'
           }`}
         >
           <Users size={18} />
           Kristian Chhungkua
+        </button>
+        <button
+          onClick={() => setActiveTab('yearly')}
+          className={`pb-4 text-sm font-bold whitespace-nowrap flex items-center gap-2 border-b-4 transition-all ${
+            activeTab === 'yearly' ? 'border-church-600 text-church-600' : 'border-transparent text-slate-400 hover:text-church-600'
+          }`}
+        >
+          <FileText size={18} />
+          Yearly Reports
         </button>
       </div>
 
@@ -63,6 +73,11 @@ const KhReports: React.FC = () => {
                 { key: 'percentage', label: t.stats.percentage, type: 'text' }
               ]}
             />
+          </div>
+        )}
+        {activeTab === 'yearly' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <KhYearlyReportsTab />
           </div>
         )}
       </div>
