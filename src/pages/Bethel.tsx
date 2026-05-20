@@ -274,7 +274,7 @@ const Bethel: React.FC = () => {
       </div>
       <div className="flex-grow bg-slate-800">
         <iframe 
-          src={`${pdf.url}#toolbar=1`} 
+          src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdf.url)}`}
           className="w-full h-full border-none"
           title={pdf.name}
         />
@@ -448,7 +448,7 @@ const Bethel: React.FC = () => {
                     </div>
                     <div className="bg-slate-800 rounded-3xl overflow-hidden h-[75vh] min-h-[600px] shadow-2xl border border-slate-200 relative group">
                       <iframe 
-                        src={`${pdfs[0].url}#toolbar=1`} 
+                        src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfs[0].url)}`} 
                         className="w-full h-full border-none absolute inset-0"
                         title={pdfs[0].name}
                       />
