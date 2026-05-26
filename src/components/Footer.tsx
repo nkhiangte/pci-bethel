@@ -94,7 +94,11 @@ const Footer: React.FC = () => {
         </div>
         <div className="border-t border-slate-700 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
           <p>&copy; {new Date().getFullYear()} {CHURCH_NAME}. {t.footer.rightsReserved}</p>
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex items-center gap-4">
+            <Link to="/privacy" className="hover:text-white transition">
+              Privacy Policy
+            </Link>
+            <span className="text-slate-600">|</span>
             {currentUser ? (
               <button onClick={handleLogout} className="flex items-center hover:text-white transition">
                 <LogOut size={12} className="mr-1" /> {t.auth.logout}

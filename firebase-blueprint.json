@@ -459,6 +459,7 @@
       },
       "required": ["name"]
     },
+    "VisitorStats": {
       "title": "Visitor Stats",
       "description": "Statistics about site visitors",
       "type": "object",
@@ -467,6 +468,20 @@
         "lastUpdated": { "type": "string", "format": "date-time" }
       },
       "required": ["count"]
+    },
+    "KhYearlyReportPdf": {
+      "title": "Kohhran Hmeichhia Yearly Report PDF",
+      "description": "PDF files for KH Yearly Report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "storagePath": { "type": "string" },
+        "year": { "type": "integer" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "url", "year"]
     }
   },
   "firestore": {
@@ -585,6 +600,10 @@
     "/sundaySchoolDepartments/{deptId}/sections/{sectionId}": {
       "schema": "SundaySchoolSection",
       "description": "Pawl (Section) within a Sunday School department"
+    },
+    "/khYearlyReportsPdfs/{docId}": {
+      "schema": "KhYearlyReportPdf",
+      "description": "Collection of Kohhran Hmeichhia Yearly Report PDFs"
     }
   }
 }

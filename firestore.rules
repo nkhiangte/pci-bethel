@@ -281,6 +281,11 @@ service cloud.firestore {
     // User profiles
     // ===============================
 
+    match /khYearlyReportsPdfs/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
