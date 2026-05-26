@@ -60,6 +60,7 @@ import CommitteeDetail from './pages/CommitteeDetail';
 import Directory from './pages/Directory';
 import Bethel from './pages/Bethel';
 import Privacy from './pages/Privacy';
+import ThlaTinaRawngbawltute from './pages/ThlaTinaRawngbawltute';
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
@@ -168,6 +169,7 @@ const AppContent: React.FC = () => {
           <Route path="/thawhlawm" element={<Thawhlawm />} />
           <Route path="/bethel" element={<Bethel />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/rawngbawltute" element={<ThlaTinaRawngbawltute />} />
         </Routes>
       </main>
       <Chatbot />

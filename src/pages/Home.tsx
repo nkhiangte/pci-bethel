@@ -225,10 +225,13 @@ const Home: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
-                <div className="bg-church-900 text-white p-6 flex items-center gap-3">
-                    <ClipboardList size={22} className="text-church-400" />
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em]">{t.home.ministersMonth}</h4>
+            <Link to="/rawngbawltute" className="lg:col-span-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col group relative">
+                <div className="bg-church-900 text-white p-6 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <ClipboardList size={22} className="text-church-400 group-hover:text-white transition-colors" />
+                        <h4 className="text-sm font-black uppercase tracking-[0.2em]">{t.home.ministersMonth}</h4>
+                    </div>
+                    <ArrowRight size={18} className="text-church-400 group-hover:translate-x-1 group-hover:text-white transition-all"/>
                 </div>
                 
                 <div className="p-8 md:p-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12">
@@ -262,7 +265,7 @@ const Home: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </Link>
 
             <div className="lg:col-span-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-slate-50 border-b border-slate-200 p-6 flex items-center gap-3">

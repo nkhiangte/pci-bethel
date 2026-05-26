@@ -111,7 +111,7 @@ const Records: React.FC = () => {
         { id: 'baptism', title: 'Baptisma Record', sub: 'Names & Dates Recorded', icon: Droplet },
         { id: 'wedding', title: 'Inneihna Record', sub: 'Marriage Registrations', icon: Heart },
         { id: 'death', title: 'Thihna Record', sub: 'Death Records & Cemetery', icon: Church },
-        { id: 'inkhawmpui', title: 'Khawmpui Record', sub: 'Bial & General Conferences', icon: Users },
+        { id: 'inkhawmpui', title: 'Inkhawmpui Record', sub: 'Bial & General Conferences', icon: Users },
         { id: 'gospelCamping', title: 'Gospel Camping', sub: 'Campaign & Camping Records', icon: Tent },
         { id: 'pemDawnsawn', title: 'Pem Dawnsawn', sub: 'Incoming Transfer Records', icon: UserPlus },
     ];
