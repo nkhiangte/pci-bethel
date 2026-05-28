@@ -321,7 +321,7 @@ const Announcements: React.FC = () => {
 
                     <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
                         <div 
-                            className="p-6 text-slate-700 leading-relaxed prose prose-slate max-w-none"
+                            className="p-6 text-slate-700 leading-relaxed prose prose-slate max-w-none text-justify [word-break:normal] break-words"
                             dangerouslySetInnerHTML={{ __html: item.content }}
                         />
 

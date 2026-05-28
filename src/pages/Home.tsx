@@ -4,9 +4,10 @@ import { getConstants } from '../constants';
 import { WeeklyDuty, Announcement, Staff } from '../types';
 import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, Clock, ChevronRight, Edit, Plus, X, BookOpen, Quote, ShieldCheck, Phone, MessageCircle } from 'lucide-react';
+import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, Clock, ChevronRight, Edit, Plus, X, BookOpen, Quote, ShieldCheck, Phone, MessageCircle, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StaffEditModal from '../components/StaffEditModal';
+import { useWeeklyEvents, parseLocalDate, normalizeTitle } from '../hooks/useWeeklyEvents';
 
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
@@ -18,6 +19,7 @@ const Home: React.FC = () => {
   const [pastors, setPastors] = useState<Staff[]>([]);
   const [proPastors, setProPastors] = useState<Staff[]>([]);
   const [elders, setElders] = useState<Staff[]>([]);
+  const { displayEvents, loading: eventsLoading } = useWeeklyEvents();
 
   // --- Home Admin & Modal States ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -205,6 +207,89 @@ const Home: React.FC = () => {
         )}
       </section>
 
+      {/* --- EVENTS (HUN RUATNA) SECTION --- */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-serif font-bold text-slate-900">{t.events.title}</h2>
+            {isAdmin && (
+              <Link to="/events" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title={t.events.title}>
+                <Edit size={18} />
+              </Link>
+            )}
+          </div>
+          <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
+            {t.home.viewAll} <ArrowRight size={16} className="ml-1"/>
+          </Link>
+        </div>
+
+        {eventsLoading ? (
+             <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+                <Loader className="animate-spin h-8 w-8 mx-auto text-church-500" />
+            </div>
+        ) : displayEvents.length > 0 ? (
+            <div className="relative h-[400px] overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100 p-6 group">
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
+                
+                <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused] w-full">
+                    {[...displayEvents, ...displayEvents].map((event, index) => {
+                        const dateObj = parseLocalDate(event.date);
+                        const normTitle = normalizeTitle(event.title);
+                        const isNilaiZan = normTitle.includes('nilai');
+                        const isSundaySchool = normTitle.includes('sunday school');
+                        const speakerLabel = isSundaySchool ? "Zirtirtu" : (isNilaiZan ? t.events.thupuiHawngtu : t.events.thuhriltu);
+                        
+                        return (
+                            <Link key={`${event.id}-${index}`} to="/events" className="group/card flex flex-col md:flex-row gap-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-church-200 hover:shadow-sm transition overflow-hidden shrink-0">
+                                <div className="bg-church-50 p-6 flex flex-col items-center justify-center md:w-32 border-b md:border-b-0 md:border-r border-slate-100 shrink-0">
+                                    <span className="text-church-600 font-bold text-[10px] uppercase tracking-wider">{dateObj.toLocaleString('default', { month: 'short' })}</span>
+                                    <span className="text-slate-800 font-bold text-2xl my-1 leading-none">{dateObj.getDate()}</span>
+                                    <span className="text-slate-500 text-[10px] font-medium uppercase">{dateObj.toLocaleString('default', { weekday: 'short' })}</span>
+                                </div>
+                                <div className="p-4 flex-1">
+                                    <h3 className="text-lg font-bold text-slate-900 mb-1">{event.title}</h3>
+                                    {event.program && (
+                                        <div className="space-y-0.5 mb-2 mt-1">
+                                            {event.program.hruaitu && (
+                                                <p className="text-sm text-slate-700 font-medium line-clamp-1">
+                                                    {t.events.hruaitu}: {event.program.hruaitu}
+                                                </p>
+                                            )}
+                                            {event.program.tantu && (
+                                                <p className="text-sm text-slate-700 font-medium line-clamp-1">
+                                                    {t.events.tantu}: {event.program.tantu}
+                                                </p>
+                                            )}
+                                            {event.program.thuhriltu && (
+                                                <p className="text-sm text-slate-700 font-medium line-clamp-1">
+                                                    {speakerLabel}: {event.program.thuhriltu}
+                                                </p>
+                                            )}
+                                            {event.program.thupui && (
+                                                <p className="text-sm text-slate-700 font-medium line-clamp-1">
+                                                    {isSundaySchool ? "Zirlai" : t.events.thupui}: {event.program.thupui}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400 mt-2">
+                                        <span className="flex items-center"><Clock size={12} className="mr-1 text-church-500" /> {event.time}</span>
+                                        <span className="flex items-center"><Calendar size={12} className="mr-1 text-church-500" /> {dateObj.toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </div>
+        ) : (
+             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+                <p className="text-slate-500 italic">Hun ruatna a awm rih lo.</p>
+            </div>
+        )}
+      </section>
+
       {/* --- WEEKLY DUTY SECTION --- */}
       <section>
         <div className="flex items-center justify-between mb-6">
@@ -219,9 +304,6 @@ const Home: React.FC = () => {
                 </div>
                 <p className="text-slate-500 text-sm mt-1">{weeklyDuty.weekRange}</p>
             </div>
-            <Link to="/events" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
-                {t.home.viewFullSchedule} <ArrowRight size={16} className="ml-1"/>
-            </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -255,7 +337,7 @@ const Home: React.FC = () => {
                             <UserCircle size={16} className="text-church-600" />
                             <h5 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{t.home.ushers}</h5>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-0 divide-y divide-slate-50 border-t border-slate-50">
                             {weeklyDuty.ushers?.map((name, i) => (
                                 <div key={i} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 group hover:bg-slate-50 transition-colors px-1">
                                     <span className="text-[9px] font-black text-church-300 group-hover:text-church-600">#</span>

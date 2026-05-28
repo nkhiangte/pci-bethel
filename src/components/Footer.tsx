@@ -64,7 +64,6 @@ const Footer: React.FC = () => {
             <h3 className="text-white text-lg font-bold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-2 text-sm">
               <li><a href="#/about" className="hover:text-white">{t.nav.about}</a></li>
-              <li><a href="#/events" className="hover:text-white">{t.nav.events}</a></li>
               <li><a href="#/contact" className="hover:text-white">{t.nav.contact}</a></li>
             </ul>
           </div>

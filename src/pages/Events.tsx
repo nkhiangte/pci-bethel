@@ -8,82 +8,14 @@ import { Event, WeeklyDuty, ArchiveEntry } from '../types';
 import AutocompleteInput from '../components/AutocompleteInput';
 import { useEventSuggestions } from '../hooks/useEventSuggestions';
 import ReminderDashboard from '../components/ReminderDashboard';
-
-// Helper to get specific dates for the current week (Monday to Sunday)
-const getDatesForWeek = () => {
-  const now = new Date();
-  const day = now.getDay(); 
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-  
-  let diffToMonday;
-  
-  if (day === 0) { // Sunday
-    if (hour > 19 || (hour === 19 && minute >= 30)) {
-      diffToMonday = 1; // Transition to next week after 7:30 PM Sunday
-    } else {
-      diffToMonday = -6; // Previous Monday
-    }
-  } else {
-    diffToMonday = 1 - day; 
-  }
-  
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diffToMonday);
-  monday.setHours(0, 0, 0, 0);
-
-  const dates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    dates.push(d);
-  }
-  return dates; 
-};
-
-const formatDateForInput = (date: Date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-};
-
-const parseLocalDate = (dateStr: string) => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d);
-};
-
-// Fuzzy Title Normalization: removes acronyms in brackets and extra spaces
-const normalizeTitle = (title: string) => {
-    return title.toLowerCase().replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
-};
-
-// Helper to convert "07:00 PM" string to minutes for correct sorting
-const timeToMinutes = (timeStr: string) => {
-    if (!timeStr) return 0;
-    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!match) return 0;
-    
-    let hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    const modifier = match[3].toUpperCase();
-
-    if (hours === 12) {
-        hours = modifier === 'AM' ? 0 : 12;
-    } else if (modifier === 'PM') {
-        hours += 12;
-    }
-    
-    return hours * 60 + minutes;
-};
+import { useWeeklyEvents, getDatesForWeek, formatDateForInput, parseLocalDate, normalizeTitle } from '../hooks/useWeeklyEvents';
 
 const Events: React.FC = () => {
   const { language, t } = useLanguage();
   const { isAdmin } = useAuth();
   const { suggestions } = useEventSuggestions();
   
-  const [displayEvents, setDisplayEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { displayEvents, loading, fetchEvents } = useWeeklyEvents();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Event>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -155,99 +87,9 @@ const Events: React.FC = () => {
     }
   }, [isAdmin]);
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    const weekDates = getDatesForWeek();
-    const virtualEvents: Event[] = [];
-    const basePrograms = t.home.weeklyProgram;
-    const dayOrder = [1, 2, 3, 4, 6, 0]; // Monday to Sunday order, skipped Friday (5)
-    
-    dayOrder.forEach(dayIndex => {
-        const dateForDay = weekDates.find(d => d.getDay() === dayIndex);
-        if (!dateForDay) return;
-
-        const dateStr = formatDateForInput(dateForDay);
-        const dailyTemplates = basePrograms.filter(p => p.dayOfWeek === dayIndex);
-        
-        dailyTemplates.forEach((template, tIdx) => {
-            virtualEvents.push({
-                id: `virtual_${template.name}_${dateStr}_${tIdx}`,
-                title: template.name,
-                date: dateStr,
-                time: template.time,
-                location: 'Biak In',
-                description: '',
-                type: 'Service',
-                isRecurringTemplate: true,
-                dayOfWeek: dayIndex,
-                program: {}
-            });
-        });
-    });
-
-    let realEvents: Event[] = [];
-    try {
-      if (db && db.collection) {
-        const snapshot = await db.collection('events')
-            .where('date', '>=', formatDateForInput(weekDates[0]))
-            .where('date', '<=', formatDateForInput(weekDates[6]))
-            .get();
-        if (!snapshot.empty) {
-            realEvents = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Event[];
-        }
-      }
-    } catch (e) {
-      console.error("Fetch DB error:", e);
-    }
-    
-    const mergedEventsMap = new Map<string, Event[]>();
-    weekDates.forEach(d => mergedEventsMap.set(formatDateForInput(d), []));
-
-    // Seed the map with virtual events
-    virtualEvents.forEach(event => {
-        const list = mergedEventsMap.get(event.date) || [];
-        list.push(event);
-        mergedEventsMap.set(event.date, list);
-    });
-    
-    // Merge real events, evicting fuzzy-matched virtual slots
-    realEvents.forEach(event => {
-        const key = event.date;
-        let list = mergedEventsMap.get(key) || [];
-        const normReal = normalizeTitle(event.title);
-
-        if (event.isCancelled) {
-            // Remove matching templates if cancelled record exists
-            list = list.filter(item => normalizeTitle(item.title) !== normReal);
-        } else {
-            // Evict template if a specific manual entry exists for this day/time
-            const existingIdx = list.findIndex(item => normalizeTitle(item.title) === normReal);
-            if (existingIdx !== -1) {
-                list[existingIdx] = event; // Replace template with real data
-            } else {
-                list.push(event); // Add unique new event
-            }
-        }
-        mergedEventsMap.set(key, list);
-    });
-
-    const finalEvents = Array.from(mergedEventsMap.values()).flat();
-    finalEvents.sort((a, b) => {
-        const dateDiff = a.date.localeCompare(b.date);
-        if (dateDiff !== 0) return dateDiff;
-        
-        // Correct time sorting:
-        return timeToMinutes(a.time) - timeToMinutes(b.time);
-    });
-
-    setDisplayEvents(finalEvents);
-    setLoading(false);
-    checkAndArchivePreviousWeek();
-  }, [t.home.weeklyProgram, checkAndArchivePreviousWeek]);
-
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    checkAndArchivePreviousWeek();
+  }, [checkAndArchivePreviousWeek]);
 
   const handleEditClick = (event: Event) => {
     setEditForm({ ...event, program: { hruaitu: '', tantu: '', thuhriltu: '', thupui: '', ...event.program } });
@@ -348,9 +190,11 @@ const Events: React.FC = () => {
         <div className="space-y-6">
           {!loading && displayEvents.map((event) => {
             const dateObj = parseLocalDate(event.date);
-            // Replace Thuhriltu with Thupui Hawngtu for Nilai Zan services
-            const isNilaiZan = normalizeTitle(event.title).includes('nilai');
-            const speakerLabel = isNilaiZan ? "Thupui Hawngtu" : "Thuhriltu";
+            const normTitle = normalizeTitle(event.title);
+            const isNilaiZan = normTitle.includes('nilai');
+            const isSundaySchool = normTitle.includes('sunday school');
+            const speakerLabel = isSundaySchool ? "Zirtirtu" : (isNilaiZan ? t.events.thupuiHawngtu : t.events.thuhriltu);
+            const topicLabel = isSundaySchool ? "Zirlai" : t.events.thupui;
 
             return (
               <div key={event.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row relative group hover:shadow-md transition">
@@ -374,8 +218,8 @@ const Events: React.FC = () => {
                       <div className="bg-slate-50 p-5 rounded-lg my-4 space-y-1 border border-slate-100 shadow-inner">
                           <ProgramItem label={t.events.hruaitu} value={event.program.hruaitu} />
                           <ProgramItem label={t.events.tantu} value={event.program.tantu} />
-                          <ProgramItem label={isNilaiZan ? t.events.thupuiHawngtu : t.events.thuhriltu} value={event.program.thuhriltu} />
-                          <ProgramItem label={t.events.thupui} value={event.program.thupui} />
+                          <ProgramItem label={speakerLabel} value={event.program.thuhriltu} />
+                          <ProgramItem label={topicLabel} value={event.program.thupui} />
                       </div>
                   )}
                   <div className="flex flex-col sm:flex-row sm:space-x-6 text-sm text-slate-500 mt-auto pt-4 border-t border-slate-100">
@@ -420,7 +264,7 @@ const Events: React.FC = () => {
                             placeholder={t.events.form.placeholders.conductor}
                         />
                         <AutocompleteInput 
-                            label={normalizeTitle(editForm.title || '').includes('nilai') ? t.events.thupuiHawngtu : t.events.thuhriltu}
+                            label={normalizeTitle(editForm.title || '').includes('sunday school') ? 'Zirtirtu' : (normalizeTitle(editForm.title || '').includes('nilai') ? t.events.thupuiHawngtu : t.events.thuhriltu)}
                             value={editForm.program?.thuhriltu || ''} 
                             onChange={val => setEditForm({...editForm, program: {...editForm.program, thuhriltu: val}})} 
                             suggestions={suggestions}
@@ -428,7 +272,7 @@ const Events: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">{t.events.form.topic}</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{normalizeTitle(editForm.title || '').includes('sunday school') ? 'Zirlai' : t.events.form.topic}</label>
                         <input className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-church-500 outline-none transition" value={editForm.program?.thupui || ''} onChange={e => setEditForm({...editForm, program: {...editForm.program, thupui: e.target.value}})} placeholder={t.events.form.placeholders.topic} />
                     </div>
                     <AutocompleteInput 

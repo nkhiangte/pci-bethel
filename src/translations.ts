@@ -90,7 +90,7 @@ export const translations = {
       noPastorData: 'No pastor data available.',
       noBiography: 'No biography available.',
       weeklyProgram: [ // Mock for type checking if needed in Events.tsx
-        { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
+        { name: 'Sunday School', time: '10:30 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
         { name: 'Zan Inkhawm', time: '07:00 PM', dayOfWeek: 0 },
         { name: 'Nilai Zan Inkhawm', time: '07:00 PM', dayOfWeek: 3 },
@@ -594,7 +594,7 @@ export const translations = {
       noPastorData: 'Pastor chanchin hmuh tur a awm rih lo.',
       noBiography: 'Chanchin ziah a la awm lo.',
       weeklyProgram: [
-        { name: 'Sunday School', time: '10:00 AM', dayOfWeek: 0 },
+        { name: 'Sunday School', time: '10:30 AM', dayOfWeek: 0 },
         { name: 'Chawhnu Inkhawm', time: '01:30 PM', dayOfWeek: 0 },
         { name: 'Zan Inkhawm', time: '07:00 PM', dayOfWeek: 0 },
         { name: 'Nilai Zan Inkhawm', time: '07:00 PM', dayOfWeek: 3 },

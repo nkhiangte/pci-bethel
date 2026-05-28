@@ -141,7 +141,7 @@ const DATA = {
       lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
       pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami',
       serviceTimes: {
-        sundaySchool: '10:00 AM',
+        sundaySchool: '10:30 AM',
         morning: '01:30 PM',
         evening: '07:00 PM'
       },
@@ -153,8 +153,8 @@ const DATA = {
       // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
         sundaySchool: [
-          { id: 'ss1', label: 'Tantu', value: '' },
-          { id: 'ss2', label: 'Zirlai', value: '' }
+          { id: 'ss1', label: 'Zirlai', value: '' },
+          { id: 'ss2', label: 'Zirtirtu', value: '' }
         ],
         morning: [
           { id: 'm1', label: 'Tantu', value: '' },
@@ -294,7 +294,7 @@ const DATA = {
       lightAndSoundDuty: 'Tv. T. Lalnunzira & Pu Lalhmunngheta',
       pangparKhawitu: 'Nl. B. Lalnunsiam & Nl. Lalnunsiami',
       serviceTimes: {
-        sundaySchool: '10:00 AM',
+        sundaySchool: '10:30 AM',
         morning: '01:30 PM',
         evening: '07:00 PM'
       },
@@ -306,8 +306,8 @@ const DATA = {
       // FIX: Changed servicePrograms to use ProgramField[] structure to match types.ts
       servicePrograms: {
         sundaySchool: [
-          { id: 'ss1', label: 'Tantu', value: '' },
-          { id: 'ss2', label: 'Zirlai', value: '' }
+          { id: 'ss1', label: 'Zirlai', value: '' },
+          { id: 'ss2', label: 'Zirtirtu', value: '' }
         ],
         morning: [
           { id: 'm1', label: 'Tantu', value: '' },

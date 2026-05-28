@@ -159,7 +159,7 @@ const AnnouncementDetail: React.FC = () => {
           {/* Content Area */}
           <div className="p-8 md:p-12 pt-0">
             <div 
-              className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor !p-0"
+              className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor !p-0 text-justify [word-break:normal] break-words"
               dangerouslySetInnerHTML={{ __html: announcement.content }}
             />
           </div>
