@@ -8,7 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
-import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle } from 'lucide-react';
+import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle, ArrowRight } from 'lucide-react';
 
 const quillModules = {
   toolbar: [
@@ -286,17 +286,14 @@ const Announcements: React.FC = () => {
         {loading ? (
            <div className="flex justify-center py-12"><Loader className="animate-spin text-church-500" /></div>
         ) : (
-            <div className="relative border-l-2 border-slate-200 ml-3 space-y-12">
+            <div className="space-y-12">
             {announcements.map((item) => {
                 const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
                 const displayCaptions = item.imageCaptions || [];
                 const displayVideos = item.videoUrls || (item.videoUrl ? [item.videoUrl] : []);
                 
                 return (
-                    <div key={item.id} className="relative pl-8 group">
-                    <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${
-                        item.category === 'Sunna' ? 'bg-slate-800' : 'bg-church-500'
-                    }`}></div>
+                    <div key={item.id} className="relative group">
                     
                     {isAdmin && (
                         <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 z-10 bg-white/50 p-1 rounded-lg backdrop-blur-sm">
@@ -319,72 +316,18 @@ const Announcements: React.FC = () => {
                         </span>
                     </div>
 
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition">
-                        <div 
-                            className="p-6 text-slate-700 leading-relaxed prose prose-slate max-w-none text-justify [word-break:normal] break-words"
-                            dangerouslySetInnerHTML={{ __html: item.content }}
-                        />
-
-                        {/* Multiple Videos Display */}
-                        {displayVideos.length > 0 && (
-                            <div className={`grid gap-3 px-4 pb-4 grid-cols-1 ${displayVideos.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-                                {displayVideos.map((url, vIdx) => {
-                                    const vidId = getYouTubeId(url);
-                                    if (!vidId) return null;
-                                    return (
-                                        <div 
-                                            key={vIdx}
-                                            className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 cursor-pointer group/vid shadow-sm"
-                                            onClick={() => setPlayingVideoId(vidId)}
-                                        >
-                                            <img 
-                                                src={`https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`} 
-                                                alt="Video Preview" 
-                                                className="w-full h-full object-cover opacity-80 group-hover/vid:scale-105 transition-transform duration-700"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${vidId}/0.jpg`;
-                                                }}
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/vid:bg-black/40 transition-colors">
-                                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover/vid:scale-110 transition-transform">
-                                                    <Play className="text-church-600 fill-current ml-0.5" size={24} />
-                                                </div>
-                                            </div>
-                                            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white font-bold uppercase tracking-wider">
-                                                <Youtube size={12} className="text-red-500" /> {t.announcements.watch}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Image Grid Display */}
-                        {displayImages.length > 0 && (
-                            <div className={`grid gap-3 p-4 pt-0 grid-cols-1 ${displayImages.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-                                {displayImages.map((url, idx) => (
-                                    <div key={idx} className="flex flex-col">
-                                        <div 
-                                            onClick={() => setPreviewImage(url)}
-                                            className={`relative overflow-hidden bg-slate-200 rounded-t-lg cursor-zoom-in group/img ${displayImages.length === 1 ? 'h-72' : 'h-48'} ${!displayCaptions[idx] ? 'rounded-b-lg' : ''}`}
-                                        >
-                                            <img src={url} alt={`${item.title} ${idx + 1}`} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
-                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                                <ZoomIn className="text-white drop-shadow-md" size={32} />
-                                            </div>
-                                        </div>
-                                        {displayCaptions[idx] && (
-                                            <div className="bg-white/80 border-x border-b border-slate-200 p-2.5 rounded-b-lg backdrop-blur-sm">
-                                                <p className="text-[11px] font-medium text-slate-600 italic leading-snug">
-                                                    {displayCaptions[idx]}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <Link 
+                        to={`/announcements/${item.id}`} 
+                        className="block bg-slate-50 rounded-xl border border-slate-100 p-6 shadow-sm hover:shadow-md hover:border-church-200 transition-all group/card"
+                    >
+                        <p className="text-slate-600 leading-relaxed text-[15px] text-justify break-normal mb-4">
+                            {item.content ? item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').slice(0, 180).trim() + (item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').length > 180 ? '...' : '') : ''}
+                        </p>
+                        <span className="inline-flex items-center text-xs font-black text-church-600 group-hover/card:text-church-700 uppercase tracking-widest gap-1">
+                            {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
+                            <ArrowRight size={14} className="group-hover/card:translate-x-1.5 transition-transform duration-300" />
+                        </span>
+                    </Link>
                     </div>
                 );
             })}

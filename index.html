@@ -124,11 +124,21 @@
       .ql-size-small { font-size: 0.75em; }
       .ql-size-large { font-size: 1.5em; }
       .ql-size-huge { font-size: 2.5em; }
+      .prose, .prose *, .ql-editor *, p {
+        -webkit-hyphens: none !important;
+        hyphens: none !important;
+      }
       @media (max-width: 768px) {
-        .prose, .prose p, .ql-editor p, p:not(.text-center):not(.text-right):not(.text-left) {
+        .prose, .prose *, .ql-editor *, p:not(.text-center):not(.text-right):not(.text-left) {
           text-align: justify !important;
           word-break: normal !important;
           overflow-wrap: break-word !important;
+          word-wrap: break-word !important;
+          white-space: pre-wrap !important;
+        }
+        .prose img, .ql-editor img, .prose iframe, .ql-editor iframe, .prose video, .ql-editor video, .prose table, .ql-editor table {
+          max-width: 100% !important;
+          height: auto !important;
         }
       }
     </style>

@@ -303,8 +303,8 @@ const Articles: React.FC = () => {
                     )}
 
                     <article 
-                        className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content overflow-hidden break-words"
-                        dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+                        className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content overflow-hidden break-normal"
+                        dangerouslySetInnerHTML={{ __html: selectedArticle.content ? selectedArticle.content.replace(/&nbsp;/g, ' ') : '' }}
                     />
 
                     {selectedArticle.videoUrl && (
