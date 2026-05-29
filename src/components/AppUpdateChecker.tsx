@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { App as CapApp } from '@capacitor/app';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { ArrowUpCircle, X, Download } from 'lucide-react';
 
 // Hardcoded app version info corresponding to the current native build
@@ -51,7 +52,40 @@ const AppUpdateChecker: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // 2. Fetch remote update configurations from Firebase
+    // 2. Setup Local Notification Action Listeners
+    const setupNotificationListener = async () => {
+      try {
+        // Register notifications channel for Android 8.0+
+        await LocalNotifications.createChannel({
+          id: 'app_updates',
+          name: 'App Updates',
+          description: 'Notifications for Champhai Bethel App Updates',
+          importance: 5,
+          visibility: 1,
+          vibration: true
+        });
+
+        await LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+          console.log('Notification action performed', notificationAction);
+          const playStoreUrl = "https://play.google.com/store/apps/details?id=com.pcibethel.app";
+          window.open(playStoreUrl, '_blank', 'noopener,noreferrer');
+        });
+      } catch (err) {
+        console.log("LocalNotifications channel/listener setup omitted:", err);
+      }
+    };
+    
+    setupNotificationListener();
+
+    return () => {
+      try {
+        LocalNotifications.removeAllListeners();
+      } catch (e) {}
+    };
+  }, []);
+
+  useEffect(() => {
+    // 3. Fetch remote update configurations from Firebase
     if (!db || !db.collection) return;
 
     // Don't show update prompt if currently inside admin panel
@@ -72,8 +106,41 @@ const AppUpdateChecker: React.FC = () => {
             const needsUpdate = data.latestVersionCode > localVersionCode;
             
             if (needsUpdate) {
-              // Show absolute notification prompt
+              // Show absolute notification prompt inside React layer
               setShowModal(true);
+
+              // Issue system tray notification for native device
+              try {
+                const perms = await LocalNotifications.checkPermissions();
+                let status = perms.display;
+                if (status !== 'granted') {
+                  const req = await LocalNotifications.requestPermissions();
+                  status = req.display;
+                }
+
+                if (status === 'granted') {
+                  // Cancel any active notification under the same ID to avoid flooding
+                  await LocalNotifications.cancel({ notifications: [{ id: 9999 }] });
+
+                  await LocalNotifications.schedule({
+                    notifications: [
+                      {
+                        title: language === 'en' ? 'New App Update Available' : 'App Update Thar A Awm e',
+                        body: language === 'en'
+                          ? `Version ${data.latestVersionName} is now ready in the Play Store.`
+                          : `Version ${data.latestVersionName} hi Play Store-ah hmuh theih a ni tawh e.`,
+                        id: 9999,
+                        schedule: { at: new Date(Date.now() + 500) },
+                        sound: 'default',
+                        channelId: 'app_updates',
+                        actionTypeId: 'OPEN_PRODUCT'
+                      }
+                    ]
+                  });
+                }
+              } catch (notifyErr) {
+                console.log("System local notification couldn't be triggered:", notifyErr);
+              }
             }
           }
         }
@@ -88,7 +155,7 @@ const AppUpdateChecker: React.FC = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [localVersionCode, localVersionName, location.pathname]);
+  }, [localVersionCode, localVersionName, location.pathname, language]);
 
   if (!showModal || !updateSettings) return null;
 
