@@ -4,6 +4,7 @@ import { App as CapApp } from '@capacitor/app';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
+import AppUpdateChecker from './components/AppUpdateChecker';
 import Home from './pages/Home';
 import About from './pages/About';
 import Events from './pages/Events';
@@ -172,6 +173,7 @@ const AppContent: React.FC = () => {
           <Route path="/rawngbawltute" element={<ThlaTinaRawngbawltute />} />
         </Routes>
       </main>
+      <AppUpdateChecker />
       <Chatbot />
       <Footer />
     </div>

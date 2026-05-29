@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Shield, Save, Loader, Upload, Trash2, ArrowLeft, Image as ImageIcon, MapPin, Phone, Mail, Map } from 'lucide-react';
+import { Shield, Save, Loader, Upload, Trash2, ArrowLeft, Image as ImageIcon, MapPin, Phone, Mail, Map, Smartphone } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 
 const INITIAL_CONTACT_DATA = {
@@ -12,6 +12,14 @@ const INITIAL_CONTACT_DATA = {
   phone: "+91 98620 12345",
   email: "office@bethelkohhran.pci",
   mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11111.96502726909!2d93.32881935!3d23.47795035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x374c5b850f896b29%3A0x59635515cb423e25!2sChamphai%20Bethel%20Presbyterian%20Church!5e1!3m2!1sen!2sin!4v1767936549517!5m2!1sen!2sin"
+};
+
+const INITIAL_APP_UPDATE_DATA = {
+  latestVersionCode: 14,
+  latestVersionName: "1.4",
+  updateUrl: "https://play.google.com/store/apps/details?id=com.pcibethel.app",
+  updateMessage: "Siampa hian App hmelhmang a tlem a thalo leh a chhung thu kuttia phek chet vel te, thuziak phek danga in split chungchang te, a phek zoom theihna te leh hriattirna/announcement danga buaina a awmte a rawn tidam rualin kan rawn update a ni. Khawngaihin update rawh le.",
+  isUpdateRequired: false
 };
 
 const AdminSettings: React.FC = () => {
@@ -23,6 +31,7 @@ const AdminSettings: React.FC = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [contactData, setContactData] = useState(INITIAL_CONTACT_DATA);
+  const [appUpdateData, setAppUpdateData] = useState(INITIAL_APP_UPDATE_DATA);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -31,9 +40,10 @@ const AdminSettings: React.FC = () => {
         return;
       }
       try {
-        const [churchDoc, contactDoc] = await Promise.all([
+        const [churchDoc, contactDoc, appUpdateDoc] = await Promise.all([
           db.collection('settings').doc('church').get(),
-          db.collection('settings').doc('contact').get()
+          db.collection('settings').doc('contact').get(),
+          db.collection('settings').doc('appUpdate').get()
         ]);
         
         if (churchDoc.exists) {
@@ -42,6 +52,10 @@ const AdminSettings: React.FC = () => {
 
         if (contactDoc.exists) {
           setContactData({ ...INITIAL_CONTACT_DATA, ...contactDoc.data() });
+        }
+
+        if (appUpdateDoc.exists) {
+          setAppUpdateData({ ...INITIAL_APP_UPDATE_DATA, ...appUpdateDoc.data() });
         }
       } catch (e) {
         console.error("Error fetching settings:", e);
@@ -76,6 +90,11 @@ const AdminSettings: React.FC = () => {
         }, { merge: true }),
         db.collection('settings').doc('contact').set({
           ...contactData,
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUser.uid
+        }, { merge: true }),
+        db.collection('settings').doc('appUpdate').set({
+          ...appUpdateData,
           updatedAt: new Date().toISOString(),
           updatedBy: currentUser.uid
         }, { merge: true })
@@ -253,6 +272,80 @@ const AdminSettings: React.FC = () => {
                     placeholder="<iframe src='...'>...</iframe> or just the HTTPS URL"
                   />
                   <p className="text-xs text-slate-500 mt-2">Paste the 'src' URL from Google Maps Embed. This points to the map display on the contact page.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Play Store Update Notification Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-8 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center">
+                <Smartphone className="mr-2 text-church-600" /> Play Store Update Notification
+              </h2>
+              <p className="text-slate-500 text-sm">Notify users when a new version of the app is available on the Play Store.</p>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Latest Version Code (Android Play Store)</label>
+                  <input 
+                    type="number" 
+                    value={appUpdateData.latestVersionCode}
+                    onChange={e => setAppUpdateData({...appUpdateData, latestVersionCode: parseInt(e.target.value) || 0})}
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
+                    placeholder="e.g., 13"
+                  />
+                  <p className="text-xs text-slate-400 mt-1.5">
+                    Android build version code (e.g., current is 13). Increment this when releasing a new version on the Play Store.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Latest Version Name</label>
+                  <input 
+                    type="text" 
+                    value={appUpdateData.latestVersionName}
+                    onChange={e => setAppUpdateData({...appUpdateData, latestVersionName: e.target.value})}
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
+                    placeholder="e.g., 1.3"
+                  />
+                  <p className="text-xs text-slate-400 mt-1.5">
+                    The user-facing version name (e.g., "1.3" or "1.3.1").
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Play Store URL / App Download URL</label>
+                  <input 
+                    type="text" 
+                    value={appUpdateData.updateUrl}
+                    onChange={e => setAppUpdateData({...appUpdateData, updateUrl: e.target.value})}
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
+                    placeholder="https://play.google.com/store/apps/details?id=com.pcibethel.app"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Update Message / What's New</label>
+                  <textarea 
+                    value={appUpdateData.updateMessage}
+                    onChange={e => setAppUpdateData({...appUpdateData, updateMessage: e.target.value})}
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500 h-24"
+                    placeholder="Describe what's new in this version..."
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={appUpdateData.isUpdateRequired}
+                      onChange={e => setAppUpdateData({...appUpdateData, isUpdateRequired: e.target.checked})}
+                      className="w-5 h-5 text-church-600 border-slate-300 rounded focus:ring-church-500 transition cursor-pointer"
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-slate-700 block select-none">Force Update (Critical Update)</span>
+                      <span className="text-xs text-slate-500 select-none">If checked, users will not be able to dismiss this popup and must update.</span>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
