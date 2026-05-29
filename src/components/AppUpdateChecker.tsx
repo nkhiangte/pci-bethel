@@ -7,8 +7,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { ArrowUpCircle, X, Download } from 'lucide-react';
 
 // Hardcoded app version info corresponding to the current native build
-const CURRENT_VERSION_CODE = 14;
-const CURRENT_VERSION_NAME = "1.4";
+const CURRENT_VERSION_CODE = 15;
+const CURRENT_VERSION_NAME = "1.5";
 
 interface AppUpdateSettings {
   latestVersionCode: number;
