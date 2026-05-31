@@ -17,6 +17,7 @@ const Events: React.FC = () => {
   
   const { displayEvents, loading, fetchEvents } = useWeeklyEvents();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Event>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -110,7 +111,7 @@ const Events: React.FC = () => {
 
   const handleSave = async () => {
     if (!db || !db.collection) return;
-    setLoading(true);
+    setIsSaving(true);
     try {
       const isVirtual = editForm.id?.startsWith('virtual_');
       const docRef = (editForm.id && !isVirtual) ? db.collection('events').doc(editForm.id) : db.collection('events').doc();
@@ -123,7 +124,7 @@ const Events: React.FC = () => {
     } catch (error) {
       alert(t.stats.saveFail);
     }
-    setLoading(false);
+    setIsSaving(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -284,8 +285,11 @@ const Events: React.FC = () => {
                     />
                 </div>
                 <div className="p-4 bg-slate-50 flex justify-end space-x-2 rounded-b-xl border-t">
-                    <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition">{t.fellowship.cancel}</button>
-                    <button onClick={handleSave} className="px-6 py-2 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition shadow-sm">{t.fellowship.save}</button>
+                    <button onClick={() => setIsEditing(false)} disabled={isSaving} className="px-4 py-2 border rounded-lg font-bold text-slate-600 hover:bg-white transition disabled:opacity-50">{t.fellowship.cancel}</button>
+                    <button onClick={handleSave} disabled={isSaving} className="flex items-center px-6 py-2 bg-church-600 text-white rounded-lg font-bold hover:bg-church-700 transition shadow-sm disabled:opacity-50">
+                      {isSaving ? <Loader className="w-5 h-5 animate-spin mr-2" /> : null}
+                      {t.fellowship.save}
+                    </button>
                 </div>
             </div>
         </div>
