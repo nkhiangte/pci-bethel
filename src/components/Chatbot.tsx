@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageCircle, X, Send, Loader, Minimize2, Maximize2, Sparkles } from 'lucide-react';
 import { getConstants } from '../constants';
+import { db } from '../services/firebase';
 
 interface Message {
   id: string;
@@ -24,8 +25,76 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const [dbContext, setDbContext] = useState<string>('');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Load some important collections from Firestore to augment context
+    const loadDbData = async () => {
+      try {
+        if (!db || !db.collection) return;
+        let contextText = "\\n--- FIRESTORE APP DATA ---\\n";
+        
+        // Load Weekly Duties
+        try {
+           const sumDoc = await db.collection('weeklyDuties').doc('current').get();
+           if (sumDoc.exists) contextText += `== Weekly Duties ==\\n${JSON.stringify(sumDoc.data())}\\n`;
+        } catch(e) {}
+
+        // Load Events
+        try {
+           const evSnap = await db.collection('events').limit(10).get();
+           if (!evSnap.empty) {
+               const evMap = evSnap.docs.map((d: any) => d.data());
+               contextText += `== Upcoming Events ==\\n${JSON.stringify(evMap)}\\n`;
+           }
+        } catch(e) {}
+        
+        // Load Announcements
+        try {
+           const anSnap = await db.collection('announcements').limit(10).get();
+           if (!anSnap.empty) {
+               const anMap = anSnap.docs.map((d: any) => d.data());
+               contextText += `== Announcements ==\\n${JSON.stringify(anMap)}\\n`;
+           }
+        } catch(e) {}
+
+        // Load Committees
+        try {
+           const coSnap = await db.collection('committees').limit(20).get();
+           if (!coSnap.empty) {
+               const coMap = coSnap.docs.map((d: any) => d.data());
+               contextText += `== Committees ==\\n${JSON.stringify(coMap)}\\n`;
+           }
+        } catch(e) {}
+
+        // Load Directories
+        try {
+           const pSnap = await db.collection('pastors').get();
+           if (!pSnap.empty) contextText += `== Pastors ==\\n${JSON.stringify(pSnap.docs.map((d: any) => d.data()))}\\n`;
+           
+           const eSnap = await db.collection('elders').get();
+           if (!eSnap.empty) contextText += `== Elders ==\\n${JSON.stringify(eSnap.docs.map((d: any) => d.data()))}\\n`;
+
+           const mSnap = await db.collection('ministries').get();
+           if (!mSnap.empty) contextText += `== Ministries Info ==\\n${JSON.stringify(mSnap.docs.map((d: any) => d.data()))}\\n`;
+           
+           const kSnap = await db.collection('ktpLeaders').get();
+           if (!kSnap.empty) contextText += `== KTP Leaders ==\\n${JSON.stringify(kSnap.docs.map((d: any) => d.data()))}\\n`;
+           
+           const recSnap = await db.collection('records').limit(100).get();
+           if (!recSnap.empty) contextText += `== Records (Baptism, Wedding, etc.) ==\\n${JSON.stringify(recSnap.docs.map((d: any) => d.data()))}\\n`;
+        } catch(e) {}
+
+        setDbContext(contextText);
+      } catch (err) {
+        console.error("Failed to load db context for chatbot:", err);
+      }
+    };
+    loadDbData();
+  }, []);
 
   // Initialize Gemini Context
   const systemInstruction = useMemo(() => {
@@ -44,7 +113,7 @@ const Chatbot: React.FC = () => {
     
     const ministriesStr = constants.ministries.map(m => `${m.name} (${m.acronym || ''})${m.leader ? ` - Leader: ${m.leader}` : ''}`).join("; ");
     
-    const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\n");
+    const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\\n");
 
     return `
       You are a helpful and polite AI assistant for the "Champhai Bethel Kohhran" website.
@@ -65,14 +134,16 @@ const Chatbot: React.FC = () => {
       LATEST ANNOUNCEMENTS (Summary):
       ${announcementsStr}
       
+      ${dbContext}
+
       GUIDELINES:
       - Answer questions about church timings, leaders, ministries, and general Christian faith queries.
-      - If asked about specific dynamic data (like who is Usher today) that is not in your context, politely say you don't have that real-time info but suggest checking the "Weekly Duties" section.
+      - If users ask about dynamic data like who is Usher today, check the "FIRESTORE APP DATA" Context above. If not there, politely say you don't have that real-time info.
       - Be respectful and use a tone appropriate for a church setting.
       - You can understand and reply in both English and Mizo. If the user speaks Mizo, reply in Mizo.
       - Keep responses concise and easy to read on a mobile chat interface.
     `;
-  }, []);
+  }, [dbContext]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

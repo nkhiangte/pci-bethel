@@ -79,7 +79,14 @@ async function startServer() {
         return res.status(500).json({ error: "API Key missing for Chatbot" });
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ 
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
       
       const contents = history || [];
       contents.push({ role: "user", parts: [{ text: message }] });
@@ -112,7 +119,14 @@ async function startServer() {
         return res.json(null);
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ 
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
       const langPrompt = language === 'mizo' ? 'Mizo (Mizo Bible)' : 'English (NIV or ESV)';
       
       const response = await ai.models.generateContent({
