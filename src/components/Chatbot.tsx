@@ -1,6 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageCircle, X, Send, Loader, Minimize2, Maximize2, Sparkles } from 'lucide-react';
 import { getConstants } from '../constants';
 
@@ -25,83 +24,54 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const chatSessionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize Gemini with Church Context
-  useEffect(() => {
-    const initChat = async () => {
-      try {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            console.error("API Key missing for Chatbot");
-            setError("Service unavailable (Config Error)");
-            return;
-        }
+  // Initialize Gemini Context
+  const systemInstruction = useMemo(() => {
+    const constants = getConstants('en'); // Use English constants for the system prompt base
+    
+    // Context Builders
+    const scheduleStr = constants.weeklyDuty.weekRange 
+        ? `Current Week: ${constants.weeklyDuty.weekRange}` 
+        : 'Check "Weekly Duties" section for latest updates.';
+    
+    const programsStr = JSON.stringify(constants.weeklyDuty.serviceTimes);
+    
+    const pastorsStr = constants.pastors.map(p => `${p.name} (${p.role})`).join(", ");
+    
+    const eldersStr = constants.elders.map(e => e.name).join(", ");
+    
+    const ministriesStr = constants.ministries.map(m => `${m.name} (${m.acronym || ''})${m.leader ? ` - Leader: ${m.leader}` : ''}`).join("; ");
+    
+    const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\n");
 
-        const ai = new GoogleGenAI({ apiKey });
-        
-        // Prepare context from constants
-        const constants = getConstants('en'); // Use English constants for the system prompt base
-        
-        // Context Builders
-        const scheduleStr = constants.weeklyDuty.weekRange 
-            ? `Current Week: ${constants.weeklyDuty.weekRange}` 
-            : 'Check "Weekly Duties" section for latest updates.';
-        
-        const programsStr = JSON.stringify(constants.weeklyDuty.serviceTimes);
-        
-        const pastorsStr = constants.pastors.map(p => `${p.name} (${p.role})`).join(", ");
-        
-        const eldersStr = constants.elders.map(e => e.name).join(", ");
-        
-        const ministriesStr = constants.ministries.map(m => `${m.name} (${m.acronym || ''}) - Leader: ${m.leader}`).join("; ");
-        
-        const announcementsStr = constants.announcements.slice(0, 3).map(a => `[${a.date}] ${a.title}: ${a.content}`).join("\n");
-
-        const systemPrompt = `
-          You are a helpful and polite AI assistant for the "Champhai Bethel Kohhran" website.
-          
-          CONTEXT:
-          - Church Name: Champhai Bethel Kohhran.
-          - Location: Bethel Veng, Champhai, Mizoram.
-          - Service Times: ${programsStr}
-          - Current Week Info: ${scheduleStr}
-          
-          LEADERSHIP:
-          - Pastors: ${pastorsStr}
-          - Elders (Upa): ${eldersStr}
-          
-          MINISTRIES & FELLOWSHIPS:
-          - ${ministriesStr}
-          
-          LATEST ANNOUNCEMENTS (Summary):
-          ${announcementsStr}
-          
-          GUIDELINES:
-          - Answer questions about church timings, leaders, ministries, and general Christian faith queries.
-          - If asked about specific dynamic data (like who is Usher today) that is not in your context, politely say you don't have that real-time info but suggest checking the "Weekly Duties" section.
-          - Be respectful and use a tone appropriate for a church setting.
-          - You can understand and reply in both English and Mizo. If the user speaks Mizo, reply in Mizo.
-          - Keep responses concise and easy to read on a mobile chat interface.
-        `;
-
-        const chat = ai.chats.create({
-          model: 'gemini-3-pro-preview',
-          config: {
-            systemInstruction: systemPrompt,
-          }
-        });
-        
-        chatSessionRef.current = chat;
-      } catch (e) {
-        console.error("Failed to init chatbot", e);
-        setError("Failed to connect to AI service.");
-      }
-    };
-
-    initChat();
+    return `
+      You are a helpful and polite AI assistant for the "Champhai Bethel Kohhran" website.
+      
+      CONTEXT:
+      - Church Name: Champhai Bethel Kohhran.
+      - Location: Bethel Veng, Champhai, Mizoram.
+      - Service Times: ${programsStr}
+      - Current Week Info: ${scheduleStr}
+      
+      LEADERSHIP:
+      - Pastors: ${pastorsStr}
+      - Elders (Upa): ${eldersStr}
+      
+      MINISTRIES & FELLOWSHIPS:
+      - ${ministriesStr}
+      
+      LATEST ANNOUNCEMENTS (Summary):
+      ${announcementsStr}
+      
+      GUIDELINES:
+      - Answer questions about church timings, leaders, ministries, and general Christian faith queries.
+      - If asked about specific dynamic data (like who is Usher today) that is not in your context, politely say you don't have that real-time info but suggest checking the "Weekly Duties" section.
+      - Be respectful and use a tone appropriate for a church setting.
+      - You can understand and reply in both English and Mizo. If the user speaks Mizo, reply in Mizo.
+      - Keep responses concise and easy to read on a mobile chat interface.
+    `;
   }, []);
 
   const scrollToBottom = () => {
@@ -120,7 +90,7 @@ const Chatbot: React.FC = () => {
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || !chatSessionRef.current || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
     const userText = input.trim();
     const userMsg: Message = { 
@@ -135,24 +105,56 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await chatSessionRef.current.sendMessage({ message: userText });
-      const text = result.text;
+      // Build history for the API
+      const history = messages.slice(1).map(m => ({ // Skip the first greeting message
+        role: m.sender,
+        parts: [{ text: m.text }]
+      }));
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: userText,
+          history,
+          systemInstruction
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to get response");
+      }
       
       const botMsg: Message = { 
           id: (Date.now() + 1).toString(), 
-          text: text, 
+          text: data.text, 
           sender: 'model',
           timestamp: new Date()
       };
       setMessages(prev => [...prev, botMsg]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { 
-          id: Date.now().toString(), 
-          text: "Ka tihpalh, harsatna ka tawk tlat mai. Khawngaihin nakinah min zawt nawn leh rawh. (Sorry, I encountered an error. Please ask again later.)", 
-          sender: 'model',
-          timestamp: new Date()
-      }]);
+    } catch (error: any) {
+      const errorMessage = (error.message === "Service unavailable (Config Error)" || error.message === "Invalid API Key provided")
+          ? "Invalid API Key provided. Please check Settings."
+          : null;
+
+      if (!errorMessage) {
+        console.error("Chat error:", error);
+      }
+
+      if (errorMessage) {
+          setError(errorMessage);
+      } else {
+        setMessages(prev => [...prev, { 
+            id: Date.now().toString(), 
+            text: "Ka tihpalh, harsatna ka tawk tlat mai. Khawngaihin nakinah min zawt nawn leh rawh. (Sorry, I encountered an error. Please ask again later.)", 
+            sender: 'model',
+            timestamp: new Date()
+        }]);
+      }
     } finally {
       setIsLoading(false);
     }

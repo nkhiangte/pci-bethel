@@ -72,7 +72,7 @@ const DATA = {
         name: 'Kristian Ṭhalai Pawl',
         acronym: 'KTP',
         description: 'Rawngbawl tura Chhandam',
-        leader: 'Tv. Lalrinfela (Leader)',
+        leader: '',
         schedule: 'Thawhṭanni @ 7:00 PM',
         image: 'https://ui-avatars.com/api/?name=KTP&background=0284c7&color=fff&size=256'
       },
@@ -81,7 +81,7 @@ const DATA = {
         name: 'Kohhran Hmeichhia',
         acronym: 'KH',
         description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
-        leader: 'Pi Lalhlimpuii (Leader)',
+        leader: '',
         schedule: 'Thawhlehni @ 1:30 PM',
         image: 'https://ui-avatars.com/api/?name=KH&background=be185d&color=fff&size=256'
       },
@@ -90,7 +90,7 @@ const DATA = {
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
         description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
-        leader: 'Pu R. Lalmalsawma (Leader)',
+        leader: '',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://ui-avatars.com/api/?name=KPP&background=15803d&color=fff&size=256'
       }
@@ -225,7 +225,7 @@ const DATA = {
         name: 'Kristian Ṭhalai Pawl',
         acronym: 'KTP',
         description: 'Rawngbawl tura Chhandam',
-        leader: 'Tv. Lalrinfela (Leader)',
+        leader: '',
         schedule: 'Thawhṭanni @ 7:00 PM',
         image: 'https://ui-avatars.com/api/?name=KTP&background=0284c7&color=fff&size=256'
       },
@@ -234,7 +234,7 @@ const DATA = {
         name: 'Kohhran Hmeichhia',
         acronym: 'KH',
         description: "Kan Kohhran hmeichhiate inkhawmpawlna, thlarau lama ṭhanglian a, rawngbawlna leh tanpui ngaite tanpuina kawnga pawimawh tak.",
-        leader: 'Pi Lalhlimpuii (Leader)',
+        leader: '',
         schedule: 'Thawhlehni @ 1:30 PM',
         image: 'https://ui-avatars.com/api/?name=KH&background=be185d&color=fff&size=256'
       },
@@ -243,7 +243,7 @@ const DATA = {
         name: 'Kohhran Pavalai Pawl',
         acronym: 'KPP',
         description: "Thil tumte :\ni) Mi dangte Krista hnena hruai.\nii) Kohhran hmalakna ṭawiawm\niii) Kristian chhungkaw ṭha din tura ṭan lak.\nThupui : Krista tana nun. (Phil 1 : 21)",
-        leader: 'Pu R. Lalmalsawma (Leader)',
+        leader: '',
         schedule: 'Zirtawpni @ 7:00 PM',
         image: 'https://ui-avatars.com/api/?name=KPP&background=15803d&color=fff&size=256'
       }

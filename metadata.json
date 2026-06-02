@@ -2,5 +2,5 @@
   "name": "Champhai Bethel Kohhran",
   "description": "PCI Champhai Bethel Kohhran website  ; inkhawm hunbi te, rawngbawlna leh rawngbawltu hrang hrang te, thuchah leh kohhran thiltih hrang hrangte tarlanna",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

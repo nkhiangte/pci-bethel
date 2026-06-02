@@ -15,8 +15,8 @@ const INITIAL_CONTACT_DATA = {
 };
 
 const INITIAL_APP_UPDATE_DATA = {
-  latestVersionCode: 15,
-  latestVersionName: "1.5",
+  latestVersionCode: 16,
+  latestVersionName: "1.6",
   updateUrl: "https://play.google.com/store/apps/details?id=com.pcibethel.app",
   updateMessage: "Siampa hian App hmelhmang a tlem a thalo leh a chhung thu kuttia phek chet vel te, thuziak phek danga in split chungchang te, a phek zoom theihna te leh hriattirna/announcement danga buaina a awmte a rawn tidam rualin kan rawn update a ni. Khawngaihin update rawh le.",
   isUpdateRequired: false

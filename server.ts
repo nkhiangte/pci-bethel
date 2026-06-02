@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import twilio, { Twilio } from "twilio";
+import { GoogleGenAI, Type } from "@google/genai";
 
 let twilioClient: Twilio | null = null;
 
@@ -66,6 +67,80 @@ async function startServer() {
     } catch (error: any) {
       console.error("Twilio Error:", error);
       res.status(500).json({ error: error.message || "Failed to send message" });
+    }
+  });
+
+  // API Route for Chatbot
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { message, history, systemInstruction } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "API Key missing for Chatbot" });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const contents = history || [];
+      contents.push({ role: "user", parts: [{ text: message }] });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents,
+        config: { systemInstruction }
+      });
+
+      res.json({ text: response.text });
+    } catch (error: any) {
+      const msg = error.message || String(error);
+      const isInvalidKey = msg.includes("API key not valid") || msg.includes("API_KEY_INVALID");
+      if (!isInvalidKey) {
+        console.error("Chat Error:", error);
+      }
+      res.status(500).json({ error: isInvalidKey ? "Invalid API Key provided" : (error.message || "Failed to generate response") });
+    }
+  });
+
+  // API Route for Daily Verse
+  app.post("/api/daily-verse", async (req, res) => {
+    try {
+      const { language } = req.body;
+      // Accept GEMINI_API_KEY as standard, fallback to API_KEY if users set it that way previously
+      const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY; 
+      if (!apiKey) {
+        // Fail silently as per requirements
+        return res.json(null);
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const langPrompt = language === 'mizo' ? 'Mizo (Mizo Bible)' : 'English (NIV or ESV)';
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Generate a single, uplifting Bible verse for the day in ${langPrompt}. Return ONLY valid JSON with "text" and "reference" fields. No markdown.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              text: { type: Type.STRING },
+              reference: { type: Type.STRING }
+            },
+            required: ['text', 'reference']
+          }
+        }
+      });
+
+      const jsonText = response.text;
+      if (!jsonText) return res.json(null);
+      res.json(JSON.parse(jsonText));
+    } catch (error: any) {
+      const msg = error.message || String(error);
+      const isInvalidKey = msg.includes("API key not valid") || msg.includes("API_KEY_INVALID");
+      if (!isInvalidKey) {
+        console.error("Verse Error:", error);
+      }
+      res.json(null);
     }
   });
 

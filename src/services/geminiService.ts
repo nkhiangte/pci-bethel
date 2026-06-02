@@ -1,61 +1,22 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { Language } from "../translations";
 
-// Safe access to process.env
-const getApiKey = () => {
-  try {
-    if (typeof process !== 'undefined' && process.env) {
-      return process.env.API_KEY;
-    }
-  } catch (e) {
-    // Ignore error if process is not defined
-  }
-  return null;
-};
-
-const getClient = () => {
-  const apiKey = getApiKey();
-  if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
-};
-
 export const getDailyVerse = async (language: Language = 'en'): Promise<{ text: string; reference: string } | null> => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    // Fail silently/gracefully if no key is present, preventing crashes
-    return null;
-  }
-
-  const ai = getClient();
-  if (!ai) {
-    console.warn("No API Key found, skipping AI verse generation.");
-    return null;
-  }
-
-  // Improved prompt to ensure Mizo Bible translation is used
-  const langPrompt = language === 'mizo' ? 'Mizo (Mizo Bible)' : 'English (NIV or ESV)';
-  
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Generate a single, uplifting Bible verse for the day in ${langPrompt}. Return JSON with "text" and "reference" fields.`,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            text: { type: Type.STRING },
-            reference: { type: Type.STRING }
-          },
-          required: ['text', 'reference']
-        }
-      }
+    const response = await fetch('/api/daily-verse', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ language })
     });
 
-    const jsonText = response.text;
-    if (!jsonText) return null;
-    return JSON.parse(jsonText);
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error("Error fetching verse:", error);
     return null;
