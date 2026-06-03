@@ -167,35 +167,42 @@ const Bethel: React.FC = () => {
 
   const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    const file = e.target.files[0];
-    if (file.type !== 'application/pdf') {
+    const files = Array.from(e.target.files);
+    
+    if (!files.every(file => file.type === 'application/pdf')) {
       alert('Only PDF files are allowed.');
       return;
     }
 
     setUploading(true);
-    setUploadProgress('Uploading...');
+    setUploadProgress(`Uploading 0/${files.length}...`);
 
     try {
       const { storage } = await import('../services/firebase');
       if (!storage) throw new Error('Storage not available');
 
       const folderName = currentFolder ? currentFolder.name : 'root';
-      const path = `bethelNewspaper/${folderName}/${Date.now()}_${file.name}`;
-      const ref = storage.ref(path);
-      await ref.put(file);
-      const url = await ref.getDownloadURL();
+      
+      let uploadedCount = 0;
+      for (const file of files) {
+        const path = `bethelNewspaper/${folderName}/${Date.now()}_${file.name}`;
+        const ref = storage.ref(path);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
 
-      const newPdf = {
-        name: file.name,
-        url,
-        storagePath: path,
-        folderId: currentFolderId || 'root',
-        date: new Date().toISOString(),
-        uploadedAt: new Date().toISOString()
-      };
+        const newPdf = {
+          name: file.name,
+          url,
+          storagePath: path,
+          folderId: currentFolderId || 'root',
+          date: new Date().toISOString(),
+          uploadedAt: new Date().toISOString()
+        };
 
-      await db.collection('bethelPdfs').add(newPdf);
+        await db.collection('bethelPdfs').add(newPdf);
+        uploadedCount++;
+        setUploadProgress(`Uploading ${uploadedCount}/${files.length}...`);
+      }
 
       setUploadProgress('');
       await fetchPdfs(currentFolderId);
@@ -363,7 +370,8 @@ const Bethel: React.FC = () => {
                 />
               </div>
               {isAdmin && (
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  {uploading && uploadProgress && <span className="text-sm text-church-600 font-bold">{uploadProgress}</span>}
                   <button 
                     onClick={() => setAddingFolder(true)}
                     className="p-2 bg-church-600 text-white rounded-xl hover:bg-church-700 transition shadow-sm"
@@ -379,7 +387,7 @@ const Bethel: React.FC = () => {
                   >
                     {uploading ? <Loader className="animate-spin" size={20} /> : <FileUp size={20} />}
                   </button>
-                  <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleUploadPdf} />
+                  <input ref={fileInputRef} type="file" multiple accept="application/pdf" className="hidden" onChange={handleUploadPdf} />
                 </div>
               )}
             </div>
