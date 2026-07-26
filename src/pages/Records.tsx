@@ -318,6 +318,52 @@ const Records: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
+    const handleDownloadTemplate = () => {
+        let fields = [...TEMPLATE_HEADERS[activeTab]];
+        if (activeTab === 'wedding') {
+            fields = ['groomName', 'brideName', 'weddingDate', 'minister'];
+        }
+
+        const sampleRow: Record<string, string> = {};
+        fields.forEach(field => {
+            const displayHeader = (t.records.theads as any)[field] || field;
+
+            if (field === 'name') sampleRow[displayHeader] = 'Lalthanpuia';
+            else if (field === 'groomName') sampleRow[displayHeader] = 'Lalremruata';
+            else if (field === 'brideName') sampleRow[displayHeader] = 'Vanlalruati';
+            else if (field === 'dateOfBirth') sampleRow[displayHeader] = '2000-01-15';
+            else if (field === 'baptismDate') sampleRow[displayHeader] = '2015-04-20';
+            else if (field === 'weddingDate') sampleRow[displayHeader] = '2023-11-10';
+            else if (field === 'dateOfDeath') sampleRow[displayHeader] = '2024-02-01';
+            else if (field === 'date') sampleRow[displayHeader] = '2024-05-12';
+            else if (field === 'parents') sampleRow[displayHeader] = 'Pu Rothanga & Pi Zothangi';
+            else if (field === 'minister') sampleRow[displayHeader] = 'Rev. C. Lalthlengliana';
+            else if (field === 'fatherName' || field === 'fathersName') sampleRow[displayHeader] = 'Pu Thangluaia';
+            else if (field === 'age') sampleRow[displayHeader] = '68';
+            else if (field === 'causeOfDeath') sampleRow[displayHeader] = 'Stroke';
+            else if (field === 'eventName') sampleRow[displayHeader] = 'Bial Inkhawmpui';
+            else if (field === 'year') sampleRow[displayHeader] = '2024';
+            else if (field === 'theme') sampleRow[displayHeader] = 'I Pathian tawk tura inpeih rawh';
+            else if (field === 'puipate') sampleRow[displayHeader] = 'Chairman: Pu Lalthanga, Secretary: Tv. Zola';
+            else if (field === 'speakers') sampleRow[displayHeader] = 'Rev. Dr. C. Chawnghmingliana';
+            else if (field === 'team') sampleRow[displayHeader] = 'Light Team';
+            else if (field === 'speaker') sampleRow[displayHeader] = 'Tv. Lalsangzuala';
+            else if (field === 'headOfFamily') sampleRow[displayHeader] = 'Pu Lalrinsanga';
+            else if (field === 'noOfMembers') sampleRow[displayHeader] = '4';
+            else if (field === 'previousChurch') sampleRow[displayHeader] = 'Aizawl Venglai Kohhran';
+            else sampleRow[displayHeader] = 'Sample Value';
+        });
+
+        const ws = XLSX.utils.json_to_sheet([sampleRow]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        triggerDownload(
+            new Blob([wbout], { type: 'application/octet-stream' }), 
+            `Bethel_Kohhran_${activeTab}_Template.xlsx`
+        );
+    };
+
     const handleExportExcel = () => {
         const headers = TEMPLATE_HEADERS[activeTab];
         // Only include actual date fields, explicitly excluding 'year' to avoid formatting issues
@@ -578,22 +624,80 @@ const Records: React.FC = () => {
         });
     }, [records, searchTerm]);
 
+    // Helper function to extract typed sortable values
+    const parseSortValue = (val: any, key: string) => {
+        if (val === null || val === undefined || val === '') return null;
+
+        if (key === 'age' || key === 'noOfMembers' || key === 'year') {
+            const num = Number(val);
+            if (!isNaN(num)) return num;
+        }
+
+        const isDateField = ['dateOfBirth', 'baptismDate', 'weddingDate', 'dateOfDeath', 'date'].includes(key);
+        if (isDateField) {
+            if (typeof val === 'number') {
+                const dateObj = new Date((val - 25569) * 86400 * 1000);
+                if (!isNaN(dateObj.getTime())) return dateObj.getTime();
+            }
+            if (typeof val === 'string') {
+                const trimmed = val.trim();
+                if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+                    const timestamp = Date.parse(trimmed);
+                    if (!isNaN(timestamp)) return timestamp;
+                }
+                const ddmmyyyy = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (ddmmyyyy) {
+                    const [, d, m, y] = ddmmyyyy;
+                    const timestamp = new Date(Number(y), Number(m) - 1, Number(d)).getTime();
+                    if (!isNaN(timestamp)) return timestamp;
+                }
+                const parsed = Date.parse(trimmed);
+                if (!isNaN(parsed)) return parsed;
+            }
+        }
+
+        const num = Number(val);
+        if (typeof val === 'number' || (typeof val === 'string' && val.trim() !== '' && !isNaN(num))) {
+            return num;
+        }
+
+        return String(val).trim().toLowerCase();
+    };
+
     // Derived Sorting
     const finalSortedRecords = useMemo(() => {
         if (!sortConfig) return searchedRecords;
+        const { key, direction } = sortConfig;
+
         const sorted = [...searchedRecords].sort((a, b) => {
-            let aVal = (a as any)[sortConfig.key] || '';
-            let bVal = (b as any)[sortConfig.key] || '';
-            
-            if (sortConfig.key === 'couple') {
-                aVal = (a as any).groomName || '';
-                bVal = (b as any).groomName || '';
+            let rawA: any;
+            let rawB: any;
+
+            if (key === 'couple') {
+                rawA = `${(a as any).groomName || ''} ${(a as any).brideName || ''}`.trim();
+                rawB = `${(b as any).groomName || ''} ${(b as any).brideName || ''}`.trim();
+            } else {
+                rawA = (a as any)[key];
+                rawB = (b as any)[key];
             }
 
-            if (typeof aVal === 'number' && typeof bVal === 'number') return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-            const compareResult = String(aVal).localeCompare(String(bVal));
-            return sortConfig.direction === 'asc' ? compareResult : -compareResult;
+            const valA = parseSortValue(rawA, key);
+            const valB = parseSortValue(rawB, key);
+
+            if (valA === null && valB === null) return 0;
+            if (valA === null) return 1;
+            if (valB === null) return -1;
+
+            let res = 0;
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                res = valA - valB;
+            } else {
+                res = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+            }
+
+            return direction === 'asc' ? res : -res;
         });
+
         return sorted;
     }, [searchedRecords, sortConfig]);
 
@@ -790,6 +894,10 @@ const Records: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                <button onClick={handleDownloadTemplate} className="p-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition flex items-center gap-1.5 text-xs font-bold" title="Download Excel Template">
+                                    <FileDown size={18}/>
+                                    <span className="hidden sm:inline">Excel Template</span>
+                                </button>
                                 {isAdmin && (
                                     <>
                                         <button onClick={handleExportExcel} className="p-2.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" title="Export Excel"><FileSpreadsheet size={20}/></button>
@@ -802,6 +910,16 @@ const Records: React.FC = () => {
                                 )}
                             </div>
                         </div>
+
+                        {importError && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center justify-between shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <AlertTriangle size={18} className="text-red-500 shrink-0" />
+                                    <span>{importError}</span>
+                                </div>
+                                <button onClick={() => setImportError(null)} className="p-1 hover:bg-red-100 rounded-lg transition"><X size={16} /></button>
+                            </div>
+                        )}
 
                         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                             <div className="overflow-x-auto">
