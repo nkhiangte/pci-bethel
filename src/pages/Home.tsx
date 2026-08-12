@@ -159,7 +159,14 @@ const Home: React.FC = () => {
       {/* --- NEWS SECTION --- */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.newsTitle}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-serif font-bold text-slate-900">{t.home.newsTitle}</h2>
+            {isAdmin && (
+              <Link to="/announcements" className="p-2 bg-church-50 text-church-600 rounded-full hover:bg-church-100 transition shadow-sm" title={t.announcements.postAnnouncement || 'Edit News'}>
+                <Edit size={18} />
+              </Link>
+            )}
+          </div>
           <Link to="/announcements" className="text-sm font-bold text-church-600 hover:text-church-700 flex items-center">
             {t.home.viewAll} <ArrowRight size={16} className="ml-1"/>
           </Link>
@@ -172,31 +179,38 @@ const Home: React.FC = () => {
                 
                 <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused]">
                     {[...latestNews, ...latestNews].map((item, index) => (
-                        <Link key={`${item.id}-${index}`} to={`/announcements/${item.id}`} className="group/card flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
-                            {item.imageUrls && item.imageUrls.length > 0 ? (
-                                <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
-                                    <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
+                        <div key={`${item.id}-${index}`} className="relative group/card">
+                            <Link to={`/announcements/${item.id}`} className="flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
+                                {item.imageUrls && item.imageUrls.length > 0 ? (
+                                    <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
+                                        <img src={item.imageUrls[0]} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
+                                    </div>
+                                ) : item.imageUrl ? (
+                                    <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
+                                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
+                                    </div>
+                                ) : (
+                                    <div className="h-24 w-full sm:w-32 bg-church-50 flex items-center justify-center shrink-0 rounded-lg border border-church-100">
+                                         <Radio size={24} className="text-church-300" />
+                                    </div>
+                                )}
+                                <div className="flex-1 flex flex-col justify-center">
+                                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                                        <span className="text-[10px] font-bold text-church-600 bg-church-50 px-2 py-0.5 rounded uppercase tracking-wider">{item.category}</span>
+                                        <span className="text-xs font-bold text-slate-400">{item.date}</span>
+                                    </div>
+                                    <h3 className="font-bold text-slate-900 mb-1 line-clamp-2 leading-snug group-hover/card:text-church-700 transition-colors">{item.title}</h3>
+                                    <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
+                                        {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
+                                    </p>
                                 </div>
-                            ) : item.imageUrl ? (
-                                <div className="h-24 w-full sm:w-32 bg-slate-200 overflow-hidden relative shrink-0 rounded-lg">
-                                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover/card:scale-105 transition duration-500" />
-                                </div>
-                            ) : (
-                                <div className="h-24 w-full sm:w-32 bg-church-50 flex items-center justify-center shrink-0 rounded-lg border border-church-100">
-                                     <Radio size={24} className="text-church-300" />
-                                </div>
+                            </Link>
+                            {isAdmin && (
+                                <Link to={`/announcements`} className="absolute top-2 right-2 p-1.5 bg-white text-church-600 rounded-full shadow-sm opacity-0 group-hover/card:opacity-100 transition-opacity border border-slate-100 hover:bg-slate-50 z-20">
+                                    <Edit size={14} />
+                                </Link>
                             )}
-                            <div className="flex-1 flex flex-col justify-center">
-                                <div className="flex items-center flex-wrap gap-2 mb-1">
-                                    <span className="text-[10px] font-bold text-church-600 bg-church-50 px-2 py-0.5 rounded uppercase tracking-wider">{item.category}</span>
-                                    <span className="text-xs font-bold text-slate-400">{item.date}</span>
-                                </div>
-                                <h3 className="font-bold text-slate-900 mb-1 line-clamp-2 leading-snug group-hover/card:text-church-700 transition-colors">{item.title}</h3>
-                                <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
-                                    {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
-                                </p>
-                            </div>
-                        </Link>
+                        </div>
                     ))}
                 </div>
             </div>

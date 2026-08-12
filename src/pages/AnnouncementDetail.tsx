@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -14,13 +15,15 @@ import {
   X, 
   Play, 
   Youtube,
-  Tag
+  Tag,
+  Edit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const AnnouncementDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { language, t } = useLanguage();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
@@ -97,12 +100,23 @@ const AnnouncementDetail: React.FC = () => {
             <ChevronLeft size={20} className="mr-1 group-hover:-translate-x-1 transition-transform" />
             {t.nav.announcements}
           </Link>
-          <button 
-            onClick={shareHandler}
-            className="p-2 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-full transition"
-          >
-            <Share2 size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link 
+                to="/announcements"
+                className="p-2 text-church-600 hover:bg-church-50 rounded-full transition"
+                title="Edit Announcement"
+              >
+                <Edit size={20} />
+              </Link>
+            )}
+            <button 
+              onClick={shareHandler}
+              className="p-2 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-full transition"
+            >
+              <Share2 size={20} />
+            </button>
+          </div>
         </div>
       </div>
 
