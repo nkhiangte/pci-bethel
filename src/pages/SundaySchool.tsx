@@ -11,7 +11,7 @@ import {
   ChevronRight, TrendingUp, Sparkles, BookOpen, Wallet,
   User, Phone, MessageCircle, MapPin, Quote, ShieldCheck,
   Camera, Move, ZoomIn, Download, FileDown, Upload, PlusCircle,
-  GripVertical, FileSpreadsheet, FileType, Search
+  GripVertical, FileSpreadsheet, FileType, Search, Radio
 } from 'lucide-react';
 import ProtectedContact from '../components/ProtectedContact';
 import * as XLSX from 'xlsx';
@@ -759,6 +759,156 @@ const SundaySchool: React.FC = () => {
       }
   };
 
+  const formatSundaySchoolReportToHtml = (report: Partial<SSWeeklyReport>): string => {
+    const puitling = report.puitling || EMPTY_SEGMENT;
+    const naupang = report.naupang || EMPTY_SEGMENT;
+
+    const puitlingZirtirtuKal = puitling.zirtirtu?.kal || 0;
+    const puitlingZirtirtuKallo = puitling.zirtirtu?.kallo || 0;
+    const puitlingZirtirtuTotal = puitlingZirtirtuKal + puitlingZirtirtuKallo;
+
+    const puitlingZirtuKal = puitling.zirtu?.kal || 0;
+    const puitlingZirtuKallo = puitling.zirtu?.kallo || 0;
+    const puitlingZirtuTotal = puitlingZirtuKal + puitlingZirtuKallo;
+
+    const puitlingChhimtu = puitling.chhimtu || 0;
+    const puitlingKal = puitlingZirtirtuKal + puitlingZirtuKal + puitlingChhimtu;
+    const puitlingKallo = puitlingZirtirtuKallo + puitlingZirtuKallo;
+    const puitlingTotal = puitlingKal + puitlingKallo;
+    const puitlingThawhlawm = puitling.thawhlawm || 0;
+
+    const naupangZirtirtuKal = naupang.zirtirtu?.kal || 0;
+    const naupangZirtirtuKallo = naupang.zirtirtu?.kallo || 0;
+    const naupangZirtirtuTotal = naupangZirtirtuKal + naupangZirtirtuKallo;
+
+    const naupangZirtuKal = naupang.zirtu?.kal || 0;
+    const naupangZirtuKallo = naupang.zirtu?.kallo || 0;
+    const naupangZirtuTotal = naupangZirtuKal + naupangZirtuKallo;
+
+    const naupangChhimtu = naupang.chhimtu || 0;
+    const naupangKal = naupangZirtirtuKal + naupangZirtuKal + naupangChhimtu;
+    const naupangKallo = naupangZirtirtuKallo + naupangZirtuKallo;
+    const naupangTotal = naupangKal + naupangKallo;
+    const naupangThawhlawm = naupang.thawhlawm || 0;
+
+    const grandKal = puitlingKal + naupangKal;
+    const grandKallo = puitlingKallo + naupangKallo;
+    const grandTotal = grandKal + grandKallo;
+    const totalThawhlawm = puitlingThawhlawm + naupangThawhlawm;
+
+    return `
+<p>Sunday School Report (${report.date || 'Tarlan a awm lo'}): Kal zawng zawng <strong>${grandKal}</strong>, Kal lo <strong>${grandKallo}</strong>, Thawhlawm tlingkhawm <strong>₹${totalThawhlawm.toLocaleString()}</strong> a ni. (Puitling: Kal ${puitlingKal}, Thawhlawm ₹${puitlingThawhlawm.toLocaleString()} | Naupang: Kal ${naupangKal}, Thawhlawm ₹${naupangThawhlawm.toLocaleString()}).</p>
+
+<div style="margin-top: 1.5rem; margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.25rem;">
+  <h3 style="margin-top: 0; margin-bottom: 0.75rem; color: #1e293b; font-size: 1.15rem; font-weight: 800;">📊 Khaikhawmna (Summary)</h3>
+  <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.8;">
+    <li><strong>Kal zawng zawng:</strong> ${grandKal}</li>
+    <li><strong>Kal lo zawng zawng:</strong> ${grandKallo}</li>
+    <li><strong>Member zawng zawng (Enrolled + Guests):</strong> ${grandTotal}</li>
+    <li><strong>Thawhlawm zawng zawng:</strong> ₹${totalThawhlawm.toLocaleString()}</li>
+  </ul>
+</div>
+
+<h3 style="margin-top: 1.5rem; color: #0f172a; font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">1. Puitling Sunday School</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem;">
+  <thead>
+    <tr style="background: #f1f5f9; text-align: left;">
+      <th style="padding: 8px 12px; border: 1px solid #cbd5e1;">Hming / Role</th>
+      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Kal</th>
+      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Kal lo</th>
+      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Zirtirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingZirtirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${puitlingZirtirtuKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingZirtirtuTotal}</td>
+    </tr>
+    <tr style="background: #f8fafc;">
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Zirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingZirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${puitlingZirtuKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingZirtuTotal}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Chhimtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">-</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingChhimtu}</td>
+    </tr>
+    <tr style="background: #e2e8f0; font-weight: bold;">
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8;">Puitling Total</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingTotal}</td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0; margin-bottom: 1.5rem; font-weight: bold; color: #047857;">💰 Puitling Thawhlawm: ₹${puitlingThawhlawm.toLocaleString()}</p>
+
+<h3 style="margin-top: 1.5rem; color: #065f46; font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #a7f3d0; padding-bottom: 0.5rem;">2. Naupang Sunday School</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem;">
+  <thead>
+    <tr style="background: #ecfdf5; text-align: left;">
+      <th style="padding: 8px 12px; border: 1px solid #a7f3d0;">Hming / Role</th>
+      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Kal</th>
+      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Kal lo</th>
+      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Zirtirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangZirtirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">${naupangZirtirtuKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangZirtirtuTotal}</td>
+    </tr>
+    <tr style="background: #f0fdf4;">
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Zirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangZirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">${naupangZirtuKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangZirtuTotal}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Chhimtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">-</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangChhimtu}</td>
+    </tr>
+    <tr style="background: #d1fae5; font-weight: bold;">
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7;">Naupang Total</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangTotal}</td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0; margin-bottom: 1.5rem; font-weight: bold; color: #047857;">💰 Naupang Thawhlawm: ₹${naupangThawhlawm.toLocaleString()}</p>
+    `.trim();
+  };
+
+  const syncReportToAnnouncement = async (report: Partial<SSWeeklyReport>, id: string) => {
+    if (!db || !db.collection || !report.date) return;
+    try {
+      const announcementDocId = `ss_report_${id}`;
+      const content = formatSundaySchoolReportToHtml(report);
+      
+      await db.collection('announcements').doc(announcementDocId).set({
+        id: announcementDocId,
+        title: `Sunday School Report (${report.date})`,
+        date: report.date,
+        category: 'Sunday School',
+        content: content,
+        reportId: id,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      console.error("Failed to sync report to announcements:", err);
+    }
+  };
+
   const handleAddReport = () => {
       setEditingReport({
           date: new Date().toISOString().split('T')[0],
@@ -778,7 +928,16 @@ const SundaySchool: React.FC = () => {
               ? db.collection('sundaySchoolWeeklyReports').doc(editingReport.id)
               : db.collection('sundaySchoolWeeklyReports').doc();
           
-          await docRef.set(editingReport, { merge: true });
+          const reportToSave = {
+              ...editingReport,
+              id: docRef.id
+          };
+          
+          await docRef.set(reportToSave, { merge: true });
+
+          // Automatically sync updated report to Latest News / Announcements
+          await syncReportToAnnouncement(reportToSave, docRef.id);
+
           setIsReportModalOpen(false);
           fetchReports();
       } catch (error: any) {
@@ -795,10 +954,28 @@ const SundaySchool: React.FC = () => {
       if (!db || !db.collection || !window.confirm("Delete this report?")) return;
       try {
           await db.collection('sundaySchoolWeeklyReports').doc(id).delete();
+          // Also delete linked announcement if exists
+          await db.collection('announcements').doc(`ss_report_${id}`).delete().catch(() => {});
           fetchReports();
       } catch (error) {
           console.error(error);
           alert("Failed to delete report.");
+      }
+  };
+
+  const handleSyncAllReports = async () => {
+      if (!db || !db.collection || reports.length === 0) return;
+      try {
+          let count = 0;
+          for (const rep of reports) {
+              if (rep.id && rep.date) {
+                  await syncReportToAnnouncement(rep, rep.id);
+                  count++;
+              }
+          }
+          alert(`Successfully synced ${count} Sunday School report(s) to Latest News / Announcements!`);
+      } catch (err: any) {
+          alert("Failed to sync reports: " + err.message);
       }
   };
 
@@ -1837,9 +2014,20 @@ const SundaySchool: React.FC = () => {
                               </div>
                           </div>
                           {isAdmin && (
-                              <button onClick={handleAddReport} className="flex items-center gap-2 px-6 py-3 bg-church-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-church-700 transition shadow-lg shadow-church-100 scale-100 active:scale-95">
-                                  <Plus size={18}/> New Weekly Entry
-                              </button>
+                              <div className="flex flex-wrap items-center gap-3">
+                                  {reports.length > 0 && (
+                                      <button 
+                                          onClick={handleSyncAllReports} 
+                                          className="flex items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition shadow-sm"
+                                          title="Sync all saved reports to Latest News / Announcements"
+                                      >
+                                          <Radio size={14} className="text-church-600"/> Sync to Latest News
+                                      </button>
+                                  )}
+                                  <button onClick={handleAddReport} className="flex items-center gap-2 px-6 py-3 bg-church-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-church-700 transition shadow-lg shadow-church-100 scale-100 active:scale-95">
+                                      <Plus size={18}/> New Weekly Entry
+                                  </button>
+                              </div>
                           )}
                       </div>
 

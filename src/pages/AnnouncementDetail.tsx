@@ -176,6 +176,21 @@ const AnnouncementDetail: React.FC = () => {
               className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor !p-0 text-justify break-normal"
               dangerouslySetInnerHTML={{ __html: announcement.content ? announcement.content.replace(/&nbsp;/g, ' ') : '' }}
             />
+
+            {(announcement.category === 'Sunday School' || (announcement as any).reportId) && (
+              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-emerald-50/60 p-5 rounded-2xl border border-emerald-100">
+                <div>
+                  <h4 className="font-bold text-emerald-950 text-sm">Sunday School Department</h4>
+                  <p className="text-emerald-700 text-xs mt-0.5">Sunday School weekly report record kimchang enna.</p>
+                </div>
+                <Link 
+                  to="/sundayschool/report" 
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-sm whitespace-nowrap"
+                >
+                  Sunday School Reports En Rawh
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Additional Media Section */}

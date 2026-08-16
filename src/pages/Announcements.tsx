@@ -67,8 +67,8 @@ const Announcements: React.FC = () => {
       const committeeSnap = await db.collection('committees').get();
       const committeeNames = committeeSnap.docs.map(doc => doc.data().name);
       
-      // Static fellowships as they are defined in Navbar
-      const fellowshipNames = ['Kohhran Hmeichhia', 'Kristian Ṭhalai Pawl (KTP)', 'Kohhran Pavalai Pawl (KPP)'];
+      // Static fellowships & departments as defined in Church organization
+      const fellowshipNames = ['Kohhran Hmeichhia', 'Kristian Ṭhalai Pawl (KTP)', 'Kohhran Pavalai Pawl (KPP)', 'Sunday School'];
 
       const allCats = ['General', 'Sunna', ...committeeNames, ...fellowshipNames];
       // Remove duplicates
