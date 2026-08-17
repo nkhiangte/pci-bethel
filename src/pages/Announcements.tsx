@@ -45,6 +45,7 @@ const Announcements: React.FC = () => {
   const { isAdmin } = useAuth();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [newsPage, setNewsPage] = useState(1);
   const [categories, setCategories] = useState<string[]>(['General', 'Sunna']);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -268,6 +269,18 @@ const Announcements: React.FC = () => {
     }
   };
 
+  const truncateToThreeSentences = (text: string) => {
+    if (!text) return '';
+    const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
+    const sentences = cleanText.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [cleanText];
+    if (sentences.length <= 3) return cleanText;
+    return sentences.slice(0, 3).join('').trim() + '...';
+  };
+
+  const newsPerPage = 10;
+  const totalNewsPages = Math.ceil(announcements.length / newsPerPage);
+  const paginatedAnnouncements = announcements.slice((newsPage - 1) * newsPerPage, newsPage * newsPerPage);
+
   return (
     <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -287,7 +300,7 @@ const Announcements: React.FC = () => {
            <div className="flex justify-center py-12"><Loader className="animate-spin text-church-500" /></div>
         ) : (
             <div className="space-y-12">
-            {announcements.map((item) => {
+            {paginatedAnnouncements.map((item) => {
                 const displayImages = item.imageUrls || (item.imageUrl ? [item.imageUrl] : []);
                 const displayCaptions = item.imageCaptions || [];
                 const displayVideos = item.videoUrls || (item.videoUrl ? [item.videoUrl] : []);
@@ -321,7 +334,7 @@ const Announcements: React.FC = () => {
                         className="block bg-slate-50 rounded-xl border border-slate-100 p-6 shadow-sm hover:shadow-md hover:border-church-200 transition-all group/card"
                     >
                         <p className="text-slate-600 leading-relaxed text-[15px] text-justify break-normal mb-4">
-                            {item.content ? item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').slice(0, 180).trim() + (item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').length > 180 ? '...' : '') : ''}
+                            {truncateToThreeSentences(item.content)}
                         </p>
                         <span className="inline-flex items-center text-xs font-black text-church-600 group-hover/card:text-church-700 uppercase tracking-widest gap-1">
                             {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
@@ -331,6 +344,45 @@ const Announcements: React.FC = () => {
                     </div>
                 );
             })}
+            
+            {/* Pagination Controls */}
+            {totalNewsPages > 1 && (
+                <div className="flex flex-wrap justify-center items-center gap-2 pt-8 border-t border-slate-200">
+                    {newsPage > 1 && (
+                        <button 
+                            onClick={() => setNewsPage(p => Math.max(1, p - 1))}
+                            className="px-4 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 transition text-sm font-bold"
+                        >
+                            Previous
+                        </button>
+                    )}
+                    
+                    <div className="flex gap-1">
+                        {Array.from({ length: totalNewsPages }).map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setNewsPage(i + 1)}
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition ${
+                                    newsPage === i + 1 
+                                        ? 'bg-church-600 text-white' 
+                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                    </div>
+
+                    {newsPage < totalNewsPages && (
+                        <button 
+                            onClick={() => setNewsPage(p => Math.min(totalNewsPages, p + 1))}
+                            className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-church-600 hover:bg-slate-50 transition text-sm font-bold"
+                        >
+                            See Next Page
+                        </button>
+                    )}
+                </div>
+            )}
             </div>
         )}
       </div>

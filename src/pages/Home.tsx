@@ -16,6 +16,7 @@ const Home: React.FC = () => {
   
   const [weeklyDuty, setWeeklyDuty] = useState<WeeklyDuty>(staticDuty);
   const [latestNews, setLatestNews] = useState<Announcement[]>([]);
+  const [newsPage, setNewsPage] = useState(1);
   const [pastors, setPastors] = useState<Staff[]>([]);
   const [proPastors, setProPastors] = useState<Staff[]>([]);
   const [elders, setElders] = useState<Staff[]>([]);
@@ -43,7 +44,7 @@ const Home: React.FC = () => {
         const dutyDoc = await db.collection('weeklyDuties').doc('current').get();
         if (dutyDoc.exists) setWeeklyDuty(dutyDoc.data() as WeeklyDuty);
 
-        const newsSnap = await db.collection('announcements').orderBy('date', 'desc').limit(10).get();
+        const newsSnap = await db.collection('announcements').orderBy('date', 'desc').get();
         const newsData = newsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Announcement[];
         setLatestNews(newsData);
 
@@ -148,6 +149,18 @@ const Home: React.FC = () => {
     setIsSaving(false);
   };
 
+  const truncateToThreeSentences = (text: string) => {
+    if (!text) return '';
+    const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
+    const sentences = cleanText.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [cleanText];
+    if (sentences.length <= 3) return cleanText;
+    return sentences.slice(0, 3).join('').trim() + '...';
+  };
+
+  const newsPerPage = 10;
+  const totalNewsPages = Math.ceil(latestNews.length / newsPerPage);
+  const paginatedNews = latestNews.slice((newsPage - 1) * newsPerPage, newsPage * newsPerPage);
+
   const allPastoralLeaders = [
     ...pastors.map(p => ({ ...p, collection: 'pastors' as const })),
     ...proPastors.map(p => ({ ...p, collection: 'proPastors' as const }))
@@ -173,12 +186,9 @@ const Home: React.FC = () => {
         </div>
         
         {latestNews.length > 0 ? (
-            <div className="relative h-[480px] overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100 p-6 group">
-                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
-                
-                <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused]">
-                    {[...latestNews, ...latestNews].map((item, index) => (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div className="flex flex-col gap-6">
+                    {paginatedNews.map((item, index) => (
                         <div key={`${item.id}-${index}`} className="relative group/card">
                             <Link to={`/announcements/${item.id}`} className="flex flex-col sm:flex-row gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-church-200 hover:shadow-sm transition">
                                 {item.imageUrls && item.imageUrls.length > 0 ? (
@@ -200,9 +210,13 @@ const Home: React.FC = () => {
                                         <span className="text-xs font-bold text-slate-400">{item.date}</span>
                                     </div>
                                     <h3 className="font-bold text-slate-900 mb-1 line-clamp-2 leading-snug group-hover/card:text-church-700 transition-colors">{item.title}</h3>
-                                    <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
-                                        {item.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
+                                    <p className="text-slate-600 text-sm leading-relaxed mb-2">
+                                        {truncateToThreeSentences(item.content)}
                                     </p>
+                                    <span className="inline-flex items-center text-xs font-black text-church-600 uppercase tracking-widest gap-1 mt-auto">
+                                        {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
+                                        <ArrowRight size={14} className="group-hover/card:translate-x-1 transition-transform duration-300" />
+                                    </span>
                                 </div>
                             </Link>
                             {isAdmin && (
@@ -213,6 +227,45 @@ const Home: React.FC = () => {
                         </div>
                     ))}
                 </div>
+                
+                {/* Pagination Controls */}
+                {totalNewsPages > 1 && (
+                    <div className="flex flex-wrap justify-center items-center gap-2 mt-8 pt-6 border-t border-slate-100">
+                        {newsPage > 1 && (
+                            <button 
+                                onClick={() => setNewsPage(p => Math.max(1, p - 1))}
+                                className="px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 transition text-sm font-bold shadow-sm"
+                            >
+                                Previous
+                            </button>
+                        )}
+                        
+                        <div className="flex gap-1">
+                            {Array.from({ length: totalNewsPages }).map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setNewsPage(i + 1)}
+                                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition shadow-sm border ${
+                                        newsPage === i + 1 
+                                            ? 'bg-church-600 text-white border-church-700' 
+                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+
+                        {newsPage < totalNewsPages && (
+                            <button 
+                                onClick={() => setNewsPage(p => Math.min(totalNewsPages, p + 1))}
+                                className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-church-600 hover:bg-slate-50 transition text-sm font-bold shadow-sm"
+                            >
+                                See Next Page
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         ) : (
             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">

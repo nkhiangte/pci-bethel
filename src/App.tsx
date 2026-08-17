@@ -53,7 +53,8 @@ import Statistics from './pages/Statistics';
 import Records from './pages/Records';
 import Archives from './pages/Archives'; 
 import InkhawmChanvo from './pages/InkhawmChanvo';
-import UpaBial from './pages/UpaBial'; 
+import UpaBial from './pages/UpaBial';
+import AutoSync from './components/AutoSync'; 
 import Articles from './pages/Articles'; 
 import Missionaries from './pages/Missionaries'; 
 import Thawhlawm from './pages/Thawhlawm';
@@ -99,6 +100,7 @@ const AppContent: React.FC = () => {
       >
         <Navbar />
       </div>
+      <AutoSync />
 
       <main className="flex-grow">
         <Routes>
