@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -63,57 +63,13 @@ const quillFormats = [
   'blockquote', 'link'
 ];
 
-// Helper to gracefully render rich HTML or plain text fallback with smart table detection
+// Helper to gracefully render rich HTML or plain text fallback
 const formatRichText = (rawContent?: string): string => {
   if (!rawContent) return '';
 
-  let processed = rawContent;
-
-  // If text contains unformatted church elder table lines like "KOHHRAN UPATE\nSl.No UPA HMING..."
-  // or consecutive lines starting with "1 Upa...", auto-convert them to responsive table HTML
-  if (!processed.includes('<table') && (
-    /(S[Il]\.?\s*No\s+UPA\s+HMING|KOHHRAN\s+UPATE)/i.test(processed) ||
-    /(\n\s*1\s+Upa\s+[^\n]+\n\s*2\s+Upa\s+)/i.test(processed)
-  )) {
-    const lines = processed.split(/\r?\n/);
-    const textBefore: string[] = [];
-    const tableLines: string[] = [];
-    const textAfter: string[] = [];
-    let state: 'before' | 'table' | 'after' = 'before';
-
-    for (const line of lines) {
-      if (state === 'before' && (
-        /(KOHHRAN\s+UPATE|S[Il]\.?\s*No\s+UPA\s+HMING)/i.test(line) ||
-        /^\s*1\s+Upa\s+/i.test(line)
-      )) {
-        state = 'table';
-        tableLines.push(line);
-      } else if (state === 'table') {
-        if (/^\s*\d+\.?\s+/i.test(line) || /(S[Il]\.?\s*No|UPA\s+HMING|HMUN|KUM)/i.test(line) || line.trim() === '') {
-          if (line.trim() !== '') tableLines.push(line);
-        } else {
-          state = 'after';
-          textAfter.push(line);
-        }
-      } else if (state === 'after') {
-        textAfter.push(line);
-      } else {
-        textBefore.push(line);
-      }
-    }
-
-    if (tableLines.length > 0) {
-      const parsed = parseTextToTableData(tableLines.join('\n'));
-      const tableHtml = generateTableHtml(parsed.headers, parsed.rows, 'KOHHRAN UPATE');
-      processed = (textBefore.length ? textBefore.join('\n') + '\n\n' : '') + 
-                  tableHtml + 
-                  (textAfter.length ? '\n\n' + textAfter.join('\n') : '');
-    }
-  }
-
-  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(processed);
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(rawContent);
   if (hasHtmlTags) {
-    let html = processed.replace(/&nbsp;/g, ' ');
+    let html = rawContent.replace(/&nbsp;/g, ' ');
     // Ensure all <table> elements have responsive wrapper
     if (html.includes('<table') && !html.includes('table-responsive-wrapper')) {
       html = html.replace(/<table([\s\S]*?)<\/table>/gi, (match) => {
@@ -123,7 +79,7 @@ const formatRichText = (rawContent?: string): string => {
     return html;
   }
 
-  return processed
+  return rawContent
     .split('\n\n')
     .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br/>')}</p>`)
     .join('');
@@ -701,23 +657,61 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
     const [activeTableField, setActiveTableField] = useState<keyof AboutPageContent>('mizo_historyText');
     const [tableInitialText, setTableInitialText] = useState('');
 
+    const historyQuillRef = useRef<any>(null);
+    const missionQuillRef = useRef<any>(null);
+    const faithQuillRef = useRef<any>(null);
+
     const handleTextChange = (field: keyof AboutPageContent, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const getActiveEditorRef = (field: keyof AboutPageContent) => {
+        const f = field.toString();
+        if (f.includes('history')) return historyQuillRef;
+        if (f.includes('mission')) return missionQuillRef;
+        return faithQuillRef;
+    };
+
     const handleOpenTableBuilder = (field: keyof AboutPageContent) => {
         setActiveTableField(field);
-        const currentVal = formData[field] as string || '';
-        if (/(S[Il]\.?\s*No|KOHHRAN\s+UPATE|UPA\s+HMING)/i.test(currentVal)) {
-            const plainText = currentVal.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ').trim();
-            setTableInitialText(plainText);
-        } else {
-            setTableInitialText('');
+        let selectedSnippet = '';
+        try {
+            const editorRef = getActiveEditorRef(field);
+            if (editorRef.current) {
+                const editor = editorRef.current.getEditor();
+                const selection = editor?.getSelection();
+                if (selection && selection.length > 0) {
+                    // Extract ONLY the text that the user highlighted
+                    selectedSnippet = editor.getText(selection.index, selection.length).trim();
+                }
+            }
+        } catch {
+            // ignore
         }
+        setTableInitialText(selectedSnippet);
         setIsTableModalOpen(true);
     };
 
     const handleTableInserted = (tableHtml: string) => {
+        try {
+            const editorRef = getActiveEditorRef(activeTableField);
+            if (editorRef.current) {
+                const editor = editorRef.current.getEditor();
+                const selection = editor?.getSelection();
+                if (selection) {
+                    if (selection.length > 0) {
+                        editor.deleteText(selection.index, selection.length);
+                    }
+                    editor.clipboard.dangerouslyPasteHTML(selection.index, `<p><br/></p>${tableHtml}<p><br/></p>`);
+                    const updatedVal = editor.root.innerHTML;
+                    handleTextChange(activeTableField, updatedVal);
+                    return;
+                }
+            }
+        } catch {
+            // ignore
+        }
+
         const currentVal = (formData[activeTableField] as string) || '';
         let updated = '';
         if (currentVal) {
@@ -897,6 +891,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 ) : (
                                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
                                         <ReactQuill
+                                            ref={historyQuillRef}
                                             theme="snow"
                                             value={formData[getField('historyText')] as string || ''}
                                             onChange={val => handleTextChange(getField('historyText'), val)}
@@ -971,6 +966,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 ) : (
                                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
                                         <ReactQuill
+                                            ref={missionQuillRef}
                                             theme="snow"
                                             value={formData[getField('missionText')] as string || ''}
                                             onChange={val => handleTextChange(getField('missionText'), val)}
@@ -1045,6 +1041,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 ) : (
                                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
                                         <ReactQuill
+                                            ref={faithQuillRef}
                                             theme="snow"
                                             value={formData[getField('faithText')] as string || ''}
                                             onChange={val => handleTextChange(getField('faithText'), val)}

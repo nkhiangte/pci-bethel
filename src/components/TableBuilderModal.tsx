@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Table as TableIcon, Sparkles, Plus, Trash2, Check, 
-  ArrowRight, LayoutGrid, FileSpreadsheet, Eye, Copy, RefreshCw 
+  LayoutGrid, FileSpreadsheet, Eye, Copy, RefreshCw, Eraser
 } from 'lucide-react';
 
 interface TableBuilderModalProps {
@@ -61,13 +61,23 @@ const PRESETS: Preset[] = [
       ['1994', 'Biak In Hmasa ber sak zawh a ni', 'Rev. R. Ramdinmawia’n a hawng'],
       ['2014', 'Biak In Thar Lungphum phum a ni', 'Rev. H. Vanlalhriata’n a phum']
     ]
+  },
+  {
+    id: 'blank',
+    name: 'Empty 3-Column Table',
+    headers: ['Sl.No', 'Description / Hming', 'Remarks / Kum'],
+    sampleRows: [
+      ['1', '', ''],
+      ['2', '', ''],
+      ['3', '', '']
+    ]
   }
 ];
 
 // Helper to parse church elder lines or general table lines
 export function parseTextToTableData(rawText: string): { headers: string[]; rows: string[][] } {
   if (!rawText || !rawText.trim()) {
-    return { headers: ['Col 1', 'Col 2', 'Col 3'], rows: [] };
+    return { headers: ['Sl.No', 'Hming / Description', 'Remarks / Kum'], rows: [] };
   }
 
   const lines = rawText
@@ -76,7 +86,7 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
     .filter(l => l.length > 0);
 
   if (lines.length === 0) {
-    return { headers: ['Col 1', 'Col 2', 'Col 3'], rows: [] };
+    return { headers: ['Sl.No', 'Hming / Description', 'Remarks / Kum'], rows: [] };
   }
 
   // Check if first line is a title like "KOHHRAN UPATE"
@@ -127,7 +137,7 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
     // 3. Multi-space separated (e.g. 2 or more spaces)
     if (/\s{2,}/.test(line)) {
       const parts = line.split(/\s{2,}/).map(p => p.trim()).filter(Boolean);
-      if (parts.length >= 3) {
+      if (parts.length >= 2) {
         rows.push(parts);
         continue;
       }
@@ -148,7 +158,6 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
     const generalNumberedMatch = line.match(/^(\d+)\.?\s+(.+?)\s+(\d{4})$/);
     if (generalNumberedMatch) {
       const [, slNo, middle, year] = generalNumberedMatch;
-      // Check if middle can split into 2 or 3 parts
       const words = middle.split(/\s+/);
       if (words.length >= 4) {
         const namePart = words.slice(0, Math.ceil(words.length / 2)).join(' ');
@@ -160,9 +169,9 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
       continue;
     }
 
-    // Fallback: split by spaces if there are 3+ words
+    // Fallback: split by spaces if there are 2+ words
     const words = line.split(/\s+/);
-    if (words.length >= 3) {
+    if (words.length >= 2) {
       rows.push(words);
     } else {
       rows.push([line]);
@@ -175,8 +184,8 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
       : rows.length > 0 && rows[0].length === 4
       ? ['Sl.No', 'Hming', 'Hmun / Role', 'Kum']
       : rows.length > 0 && rows[0].length === 3
-      ? ['Sl.No', 'Hming', 'Kum / Remarks']
-      : ['Col 1', 'Col 2', 'Col 3']
+      ? ['Sl.No', 'Hming / Description', 'Kum / Remarks']
+      : ['Sl.No', 'Col 2', 'Col 3']
   );
 
   return { headers: finalHeaders, rows };
@@ -184,7 +193,7 @@ export function parseTextToTableData(rawText: string): { headers: string[]; rows
 
 // Convert table data into clean responsive HTML table string
 export function generateTableHtml(headers: string[], rows: string[][], caption?: string): string {
-  const headerHtml = headers.map(h => `<th style="padding: 10px 14px; background-color: #1e293b; color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; border-right: 1px solid #334155; text-align: left;">${h}</th>`).join('');
+  const headerHtml = headers.map(h => `<th style="padding: 12px 14px; background-color: #1e293b; color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; border-right: 1px solid #334155; text-align: left;">${h}</th>`).join('');
   
   const rowsHtml = rows.map((row, index) => {
     const bg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
@@ -192,24 +201,26 @@ export function generateTableHtml(headers: string[], rows: string[][], caption?:
       const val = row[colIndex] || '';
       const isNumOrYear = /^\d+$/.test(val.trim());
       const align = isNumOrYear ? 'text-align: center;' : 'text-align: left;';
-      return `<td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; color: #334155; font-size: 14px; ${align}">${val}</td>`;
+      return `<td style="padding: 11px 14px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; color: #334155; font-size: 14px; ${align}">${val}</td>`;
     }).join('');
     return `<tr style="background-color: ${bg};">${cells}</tr>`;
   }).join('');
 
-  const captionHtml = caption ? `<div style="font-weight: 800; font-size: 16px; margin-bottom: 8px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em;">${caption}</div>` : '';
+  const captionHtml = caption && caption.trim() 
+    ? `<div style="font-weight: 800; font-size: 15px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em;">${caption.trim()}</div>` 
+    : '';
 
-  return `<div class="table-responsive-wrapper" style="overflow-x: auto; margin: 20px 0; border: 1px solid #cbd5e1; border-radius: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background: #ffffff;">
-    ${captionHtml ? `<div style="padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">${captionHtml}</div>` : ''}
-    <table class="church-table" style="width: 100%; border-collapse: collapse; min-width: 600px; text-align: left; font-family: inherit;">
-      <thead>
-        <tr>${headerHtml}</tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>
-  </div>`;
+  return `<div class="table-responsive-wrapper my-6 overflow-x-auto border border-slate-300 rounded-2xl shadow-sm bg-white">
+  ${captionHtml ? `<div style="padding: 12px 16px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">${captionHtml}</div>` : ''}
+  <table class="church-table w-full border-collapse min-w-[600px] text-left font-sans">
+    <thead>
+      <tr>${headerHtml}</tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
+</div>`;
 }
 
 const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
@@ -219,38 +230,48 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
   initialText = ''
 }) => {
   const [activeTab, setActiveTab] = useState<'paste' | 'designer'>('paste');
-  const [pastedText, setPastedText] = useState(initialText);
+  const [pastedText, setPastedText] = useState('');
   const [tableCaption, setTableCaption] = useState('KOHHRAN UPATE');
   const [headers, setHeaders] = useState<string[]>(['Sl.No', 'Upa Hming', 'Nemnghettu', 'Nemnghehna Hmun', 'Kum']);
   const [rows, setRows] = useState<string[][]>([]);
+  const [copied, setCopied] = useState(false);
 
   // When initial text or preset is selected
   useEffect(() => {
-    if (initialText) {
+    if (initialText && initialText.trim()) {
       setPastedText(initialText);
       const parsed = parseTextToTableData(initialText);
       setHeaders(parsed.headers);
       setRows(parsed.rows);
+      setActiveTab('designer');
     } else {
-      // Default to Kohhran Upate preset sample
+      // Default to empty or upate preset sample
       const preset = PRESETS[0];
       setHeaders(preset.headers);
       setRows(preset.sampleRows);
     }
-  }, [initialText]);
+  }, [initialText, isOpen]);
 
   if (!isOpen) return null;
 
   const handleConvertText = () => {
+    if (!pastedText.trim()) return;
     const parsed = parseTextToTableData(pastedText);
     setHeaders(parsed.headers);
     setRows(parsed.rows);
+    setActiveTab('designer');
   };
 
   const handleApplyPreset = (preset: Preset) => {
-    setTableCaption(preset.name.toUpperCase());
+    setTableCaption(preset.id === 'blank' ? '' : preset.name.toUpperCase());
     setHeaders([...preset.headers]);
     setRows(preset.sampleRows.map(r => [...r]));
+  };
+
+  const handleClearTable = () => {
+    setRows([]);
+    setPastedText('');
+    setTableCaption('');
   };
 
   const handleHeaderChange = (index: number, val: string) => {
@@ -292,8 +313,15 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
     onClose();
   };
 
+  const handleCopyHtml = () => {
+    const tableHtml = generateTableHtml(headers, rows, tableCaption);
+    navigator.clipboard.writeText(tableHtml);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="fixed inset-0 z-[150] bg-black/70 flex items-center justify-center p-3 sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[150] bg-black/75 flex items-center justify-center p-3 sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
         
         {/* Header */}
@@ -304,7 +332,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-bold">Table Creator & Column Formatter</h3>
-              <p className="text-xs text-slate-300">Format church lists, elders records, or milestones into structured columns</p>
+              <p className="text-xs text-slate-300">Format a specific list, elders records, or Excel table without altering your story paragraphs</p>
             </div>
           </div>
           <button 
@@ -328,7 +356,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
               }`}
             >
               <FileSpreadsheet size={15} />
-              <span>Smart Text / Excel Paste</span>
+              <span>Paste Specific Text / Excel</span>
             </button>
             <button
               type="button"
@@ -344,7 +372,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
             </button>
           </div>
 
-          {/* Quick Presets */}
+          {/* Quick Presets & Clear */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Presets:</span>
             {PRESETS.map(preset => (
@@ -358,6 +386,15 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                 <span>{preset.name}</span>
               </button>
             ))}
+
+            <button
+              type="button"
+              onClick={handleClearTable}
+              className="px-2.5 py-1.5 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition shadow-xs whitespace-nowrap flex items-center gap-1"
+            >
+              <Eraser size={13} />
+              <span>Clear</span>
+            </button>
           </div>
         </div>
 
@@ -369,16 +406,17 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800">Paste your text, table or list below</h4>
-                  <p className="text-xs text-slate-500">Paste plain text with numbers, tab-separated Excel rows, or WhatsApp church records</p>
+                  <h4 className="text-sm font-bold text-slate-800">Paste ONLY the table/list snippet below</h4>
+                  <p className="text-xs text-slate-500">Copy the specific lines from Excel, WhatsApp, or Word and paste them here to turn into columns</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleConvertText}
-                  className="px-4 py-2 bg-church-600 hover:bg-church-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 self-start sm:self-auto"
+                  disabled={!pastedText.trim()}
+                  className="px-4 py-2 bg-church-600 hover:bg-church-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 self-start sm:self-auto transition"
                 >
                   <RefreshCw size={14} />
-                  <span>Parse & Convert to Table</span>
+                  <span>Parse & Convert Snippet</span>
                 </button>
               </div>
 
@@ -386,7 +424,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                 rows={6}
                 value={pastedText}
                 onChange={e => setPastedText(e.target.value)}
-                placeholder={`KOHHRAN UPATE\nSl.No UPA HMING NEMNGHETTU NEMNGHEHNA HMUN KUM\n1 Upa Manhleia Rev.C.Vanlalhruaia Kahrawt Biak In 1983\n2 Upa Khawidawla (Puan) Rev.Lalramliana Zotlang 1986\n...`}
+                placeholder={`Paste ONLY the list rows you want in the table, for example:\n\n1 Upa Manhleia Rev.C.Vanlalhruaia Kahrawt Biak In 1983\n2 Upa Khawidawla (Puan) Rev.Lalramliana Zotlang 1986\n3 Upa B. Hranghlira Rev. Sikulfala Hnahlan 1987`}
                 className="w-full font-mono text-xs p-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none leading-relaxed"
               />
             </div>
@@ -395,13 +433,13 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
           {/* Table Caption Input */}
           <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
             <label className="text-xs font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">
-              Table Title / Header:
+              Table Title / Caption (Optional):
             </label>
             <input
               type="text"
               value={tableCaption}
               onChange={e => setTableCaption(e.target.value)}
-              placeholder="e.g. KOHHRAN UPATE"
+              placeholder="e.g. KOHHRAN UPATE (Leave empty if no header needed)"
               className="flex-1 font-bold text-sm text-slate-800 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl focus:ring-2 focus:ring-church-500 outline-none"
             />
           </div>
@@ -469,7 +507,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                   {rows.length === 0 ? (
                     <tr>
                       <td colSpan={headers.length + 2} className="p-8 text-center text-slate-400 italic">
-                        No rows added yet. Click "Parse & Convert to Table" above or "Add Row".
+                        No rows in table. Click "Paste Specific Text" or "Add Row" or choose a Preset above.
                       </td>
                     </tr>
                   ) : (
@@ -510,16 +548,25 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-5 sm:p-6 border-t bg-slate-50 flex items-center justify-between gap-3 rounded-b-3xl">
+        <div className="p-5 sm:p-6 border-t bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-3xl">
           <div className="text-xs text-slate-500">
-            Click <strong>Insert Table</strong> to place this styled column table directly into the page content.
+            Inserting will place only this specific table without modifying any other paragraphs in your story.
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button
+              type="button"
+              onClick={handleCopyHtml}
+              disabled={rows.length === 0}
+              className="px-4 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl border border-slate-300 text-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Copy size={14} />
+              <span>{copied ? 'HTML Copied!' : 'Copy HTML'}</span>
+            </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl border border-slate-300 text-xs"
+              className="px-4 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl border border-slate-300 text-xs"
             >
               Cancel
             </button>
@@ -527,7 +574,7 @@ const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
               type="button"
               onClick={handleInsert}
               disabled={rows.length === 0}
-              className="px-7 py-2.5 bg-church-600 hover:bg-church-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-church-600 hover:bg-church-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition disabled:opacity-50"
             >
               <Check size={16} />
               <span>Insert Table ({rows.length} Rows)</span>
