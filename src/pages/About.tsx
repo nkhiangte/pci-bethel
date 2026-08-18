@@ -1,10 +1,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getConstants } from '../constants';
 import { Staff } from '../types';
 import { db } from '../services/firebase';
-import { Loader, History, Target, ShieldCheck, Plus, Edit, Trash, BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, MessageCircle, Save, BarChart3 } from 'lucide-react';
+import { 
+  Loader, History, Target, ShieldCheck, Plus, Edit, Trash, 
+  BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, 
+  MessageCircle, Save, BarChart3, Globe, Sparkles, Eye, 
+  Type, Check, UserCheck, GraduationCap, Layout
+} from 'lucide-react';
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
@@ -13,26 +19,60 @@ import { ProtectedContact } from '../components/ProtectedContact';
 
 // Define the structure for the editable content
 interface AboutPageContent {
-  en_title: string;
-  mizo_title: string;
-  en_subtitle: string;
-  mizo_subtitle: string;
-  en_historyTitle: string;
-  mizo_historyTitle: string;
-  en_historyText: string;
-  mizo_historyText: string;
-  en_missionTitle: string;
-  mizo_missionTitle: string;
-  en_missionText: string;
-  mizo_missionText: string;
-  en_faithTitle: string;
-  mizo_faithTitle: string;
-  en_faithText: string;
-  mizo_faithText: string;
+  en_title?: string;
+  mizo_title?: string;
+  en_subtitle?: string;
+  mizo_subtitle?: string;
+  en_historyTitle?: string;
+  mizo_historyTitle?: string;
+  en_historyText?: string;
+  mizo_historyText?: string;
+  en_missionTitle?: string;
+  mizo_missionTitle?: string;
+  en_missionText?: string;
+  mizo_missionText?: string;
+  en_faithTitle?: string;
+  mizo_faithTitle?: string;
+  en_faithText?: string;
+  mizo_faithText?: string;
   stats_families?: number;
   stats_members?: number;
   stats_sundayschool?: number;
 }
+
+// Quill configuration
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ color: [] }, { background: [] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ align: [] }],
+    ['blockquote', 'link'],
+    ['clean']
+  ]
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'color', 'background',
+  'list', 'align',
+  'blockquote', 'link'
+];
+
+// Helper to gracefully render rich HTML or plain text fallback
+const formatRichText = (rawContent?: string): string => {
+  if (!rawContent) return '';
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(rawContent);
+  if (hasHtmlTags) {
+    return rawContent.replace(/&nbsp;/g, ' ');
+  }
+  return rawContent
+    .split('\n\n')
+    .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+};
 
 const About: React.FC = () => {
   const { t, language } = useLanguage();
@@ -175,8 +215,10 @@ const About: React.FC = () => {
   ];
 
   const c = (key: keyof AboutPageContent, fallback: string) => {
-      const langKey = `${language}_${key.split('_')[1]}` as keyof AboutPageContent;
-      return (content as any)[langKey] || fallback;
+      const suffix = key.toString().replace(/^(en_|mizo_)/, '');
+      const langKey = `${language}_${suffix}` as keyof AboutPageContent;
+      const defaultKey = `en_${suffix}` as keyof AboutPageContent;
+      return (content as any)[langKey] || (content as any)[defaultKey] || (content as any)[key] || fallback;
   };
 
   // Merge current DB content with default translations for the modal
@@ -189,9 +231,17 @@ const About: React.FC = () => {
       en_missionText: content.en_missionText || translations.en.about.missionText,
       en_faithTitle: content.en_faithTitle || translations.en.about.faithTitle,
       en_faithText: content.en_faithText || translations.en.about.faithText,
-      stats_families: content.stats_families || 0,
-      stats_members: content.stats_members || 0,
-      stats_sundayschool: content.stats_sundayschool || 0,
+      mizo_title: content.mizo_title || translations.mizo.about.title,
+      mizo_subtitle: content.mizo_subtitle || translations.mizo.about.subtitle,
+      mizo_historyTitle: content.mizo_historyTitle || translations.mizo.about.historyTitle,
+      mizo_historyText: content.mizo_historyText || translations.mizo.about.historyText,
+      mizo_missionTitle: content.mizo_missionTitle || translations.mizo.about.missionTitle,
+      mizo_missionText: content.mizo_missionText || translations.mizo.about.missionText,
+      mizo_faithTitle: content.mizo_faithTitle || translations.mizo.about.faithTitle,
+      mizo_faithText: content.mizo_faithText || translations.mizo.about.faithText,
+      stats_families: content.stats_families ?? 0,
+      stats_members: content.stats_members ?? 0,
+      stats_sundayschool: content.stats_sundayschool ?? 0,
   });
 
   return (
@@ -206,9 +256,10 @@ const About: React.FC = () => {
           <div className="sticky top-24 z-40 flex justify-center py-4">
               <button 
                 onClick={() => setIsPageEditModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-church-700 transition shadow-lg"
+                className="flex items-center gap-2.5 px-6 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-church-50 hover:text-church-700 hover:border-church-200 transition shadow-lg group"
               >
-                  <Edit size={16} /> Edit Page Content
+                  <Edit size={16} className="text-church-600 group-hover:scale-110 transition-transform" /> 
+                  <span>Edit Page Content (Rich Text)</span>
               </button>
           </div>
       )}
@@ -217,22 +268,33 @@ const About: React.FC = () => {
         
         {/* History & Mission */}
         <div className="grid md:grid-cols-2 gap-12">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
                 <div className="flex items-center mb-6 text-church-600">
-                    <History size={32} className="mr-3" />
+                    <History size={32} className="mr-3 shrink-0" />
                     <h2 className="text-2xl font-bold text-slate-900">{c('en_historyTitle', t.about.historyTitle)}</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c('en_historyText', t.about.historyText)}</p>
+                <article 
+                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0"
+                    dangerouslySetInnerHTML={{ __html: formatRichText(c('en_historyText', t.about.historyText)) }}
+                />
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
                 <div className="flex items-center mb-6 text-church-600">
-                    <Target size={32} className="mr-3" />
+                    <Target size={32} className="mr-3 shrink-0" />
                     <h2 className="text-2xl font-bold text-slate-900">{c('en_missionTitle', t.about.missionTitle)}</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c('en_missionText', t.about.missionText)}</p>
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                    <h3 className="font-bold text-slate-900 mb-2 flex items-center"><ShieldCheck size={20} className="mr-2 text-church-500"/> {c('en_faithTitle', t.about.faithTitle)}</h3>
-                    <p className="text-slate-600 text-sm whitespace-pre-wrap">{c('en_faithText', t.about.faithText)}</p>
+                <article 
+                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0 mb-6"
+                    dangerouslySetInnerHTML={{ __html: formatRichText(c('en_missionText', t.about.missionText)) }}
+                />
+                <div className="mt-auto pt-6 border-t border-slate-100">
+                    <h3 className="font-bold text-slate-900 mb-3 flex items-center text-lg">
+                        <ShieldCheck size={22} className="mr-2 text-church-500 shrink-0"/> {c('en_faithTitle', t.about.faithTitle)}
+                    </h3>
+                    <article 
+                        className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0"
+                        dangerouslySetInnerHTML={{ __html: formatRichText(c('en_faithText', t.about.faithText)) }}
+                    />
                 </div>
             </div>
         </div>
@@ -357,7 +419,7 @@ const About: React.FC = () => {
           />
       )}
 
-      {/* BIOGRAPHY THEATER MODAL (unchanged) */}
+      {/* BIOGRAPHY THEATER MODAL */}
       {selectedLeader && (
         <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedLeader(null)}>
             <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
@@ -544,7 +606,7 @@ const About: React.FC = () => {
   );
 };
 
-// New component for the page content edit modal
+// Rich Text Page Content Edit Modal Component
 interface PageContentEditModalProps {
     content: Partial<AboutPageContent>;
     onClose: () => void;
@@ -552,86 +614,462 @@ interface PageContentEditModalProps {
     isLoading: boolean;
 }
 
-const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, onClose, onSave, isLoading }) => {
-    const [formData, setFormData] = useState(content);
+type SectionTab = 'history' | 'mission' | 'faith' | 'overview' | 'stats';
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, onClose, onSave, isLoading }) => {
+    const [formData, setFormData] = useState<Partial<AboutPageContent>>(content);
+    const [activeLang, setActiveLang] = useState<'mizo' | 'en'>('mizo');
+    const [activeTab, setActiveTab] = useState<SectionTab>('history');
+    const [showLivePreview, setShowLivePreview] = useState(false);
+
+    const handleTextChange = (field: keyof AboutPageContent, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value === '' ? undefined : parseInt(value, 10) });
+    const handleNumberChange = (field: keyof AboutPageContent, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value === '' ? 0 : parseInt(value, 10) || 0 }));
     };
 
     const handleSaveClick = () => {
         onSave(formData);
     };
 
-    const renderField = (label: string, name: keyof AboutPageContent, isTextarea = false) => (
-        <div key={name}>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
-            {isTextarea ? (
-                <textarea name={name} value={(formData as any)[name] || ''} onChange={handleChange} className="w-full border p-2 rounded-lg h-24" />
-            ) : (
-                <input name={name} value={(formData as any)[name] || ''} onChange={handleChange} className="w-full border p-2 rounded-lg" />
-            )}
-        </div>
-    );
+    // Helper for active language field names
+    const getField = (suffix: string): keyof AboutPageContent => {
+        return `${activeLang}_${suffix}` as keyof AboutPageContent;
+    };
+
+    const tabs: { id: SectionTab; label: string; icon: React.ReactNode; badge?: string }[] = [
+        { id: 'history', label: 'History (Chanchin)', icon: <History size={16} /> },
+        { id: 'mission', label: 'Mission (Tum)', icon: <Target size={16} /> },
+        { id: 'faith', label: 'Faith (Rinna)', icon: <ShieldCheck size={16} /> },
+        { id: 'overview', label: 'Header & Subtitle', icon: <Type size={16} /> },
+        { id: 'stats', label: 'Statistics', icon: <BarChart3 size={16} /> },
+    ];
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
-                    <h3 className="text-xl font-bold text-slate-800">Edit 'About Us' Page</h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                </div>
-                <div className="p-6 space-y-6 overflow-y-auto">
-                    <div className="grid md:grid-cols-1 gap-6">
-                        {/* English Column Only */}
-                        <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
-                            <h4 className="font-bold text-center text-slate-600">English Content</h4>
-                            {renderField("Title", "en_title")}
-                            {renderField("Subtitle", "en_subtitle")}
-                            {renderField("History Title", "en_historyTitle")}
-                            {renderField("History Text", "en_historyText", true)}
-                            {renderField("Mission Title", "en_missionTitle")}
-                            {renderField("Mission Text", "en_missionText", true)}
-                            {renderField("Faith Title", "en_faithTitle")}
-                            {renderField("Faith Text", "en_faithText", true)}
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                
+                {/* Modal Header */}
+                <div className="p-5 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/80 rounded-t-3xl">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-church-600 text-white flex items-center justify-center shadow-md shadow-church-200 shrink-0">
+                            <Sparkles size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900">About Page Editor</h3>
+                            <p className="text-xs text-slate-500 font-medium">Customize history, mission, faith statement & statistics with rich text</p>
                         </div>
                     </div>
-                    {/* Statistics Section */}
-                    <div className="p-4 bg-slate-50 rounded-lg border mt-6">
-                        <h4 className="font-bold text-center text-slate-600 mb-4 flex items-center justify-center gap-2">
-                            <BarChart3 size={18} /> Statistics Counters
-                        </h4>
-                        <div className="grid grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Families</label>
-                                <input type="number" name="stats_families" value={formData.stats_families || ''} onChange={handleNumberChange} className="w-full border p-2 rounded-lg" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Members</label>
-                                <input type="number" name="stats_members" value={formData.stats_members || ''} onChange={handleNumberChange} className="w-full border p-2 rounded-lg" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Sunday School</label>
-                                <input type="number" name="stats_sundayschool" value={formData.stats_sundayschool || ''} onChange={handleNumberChange} className="w-full border p-2 rounded-lg" />
-                            </div>
+
+                    <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                        {/* Language Selector */}
+                        <div className="flex items-center bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                            <button
+                                type="button"
+                                onClick={() => setActiveLang('mizo')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                                    activeLang === 'mizo' 
+                                        ? 'bg-church-600 text-white shadow-sm' 
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                }`}
+                            >
+                                <span>🇲🇿</span> Mizo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveLang('en')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                                    activeLang === 'en' 
+                                        ? 'bg-church-600 text-white shadow-sm' 
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                }`}
+                            >
+                                <span>🇬🇧</span> English
+                            </button>
                         </div>
+
+                        {/* Close button */}
+                        <button 
+                            onClick={onClose} 
+                            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-white rounded-full transition border border-transparent hover:border-slate-200"
+                        >
+                            <X size={20}/>
+                        </button>
                     </div>
                 </div>
-                <div className="p-6 border-t bg-slate-100 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-xl border border-slate-300">Cancel</button>
-                    <button onClick={handleSaveClick} disabled={isLoading} className="px-8 py-2.5 bg-church-600 text-white rounded-xl flex items-center shadow-lg font-bold hover:bg-church-700 transition">
-                        {isLoading ? <Loader className="animate-spin w-4 h-4 mr-2" /> : <Save size={16} className="mr-2" />} Save Content
-                    </button>
+
+                {/* Section Navigation Tabs */}
+                <div className="bg-slate-100/70 border-b border-slate-200 px-4 sm:px-6 pt-3 flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar shrink-0">
+                    {tabs.map(tab => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-2xl text-xs font-bold transition whitespace-nowrap border-t-2 ${
+                                    isActive
+                                        ? 'bg-white text-church-700 border-church-600 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]'
+                                        : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-white/50'
+                                }`}
+                            >
+                                {tab.icon}
+                                <span>{tab.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
+
+                {/* Tab Content Body */}
+                <div className="p-5 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white">
+                    
+                    {/* HISTORY TAB */}
+                    {activeTab === 'history' && (
+                        <div className="space-y-5 animate-in fade-in duration-150">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <History size={18} className="text-church-600" />
+                                        <span>History Section ({activeLang === 'mizo' ? 'Kan Chanchin' : 'Our History'})</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-400 mt-0.5">Founding story, milestones, and church background</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLivePreview(!showLivePreview)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                    }`}
+                                >
+                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                </button>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    Section Title
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData[getField('historyTitle')] as string || ''}
+                                    onChange={e => handleTextChange(getField('historyTitle'), e.target.value)}
+                                    placeholder={activeLang === 'mizo' ? 'Kan Chanchin' : 'Our History'}
+                                    className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none text-slate-800 font-semibold"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                    <span>Detailed History Story (Rich Text)</span>
+                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
+                                </label>
+                                
+                                {showLivePreview ? (
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
+                                        <div className="prose prose-slate max-w-none ql-editor !p-0 font-sans text-slate-700"
+                                            dangerouslySetInnerHTML={{ __html: formatRichText(formData[getField('historyText')] as string || '') }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData[getField('historyText')] as string || ''}
+                                            onChange={val => handleTextChange(getField('historyText'), val)}
+                                            modules={quillModules}
+                                            formats={quillFormats}
+                                            className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
+                                            placeholder="Write or paste your church history here..."
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MISSION TAB */}
+                    {activeTab === 'mission' && (
+                        <div className="space-y-5 animate-in fade-in duration-150">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <Target size={18} className="text-church-600" />
+                                        <span>Mission & Vision Section ({activeLang === 'mizo' ? 'Kan Tum' : 'Our Mission'})</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-400 mt-0.5">Core mission statement, outreach vision, and evangelism objectives</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLivePreview(!showLivePreview)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                    }`}
+                                >
+                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                </button>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    Section Title
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData[getField('missionTitle')] as string || ''}
+                                    onChange={e => handleTextChange(getField('missionTitle'), e.target.value)}
+                                    placeholder={activeLang === 'mizo' ? 'Kan Tum' : 'Our Mission'}
+                                    className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none text-slate-800 font-semibold"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                    <span>Mission Statement Content (Rich Text)</span>
+                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
+                                </label>
+                                
+                                {showLivePreview ? (
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
+                                        <div className="prose prose-slate max-w-none ql-editor !p-0 font-sans text-slate-700"
+                                            dangerouslySetInnerHTML={{ __html: formatRichText(formData[getField('missionText')] as string || '') }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData[getField('missionText')] as string || ''}
+                                            onChange={val => handleTextChange(getField('missionText'), val)}
+                                            modules={quillModules}
+                                            formats={quillFormats}
+                                            className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
+                                            placeholder="Write your mission & vision statement here..."
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* FAITH TAB */}
+                    {activeTab === 'faith' && (
+                        <div className="space-y-5 animate-in fade-in duration-150">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <ShieldCheck size={18} className="text-church-600" />
+                                        <span>Statement of Faith ({activeLang === 'mizo' ? 'Kan Rinna' : 'Our Faith'})</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-400 mt-0.5">Foundational theological beliefs, scriptures, and doctrinal statements</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLivePreview(!showLivePreview)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                    }`}
+                                >
+                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                </button>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                    Section Title
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData[getField('faithTitle')] as string || ''}
+                                    onChange={e => handleTextChange(getField('faithTitle'), e.target.value)}
+                                    placeholder={activeLang === 'mizo' ? 'Kan Rinna' : 'Our Faith'}
+                                    className="w-full border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none text-slate-800 font-semibold"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                    <span>Statement of Faith Body (Rich Text)</span>
+                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
+                                </label>
+                                
+                                {showLivePreview ? (
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
+                                        <div className="prose prose-slate max-w-none ql-editor !p-0 font-sans text-slate-700"
+                                            dangerouslySetInnerHTML={{ __html: formatRichText(formData[getField('faithText')] as string || '') }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500">
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData[getField('faithText')] as string || ''}
+                                            onChange={val => handleTextChange(getField('faithText'), val)}
+                                            modules={quillModules}
+                                            formats={quillFormats}
+                                            className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
+                                            placeholder="Write your declaration of faith and beliefs here..."
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* OVERVIEW / HEADER TAB */}
+                    {activeTab === 'overview' && (
+                        <div className="space-y-6 animate-in fade-in duration-150">
+                            <div>
+                                <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                    <Type size={18} className="text-church-600" />
+                                    <span>About Page Header & Subtitle ({activeLang === 'mizo' ? 'Mizo' : 'English'})</span>
+                                </h4>
+                                <p className="text-xs text-slate-400 mt-0.5">Top banner headline and introduction tagline</p>
+                            </div>
+
+                            <div className="space-y-4 bg-slate-50/80 p-6 rounded-2xl border border-slate-200">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                        Main Page Headline
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData[getField('title')] as string || ''}
+                                        onChange={e => handleTextChange(getField('title'), e.target.value)}
+                                        placeholder={activeLang === 'mizo' ? 'Kan Chanchin' : 'About Us'}
+                                        className="w-full border border-slate-200 bg-white p-3 rounded-xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none text-slate-800 font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                                        Page Subtitle / Tagline
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={formData[getField('subtitle')] as string || ''}
+                                        onChange={e => handleTextChange(getField('subtitle'), e.target.value)}
+                                        placeholder={activeLang === 'mizo' ? 'Pathian hriat leh amah hriattir.' : 'To know God and make Him known.'}
+                                        className="w-full border border-slate-200 bg-white p-3 rounded-xl focus:ring-2 focus:ring-church-500 focus:border-church-500 outline-none text-slate-800 font-medium leading-relaxed"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STATISTICS TAB */}
+                    {activeTab === 'stats' && (
+                        <div className="space-y-6 animate-in fade-in duration-150">
+                            <div>
+                                <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                    <BarChart3 size={18} className="text-church-600" />
+                                    <span>Church Statistics Counters</span>
+                                </h4>
+                                <p className="text-xs text-slate-400 mt-0.5">Key figures displayed on the About page counter banner</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                                    <div className="flex items-center gap-3 mb-3 text-church-600">
+                                        <div className="p-2.5 bg-white rounded-xl shadow-xs border border-slate-100">
+                                            <Users size={20} />
+                                        </div>
+                                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                                            Chhungkua (Families)
+                                        </label>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.stats_families ?? ''}
+                                        onChange={e => handleNumberChange('stats_families', e.target.value)}
+                                        placeholder="e.g. 250"
+                                        className="w-full bg-white border border-slate-200 p-3 rounded-xl text-xl font-bold text-slate-800 focus:ring-2 focus:ring-church-500 outline-none text-center"
+                                    />
+                                </div>
+
+                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                                    <div className="flex items-center gap-3 mb-3 text-blue-600">
+                                        <div className="p-2.5 bg-white rounded-xl shadow-xs border border-slate-100">
+                                            <UserCheck size={20} />
+                                        </div>
+                                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                                            Member Zawng (Members)
+                                        </label>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.stats_members ?? ''}
+                                        onChange={e => handleNumberChange('stats_members', e.target.value)}
+                                        placeholder="e.g. 1200"
+                                        className="w-full bg-white border border-slate-200 p-3 rounded-xl text-xl font-bold text-slate-800 focus:ring-2 focus:ring-church-500 outline-none text-center"
+                                    />
+                                </div>
+
+                                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                                    <div className="flex items-center gap-3 mb-3 text-emerald-600">
+                                        <div className="p-2.5 bg-white rounded-xl shadow-xs border border-slate-100">
+                                            <GraduationCap size={20} />
+                                        </div>
+                                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                                            Sunday School Zirlai
+                                        </label>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.stats_sundayschool ?? ''}
+                                        onChange={e => handleNumberChange('stats_sundayschool', e.target.value)}
+                                        placeholder="e.g. 450"
+                                        className="w-full bg-white border border-slate-200 p-3 rounded-xl text-xl font-bold text-slate-800 focus:ring-2 focus:ring-church-500 outline-none text-center"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-5 sm:p-6 border-t bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-3xl shrink-0">
+                    <div className="text-xs text-slate-500 flex items-center gap-1.5 self-start sm:self-auto">
+                        <Check size={15} className="text-emerald-500" />
+                        <span>Changes will be immediately saved to Firebase Firestore</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <button 
+                            type="button"
+                            onClick={onClose} 
+                            className="px-5 py-2.5 text-slate-700 font-bold hover:bg-white transition rounded-2xl border border-slate-300 text-xs uppercase tracking-wider"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={handleSaveClick} 
+                            disabled={isLoading} 
+                            className="px-7 py-2.5 bg-church-600 hover:bg-church-700 text-white rounded-2xl flex items-center shadow-lg font-bold text-xs uppercase tracking-wider transition disabled:opacity-50"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader className="animate-spin w-4 h-4 mr-2" /> Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={16} className="mr-2" /> Save Content
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
 };
 
-
 export default About;
+
