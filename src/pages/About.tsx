@@ -9,11 +9,13 @@ import {
   Loader, History, Target, ShieldCheck, Plus, Edit, Trash, 
   BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, 
   MessageCircle, Save, BarChart3, Globe, Sparkles, Eye, 
-  Type, Check, UserCheck, GraduationCap, Layout
+  Type, Check, UserCheck, GraduationCap, Layout, Table as TableIcon,
+  FileSpreadsheet, Wand2
 } from 'lucide-react';
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
+import TableBuilderModal, { parseTextToTableData, generateTableHtml } from '../components/TableBuilderModal';
 import { translations } from '../translations';
 import { ProtectedContact } from '../components/ProtectedContact';
 
@@ -61,14 +63,67 @@ const quillFormats = [
   'blockquote', 'link'
 ];
 
-// Helper to gracefully render rich HTML or plain text fallback
+// Helper to gracefully render rich HTML or plain text fallback with smart table detection
 const formatRichText = (rawContent?: string): string => {
   if (!rawContent) return '';
-  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(rawContent);
-  if (hasHtmlTags) {
-    return rawContent.replace(/&nbsp;/g, ' ');
+
+  let processed = rawContent;
+
+  // If text contains unformatted church elder table lines like "KOHHRAN UPATE\nSl.No UPA HMING..."
+  // or consecutive lines starting with "1 Upa...", auto-convert them to responsive table HTML
+  if (!processed.includes('<table') && (
+    /(S[Il]\.?\s*No\s+UPA\s+HMING|KOHHRAN\s+UPATE)/i.test(processed) ||
+    /(\n\s*1\s+Upa\s+[^\n]+\n\s*2\s+Upa\s+)/i.test(processed)
+  )) {
+    const lines = processed.split(/\r?\n/);
+    const textBefore: string[] = [];
+    const tableLines: string[] = [];
+    const textAfter: string[] = [];
+    let state: 'before' | 'table' | 'after' = 'before';
+
+    for (const line of lines) {
+      if (state === 'before' && (
+        /(KOHHRAN\s+UPATE|S[Il]\.?\s*No\s+UPA\s+HMING)/i.test(line) ||
+        /^\s*1\s+Upa\s+/i.test(line)
+      )) {
+        state = 'table';
+        tableLines.push(line);
+      } else if (state === 'table') {
+        if (/^\s*\d+\.?\s+/i.test(line) || /(S[Il]\.?\s*No|UPA\s+HMING|HMUN|KUM)/i.test(line) || line.trim() === '') {
+          if (line.trim() !== '') tableLines.push(line);
+        } else {
+          state = 'after';
+          textAfter.push(line);
+        }
+      } else if (state === 'after') {
+        textAfter.push(line);
+      } else {
+        textBefore.push(line);
+      }
+    }
+
+    if (tableLines.length > 0) {
+      const parsed = parseTextToTableData(tableLines.join('\n'));
+      const tableHtml = generateTableHtml(parsed.headers, parsed.rows, 'KOHHRAN UPATE');
+      processed = (textBefore.length ? textBefore.join('\n') + '\n\n' : '') + 
+                  tableHtml + 
+                  (textAfter.length ? '\n\n' + textAfter.join('\n') : '');
+    }
   }
-  return rawContent
+
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(processed);
+  if (hasHtmlTags) {
+    let html = processed.replace(/&nbsp;/g, ' ');
+    // Ensure all <table> elements have responsive wrapper
+    if (html.includes('<table') && !html.includes('table-responsive-wrapper')) {
+      html = html.replace(/<table([\s\S]*?)<\/table>/gi, (match) => {
+        return `<div class="table-responsive-wrapper">${match}</div>`;
+      });
+    }
+    return html;
+  }
+
+  return processed
     .split('\n\n')
     .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br/>')}</p>`)
     .join('');
@@ -266,36 +321,57 @@ const About: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
         
-        {/* History & Mission */}
-        <div className="grid md:grid-cols-2 gap-12">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-                <div className="flex items-center mb-6 text-church-600">
-                    <History size={32} className="mr-3 shrink-0" />
-                    <h2 className="text-2xl font-bold text-slate-900">{c('en_historyTitle', t.about.historyTitle)}</h2>
+        {/* History - Full Width Column */}
+        <div className="w-full bg-white p-8 sm:p-12 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+            <div className="flex items-center mb-8 pb-4 border-b border-slate-100 text-church-600">
+                <div className="w-12 h-12 rounded-2xl bg-church-50 text-church-600 flex items-center justify-center mr-4 shrink-0 shadow-xs">
+                    <History size={26} />
                 </div>
-                <article 
-                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0"
-                    dangerouslySetInnerHTML={{ __html: formatRichText(c('en_historyText', t.about.historyText)) }}
-                />
+                <div>
+                    <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900">{c('en_historyTitle', t.about.historyTitle)}</h2>
+                    <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Champhai Bethel Kohhran Chanchin Tlangpui</p>
+                </div>
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+            <article 
+                className="prose prose-slate max-w-none text-slate-700 leading-relaxed font-sans ql-editor !p-0 text-base sm:text-lg"
+                dangerouslySetInnerHTML={{ __html: formatRichText(c('en_historyText', t.about.historyText)) }}
+            />
+        </div>
+
+        {/* Mission & Statement of Faith - Scrolled Section */}
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+            {/* Our Mission */}
+            <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
                 <div className="flex items-center mb-6 text-church-600">
-                    <Target size={32} className="mr-3 shrink-0" />
-                    <h2 className="text-2xl font-bold text-slate-900">{c('en_missionTitle', t.about.missionTitle)}</h2>
+                    <div className="w-12 h-12 rounded-2xl bg-church-50 text-church-600 flex items-center justify-center mr-4 shrink-0 shadow-xs">
+                        <Target size={26} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-serif font-bold text-slate-900">{c('en_missionTitle', t.about.missionTitle)}</h2>
+                        <p className="text-xs text-slate-400 font-medium">Kan Thuvawn & Rawngbawlna Tum</p>
+                    </div>
                 </div>
                 <article 
-                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0 mb-6"
+                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0 flex-1 text-base"
                     dangerouslySetInnerHTML={{ __html: formatRichText(c('en_missionText', t.about.missionText)) }}
                 />
-                <div className="mt-auto pt-6 border-t border-slate-100">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center text-lg">
-                        <ShieldCheck size={22} className="mr-2 text-church-500 shrink-0"/> {c('en_faithTitle', t.about.faithTitle)}
-                    </h3>
-                    <article 
-                        className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0"
-                        dangerouslySetInnerHTML={{ __html: formatRichText(c('en_faithText', t.about.faithText)) }}
-                    />
+            </div>
+
+            {/* Statement of Faith */}
+            <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+                <div className="flex items-center mb-6 text-church-600">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mr-4 shrink-0 shadow-xs">
+                        <ShieldCheck size={26} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-serif font-bold text-slate-900">{c('en_faithTitle', t.about.faithTitle)}</h2>
+                        <p className="text-xs text-slate-400 font-medium">Kan Rinna Bul Thute</p>
+                    </div>
                 </div>
+                <article 
+                    className="prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans ql-editor !p-0 flex-1 text-base"
+                    dangerouslySetInnerHTML={{ __html: formatRichText(c('en_faithText', t.about.faithText)) }}
+                />
             </div>
         </div>
 
@@ -621,9 +697,35 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
     const [activeLang, setActiveLang] = useState<'mizo' | 'en'>('mizo');
     const [activeTab, setActiveTab] = useState<SectionTab>('history');
     const [showLivePreview, setShowLivePreview] = useState(false);
+    const [isTableModalOpen, setIsTableModalOpen] = useState(false);
+    const [activeTableField, setActiveTableField] = useState<keyof AboutPageContent>('mizo_historyText');
+    const [tableInitialText, setTableInitialText] = useState('');
 
     const handleTextChange = (field: keyof AboutPageContent, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleOpenTableBuilder = (field: keyof AboutPageContent) => {
+        setActiveTableField(field);
+        const currentVal = formData[field] as string || '';
+        if (/(S[Il]\.?\s*No|KOHHRAN\s+UPATE|UPA\s+HMING)/i.test(currentVal)) {
+            const plainText = currentVal.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ').trim();
+            setTableInitialText(plainText);
+        } else {
+            setTableInitialText('');
+        }
+        setIsTableModalOpen(true);
+    };
+
+    const handleTableInserted = (tableHtml: string) => {
+        const currentVal = (formData[activeTableField] as string) || '';
+        let updated = '';
+        if (currentVal) {
+            updated = `${currentVal}<p><br/></p>${tableHtml}<p><br/></p>`;
+        } else {
+            updated = tableHtml;
+        }
+        handleTextChange(activeTableField, updated);
     };
 
     const handleNumberChange = (field: keyof AboutPageContent, value: string) => {
@@ -648,6 +750,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
     ];
 
     return (
+        <>
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
                 
@@ -728,7 +831,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                     {/* HISTORY TAB */}
                     {activeTab === 'history' && (
                         <div className="space-y-5 animate-in fade-in duration-150">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
                                         <History size={18} className="text-church-600" />
@@ -736,15 +839,25 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                     </h4>
                                     <p className="text-xs text-slate-400 mt-0.5">Founding story, milestones, and church background</p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowLivePreview(!showLivePreview)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
-                                    }`}
-                                >
-                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('historyText'))}
+                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-church-600" />
+                                        <span>Insert / Format Table</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLivePreview(!showLivePreview)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                            showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                        }`}
+                                    >
+                                        <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
@@ -761,10 +874,19 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             </div>
 
                             <div>
-                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                                    <span>Detailed History Story (Rich Text)</span>
-                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
-                                </label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-black text-slate-500 uppercase tracking-wider">
+                                        Detailed History Story (Rich Text)
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('historyText'))}
+                                        className="text-[11px] font-bold text-church-600 hover:text-church-800 underline flex items-center gap-1"
+                                    >
+                                        <FileSpreadsheet size={13} />
+                                        <span>Convert or Insert Column Table</span>
+                                    </button>
+                                </div>
                                 
                                 {showLivePreview ? (
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
@@ -792,7 +914,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                     {/* MISSION TAB */}
                     {activeTab === 'mission' && (
                         <div className="space-y-5 animate-in fade-in duration-150">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
                                         <Target size={18} className="text-church-600" />
@@ -800,15 +922,25 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                     </h4>
                                     <p className="text-xs text-slate-400 mt-0.5">Core mission statement, outreach vision, and evangelism objectives</p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowLivePreview(!showLivePreview)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
-                                    }`}
-                                >
-                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('missionText'))}
+                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-church-600" />
+                                        <span>Insert Table</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLivePreview(!showLivePreview)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                            showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                        }`}
+                                    >
+                                        <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
@@ -856,7 +988,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                     {/* FAITH TAB */}
                     {activeTab === 'faith' && (
                         <div className="space-y-5 animate-in fade-in duration-150">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h4 className="text-base font-bold text-slate-800 flex items-center gap-2">
                                         <ShieldCheck size={18} className="text-church-600" />
@@ -864,15 +996,25 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                     </h4>
                                     <p className="text-xs text-slate-400 mt-0.5">Foundational theological beliefs, scriptures, and doctrinal statements</p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowLivePreview(!showLivePreview)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                                        showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
-                                    }`}
-                                >
-                                    <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('faithText'))}
+                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-church-600" />
+                                        <span>Insert Table</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLivePreview(!showLivePreview)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                                            showLivePreview ? 'bg-church-50 text-church-700 border-church-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                        }`}
+                                    >
+                                        <Eye size={14} /> {showLivePreview ? 'Edit Mode' : 'Preview'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
@@ -909,7 +1051,7 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                             modules={quillModules}
                                             formats={quillFormats}
                                             className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
-                                            placeholder="Write your declaration of faith and beliefs here..."
+                                            placeholder="Write your doctrinal beliefs and statement of faith here..."
                                         />
                                     </div>
                                 )}
@@ -1068,6 +1210,16 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
 
             </div>
         </div>
+
+        {isTableModalOpen && (
+            <TableBuilderModal
+                isOpen={isTableModalOpen}
+                onClose={() => setIsTableModalOpen(false)}
+                onInsertTable={handleTableInserted}
+                initialText={tableInitialText}
+            />
+        )}
+        </>
     );
 };
 

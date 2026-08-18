@@ -128,6 +128,81 @@
         -webkit-hyphens: none !important;
         hyphens: none !important;
       }
+
+      /* Comprehensive Table Styles for Rich Text & Content */
+      .prose table, .ql-editor table, table.content-table, .church-table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        margin: 1.5rem 0 !important;
+        border-radius: 0.875rem !important;
+        overflow: hidden !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        font-family: inherit !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06) !important;
+      }
+
+      .prose table thead, .ql-editor table thead, table.content-table thead, .church-table thead {
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+      }
+
+      .prose table th, .ql-editor table th, table.content-table th, .church-table th {
+        padding: 0.75rem 1rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        font-size: 0.75rem !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #0f172a !important;
+        border-right: 1px solid #334155 !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+      }
+
+      .prose table th:last-child, .ql-editor table th:last-child, table.content-table th:last-child, .church-table th:last-child {
+        border-right: none !important;
+      }
+
+      .prose table td, .ql-editor table td, table.content-table td, .church-table td {
+        padding: 0.75rem 1rem !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        border-right: 1px solid #f1f5f9 !important;
+        color: #334155 !important;
+        vertical-align: middle !important;
+        white-space: normal !important;
+      }
+
+      .prose table td:last-child, .ql-editor table td:last-child, table.content-table td:last-child, .church-table td:last-child {
+        border-right: none !important;
+      }
+
+      .prose table tbody tr:nth-child(even), .ql-editor table tbody tr:nth-child(even), table.content-table tbody tr:nth-child(even), .church-table tbody tr:nth-child(even) {
+        background-color: #f8fafc !important;
+      }
+
+      .prose table tbody tr:hover, .ql-editor table tbody tr:hover, table.content-table tbody tr:hover, .church-table tbody tr:hover {
+        background-color: #f1f5f9 !important;
+      }
+
+      .table-responsive-wrapper {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 1.5rem 0 !important;
+        border-radius: 0.875rem !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      }
+
+      .table-responsive-wrapper table {
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+      }
+
       @media (max-width: 768px) {
         .prose, .prose *, .ql-editor *, p:not(.text-center):not(.text-right):not(.text-left) {
           text-align: justify !important;
@@ -135,6 +210,17 @@
           overflow-wrap: break-word !important;
           word-wrap: break-word !important;
           white-space: pre-wrap !important;
+        }
+        .prose table, .ql-editor table, table.content-table, .church-table {
+          white-space: normal !important;
+        }
+        .prose table th, .ql-editor table th, table.content-table th, .church-table th {
+          font-size: 0.7rem !important;
+          padding: 0.5rem 0.6rem !important;
+        }
+        .prose table td, .ql-editor table td, table.content-table td, .church-table td {
+          font-size: 0.75rem !important;
+          padding: 0.5rem 0.6rem !important;
         }
         .prose img, .ql-editor img, .prose iframe, .ql-editor iframe, .prose video, .ql-editor video, .prose table, .ql-editor table {
           max-width: 100% !important;
