@@ -10,12 +10,14 @@ import {
   BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, 
   MessageCircle, Save, BarChart3, Globe, Sparkles, Eye, 
   Type, Check, UserCheck, GraduationCap, Layout, Table as TableIcon,
-  FileSpreadsheet, Wand2
+  FileSpreadsheet, Wand2, Image as ImageIcon
 } from 'lucide-react';
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
 import TableBuilderModal, { parseTextToTableData, generateTableHtml } from '../components/TableBuilderModal';
+import { ImageInsertModal } from '../components/ImageInsertModal';
+import { attachImagePasteAndDrop, insertImageAtQuillCursor } from '../utils/imageUtils';
 import { translations } from '../translations';
 import { ProtectedContact } from '../components/ProtectedContact';
 
@@ -50,9 +52,12 @@ const quillModules = {
     [{ color: [] }, { background: [] }],
     [{ list: 'ordered' }, { list: 'bullet' }],
     [{ align: [] }],
-    ['blockquote', 'link'],
+    ['blockquote', 'link', 'image'],
     ['clean']
-  ]
+  ],
+  clipboard: {
+    matchVisual: false
+  }
 };
 
 const quillFormats = [
@@ -60,7 +65,7 @@ const quillFormats = [
   'bold', 'italic', 'underline', 'strike',
   'color', 'background',
   'list', 'align',
-  'blockquote', 'link'
+  'blockquote', 'link', 'image'
 ];
 
 // Helper to gracefully render rich HTML or plain text fallback
@@ -657,6 +662,10 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
     const [activeTableField, setActiveTableField] = useState<keyof AboutPageContent>('mizo_historyText');
     const [tableInitialText, setTableInitialText] = useState('');
 
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [activeImageField, setActiveImageField] = useState<keyof AboutPageContent>('mizo_historyText');
+    const [uploadStatus, setUploadStatus] = useState<{ uploading: boolean; message: string }>({ uploading: false, message: '' });
+
     const historyQuillRef = useRef<any>(null);
     const missionQuillRef = useRef<any>(null);
     const faithQuillRef = useRef<any>(null);
@@ -671,6 +680,89 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
         if (f.includes('mission')) return missionQuillRef;
         return faithQuillRef;
     };
+
+    const handleOpenImageModal = (field: keyof AboutPageContent) => {
+        setActiveImageField(field);
+        setIsImageModalOpen(true);
+    };
+
+    const handleImageInserted = (htmlSnippet: string) => {
+        try {
+            const editorRef = getActiveEditorRef(activeImageField);
+            if (editorRef.current) {
+                const editor = editorRef.current.getEditor();
+                const selection = editor?.getSelection() || { index: editor?.getLength() - 1, length: 0 };
+                editor.clipboard.dangerouslyPasteHTML(selection.index, htmlSnippet);
+                const updatedVal = editor.root.innerHTML;
+                handleTextChange(activeImageField, updatedVal);
+                return;
+            }
+        } catch {
+            // ignore
+        }
+
+        const currentVal = (formData[activeImageField] as string) || '';
+        const updated = currentVal ? `${currentVal}${htmlSnippet}` : htmlSnippet;
+        handleTextChange(activeImageField, updated);
+    };
+
+    // Helper for active language field names
+    const getField = (suffix: string): keyof AboutPageContent => {
+        return `${activeLang}_${suffix}` as keyof AboutPageContent;
+    };
+
+    // Attach paste and drag-and-drop image listeners to the active Quill editor instances
+    useEffect(() => {
+        const cleanups: (() => void)[] = [];
+
+        const attach = (ref: React.RefObject<any>, field: keyof AboutPageContent) => {
+            if (ref.current) {
+                const editor = ref.current.getEditor();
+                if (editor) {
+                    const cleanup = attachImagePasteAndDrop(editor, (status) => {
+                        setUploadStatus(status);
+                        if (!status.uploading) {
+                            setTimeout(() => {
+                                handleTextChange(field, editor.root.innerHTML);
+                            }, 50);
+                        }
+                    });
+                    cleanups.push(cleanup);
+                }
+            }
+        };
+
+        const timer = setTimeout(() => {
+            attach(historyQuillRef, getField('historyText'));
+            attach(missionQuillRef, getField('missionText'));
+            attach(faithQuillRef, getField('faithText'));
+        }, 200);
+
+        return () => {
+            clearTimeout(timer);
+            cleanups.forEach(fn => fn());
+        };
+    }, [activeTab, activeLang]);
+
+    const getEditorModules = useCallback((field: keyof AboutPageContent) => ({
+        toolbar: {
+            container: [
+                [{ header: [1, 2, 3, 4, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ color: [] }, { background: [] }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ align: [] }],
+                ['blockquote', 'link', 'image'],
+                ['clean']
+            ],
+            handlers: {
+                image: () => handleOpenImageModal(field)
+            }
+        },
+        clipboard: {
+            matchVisual: false
+        }
+    }), [activeLang]);
 
     const handleOpenTableBuilder = (field: keyof AboutPageContent) => {
         setActiveTableField(field);
@@ -728,11 +820,6 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
 
     const handleSaveClick = () => {
         onSave(formData);
-    };
-
-    // Helper for active language field names
-    const getField = (suffix: string): keyof AboutPageContent => {
-        return `${activeLang}_${suffix}` as keyof AboutPageContent;
     };
 
     const tabs: { id: SectionTab; label: string; icon: React.ReactNode; badge?: string }[] = [
@@ -836,11 +923,19 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleOpenTableBuilder(getField('historyText'))}
-                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                        onClick={() => handleOpenImageModal(getField('historyText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-2xs transition"
                                     >
-                                        <TableIcon size={14} className="text-church-600" />
-                                        <span>Insert / Format Table</span>
+                                        <ImageIcon size={14} className="text-church-600" />
+                                        <span>Insert Image</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('historyText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-2xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-slate-600" />
+                                        <span>Insert Table</span>
                                     </button>
                                     <button
                                         type="button"
@@ -868,18 +963,28 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             </div>
 
                             <div>
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                                     <label className="block text-xs font-black text-slate-500 uppercase tracking-wider">
-                                        Detailed History Story (Rich Text)
+                                        Detailed History Story (Rich Text & Images)
                                     </label>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleOpenTableBuilder(getField('historyText'))}
-                                        className="text-[11px] font-bold text-church-600 hover:text-church-800 underline flex items-center gap-1"
-                                    >
-                                        <FileSpreadsheet size={13} />
-                                        <span>Convert or Insert Column Table</span>
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenImageModal(getField('historyText'))}
+                                            className="text-[11px] font-bold text-church-700 hover:text-church-900 bg-church-50 hover:bg-church-100 border border-church-200 px-2 py-0.5 rounded-lg flex items-center gap-1 transition"
+                                        >
+                                            <ImageIcon size={12} className="text-church-600" />
+                                            <span>Add Image</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenTableBuilder(getField('historyText'))}
+                                            className="text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2 py-0.5 rounded-lg flex items-center gap-1 transition"
+                                        >
+                                            <FileSpreadsheet size={12} />
+                                            <span>Table Formatter</span>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 {showLivePreview ? (
@@ -895,13 +1000,23 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                             theme="snow"
                                             value={formData[getField('historyText')] as string || ''}
                                             onChange={val => handleTextChange(getField('historyText'), val)}
-                                            modules={quillModules}
+                                            modules={getEditorModules(getField('historyText'))}
                                             formats={quillFormats}
                                             className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
                                             placeholder="Write or paste your church history here..."
                                         />
                                     </div>
                                 )}
+
+                                {uploadStatus.uploading && (
+                                    <div className="mt-2 flex items-center gap-2 p-2.5 bg-church-50 border border-church-200 rounded-xl text-xs font-bold text-church-800 animate-pulse">
+                                        <Loader size={14} className="animate-spin text-church-600" />
+                                        <span>{uploadStatus.message || 'Uploading and placing image in paragraph...'}</span>
+                                    </div>
+                                )}
+                                <p className="text-[11px] text-slate-400 italic flex items-center gap-1 mt-1.5">
+                                    <span>💡 <strong>Tip:</strong> You can paste (Ctrl+V / Cmd+V) any screenshot or copied image directly anywhere inside paragraphs, or click <strong>Insert Image</strong>.</span>
+                                </p>
                             </div>
                         </div>
                     )}
@@ -920,10 +1035,18 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleOpenTableBuilder(getField('missionText'))}
-                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                        onClick={() => handleOpenImageModal(getField('missionText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-2xs transition"
                                     >
-                                        <TableIcon size={14} className="text-church-600" />
+                                        <ImageIcon size={14} className="text-church-600" />
+                                        <span>Insert Image</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('missionText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-2xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-slate-600" />
                                         <span>Insert Table</span>
                                     </button>
                                     <button
@@ -952,10 +1075,19 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             </div>
 
                             <div>
-                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                                    <span>Mission Statement Content (Rich Text)</span>
-                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
-                                </label>
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                    <label className="block text-xs font-black text-slate-500 uppercase tracking-wider">
+                                        Mission Statement Content (Rich Text & Images)
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenImageModal(getField('missionText'))}
+                                        className="text-[11px] font-bold text-church-700 hover:text-church-900 bg-church-50 hover:bg-church-100 border border-church-200 px-2 py-0.5 rounded-lg flex items-center gap-1 transition"
+                                    >
+                                        <ImageIcon size={12} className="text-church-600" />
+                                        <span>Add Image</span>
+                                    </button>
+                                </div>
                                 
                                 {showLivePreview ? (
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
@@ -970,13 +1102,23 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                             theme="snow"
                                             value={formData[getField('missionText')] as string || ''}
                                             onChange={val => handleTextChange(getField('missionText'), val)}
-                                            modules={quillModules}
+                                            modules={getEditorModules(getField('missionText'))}
                                             formats={quillFormats}
                                             className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
                                             placeholder="Write your mission & vision statement here..."
                                         />
                                     </div>
                                 )}
+
+                                {uploadStatus.uploading && (
+                                    <div className="mt-2 flex items-center gap-2 p-2.5 bg-church-50 border border-church-200 rounded-xl text-xs font-bold text-church-800 animate-pulse">
+                                        <Loader size={14} className="animate-spin text-church-600" />
+                                        <span>{uploadStatus.message || 'Uploading and placing image in paragraph...'}</span>
+                                    </div>
+                                )}
+                                <p className="text-[11px] text-slate-400 italic flex items-center gap-1 mt-1.5">
+                                    <span>💡 <strong>Tip:</strong> Paste any picture or screenshot directly into the paragraph.</span>
+                                </p>
                             </div>
                         </div>
                     )}
@@ -995,10 +1137,18 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleOpenTableBuilder(getField('faithText'))}
-                                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-xs transition"
+                                        onClick={() => handleOpenImageModal(getField('faithText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-church-50 text-church-700 hover:bg-church-100 border border-church-200 shadow-2xs transition"
                                     >
-                                        <TableIcon size={14} className="text-church-600" />
+                                        <ImageIcon size={14} className="text-church-600" />
+                                        <span>Insert Image</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenTableBuilder(getField('faithText'))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-2xs transition"
+                                    >
+                                        <TableIcon size={14} className="text-slate-600" />
                                         <span>Insert Table</span>
                                     </button>
                                     <button
@@ -1027,10 +1177,19 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                             </div>
 
                             <div>
-                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                                    <span>Statement of Faith Body (Rich Text)</span>
-                                    <span className="text-[10px] font-normal text-slate-400 lowercase">supports formatting, headings, lists & links</span>
-                                </label>
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                    <label className="block text-xs font-black text-slate-500 uppercase tracking-wider">
+                                        Statement of Faith Body (Rich Text & Images)
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenImageModal(getField('faithText'))}
+                                        className="text-[11px] font-bold text-church-700 hover:text-church-900 bg-church-50 hover:bg-church-100 border border-church-200 px-2 py-0.5 rounded-lg flex items-center gap-1 transition"
+                                    >
+                                        <ImageIcon size={12} className="text-church-600" />
+                                        <span>Add Image</span>
+                                    </button>
+                                </div>
                                 
                                 {showLivePreview ? (
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 min-h-[220px]">
@@ -1045,13 +1204,23 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                                             theme="snow"
                                             value={formData[getField('faithText')] as string || ''}
                                             onChange={val => handleTextChange(getField('faithText'), val)}
-                                            modules={quillModules}
+                                            modules={getEditorModules(getField('faithText'))}
                                             formats={quillFormats}
                                             className="h-64 mb-12 sm:mb-14 font-sans text-slate-800"
                                             placeholder="Write your doctrinal beliefs and statement of faith here..."
                                         />
                                     </div>
                                 )}
+
+                                {uploadStatus.uploading && (
+                                    <div className="mt-2 flex items-center gap-2 p-2.5 bg-church-50 border border-church-200 rounded-xl text-xs font-bold text-church-800 animate-pulse">
+                                        <Loader size={14} className="animate-spin text-church-600" />
+                                        <span>{uploadStatus.message || 'Uploading and placing image in paragraph...'}</span>
+                                    </div>
+                                )}
+                                <p className="text-[11px] text-slate-400 italic flex items-center gap-1 mt-1.5">
+                                    <span>💡 <strong>Tip:</strong> Paste images directly anywhere inside the statement of faith.</span>
+                                </p>
                             </div>
                         </div>
                     )}
@@ -1214,6 +1383,14 @@ const PageContentEditModal: React.FC<PageContentEditModalProps> = ({ content, on
                 onClose={() => setIsTableModalOpen(false)}
                 onInsertTable={handleTableInserted}
                 initialText={tableInitialText}
+            />
+        )}
+
+        {isImageModalOpen && (
+            <ImageInsertModal
+                isOpen={isImageModalOpen}
+                onClose={() => setIsImageModalOpen(false)}
+                onInsertImage={handleImageInserted}
             />
         )}
         </>
