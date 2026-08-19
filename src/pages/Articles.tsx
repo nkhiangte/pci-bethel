@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { Article } from '../types';
+import { sanitizeContentForStorage } from '../utils/imageUtils';
 import { 
   FileText, Mic, Search, Plus, Edit, Trash, X, Save, 
   Calendar, User, Filter, ExternalLink, Loader, ChevronRight
@@ -100,7 +101,8 @@ const Articles: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const { id, ...data } = editingArticle;
+      const sanitized = await sanitizeContentForStorage(editingArticle);
+      const { id, ...data } = sanitized;
       
       if (id) {
         await db.collection('articles').doc(id).set(data, { merge: true });
@@ -115,7 +117,7 @@ const Articles: React.FC = () => {
       fetchArticles();
     } catch (error) {
       console.error("Error saving article:", error);
-      alert(t.articles.saveFail);
+      alert(t.articles.saveFail || "Failed to save article");
     }
     setIsSaving(false);
   };

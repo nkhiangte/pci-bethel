@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import StaffEditModal from '../components/StaffEditModal';
 import TableBuilderModal, { parseTextToTableData, generateTableHtml } from '../components/TableBuilderModal';
 import { ImageInsertModal } from '../components/ImageInsertModal';
-import { attachImagePasteAndDrop, insertImageAtQuillCursor } from '../utils/imageUtils';
+import { attachImagePasteAndDrop, insertImageAtQuillCursor, sanitizeContentForStorage } from '../utils/imageUtils';
 import { translations } from '../translations';
 import { ProtectedContact } from '../components/ProtectedContact';
 
@@ -214,12 +214,14 @@ const About: React.FC = () => {
       setIsSaving(true);
       if (db) {
           try {
-              await db.collection('settings').doc('aboutPage').set(newContent, { merge: true });
-              setContent(newContent);
+              // Convert any inline base64/pasted images to permanent hosted URLs to stay well within Firestore 1MB limits
+              const cleanContent = await sanitizeContentForStorage(newContent);
+              await db.collection('settings').doc('aboutPage').set(cleanContent, { merge: true });
+              setContent(cleanContent);
               setIsPageEditModalOpen(false);
           } catch (error) {
               console.error("Error saving page content:", error);
-              alert("Failed to save content.");
+              alert("Failed to save content: " + (error instanceof Error ? error.message : "Unknown error"));
           }
       }
       setIsSaving(false);
