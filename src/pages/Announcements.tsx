@@ -8,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
+import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle, ArrowRight } from 'lucide-react';
 
 const quillModules = {
@@ -100,10 +101,17 @@ const Announcements: React.FC = () => {
     try {
       const snapshot = await db.collection('announcements').get();
       if (!snapshot.empty) {
-        const fetchedData = snapshot.docs.map((doc: any) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Announcement[];
+        const fetchedData = snapshot.docs.map((doc: any) => {
+          const data = doc.data();
+          const cleanedContent = (data.category === 'Sunday School' || doc.id.startsWith('ss_report_') || data.reportId)
+            ? sanitizeSundaySchoolReportHtml(data.content)
+            : data.content;
+          return {
+            id: doc.id,
+            ...data,
+            content: cleanedContent
+          };
+        }) as Announcement[];
         fetchedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setAnnouncements(fetchedData);
       } else {
@@ -281,6 +289,23 @@ const Announcements: React.FC = () => {
   const totalNewsPages = Math.ceil(announcements.length / newsPerPage);
   const paginatedAnnouncements = announcements.slice((newsPage - 1) * newsPerPage, newsPage * newsPerPage);
 
+  const getVisiblePageNumbers = (current: number, total: number, maxToShow = 10) => {
+    if (total <= maxToShow) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    let start = Math.max(1, current - Math.floor(maxToShow / 2));
+    let end = start + maxToShow - 1;
+    if (end > total) {
+      end = total;
+      start = Math.max(1, end - maxToShow + 1);
+    }
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   return (
     <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -333,8 +358,8 @@ const Announcements: React.FC = () => {
                         to={`/announcements/${item.id}`} 
                         className="block bg-slate-50 rounded-xl border border-slate-100 p-6 shadow-sm hover:shadow-md hover:border-church-200 transition-all group/card"
                     >
-                        <p className="text-slate-600 leading-relaxed text-[15px] text-justify break-normal mb-4">
-                            {truncateToThreeSentences(item.content)}
+                        <p className="text-slate-600 leading-relaxed text-[15px] text-justify break-normal mb-4 line-clamp-3">
+                            {getAnnouncementSnippet(item)}
                         </p>
                         <span className="inline-flex items-center text-xs font-black text-church-600 group-hover/card:text-church-700 uppercase tracking-widest gap-1">
                             {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
@@ -358,17 +383,17 @@ const Announcements: React.FC = () => {
                     )}
                     
                     <div className="flex gap-1">
-                        {Array.from({ length: totalNewsPages }).map((_, i) => (
+                        {getVisiblePageNumbers(newsPage, totalNewsPages, 10).map((pageNum) => (
                             <button
-                                key={i}
-                                onClick={() => setNewsPage(i + 1)}
+                                key={pageNum}
+                                onClick={() => setNewsPage(pageNum)}
                                 className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition ${
-                                    newsPage === i + 1 
+                                    newsPage === pageNum 
                                         ? 'bg-church-600 text-white' 
                                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                                 }`}
                             >
-                                {i + 1}
+                                {pageNum}
                             </button>
                         ))}
                     </div>
@@ -378,7 +403,7 @@ const Announcements: React.FC = () => {
                             onClick={() => setNewsPage(p => Math.min(totalNewsPages, p + 1))}
                             className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-church-600 hover:bg-slate-50 transition text-sm font-bold"
                         >
-                            See Next Page
+                            {language === 'en' ? 'Next' : 'A dawt leh'}
                         </button>
                     )}
                 </div>

@@ -797,91 +797,79 @@ const SundaySchool: React.FC = () => {
     const totalThawhlawm = puitlingThawhlawm + naupangThawhlawm;
 
     return `
-<p>Sunday School Report (${report.date || 'Tarlan a awm lo'}): Kal zawng zawng <strong>${grandKal}</strong>, Kal lo <strong>${grandKallo}</strong>, Thawhlawm tlingkhawm <strong>₹${totalThawhlawm.toLocaleString()}</strong> a ni. (Puitling: Kal ${puitlingKal}, Thawhlawm ₹${puitlingThawhlawm.toLocaleString()} | Naupang: Kal ${naupangKal}, Thawhlawm ₹${naupangThawhlawm.toLocaleString()}).</p>
-
-<div style="margin-top: 1.5rem; margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.25rem;">
-  <h3 style="margin-top: 0; margin-bottom: 0.75rem; color: #1e293b; font-size: 1.15rem; font-weight: 800;">📊 Khaikhawmna (Summary)</h3>
-  <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.8;">
-    <li><strong>Kal zawng zawng:</strong> ${grandKal}</li>
-    <li><strong>Kal lo zawng zawng:</strong> ${grandKallo}</li>
-    <li><strong>Member zawng zawng (Enrolled + Guests):</strong> ${grandTotal}</li>
-    <li><strong>Thawhlawm zawng zawng:</strong> ₹${totalThawhlawm.toLocaleString()}</li>
-  </ul>
-</div>
-
-<h3 style="margin-top: 1.5rem; color: #0f172a; font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">1. Puitling Sunday School</h3>
-<table style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem;">
+<h3 style="margin-top: 0.5rem; color: #0f172a; font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">1. Puitling Sunday School</h3>
+<table class="church-table" style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
   <thead>
-    <tr style="background: #f1f5f9; text-align: left;">
-      <th style="padding: 8px 12px; border: 1px solid #cbd5e1;">Hming / Role</th>
-      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Kal</th>
-      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Kal lo</th>
-      <th style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">Total</th>
+    <tr style="background-color: #0f172a; color: #ffffff; text-align: left;">
+      <th style="padding: 10px 14px; background-color: #0f172a; color: #ffffff !important; font-weight: 800; border: 1px solid #334155; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Hming / Role</th>
+      <th style="padding: 10px 14px; background-color: #0f172a; color: #ffffff !important; font-weight: 800; border: 1px solid #334155; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Kal</th>
+      <th style="padding: 10px 14px; background-color: #0f172a; color: #ffffff !important; font-weight: 800; border: 1px solid #334155; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Kal lo</th>
+      <th style="padding: 10px 14px; background-color: #0f172a; color: #ffffff !important; font-weight: 800; border: 1px solid #334155; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Total</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Zirtirtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingZirtirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">Zirtirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingZirtirtuKal}</td>
       <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${puitlingZirtirtuKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingZirtirtuTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingZirtirtuTotal}</td>
     </tr>
     <tr style="background: #f8fafc;">
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Zirtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingZirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">Zirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingZirtuKal}</td>
       <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${puitlingZirtuKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingZirtuTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingZirtuTotal}</td>
     </tr>
     <tr>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold;">Chhimtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center;">${puitlingChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">Chhimtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingChhimtu}</td>
       <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">-</td>
-      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${puitlingChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #0f172a;">${puitlingChhimtu}</td>
     </tr>
     <tr style="background: #e2e8f0; font-weight: bold;">
-      <td style="padding: 8px 12px; border: 1px solid #94a3b8;">Puitling Total</td>
-      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingKal}</td>
-      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center;">${puitlingTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; color: #0f172a;">Puitling Total</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center; color: #0f172a;">${puitlingKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center; color: #475569;">${puitlingKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #94a3b8; text-align: center; color: #0f172a;">${puitlingTotal}</td>
     </tr>
   </tbody>
 </table>
 <p style="margin-top: 0; margin-bottom: 1.5rem; font-weight: bold; color: #047857;">💰 Puitling Thawhlawm: ₹${puitlingThawhlawm.toLocaleString()}</p>
 
 <h3 style="margin-top: 1.5rem; color: #065f46; font-size: 1.1rem; font-weight: 800; border-bottom: 2px solid #a7f3d0; padding-bottom: 0.5rem;">2. Naupang Sunday School</h3>
-<table style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem;">
+<table class="church-table" style="width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
   <thead>
-    <tr style="background: #ecfdf5; text-align: left;">
-      <th style="padding: 8px 12px; border: 1px solid #a7f3d0;">Hming / Role</th>
-      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Kal</th>
-      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Kal lo</th>
-      <th style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">Total</th>
+    <tr style="background-color: #065f46; color: #ffffff; text-align: left;">
+      <th style="padding: 10px 14px; background-color: #065f46; color: #ffffff !important; font-weight: 800; border: 1px solid #047857; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Hming / Role</th>
+      <th style="padding: 10px 14px; background-color: #065f46; color: #ffffff !important; font-weight: 800; border: 1px solid #047857; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Kal</th>
+      <th style="padding: 10px 14px; background-color: #065f46; color: #ffffff !important; font-weight: 800; border: 1px solid #047857; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Kal lo</th>
+      <th style="padding: 10px 14px; background-color: #065f46; color: #ffffff !important; font-weight: 800; border: 1px solid #047857; text-align: center; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Total</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Zirtirtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangZirtirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold; color: #065f46;">Zirtirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangZirtirtuKal}</td>
       <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">${naupangZirtirtuKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangZirtirtuTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangZirtirtuTotal}</td>
     </tr>
     <tr style="background: #f0fdf4;">
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Zirtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangZirtuKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold; color: #065f46;">Zirtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangZirtuKal}</td>
       <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">${naupangZirtuKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangZirtuTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangZirtuTotal}</td>
     </tr>
     <tr>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold;">Chhimtu</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center;">${naupangChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; font-weight: bold; color: #065f46;">Chhimtu</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangChhimtu}</td>
       <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; color: #64748b;">-</td>
-      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold;">${naupangChhimtu}</td>
+      <td style="padding: 8px 12px; border: 1px solid #a7f3d0; text-align: center; font-weight: bold; color: #065f46;">${naupangChhimtu}</td>
     </tr>
     <tr style="background: #d1fae5; font-weight: bold;">
-      <td style="padding: 8px 12px; border: 1px solid #6ee7b7;">Naupang Total</td>
-      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangKal}</td>
-      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangKallo}</td>
-      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center;">${naupangTotal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; color: #065f46;">Naupang Total</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center; color: #065f46;">${naupangKal}</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center; color: #475569;">${naupangKallo}</td>
+      <td style="padding: 8px 12px; border: 1px solid #6ee7b7; text-align: center; color: #065f46;">${naupangTotal}</td>
     </tr>
   </tbody>
 </table>
@@ -2355,12 +2343,12 @@ const ReportTable: React.FC<{ segment: SSReportSegment; theme: string }> = ({ se
         <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[300px]">
                 <thead>
-                    <tr className="bg-slate-50 text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.25em] border-b border-slate-100">
-                        <th className="px-4 md:px-8 py-3 md:py-5">Hming / Role</th>
-                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal</th>
-                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Kal lo</th>
-                        <th className="px-2 md:px-8 py-3 md:py-5 text-center">Total</th>
-                        <th className="px-2 md:px-8 py-3 md:py-5 text-right"></th>
+                    <tr className="bg-slate-900 text-white text-[10px] md:text-xs font-black uppercase tracking-wider border-b border-slate-800">
+                        <th className="px-4 md:px-8 py-3.5 md:py-4 text-white font-black">Hming / Role</th>
+                        <th className="px-2 md:px-8 py-3.5 md:py-4 text-center text-white font-black">Kal</th>
+                        <th className="px-2 md:px-8 py-3.5 md:py-4 text-center text-white font-black">Kal lo</th>
+                        <th className="px-2 md:px-8 py-3.5 md:py-4 text-center text-white font-black">Total</th>
+                        <th className="px-2 md:px-8 py-3.5 md:py-4 text-right text-white font-black"></th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

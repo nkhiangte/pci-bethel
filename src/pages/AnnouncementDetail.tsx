@@ -5,6 +5,7 @@ import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { sanitizeSundaySchoolReportHtml } from '../utils/sanitizeReport';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -38,7 +39,17 @@ const AnnouncementDetail: React.FC = () => {
       try {
         const doc = await db.collection('announcements').doc(id).get();
         if (doc.exists) {
-          setAnnouncement({ id: doc.id, ...doc.data() } as Announcement);
+          const data = doc.data() as Announcement;
+          const cleanedContent = (data.category === 'Sunday School' || (data as any).reportId || id.startsWith('ss_report_'))
+            ? sanitizeSundaySchoolReportHtml(data.content)
+            : data.content;
+
+          // If content had legacy summary box, clean it in Firestore silently
+          if (cleanedContent !== data.content && db && db.collection) {
+            db.collection('announcements').doc(id).set({ content: cleanedContent }, { merge: true }).catch(() => {});
+          }
+
+          setAnnouncement({ id: doc.id, ...data, content: cleanedContent });
         } else {
           console.error("Announcement not found");
           navigate('/announcements');
@@ -174,7 +185,7 @@ const AnnouncementDetail: React.FC = () => {
           <div className="p-8 md:p-12 pt-0 animate-fade-in">
             <div 
               className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed ql-editor !p-0 text-justify break-normal"
-              dangerouslySetInnerHTML={{ __html: announcement.content ? announcement.content.replace(/&nbsp;/g, ' ') : '' }}
+              dangerouslySetInnerHTML={{ __html: sanitizeSundaySchoolReportHtml(announcement.content) }}
             />
 
             {(announcement.category === 'Sunday School' || (announcement as any).reportId) && (

@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Shield, Save, Loader, Upload, Trash2, ArrowLeft, Image as ImageIcon, MapPin, Phone, Mail, Map, Smartphone } from 'lucide-react';
+import { Shield, Save, Loader, Upload, Trash2, ArrowLeft, Image as ImageIcon, MapPin, Phone, Mail, Map, Smartphone, BellRing, Plus, CheckCircle } from 'lucide-react';
 import { db, storage } from '../services/firebase';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const INITIAL_CONTACT_DATA = {
   addressLine1: "Bethel Veng, Champhai",
@@ -15,8 +16,8 @@ const INITIAL_CONTACT_DATA = {
 };
 
 const INITIAL_APP_UPDATE_DATA = {
-  latestVersionCode: 18,
-  latestVersionName: "1.8",
+  latestVersionCode: 21,
+  latestVersionName: "2.1",
   updateUrl: "https://play.google.com/store/apps/details?id=com.pcibethel.app",
   updateMessage: "Siampa hian App hmelhmang a tlem a thalo leh a chhung thu kuttia phek chet vel te, thuziak phek danga in split chungchang te, a phek zoom theihna te leh hriattirna/announcement danga buaina a awmte a rawn tidam rualin kan rawn update a ni. Khawngaihin update rawh le.",
   isUpdateRequired: false
@@ -32,6 +33,7 @@ const AdminSettings: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [contactData, setContactData] = useState(INITIAL_CONTACT_DATA);
   const [appUpdateData, setAppUpdateData] = useState(INITIAL_APP_UPDATE_DATA);
+  const [testNotificationSent, setTestNotificationSent] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -68,6 +70,57 @@ const AdminSettings: React.FC = () => {
   if (!currentUser) return <Navigate to="/login" />;
   if (!isAdmin) return <Navigate to="/" />;
 
+  const handleTestNotification = async () => {
+    try {
+      // 1. Capacitor notification test
+      const perms = await LocalNotifications.checkPermissions();
+      let status = perms.display;
+      if (status !== 'granted') {
+        const req = await LocalNotifications.requestPermissions();
+        status = req.display;
+      }
+      if (status === 'granted') {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: 'Play Store-ah App Update Thar A Awm e (Test)',
+              body: `Version ${appUpdateData.latestVersionName} hi Google Play Store-ah download/update theih a ni tawh e.`,
+              id: 9998,
+              schedule: { at: new Date(Date.now() + 500) },
+              sound: 'default',
+              channelId: 'app_updates'
+            }
+          ]
+        });
+      }
+    } catch (e) {
+      console.log("Capacitor local notification fallback to Web Notification API:", e);
+    }
+
+    // 2. Web browser notification test
+    try {
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification('Champhai Bethel: App Update Thar A Awm e (Test)', {
+            body: `Version ${appUpdateData.latestVersionName} hi Google Play Store-ah download theih a ni tawh e.`,
+            icon: 'https://i.ibb.co/mVw3Ftpw/PCI-logo.png'
+          });
+        } else {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            new Notification('Champhai Bethel: App Update Thar A Awm e (Test)', {
+              body: `Version ${appUpdateData.latestVersionName} hi Google Play Store-ah download theih a ni tawh e.`,
+              icon: 'https://i.ibb.co/mVw3Ftpw/PCI-logo.png'
+            });
+          }
+        }
+      }
+    } catch (e) {}
+
+    setTestNotificationSent(true);
+    setTimeout(() => setTestNotificationSent(false), 4000);
+  };
+
   const handleSave = async () => {
     if (!db || !db.collection) return;
     setIsSaving(true);
@@ -95,6 +148,7 @@ const AdminSettings: React.FC = () => {
         }, { merge: true }),
         db.collection('settings').doc('appUpdate').set({
           ...appUpdateData,
+          latestVersionCode: Number(appUpdateData.latestVersionCode),
           updatedAt: new Date().toISOString(),
           updatedBy: currentUser.uid
         }, { merge: true })
@@ -102,7 +156,7 @@ const AdminSettings: React.FC = () => {
 
       setLogoUrl(finalLogoUrl);
       setLogoFile(null);
-      alert("Settings saved successfully.");
+      alert("Settings saved successfully! App users will receive update notifications.");
     } catch (error) {
       console.error("Error saving settings:", error);
       alert("Failed to save settings.");
@@ -279,26 +333,58 @@ const AdminSettings: React.FC = () => {
 
           {/* Play Store Update Notification Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-8 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center">
-                <Smartphone className="mr-2 text-church-600" /> Play Store Update Notification
-              </h2>
-              <p className="text-slate-500 text-sm">Notify users when a new version of the app is available on the Play Store.</p>
+            <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-1 flex items-center">
+                  <Smartphone className="mr-2 text-church-600" /> Play Store Update Notification
+                </h2>
+                <p className="text-slate-500 text-sm">Notify all members with a push alert and in-app popup whenever a new version is released on Google Play Store.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleTestNotification}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition border border-slate-200 shrink-0 shadow-sm"
+              >
+                {testNotificationSent ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    <span>Notification Sent!</span>
+                  </>
+                ) : (
+                  <>
+                    <BellRing className="w-4 h-4 text-church-600" />
+                    <span>Test Notification</span>
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="p-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Latest Version Code (Android Play Store)</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-semibold text-slate-700">Latest Version Code (Android Build)</label>
+                    <button
+                      type="button"
+                      onClick={() => setAppUpdateData({
+                        ...appUpdateData,
+                        latestVersionCode: (Number(appUpdateData.latestVersionCode) || 0) + 1
+                      })}
+                      className="text-xs font-bold text-church-600 hover:text-church-700 flex items-center gap-0.5 bg-church-50 px-2 py-0.5 rounded"
+                      title="Increment version code by 1"
+                    >
+                      <Plus size={12} /> Auto +1
+                    </button>
+                  </div>
                   <input 
                     type="number" 
                     value={appUpdateData.latestVersionCode}
                     onChange={e => setAppUpdateData({...appUpdateData, latestVersionCode: parseInt(e.target.value) || 0})}
-                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
-                    placeholder="e.g., 13"
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500 font-mono font-bold text-slate-800"
+                    placeholder="e.g., 19"
                   />
                   <p className="text-xs text-slate-400 mt-1.5">
-                    Android build version code (e.g., current is 13). Increment this when releasing a new version on the Play Store.
+                    Android build version code in Play Store. When this number exceeds a user's installed version, they receive the update notification.
                   </p>
                 </div>
                 <div>
@@ -307,15 +393,15 @@ const AdminSettings: React.FC = () => {
                     type="text" 
                     value={appUpdateData.latestVersionName}
                     onChange={e => setAppUpdateData({...appUpdateData, latestVersionName: e.target.value})}
-                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
-                    placeholder="e.g., 1.3"
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500 font-mono font-bold text-slate-800"
+                    placeholder="e.g., 1.9"
                   />
                   <p className="text-xs text-slate-400 mt-1.5">
-                    The user-facing version name (e.g., "1.3" or "1.3.1").
+                    User-facing version title shown in the prompt (e.g. "1.9").
                   </p>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Play Store URL / App Download URL</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Google Play Store URL</label>
                   <input 
                     type="text" 
                     value={appUpdateData.updateUrl}
@@ -323,18 +409,19 @@ const AdminSettings: React.FC = () => {
                     className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500"
                     placeholder="https://play.google.com/store/apps/details?id=com.pcibethel.app"
                   />
+                  <p className="text-xs text-slate-400 mt-1">Direct Google Play Store link that opens when users tap "Update Now".</p>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Update Message / What's New</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Update Message / What's New (Mizo or English)</label>
                   <textarea 
                     value={appUpdateData.updateMessage}
                     onChange={e => setAppUpdateData({...appUpdateData, updateMessage: e.target.value})}
-                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500 h-24"
-                    placeholder="Describe what's new in this version..."
+                    className="w-full border-slate-300 rounded-lg p-3 border outline-none focus:ring-2 focus:ring-church-500 h-24 text-sm leading-relaxed"
+                    placeholder="Describe the new features and fixes in this version..."
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
+                  <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <input 
                       type="checkbox" 
                       checked={appUpdateData.isUpdateRequired}
@@ -343,7 +430,7 @@ const AdminSettings: React.FC = () => {
                     />
                     <div>
                       <span className="text-sm font-bold text-slate-700 block select-none">Force Update (Critical Update)</span>
-                      <span className="text-xs text-slate-500 select-none">If checked, users will not be able to dismiss this popup and must update.</span>
+                      <span className="text-xs text-slate-500 select-none">If checked, users must update on Google Play Store before they can proceed with the app.</span>
                     </div>
                   </label>
                 </div>

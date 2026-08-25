@@ -7,7 +7,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, Clock, ChevronRight, Edit, Plus, X, BookOpen, Quote, ShieldCheck, Phone, MessageCircle, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StaffEditModal from '../components/StaffEditModal';
+import SundaySchoolReportWidget from '../components/SundaySchoolReportWidget';
 import { useWeeklyEvents, parseLocalDate, normalizeTitle } from '../hooks/useWeeklyEvents';
+import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
 
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
@@ -45,7 +47,13 @@ const Home: React.FC = () => {
         if (dutyDoc.exists) setWeeklyDuty(dutyDoc.data() as WeeklyDuty);
 
         const newsSnap = await db.collection('announcements').orderBy('date', 'desc').get();
-        const newsData = newsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Announcement[];
+        const newsData = newsSnap.docs.map((doc: any) => {
+          const data = doc.data();
+          const cleanedContent = (data.category === 'Sunday School' || doc.id.startsWith('ss_report_') || data.reportId)
+            ? sanitizeSundaySchoolReportHtml(data.content)
+            : data.content;
+          return { id: doc.id, ...data, content: cleanedContent };
+        }) as Announcement[];
         setLatestNews(newsData);
 
         const fetchStaff = async (collection: string) => {
@@ -157,9 +165,26 @@ const Home: React.FC = () => {
     return sentences.slice(0, 3).join('').trim() + '...';
   };
 
-  const newsPerPage = 10;
+  const newsPerPage = 3;
   const totalNewsPages = Math.ceil(latestNews.length / newsPerPage);
   const paginatedNews = latestNews.slice((newsPage - 1) * newsPerPage, newsPage * newsPerPage);
+
+  const getVisiblePageNumbers = (current: number, total: number, maxToShow = 10) => {
+    if (total <= maxToShow) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    let start = Math.max(1, current - Math.floor(maxToShow / 2));
+    let end = start + maxToShow - 1;
+    if (end > total) {
+      end = total;
+      start = Math.max(1, end - maxToShow + 1);
+    }
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const allPastoralLeaders = [
     ...pastors.map(p => ({ ...p, collection: 'pastors' as const })),
@@ -210,8 +235,8 @@ const Home: React.FC = () => {
                                         <span className="text-xs font-bold text-slate-400">{item.date}</span>
                                     </div>
                                     <h3 className="font-bold text-slate-900 mb-1 line-clamp-2 leading-snug group-hover/card:text-church-700 transition-colors">{item.title}</h3>
-                                    <p className="text-slate-600 text-sm leading-relaxed mb-2">
-                                        {truncateToThreeSentences(item.content)}
+                                    <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-3">
+                                        {getAnnouncementSnippet(item)}
                                     </p>
                                     <span className="inline-flex items-center text-xs font-black text-church-600 uppercase tracking-widest gap-1 mt-auto">
                                         {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
@@ -236,22 +261,22 @@ const Home: React.FC = () => {
                                 onClick={() => setNewsPage(p => Math.max(1, p - 1))}
                                 className="px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 transition text-sm font-bold shadow-sm"
                             >
-                                Previous
+                                {language === 'en' ? 'Previous' : 'Hmasa'}
                             </button>
                         )}
                         
                         <div className="flex gap-1">
-                            {Array.from({ length: totalNewsPages }).map((_, i) => (
+                            {getVisiblePageNumbers(newsPage, totalNewsPages, 10).map((pageNum) => (
                                 <button
-                                    key={i}
-                                    onClick={() => setNewsPage(i + 1)}
+                                    key={pageNum}
+                                    onClick={() => setNewsPage(pageNum)}
                                     className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition shadow-sm border ${
-                                        newsPage === i + 1 
+                                        newsPage === pageNum 
                                             ? 'bg-church-600 text-white border-church-700' 
                                             : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                     }`}
                                 >
-                                    {i + 1}
+                                    {pageNum}
                                 </button>
                             ))}
                         </div>
@@ -261,7 +286,7 @@ const Home: React.FC = () => {
                                 onClick={() => setNewsPage(p => Math.min(totalNewsPages, p + 1))}
                                 className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-church-600 hover:bg-slate-50 transition text-sm font-bold shadow-sm"
                             >
-                                See Next Page
+                                {language === 'en' ? 'Next' : 'A dawt leh'}
                             </button>
                         )}
                     </div>
@@ -356,6 +381,9 @@ const Home: React.FC = () => {
             </div>
         )}
       </section>
+
+      {/* --- SUNDAY SCHOOL WEEKLY REPORT SECTION --- */}
+      <SundaySchoolReportWidget />
 
       {/* --- WEEKLY DUTY SECTION --- */}
       <section>
