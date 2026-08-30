@@ -30,6 +30,7 @@ import {
 } from '../constants/sundaySchoolSyllabus';
 import { getNextSundayLesson } from '../services/syllabusService';
 import { QuarterlySyllabusItem, quarterlySyllabusData } from '../constants/quarterlySyllabus';
+import { getMizoDayName, parseLocalDate } from '../hooks/useWeeklyEvents';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
@@ -2039,7 +2040,10 @@ const SundaySchool: React.FC = () => {
                                               <div>
                                                 <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400 mb-1">Kohhran Service Report</p>
                                                 <span className="font-serif font-black text-xl md:text-3xl tracking-tight">
-                                                    {new Date(report.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                    {(() => {
+                                                        const d = report.date ? parseLocalDate(report.date) : new Date();
+                                                        return `${getMizoDayName(d)}, ${d.getDate()} ${d.toLocaleString('default', { month: 'long', year: 'numeric' })}`;
+                                                    })()}
                                                 </span>
                                               </div>
                                           </div>

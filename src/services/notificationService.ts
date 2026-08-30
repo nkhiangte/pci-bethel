@@ -1,5 +1,5 @@
 
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { KTPMember, CommitteeMember, UserProfile } from '../types';
 
 export interface ContactInfo {
@@ -68,14 +68,19 @@ export const findContactByName = async (name: string): Promise<ContactInfo | nul
       }
     }
 
-    // 4. Search in Users (if they have phone stored)
-    // For users table we might need to fetch all and filter in JS if titles are used inconsistently
-    const userSnap = await db.collection('users').get();
-    for (const doc of userSnap.docs) {
-       const data = doc.data();
-       if (data.displayName && normalizeName(data.displayName) === searchName && data.phone) {
-           return { name: data.displayName, phone: data.phone, source: 'User Profile' };
-       }
+    // 4. Search in Users (if they have phone stored and user is authenticated)
+    if (auth && auth.currentUser) {
+      try {
+        const userSnap = await db.collection('users').get();
+        for (const doc of userSnap.docs) {
+           const data = doc.data();
+           if (data.displayName && normalizeName(data.displayName) === searchName && data.phone) {
+               return { name: data.displayName, phone: data.phone, source: 'User Profile' };
+           }
+        }
+      } catch {
+        // Silently ignore if lacking list permission
+      }
     }
 
   } catch (error) {

@@ -14,6 +14,7 @@ import {
   Edit, 
   Loader2 
 } from 'lucide-react';
+import { getMizoDayName, parseLocalDate } from '../hooks/useWeeklyEvents';
 
 interface ReportSegmentTableProps {
   title: string;
@@ -207,12 +208,8 @@ const SundaySchoolReportWidget: React.FC = () => {
 
   const totalThawhlawm = (currentReport.puitling?.thawhlawm || 0) + (currentReport.naupang?.thawhlawm || 0);
 
-  const formattedDate = new Date(currentReport.date).toLocaleDateString(undefined, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const dateObj = currentReport.date ? parseLocalDate(currentReport.date) : new Date();
+  const formattedDate = `${getMizoDayName(dateObj)}, ${dateObj.getDate()} ${dateObj.toLocaleString('default', { month: 'long', year: 'numeric' })}`;
 
   return (
     <section>

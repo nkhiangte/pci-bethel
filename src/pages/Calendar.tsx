@@ -192,7 +192,7 @@ const Calendar: React.FC = () => {
     const firstDay = getFirstDayOfMonth(year, month);
     
     const days = [];
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDays = ['Pathianni', 'Thawhṭan', 'Thawhleh', 'Nilai', 'Ningani', 'Zirtawp', 'Inrinni'];
 
     // Weekday headers
     const headers = weekDays.map(day => (

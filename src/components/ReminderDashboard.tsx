@@ -50,10 +50,14 @@ const ReminderDashboard: React.FC<ReminderDashboardProps> = ({ events, onClose }
 
       for (const ev of upcomingEvents) {
         if (ev.program) {
+          const isBeihrual = ev.isBeihrual || (ev.title && ev.title.toLowerCase().includes('beihrual'));
+          const isNilai = ev.title && ev.title.toLowerCase().includes('nilai');
+          const speakerLabel = (isBeihrual || isNilai) ? 'Thupui Hawngtu' : 'Thuhriltu';
+
           const roles = [
             { key: 'hruaitu', label: 'Hruaitu' },
-            { key: 'tantu', label: 'Tantu' },
-            { key: 'thuhriltu', label: 'Thuhriltu' }
+            { key: 'tantu', label: 'Ṭantu' },
+            { key: 'thuhriltu', label: speakerLabel }
           ];
 
           for (const role of roles) {
@@ -62,7 +66,7 @@ const ReminderDashboard: React.FC<ReminderDashboardProps> = ({ events, onClose }
               list.push({
                 name: name.trim(),
                 role: role.label,
-                eventTitle: ev.title,
+                eventTitle: ev.title + (ev.program.thupui ? ` (Thupui: ${ev.program.thupui})` : ''),
                 eventDate: ev.date,
                 status: 'searching'
               });

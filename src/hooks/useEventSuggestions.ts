@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { db } from '../services/firebase';
+import { db, auth } from '../services/firebase';
 import { SEED_DATA } from '../pages/InkhawmChanvo';
 import { getConstants } from '../constants';
-import { Committee, SundaySchoolDepartment, UserProfile, Ministry } from '../types';
+import { Committee, SundaySchoolDepartment, UserProfile } from '../types';
 
 export const useEventSuggestions = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -33,18 +33,22 @@ export const useEventSuggestions = () => {
 
       // 3. From Firestore
       if (db && db.collection) {
+        // Committees
         try {
-          // Committees
           const committeeSnap = await db.collection('committees').get();
           committeeSnap.docs.forEach((doc: any) => {
             const data = doc.data() as Committee;
-            namesSet.add(data.name); // Add committee name itself
+            if (data.name) namesSet.add(data.name);
             if (data.members) {
               data.members.forEach(m => namesSet.add(m.name));
             }
           });
+        } catch {
+          // ignore error
+        }
 
-          // Sunday School
+        // Sunday School
+        try {
           const ssSnap = await db.collection('sundaySchoolDepartments').get();
           ssSnap.docs.forEach((doc: any) => {
             const data = doc.data() as SundaySchoolDepartment;
@@ -56,12 +60,16 @@ export const useEventSuggestions = () => {
               data.zirtirtute.forEach(t => namesSet.add(t));
             }
           });
+        } catch {
+          // ignore error
+        }
 
-          // Ministries (Fellowships)
+        // Ministries (Fellowships)
+        try {
           const ministrySnap = await db.collection('ministries').get();
           ministrySnap.docs.forEach((doc: any) => {
             const data = doc.data() as any;
-            namesSet.add(data.name);
+            if (data.name) namesSet.add(data.name);
             if (data.leader) namesSet.add(data.leader);
             if (data.leaders) data.leaders.forEach((m: any) => namesSet.add(m.name));
             if (data.committeeMembers) data.committeeMembers.forEach((m: any) => namesSet.add(m.name));
@@ -72,8 +80,12 @@ export const useEventSuggestions = () => {
               });
             }
           });
+        } catch {
+          // ignore error
+        }
 
-          // KTP Leaders
+        // KTP Leaders
+        try {
           const ktpLeadersSnap = await db.collection('ktpLeaders').get();
           ktpLeadersSnap.docs.forEach((doc: any) => {
             const data = doc.data() as any;
@@ -86,22 +98,23 @@ export const useEventSuggestions = () => {
               });
             }
           });
+        } catch {
+          // ignore error
+        }
 
-          // Users (All registered members)
-          const userSnap = await db.collection('users').get();
-          if (!userSnap.empty) {
-            userSnap.docs.forEach((doc: any) => {
-              const data = doc.data() as UserProfile;
-              if (data.displayName) namesSet.add(data.displayName);
-            });
-          } else {
-            // Fallback to some mock names if DB is empty
-            const mockNames = ['Lalhruaitluanga (Admin)', 'Vanlalruata', 'K. Lalduhawma'];
-            mockNames.forEach(n => namesSet.add(n));
+        // Users (All registered members - only if authenticated)
+        if (auth && auth.currentUser) {
+          try {
+            const userSnap = await db.collection('users').get();
+            if (userSnap && !userSnap.empty) {
+              userSnap.docs.forEach((doc: any) => {
+                const data = doc.data() as UserProfile;
+                if (data.displayName) namesSet.add(data.displayName);
+              });
+            }
+          } catch {
+            // ignore error
           }
-
-        } catch (error) {
-          console.error("Error fetching suggestions from Firestore:", error);
         }
       }
 

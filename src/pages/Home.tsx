@@ -8,7 +8,7 @@ import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, C
 import { Link } from 'react-router-dom';
 import StaffEditModal from '../components/StaffEditModal';
 import SundaySchoolReportWidget from '../components/SundaySchoolReportWidget';
-import { useWeeklyEvents, parseLocalDate, normalizeTitle } from '../hooks/useWeeklyEvents';
+import { useWeeklyEvents, parseLocalDate, normalizeTitle, getMizoDayName } from '../hooks/useWeeklyEvents';
 import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
 
 const Home: React.FC = () => {
@@ -327,40 +327,51 @@ const Home: React.FC = () => {
                 <div className="flex flex-col gap-6 animate-scroll-vertical group-hover:[animation-play-state:paused] w-full">
                     {[...displayEvents, ...displayEvents].map((event, index) => {
                         const dateObj = parseLocalDate(event.date);
+                        const isSunday = dateObj.getDay() === 0;
                         const normTitle = normalizeTitle(event.title);
+                        const isSept = dateObj.getMonth() === 8;
+                        const isBeihrual = event.isBeihrual || (!isSunday && (normTitle.includes('beihrual') || (isSept && event.time.includes('PM'))));
                         const isNilaiZan = normTitle.includes('nilai');
                         const isSundaySchool = normTitle.includes('sunday school');
-                        const speakerLabel = isSundaySchool ? "Zirtirtu" : (isNilaiZan ? t.events.thupuiHawngtu : t.events.thuhriltu);
+                        const speakerLabel = isSundaySchool ? "Zirtirtu" : ((isBeihrual || isNilaiZan) ? t.events.thupuiHawngtu : t.events.thuhriltu);
+                        const topicLabel = isSundaySchool ? "Zirlai" : t.events.thupui;
                         
                         return (
                             <Link key={`${event.id}-${index}`} to="/events" className="group/card flex flex-col md:flex-row gap-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-church-200 hover:shadow-sm transition overflow-hidden shrink-0">
                                 <div className="bg-church-50 p-6 flex flex-col items-center justify-center md:w-32 border-b md:border-b-0 md:border-r border-slate-100 shrink-0">
                                     <span className="text-church-600 font-bold text-[10px] uppercase tracking-wider">{dateObj.toLocaleString('default', { month: 'short' })}</span>
                                     <span className="text-slate-800 font-bold text-2xl my-1 leading-none">{dateObj.getDate()}</span>
-                                    <span className="text-slate-500 text-[10px] font-medium uppercase">{dateObj.toLocaleString('default', { weekday: 'short' })}</span>
+                                    <span className="text-slate-600 text-[10px] font-bold uppercase">{getMizoDayName(dateObj, true)}</span>
                                 </div>
                                 <div className="p-4 flex-1">
-                                    <h3 className="text-lg font-bold text-slate-900 mb-1">{event.title}</h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="text-lg font-bold text-slate-900">{event.title}</h3>
+                                        {isBeihrual && (
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                {t.events.beihrual}
+                                            </span>
+                                        )}
+                                    </div>
                                     {event.program && (
                                         <div className="space-y-0.5 mb-2 mt-1">
                                             {event.program.hruaitu && (
                                                 <p className="text-sm text-slate-700 font-medium line-clamp-1">
-                                                    {t.events.hruaitu}: {event.program.hruaitu}
+                                                    <span className="font-semibold text-slate-900">{t.events.hruaitu}:</span> {event.program.hruaitu}
                                                 </p>
                                             )}
                                             {event.program.tantu && (
                                                 <p className="text-sm text-slate-700 font-medium line-clamp-1">
-                                                    {t.events.tantu}: {event.program.tantu}
+                                                    <span className="font-semibold text-slate-900">{t.events.tantu}:</span> {event.program.tantu}
                                                 </p>
                                             )}
                                             {event.program.thuhriltu && (
                                                 <p className="text-sm text-slate-700 font-medium line-clamp-1">
-                                                    {speakerLabel}: {event.program.thuhriltu}
+                                                    <span className="font-semibold text-slate-900">{speakerLabel}:</span> {event.program.thuhriltu}
                                                 </p>
                                             )}
                                             {event.program.thupui && (
                                                 <p className="text-sm text-slate-700 font-medium line-clamp-1">
-                                                    {isSundaySchool ? "Zirlai" : t.events.thupui}: {event.program.thupui}
+                                                    <span className="font-semibold text-slate-900">{topicLabel}:</span> {event.program.thupui}
                                                 </p>
                                             )}
                                         </div>

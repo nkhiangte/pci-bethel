@@ -33,12 +33,14 @@ export interface Event {
   type?: string;
   isCancelled?: boolean;
   isRecurringTemplate?: boolean;
+  isBeihrual?: boolean;
   dayOfWeek?: number;
   program?: {
     hruaitu?: string;
     tantu?: string;
     thuhriltu?: string;
     thupui?: string;
+    thupuiHawngtu?: string;
     [key: string]: string | undefined;
   };
 }

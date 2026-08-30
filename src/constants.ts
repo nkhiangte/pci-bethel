@@ -347,7 +347,7 @@ export const ANNOUNCEMENTS_DATA = DATA.en.announcements;
 // FIX: Export SERMONS_DATA for backward compatibility and to resolve import errors.
 export const SERMONS_DATA = DATA.en.sermons;
 export const EVENTS_DATA = DATA.en.events.map(e => ({
-    day: e.dayOfWeek !== undefined ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][e.dayOfWeek] : 'Special',
+    day: e.dayOfWeek !== undefined ? ['Pathianni', 'Thawhṭanni', 'Thawhlehni', 'Nilaini', 'Ningani', 'Zirtawpni', 'Inrinni'][e.dayOfWeek] : 'Special',
     time: e.time,
     name: e.title,
     leader: e.program?.thuhriltu || e.program?.hruaitu || 'TBD'
