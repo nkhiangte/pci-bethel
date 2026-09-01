@@ -63,6 +63,7 @@ import Directory from './pages/Directory';
 import Bethel from './pages/Bethel';
 import Privacy from './pages/Privacy';
 import ThlaTinaRawngbawltute from './pages/ThlaTinaRawngbawltute';
+import Library from './pages/Library';
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
@@ -171,6 +172,7 @@ const AppContent: React.FC = () => {
           <Route path="/inkhawm-chanvo" element={<InkhawmChanvo />} />
           <Route path="/thawhlawm" element={<Thawhlawm />} />
           <Route path="/bethel" element={<Bethel />} />
+          <Route path="/library" element={<Library />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/rawngbawltute" element={<ThlaTinaRawngbawltute />} />
         </Routes>

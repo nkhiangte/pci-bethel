@@ -291,6 +291,27 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /library_books/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /library_members/{document=**} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    match /library_transactions/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /library_settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();

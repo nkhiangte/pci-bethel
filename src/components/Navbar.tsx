@@ -46,6 +46,7 @@ const Navbar: React.FC = () => {
     { name: t.nav.announcements, path: '/announcements' },
     { name: t.nav.calendar, path: '/calendar' },
     { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
+    { name: 'Library', path: '/library' },
     { name: t.nav.records, path: '/records' },
     { name: t.nav.directory, path: '/directory' },
     { name: t.nav.missionaries, path: '/missionaries' },

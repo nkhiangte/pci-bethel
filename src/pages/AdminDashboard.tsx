@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send, BookOpen } from 'lucide-react';
 import { db } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 
@@ -28,6 +28,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const adminActions = [
+      { title: 'Church Library System', icon: BookOpen, link: '/library', color: 'bg-church-800', desc: 'QR Scanner, Issue & Return, Excel Book Import & Catalog.' },
       { title: 'Manage Contributions', icon: HeartHandshake, link: '/admin/thawhlawm', color: 'bg-emerald-600', desc: 'Verify and track Thawhlawm payments.' },
       { title: 'Manage Events', icon: Calendar, link: '/events', color: 'bg-church-500', desc: 'Add or edit church calendar items.' },
       { title: 'Manage Announcements', icon: Bell, link: '/announcements', color: 'bg-orange-500', desc: 'Post new updates for the congregation.' },

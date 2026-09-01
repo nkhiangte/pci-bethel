@@ -482,6 +482,93 @@
         "uploadedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "url", "year"]
+    },
+    "LibraryBook": {
+      "title": "Library Book",
+      "description": "Church library book catalog item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "accessionNo": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "category": { "type": "string" },
+        "isbn": { "type": "string" },
+        "publisher": { "type": "string" },
+        "year": { "type": "string" },
+        "pages": { "type": "integer" },
+        "shelfLocation": { "type": "string" },
+        "totalCopies": { "type": "integer" },
+        "availableCopies": { "type": "integer" },
+        "status": { "type": "string", "enum": ["available", "issued", "lost", "reserved"] },
+        "qrCode": { "type": "string" },
+        "coverUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "addedDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["accessionNo", "title", "author", "category"]
+    },
+    "LibraryMember": {
+      "title": "Library Member",
+      "description": "Registered borrower card profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberNo": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "veng": { "type": "string" },
+        "department": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "registeredDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "suspended", "expired"] },
+        "qrCode": { "type": "string" },
+        "activeLoansCount": { "type": "integer" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["memberNo", "name", "phone", "department"]
+    },
+    "LibraryTransaction": {
+      "title": "Library Transaction",
+      "description": "Book issue and return transaction logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "bookId": { "type": "string" },
+        "bookTitle": { "type": "string" },
+        "accessionNo": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "memberPhone": { "type": "string" },
+        "memberNo": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "returnDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["issued", "returned", "overdue", "lost"] },
+        "issuedBy": { "type": "string" },
+        "returnedTo": { "type": "string" },
+        "remarks": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookId", "bookTitle", "accessionNo", "memberId", "memberName", "issueDate", "dueDate", "status"]
+    },
+    "LibrarySettings": {
+      "title": "Library Settings",
+      "description": "Global settings for library loan policies and contact info",
+      "type": "object",
+      "properties": {
+        "libraryName": { "type": "string" },
+        "loanDurationDays": { "type": "integer" },
+        "maxBooksPerMember": { "type": "integer" },
+        "allowSelfRegistration": { "type": "boolean" },
+        "finePerDay": { "type": "number" },
+        "contactPerson": { "type": "string" },
+        "contactPhone": { "type": "string" }
+      },
+      "required": ["libraryName", "loanDurationDays"]
     }
   },
   "firestore": {
@@ -604,6 +691,22 @@
     "/khYearlyReportsPdfs/{docId}": {
       "schema": "KhYearlyReportPdf",
       "description": "Collection of Kohhran Hmeichhia Yearly Report PDFs"
+    },
+    "/library_books/{bookId}": {
+      "schema": "LibraryBook",
+      "description": "Church library book catalog collection"
+    },
+    "/library_members/{memberId}": {
+      "schema": "LibraryMember",
+      "description": "Registered library borrowers and digital ID cards"
+    },
+    "/library_transactions/{transactionId}": {
+      "schema": "LibraryTransaction",
+      "description": "Church library book checkout and return history"
+    },
+    "/library_settings/{settingsId}": {
+      "schema": "LibrarySettings",
+      "description": "Library configuration and loan duration settings"
     }
   }
 }

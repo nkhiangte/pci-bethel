@@ -541,3 +541,78 @@ export interface Committee {
   propertyRecords?: PropertyRecord[];
   order?: number;
 }
+
+export interface LibraryBook {
+  id: string;
+  accessionNo: string;
+  title: string;
+  author: string;
+  category: string;
+  isbn?: string;
+  publisher?: string;
+  publishedYear?: string | number;
+  edition?: string;
+  totalCopies: number;
+  availableCopies: number;
+  shelfLocation?: string;
+  language?: string;
+  coverUrl?: string;
+  description?: string;
+  status: 'available' | 'issued' | 'maintenance' | 'lost';
+  qrCode?: string;
+  barcode?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface LibraryMember {
+  id: string;
+  memberNo: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  veng?: string;
+  department?: string;
+  gender?: 'male' | 'female' | 'other';
+  photoUrl?: string;
+  registeredDate: string;
+  status: 'active' | 'suspended';
+  qrCode?: string;
+  activeLoansCount?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface LibraryTransaction {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  accessionNo: string;
+  memberId: string;
+  memberName: string;
+  memberNo: string;
+  memberPhone: string;
+  issueDate: string;
+  dueDate: string;
+  returnDate?: string | null;
+  status: 'active' | 'returned' | 'overdue';
+  issuedBy?: string;
+  returnedTo?: string;
+  remarks?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface LibrarySettings {
+  id?: string;
+  libraryName: string;
+  loanDurationDays: number;
+  maxBooksPerMember: number;
+  allowSelfRegistration: boolean;
+  finePerDay?: number;
+  contactPerson?: string;
+  contactPhone?: string;
+  genres?: string[];
+}
