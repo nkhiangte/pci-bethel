@@ -47,7 +47,7 @@ jobs:
           cd android
           gradle wrapper
           chmod +x gradlew
-          ./gradlew clean bundleRelease --no-daemon --stacktrace --info
+          ./gradlew clean bundleRelease --no-daemon
 
       - name: Sign AAB
         id: sign_app
