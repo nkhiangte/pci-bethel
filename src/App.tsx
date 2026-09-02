@@ -64,10 +64,16 @@ import Bethel from './pages/Bethel';
 import Privacy from './pages/Privacy';
 import ThlaTinaRawngbawltute from './pages/ThlaTinaRawngbawltute';
 import Library from './pages/Library';
+import { requestAppStartupPermissions } from './services/appPermissions';
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Request runtime permissions when opened on mobile device
+  useEffect(() => {
+    requestAppStartupPermissions();
+  }, []);
 
   useEffect(() => {
     const handleBackButton = CapApp.addListener('backButton', ({ canGoBack }) => {

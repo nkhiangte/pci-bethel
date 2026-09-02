@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, Camera, SwitchCamera, Upload, AlertCircle, CheckCircle2, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { X, Camera, SwitchCamera, Upload, AlertCircle, CheckCircle2, Sparkles, Volume2, VolumeX, ShieldCheck, RefreshCw } from 'lucide-react';
 import { parseScannedQr } from '../../utils/qrHelper';
+import { requestCameraPermission } from '../../services/appPermissions';
 
 interface QrScannerModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
 }) => {
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [scanFeedback, setScanFeedback] = useState<{ text: string; type: string } | null>(null);
@@ -51,43 +53,49 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
     }
   };
 
+  const initScanner = async () => {
+    try {
+      setScannerError(null);
+      setIsRequestingPermission(true);
+
+      // Explicitly request camera permission first
+      await requestCameraPermission();
+
+      const devices = await Html5Qrcode.getCameras();
+      if (devices && devices.length > 0) {
+        setCameras(devices);
+        // Default to back/environment camera if available
+        const backCam = devices.find((d) => 
+          d.label.toLowerCase().includes('back') || 
+          d.label.toLowerCase().includes('rear') || 
+          d.label.toLowerCase().includes('environment')
+        );
+        const defaultCamId = backCam ? backCam.id : devices[0].id;
+        setSelectedCameraId(defaultCamId);
+        await startScanner(defaultCamId);
+      } else {
+        setScannerError('Camera hmuh a ni lo. File upload emaw manual input hmang rawh.');
+      }
+    } catch (err: any) {
+      console.error('Error getting cameras:', err);
+      setScannerError('Camera access permission pek a ni lo emaw hman theih a ni lo.');
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) {
       stopScanner();
       return;
     }
 
-    let isMounted = true;
-
-    const initScanner = async () => {
-      try {
-        setScannerError(null);
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-          if (isMounted) {
-            setCameras(devices);
-            // Default to back/environment camera if available
-            const backCam = devices.find((d) => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear') || d.label.toLowerCase().includes('environment'));
-            const defaultCamId = backCam ? backCam.id : devices[0].id;
-            setSelectedCameraId(defaultCamId);
-            startScanner(defaultCamId);
-          }
-        } else {
-          setScannerError('Camera hmuh a ni lo. File upload emaw manual input hmang rawh.');
-        }
-      } catch (err: any) {
-        console.error('Error getting cameras:', err);
-        setScannerError('Camera access permission pek a ni lo emaw hman theih a ni lo.');
-      }
-    };
-
     // Small delay to ensure modal DOM is mounted
     const timeout = setTimeout(() => {
       initScanner();
-    }, 200);
+    }, 250);
 
     return () => {
-      isMounted = false;
       clearTimeout(timeout);
       stopScanner();
     };
@@ -289,13 +297,38 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
           </div>
         </div>
 
-        {/* Error message */}
+        {/* Error message / Permission prompt banner */}
         {scannerError && (
-          <div className="p-3 bg-amber-50 border-y border-amber-200 text-amber-800 text-xs flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="font-semibold">{scannerError}</p>
-              <p className="mt-0.5 text-amber-700">A hnuai lamah Accession Number emaw Member ID chhu lut rawh:</p>
+          <div className="p-3.5 bg-amber-50 border-y border-amber-200 text-amber-900 text-xs flex flex-col gap-2">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold">{scannerError}</p>
+                <p className="mt-0.5 text-amber-700">
+                  Camera permission pek a ngai a ni. Hmet la phalsak rawh, emaw a hnuai lamah Accession Number / Member ID chhu lut rawh:
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pl-6">
+              <button
+                type="button"
+                disabled={isRequestingPermission}
+                onClick={initScanner}
+                className="px-3 py-1.5 bg-church-800 hover:bg-church-900 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-xs"
+              >
+                {isRequestingPermission ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Checking...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>Grant Camera Access / Pe Rawh</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
