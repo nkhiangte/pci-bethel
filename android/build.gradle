@@ -24,9 +24,6 @@ allprojects {
     }
     configurations.all {
         resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'org.jetbrains.kotlin') {
-                details.useVersion("1.9.22")
-            }
             if (details.requested.group == 'androidx.core' && (details.requested.name == 'core' || details.requested.name == 'core-ktx')) {
                 details.useVersion("1.13.1")
             }
