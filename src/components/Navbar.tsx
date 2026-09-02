@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, LogOut, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown, ChevronUp, Shield, ExternalLink, Calculator } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
+import { PathianRamModal } from './PathianRamModal';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [pathianRamModalOpen, setPathianRamModalOpen] = useState(false);
   const location = useLocation();
   const { t } = useLanguage();
   const { currentUser, userProfile, isAdmin } = useAuth();
@@ -46,6 +48,7 @@ const Navbar: React.FC = () => {
     { name: t.nav.announcements, path: '/announcements' },
     { name: t.nav.calendar, path: '/calendar' },
     { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
+    { name: 'Pathian Ram', path: '#', isPathianRam: true },
     { name: 'Library', path: '/library' },
     { name: t.nav.records, path: '/records' },
     { name: t.nav.directory, path: '/directory' },
@@ -144,6 +147,15 @@ const Navbar: React.FC = () => {
                         </div>
                       </div>
                     </>
+                  ) : link.isPathianRam ? (
+                    <button
+                      type="button"
+                      onClick={() => setPathianRamModalOpen(true)}
+                      className="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 text-amber-300 hover:bg-church-800 hover:text-amber-200 flex items-center space-x-1"
+                    >
+                      <Calculator size={14} className="mr-1 text-amber-400" />
+                      <span>{link.name}</span>
+                    </button>
                   ) : (
                     <Link
                       to={link.path}
@@ -245,6 +257,23 @@ const Navbar: React.FC = () => {
                       </div>
                     )}
                   </>
+                ) : link.isPathianRam ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      setPathianRamModalOpen(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-300 hover:bg-church-800 hover:text-amber-200 flex items-center justify-between"
+                  >
+                    <span className="flex items-center space-x-2">
+                      <Calculator size={18} className="text-amber-400" />
+                      <span>{link.name}</span>
+                    </span>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/30">
+                      Tithe Portal
+                    </span>
+                  </button>
                 ) : (
                   <Link
                     to={link.path}
@@ -286,6 +315,12 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Pathian Ram Launcher Modal */}
+      <PathianRamModal 
+        isOpen={pathianRamModalOpen} 
+        onClose={() => setPathianRamModalOpen(false)} 
+      />
     </nav>
   );
 };

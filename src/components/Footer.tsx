@@ -65,6 +65,22 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm">
               <li><a href="#/about" className="hover:text-white">{t.nav.about}</a></li>
               <li><a href="#/contact" className="hover:text-white">{t.nav.contact}</a></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+                    if (isMobile) {
+                      window.open('https://play.google.com/store/apps/details?id=com.champhaibethel.app', '_blank', 'noopener,noreferrer');
+                    } else {
+                      window.open('https://bethelptr.vercel.app', '_blank', 'noopener,noreferrer');
+                    }
+                  }}
+                  className="text-amber-300 hover:text-amber-200 transition flex items-center space-x-1"
+                >
+                  <span>Pathian Ram (Tithe Calculator)</span>
+                </button>
+              </li>
             </ul>
           </div>
 

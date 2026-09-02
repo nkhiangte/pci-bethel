@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send, BookOpen } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send, BookOpen, Calculator, ExternalLink } from 'lucide-react';
 import { db } from '../services/firebase';
 import firebase from 'firebase/compat/app';
+import { PathianRamModal } from '../components/PathianRamModal';
 
 const AdminDashboard: React.FC = () => {
   const { isAdmin, currentUser } = useAuth();
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  const [pathianRamModalOpen, setPathianRamModalOpen] = useState(false);
   
   // Notification State
   const [notifTitle, setNotifTitle] = useState('');
@@ -28,6 +30,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const adminActions = [
+      { title: 'Pathian Ram / PTR Tithe Portal', icon: Calculator, isCustomAction: true, color: 'bg-amber-600', desc: 'Finance Committee Tithe Calculator (Web & Android App).' },
       { title: 'Church Library System', icon: BookOpen, link: '/library', color: 'bg-church-800', desc: 'QR Scanner, Issue & Return, Excel Book Import & Catalog.' },
       { title: 'Manage Contributions', icon: HeartHandshake, link: '/admin/thawhlawm', color: 'bg-emerald-600', desc: 'Verify and track Thawhlawm payments.' },
       { title: 'Manage Events', icon: Calendar, link: '/events', color: 'bg-church-500', desc: 'Add or edit church calendar items.' },
@@ -120,15 +123,39 @@ To make this live:
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {adminActions.map((action, idx) => (
-                    <Link to={action.link} key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition group">
-                        <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center text-white mb-4 shadow-sm`}>
-                            <action.icon size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-600 transition-colors">{action.title}</h3>
-                        <p className="text-slate-500 mt-2 text-sm">{action.desc}</p>
-                    </Link>
+                    action.isCustomAction ? (
+                      <button 
+                        key={idx} 
+                        type="button"
+                        onClick={() => setPathianRamModalOpen(true)}
+                        className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition group text-left w-full"
+                      >
+                          <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center text-white mb-4 shadow-sm`}>
+                              <action.icon size={24} />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-amber-600 transition-colors">{action.title}</h3>
+                            <ExternalLink size={16} className="text-slate-400 group-hover:text-amber-600" />
+                          </div>
+                          <p className="text-slate-500 mt-2 text-sm">{action.desc}</p>
+                      </button>
+                    ) : (
+                      <Link to={action.link!} key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition group">
+                          <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center text-white mb-4 shadow-sm`}>
+                              <action.icon size={24} />
+                          </div>
+                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-600 transition-colors">{action.title}</h3>
+                          <p className="text-slate-500 mt-2 text-sm">{action.desc}</p>
+                      </Link>
+                    )
                 ))}
             </div>
+
+            {/* Pathian Ram Launcher Modal */}
+            <PathianRamModal 
+              isOpen={pathianRamModalOpen} 
+              onClose={() => setPathianRamModalOpen(false)} 
+            />
 
             <div className="grid md:grid-cols-2 gap-8 mt-12">
                 

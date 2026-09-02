@@ -1,10 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Heart, Globe, Coffee, Home, Users, ArrowLeft, Calendar, User, MapPin, DollarSign, QrCode, Upload, CheckCircle2, Loader, ArrowRight, Settings, Save, X, FileDown, FileUp, ChevronDown } from 'lucide-react';
+import { Heart, Globe, Coffee, Home, Users, ArrowLeft, Calendar, User, MapPin, DollarSign, QrCode, Upload, CheckCircle2, Loader, ArrowRight, Settings, Save, X, FileDown, FileUp, ChevronDown, Calculator, ExternalLink } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import * as XLSX from 'xlsx';
+import { PathianRamModal } from '../components/PathianRamModal';
 
 const IMGBB_API_KEY = '7939507abc655d09649cc02e47dc9d49';
 
@@ -60,6 +61,7 @@ const Thawhlawm: React.FC = () => {
 
   // Admin Management State
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+  const [pathianRamModalOpen, setPathianRamModalOpen] = useState(false);
   const [manageBial, setManageBial] = useState(BIAL_OPTIONS[0]);
   const [manageNamesText, setManageNamesText] = useState('');
   const [savingFamilies, setSavingFamilies] = useState(false);
@@ -328,25 +330,56 @@ const Thawhlawm: React.FC = () => {
 
         {!activeCategory ? (
           /* Landing View: Categories */
-          <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
-                className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-church-200 transition-all duration-300 text-left group flex items-center"
-              >
-                <div className={`p-4 ${cat.color} rounded-xl text-white mr-5 shadow-md group-hover:scale-110 transition-transform`}>
-                  <cat.icon size={24} />
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Dedicated Finance Committee PTR Tithe Calculator Portal Banner */}
+            <button
+              type="button"
+              onClick={() => setPathianRamModalOpen(true)}
+              className="w-full bg-gradient-to-r from-amber-600 via-amber-700 to-church-900 p-5 rounded-2xl shadow-md border border-amber-400/40 text-left text-white group flex items-center justify-between hover:shadow-xl transition-all duration-300"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-3.5 bg-white/10 backdrop-blur-xs rounded-xl border border-white/20 text-amber-200 group-hover:scale-105 transition-transform">
+                  <Calculator size={26} />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-700 transition-colors">{cat.title}</h3>
-                    <p className="text-slate-500 text-sm">{cat.description}</p>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-bold text-white group-hover:text-amber-200 transition-colors">
+                      Pathian Ram (PTR) Tithe Calculator
+                    </h3>
+                    <span className="px-2 py-0.5 bg-amber-400 text-amber-950 font-black text-[10px] rounded-full uppercase tracking-wider">
+                      Finance Portal
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-100/90 mt-0.5">
+                    Finance Committee tithe calculation app (Web portal & Android Play Store App).
+                  </p>
                 </div>
-                <div className="ml-auto text-slate-300 group-hover:text-church-500">
-                    <ArrowRight size={24} />
-                </div>
-              </button>
-            ))}
+              </div>
+              <div className="text-amber-200 group-hover:translate-x-1 transition-transform">
+                <ExternalLink size={20} />
+              </div>
+            </button>
+
+            <div className="grid grid-cols-1 gap-4">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-church-200 transition-all duration-300 text-left group flex items-center"
+                >
+                  <div className={`p-4 ${cat.color} rounded-xl text-white mr-5 shadow-md group-hover:scale-110 transition-transform`}>
+                    <cat.icon size={24} />
+                  </div>
+                  <div>
+                      <h3 className="text-xl font-bold text-slate-800 group-hover:text-church-700 transition-colors">{cat.title}</h3>
+                      <p className="text-slate-500 text-sm">{cat.description}</p>
+                  </div>
+                  <div className="ml-auto text-slate-300 group-hover:text-church-500">
+                      <ArrowRight size={24} />
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           /* Detail View */
@@ -701,6 +734,12 @@ const Thawhlawm: React.FC = () => {
               </div>
           </div>
       )}
+
+      {/* Pathian Ram Launcher Modal */}
+      <PathianRamModal 
+        isOpen={pathianRamModalOpen} 
+        onClose={() => setPathianRamModalOpen(false)} 
+      />
     </div>
   );
 };

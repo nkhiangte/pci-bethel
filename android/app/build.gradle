@@ -43,6 +43,12 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 
     constraints {
+        implementation("androidx.core:core:1.13.1") {
+            because("androidx.core 1.17.0 requires AGP 8.9.1+")
+        }
+        implementation("androidx.core:core-ktx:1.13.1") {
+            because("androidx.core-ktx 1.17.0 requires AGP 8.9.1+")
+        }
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
         }
