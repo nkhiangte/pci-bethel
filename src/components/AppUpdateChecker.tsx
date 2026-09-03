@@ -7,8 +7,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { ArrowUpCircle, X, Download, Sparkles, ExternalLink } from 'lucide-react';
 
 // Hardcoded app version info corresponding to the current native build
-const CURRENT_VERSION_CODE = 24;
-const CURRENT_VERSION_NAME = "2.4";
+const CURRENT_VERSION_CODE = 26;
+const CURRENT_VERSION_NAME = "2.6";
 
 interface AppUpdateSettings {
   latestVersionCode: number;
@@ -112,7 +112,30 @@ const AppUpdateChecker: React.FC = () => {
     if (!db || !db.collection) return;
 
     const unsubscribe = db.collection('settings').doc('appUpdate').onSnapshot(async (doc) => {
-      if (!doc.exists) return;
+      if (!doc.exists) {
+        // Fallback to static version.json
+        try {
+          const res = await fetch(`/version.json?t=${Date.now()}`);
+          const vData = await res.json();
+          if (vData && vData.version) {
+            const remoteVerCode = parseInt(vData.version.replace(/\./g, ''), 10) || 26;
+            const fallbackSettings: AppUpdateSettings = {
+              latestVersionCode: remoteVerCode,
+              latestVersionName: vData.version,
+              updateUrl: vData.playStoreUrl || "https://play.google.com/store/apps/details?id=com.pcibethel.app",
+              updateMessage: vData.message || "A new version of Bethel Kohhran is available.",
+              isUpdateRequired: false
+            };
+            setUpdateSettings(fallbackSettings);
+            if (remoteVerCode > Number(localVersionCode) && !location.pathname.startsWith('/admin') && !isDismissed) {
+              setShowModal(true);
+            }
+          }
+        } catch (e) {
+          console.log("version.json fallback error:", e);
+        }
+        return;
+      }
       const data = doc.data() as AppUpdateSettings;
       if (!data) return;
 
