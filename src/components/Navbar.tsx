@@ -16,60 +16,55 @@ const Navbar: React.FC = () => {
   const { currentUser, userProfile, isAdmin } = useAuth();
 
   const navLinks = [
-    { name: t.nav.home, path: '/' },
-    { name: t.nav.bethel, path: '/bethel' },
-    { name: t.nav.upaBial, path: '/upa-bial' },
-    { name: t.nav.departments, path: '/committees' },
+    { name: 'Home', path: '/' },
     { 
-      name: t.nav.fellowships, 
+      name: 'About', 
       path: '#',
       children: [
-        { name: 'Kohhran Hmeichhia', path: '/kohhran-hmeichhia' },
-        { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
-        { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
+        { name: 'About Us', path: '/about' },
+        { name: 'History', path: '/about' },
+        { name: 'Committees', path: '/committees' },
+        { name: 'Missionaries', path: '/missionaries' },
+        { name: 'Archives', path: '/archives' },
       ]
     },
     { 
-      name: t.nav.sundaySchool, 
+      name: 'Rawngbawlna', 
       path: '#',
       children: [
-        { name: 'Dashboard', path: '/sundayschool/dashboard' },
-        { name: t.nav.weeklyReport, path: '/sundayschool/report' },
-        { name: t.sundaySchool['pre-beginner'], path: '/sundayschool/pre-beginner' },
-        { name: t.sundaySchool.beginner, path: '/sundayschool/beginner' },
-        { name: t.sundaySchool.primary, path: '/sundayschool/primary' },
-        { name: t.sundaySchool.junior, path: '/sundayschool/junior' },
-        { name: t.sundaySchool.intermediate, path: '/sundayschool/intermediate' },
-        { name: t.sundaySchool.sacrament, path: '/sundayschool/sacrament' },
-        { name: t.sundaySchool.senior, path: '/sundayschool/senior' },
-        { name: t.sundaySchool.puitling, path: '/sundayschool/puitling' },
+        { name: 'Upa Bial', path: '/upa-bial' },
+        { 
+          name: 'Fellowships', 
+          path: '#',
+          children: [
+            { name: 'Kohhran Hmeichhia', path: '/kohhran-hmeichhia' },
+            { name: 'Kristian Ṭhalai Pawl (KTP)', path: '/ktp' },
+            { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
+          ]
+        },
+        { name: 'Sunday School', path: '/sundayschool/dashboard' },
+        { name: 'Pathian Ram', path: '#', isPathianRam: true },
       ]
     },
-    { name: t.nav.announcements, path: '/announcements' },
-    { name: t.nav.calendar, path: '/calendar' },
-    { name: t.nav.chanvo, path: '/inkhawm-chanvo' },
-    { name: 'Pathian Ram', path: '#', isPathianRam: true },
-    { name: 'Library', path: '/library' },
-    { name: t.nav.records, path: '/records' },
-    { name: t.nav.directory, path: '/directory' },
-    { name: t.nav.missionaries, path: '/missionaries' },
     { 
-      name: t.nav.archives, 
+      name: 'Worship', 
       path: '#',
       children: [
-        { name: t.nav.archives, path: '/archives' },
-        { name: t.nav.articles, path: '/articles' },
+        { name: 'Hriattirna', path: '/announcements' },
+        { name: 'Calendar', path: '/calendar' },
+        { name: 'Inkhawm Chanvo', path: '/inkhawm-chanvo' },
       ]
     },
-    { name: t.nav.gallery, path: '/gallery' },
     { 
-      name: t.nav.about, 
+      name: 'Resources', 
       path: '#',
       children: [
-        { name: t.nav.about, path: '/about' },
-        { name: t.nav.contact, path: '/contact' },
+        { name: 'Library', path: '/library' },
+        { name: 'Records', path: '/records' },
+        { name: 'Gallery', path: '/gallery' },
       ]
     },
+    { name: 'Directory', path: '/directory' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -132,17 +127,51 @@ const Navbar: React.FC = () => {
                       <div className="absolute left-0 top-full pt-2 w-56 hidden group-hover:block animate-in fade-in slide-in-from-top-1 duration-200 z-40">
                         <div className="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none py-1 overflow-hidden">
                           {link.children.map((child) => (
-                            <Link
-                              key={child.path}
-                              to={child.path}
-                              className={`block px-4 py-2 text-sm ${
-                                isActive(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path)
-                                  ? 'bg-church-50 text-church-700 font-bold'
-                                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                              }`}
-                            >
-                              {child.name}
-                            </Link>
+                            child.children ? (
+                              <div key={child.name} className="relative group/sub">
+                                <div className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer font-medium">
+                                  <span>{child.name}</span>
+                                  <span className="text-xs">&gt;</span>
+                                </div>
+                                <div className="absolute left-full top-0 w-56 hidden group-hover/sub:block shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50 rounded-md">
+                                  {child.children.map((subChild) => (
+                                    <Link
+                                      key={subChild.path}
+                                      to={subChild.path}
+                                      className={`block px-4 py-2 text-sm ${
+                                        isActive(subChild.path)
+                                          ? 'bg-church-50 text-church-700 font-bold'
+                                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                                      }`}
+                                    >
+                                      {subChild.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : child.isPathianRam ? (
+                              <button
+                                key={child.name}
+                                type="button"
+                                onClick={() => setPathianRamModalOpen(true)}
+                                className="w-full text-left px-4 py-2 text-sm text-amber-700 hover:bg-slate-100 flex items-center space-x-2 font-medium"
+                              >
+                                <Calculator size={14} />
+                                <span>{child.name}</span>
+                              </button>
+                            ) : child.isSignIn && currentUser ? null : (
+                              <Link
+                                key={child.name}
+                                to={child.path}
+                                className={`block px-4 py-2 text-sm ${
+                                  isActive(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path)
+                                    ? 'bg-church-50 text-church-700 font-bold'
+                                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
+                              >
+                                {child.name}
+                              </Link>
+                            )
                           ))}
                         </div>
                       </div>
@@ -241,18 +270,62 @@ const Navbar: React.FC = () => {
                     {mobileExpanded === link.name && (
                       <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2 mt-1 animate-in slide-in-from-top-1 duration-200">
                         {link.children.map((child) => (
-                          <Link
-                            key={child.path}
-                            to={child.path}
-                            onClick={() => setIsOpen(false)}
-                            className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                              isActive(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path)
-                                ? 'bg-church-800 text-white'
-                                : 'text-slate-400 hover:bg-church-800 hover:text-white'
-                            }`}
-                          >
-                            {child.name}
-                          </Link>
+                          <div key={child.name}>
+                            {child.children ? (
+                              <>
+                                <button
+                                  onClick={() => toggleMobileMenu(child.name)}
+                                  className="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-church-800 hover:text-white"
+                                >
+                                  <span>{child.name}</span>
+                                  {mobileExpanded === child.name ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </button>
+                                {mobileExpanded === child.name && (
+                                  <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2 mt-1">
+                                    {child.children.map((subChild) => (
+                                      <Link
+                                        key={subChild.path}
+                                        to={subChild.path}
+                                        onClick={() => setIsOpen(false)}
+                                        className={`block px-3 py-1.5 rounded-md text-sm font-medium ${
+                                          isActive(subChild.path)
+                                            ? 'bg-church-800 text-white'
+                                            : 'text-slate-400 hover:bg-church-800 hover:text-white'
+                                        }`}
+                                      >
+                                        {subChild.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            ) : child.isPathianRam ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  setPathianRamModalOpen(true);
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-amber-300 hover:bg-church-800 flex items-center space-x-2"
+                              >
+                                <Calculator size={14} className="text-amber-400" />
+                                <span>{child.name}</span>
+                              </button>
+                            ) : child.isSignIn && currentUser ? null : (
+                              <Link
+                                key={child.name}
+                                to={child.path}
+                                onClick={() => setIsOpen(false)}
+                                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                                  isActive(child.path)
+                                    ? 'bg-church-800 text-white'
+                                    : 'text-slate-300 hover:bg-church-800 hover:text-white'
+                                }`}
+                              >
+                                {child.name}
+                              </Link>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
