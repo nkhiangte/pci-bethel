@@ -85,6 +85,52 @@ export const Library: React.FC = () => {
   const [borrowerSearch, setBorrowerSearch] = useState('');
   const [transactionFilter, setTransactionFilter] = useState<'ALL' | 'active' | 'overdue' | 'returned'>('ALL');
 
+  // Library Directory Landing States
+  const [directoryTab, setDirectoryTab] = useState<'categories' | 'authors' | 'az'>('categories');
+  const [selectedDirectoryFilter, setSelectedDirectoryFilter] = useState<{ type: 'category' | 'author' | 'az'; value: string } | null>(null);
+
+  // Authors List with book counts
+  const authorsList = useMemo(() => {
+    const map = new Map<string, { count: number; available: number }>();
+    books.forEach((b) => {
+      const author = b.author?.trim() || 'Unknown Author';
+      const curr = map.get(author) || { count: 0, available: 0 };
+      map.set(author, {
+        count: curr.count + 1,
+        available: curr.available + ((b.availableCopies || 0) > 0 ? 1 : 0),
+      });
+    });
+    return Array.from(map.entries())
+      .map(([author, data]) => ({ author, ...data }))
+      .sort((a, b) => a.author.localeCompare(b.author));
+  }, [books]);
+
+  // A-Z List with book counts
+  const azList = useMemo(() => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const map = new Map<string, number>();
+    letters.forEach((l) => map.set(l, 0));
+    map.set('#', 0);
+
+    books.forEach((b) => {
+      const firstChar = (b.title || '').trim().charAt(0).toUpperCase();
+      if (letters.includes(firstChar)) {
+        map.set(firstChar, (map.get(firstChar) || 0) + 1);
+      } else {
+        map.set('#', (map.get('#') || 0) + 1);
+      }
+    });
+
+    const result: { letter: string; count: number }[] = [];
+    if ((map.get('#') || 0) > 0) {
+      result.push({ letter: '#', count: map.get('#') || 0 });
+    }
+    letters.forEach((l) => {
+      result.push({ letter: l, count: map.get(l) || 0 });
+    });
+    return result;
+  }, [books]);
+
   // Modal States
   const [scannerModalOpen, setScannerModalOpen] = useState(false);
   const [scannerTargetType, setScannerTargetType] = useState<'any' | 'book' | 'member'>('any');
@@ -273,6 +319,26 @@ export const Library: React.FC = () => {
     }
   };
 
+  // Delete All Books / Clear Book List
+  const handleDeleteAllBooks = async () => {
+    if (!window.confirm("WARNING: Are you sure you want to delete ALL book titles from the library database? This action cannot be undone and will clear the catalog so you can upload a new list.")) {
+      return;
+    }
+    try {
+      if (db && db.collection) {
+        const snap = await db.collection('library_books').get();
+        const deletePromises = snap.docs.map((d) => d.ref.delete());
+        await Promise.all(deletePromises);
+      }
+      setBooks([]);
+      alert("All books have been successfully deleted from the library catalog.");
+      fetchLibraryData();
+    } catch (err) {
+      console.error('Error deleting all books:', err);
+      alert('Failed to delete all books.');
+    }
+  };
+
   // Save Settings
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -302,6 +368,22 @@ export const Library: React.FC = () => {
         (b.isbn && b.isbn.includes(searchQuery)) ||
         (b.shelfLocation && b.shelfLocation.toLowerCase().includes(searchQuery.toLowerCase()));
 
+      let matchesDirectory = true;
+      if (selectedDirectoryFilter) {
+        if (selectedDirectoryFilter.type === 'category') {
+          matchesDirectory = b.category === selectedDirectoryFilter.value;
+        } else if (selectedDirectoryFilter.type === 'author') {
+          matchesDirectory = (b.author?.trim() || 'Unknown Author') === selectedDirectoryFilter.value;
+        } else if (selectedDirectoryFilter.type === 'az') {
+          const firstChar = (b.title || '').trim().charAt(0).toUpperCase();
+          if (selectedDirectoryFilter.value === '#') {
+            matchesDirectory = !/[A-Z]/.test(firstChar);
+          } else {
+            matchesDirectory = firstChar === selectedDirectoryFilter.value;
+          }
+        }
+      }
+
       const matchesCategory = categoryFilter === 'ALL' || b.category === categoryFilter;
 
       const matchesStatus =
@@ -309,9 +391,9 @@ export const Library: React.FC = () => {
         (statusFilter === 'available' && b.availableCopies > 0) ||
         (statusFilter === 'issued' && b.availableCopies === 0);
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesDirectory && matchesCategory && matchesStatus;
     });
-  }, [books, searchQuery, categoryFilter, statusFilter]);
+  }, [books, searchQuery, categoryFilter, statusFilter, selectedDirectoryFilter]);
 
   // Filtered Borrowers
   const filteredMembersList = useMemo(() => {
@@ -701,101 +783,265 @@ export const Library: React.FC = () => {
               </div>
             </div>
 
-            {/* Books Grid / List View */}
+            {/* Books Grid / List View or Directory Landing */}
             {loading ? (
               <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
                 <RefreshCw className="w-8 h-8 text-church-600 animate-spin mx-auto mb-3" />
                 <p className="font-semibold text-slate-700">Lehkhabu zawng zawng lakkhawm mek a ni...</p>
               </div>
-            ) : filteredBooks.length === 0 ? (
-              <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
-                <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-                <h3 className="text-lg font-bold text-slate-800">Lehkhabu hmuh a ni lo</h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  I thil zawn nen a inmil lehkhabu a awm rih lo emaw, database-ah lehkhabu la awm lo a ni thei e.
-                </p>
-                {isAdmin && (
-                  <div className="pt-2 flex justify-center space-x-3">
+            ) : !searchQuery.trim() && !selectedDirectoryFilter ? (
+              <div className="space-y-6">
+                {/* Directory Navigation Header */}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                      <BookOpen className="w-5 h-5 text-church-600" />
+                      <span>Library Directory</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Explore library collection by Category, Author, or A-Z index.
+                    </p>
+                  </div>
+                  <div className="bg-slate-100 p-1 rounded-xl flex border border-slate-200 w-full sm:w-auto">
                     <button
                       type="button"
-                      onClick={() => setBookFormModalOpen(true)}
-                      className="px-4 py-2 bg-church-800 text-white rounded-xl text-xs font-bold"
+                      onClick={() => setDirectoryTab('categories')}
+                      className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        directoryTab === 'categories'
+                          ? 'bg-church-800 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     >
-                      Add First Book
+                      <Tag className="w-3.5 h-3.5" />
+                      <span>View by Category</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setExcelImportModalOpen(true)}
-                      className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+                      onClick={() => setDirectoryTab('authors')}
+                      className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        directoryTab === 'authors'
+                          ? 'bg-church-800 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     >
-                      Import Excel File
+                      <Users className="w-3.5 h-3.5" />
+                      <span>View by Author</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setDirectoryTab('az')}
+                      className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        directoryTab === 'az'
+                          ? 'bg-church-800 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>View by A-Z</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Directory Content */}
+                {directoryTab === 'categories' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {effectiveGenres.map((cat) => {
+                      const catBooks = books.filter((b) => b.category === cat);
+                      const catCount = catBooks.length;
+                      const availCount = catBooks.filter((b) => (b.availableCopies || 0) > 0).length;
+                      return (
+                        <div
+                          key={cat}
+                          onClick={() => setSelectedDirectoryFilter({ type: 'category', value: cat })}
+                          className="bg-white rounded-2xl p-5 border border-slate-200 hover:border-church-500 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="p-2.5 bg-church-50 text-church-700 rounded-xl group-hover:bg-church-800 group-hover:text-white transition-colors">
+                                <Tag className="w-4 h-4" />
+                              </span>
+                              <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-bold rounded-full text-xs">
+                                {catCount} {catCount === 1 ? 'book' : 'books'}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-slate-900 group-hover:text-church-700 transition-colors text-sm mb-1">
+                              {cat}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {availCount} available for loan
+                            </p>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-church-700 font-bold">
+                            <span>Browse Category</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {directoryTab === 'authors' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {authorsList.length === 0 ? (
+                      <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-200">
+                        <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-slate-700">No authors found in catalog</p>
+                      </div>
+                    ) : (
+                      authorsList.map((item) => (
+                        <div
+                          key={item.author}
+                          onClick={() => setSelectedDirectoryFilter({ type: 'author', value: item.author })}
+                          className="bg-white rounded-2xl p-5 border border-slate-200 hover:border-church-500 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="p-2.5 bg-amber-50 text-amber-700 rounded-xl group-hover:bg-amber-800 group-hover:text-white transition-colors">
+                                <Users className="w-4 h-4" />
+                              </span>
+                              <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-bold rounded-full text-xs">
+                                {item.count} {item.count === 1 ? 'book' : 'books'}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-slate-900 group-hover:text-church-700 transition-colors text-sm mb-1 line-clamp-1">
+                              {item.author}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {item.available} available
+                            </p>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-church-700 font-bold">
+                            <span>View Author Books</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {directoryTab === 'az' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-3">
+                      {azList.map((item) => (
+                        <button
+                          key={item.letter}
+                          type="button"
+                          onClick={() => setSelectedDirectoryFilter({ type: 'az', value: item.letter })}
+                          disabled={item.count === 0}
+                          className={`p-4 rounded-2xl border flex flex-col items-center justify-center space-y-1 transition-all ${
+                            item.count > 0
+                              ? 'bg-white border-slate-200 hover:border-church-500 hover:shadow-md cursor-pointer text-slate-900 group'
+                              : 'bg-slate-50 border-slate-200 opacity-40 cursor-not-allowed text-slate-400'
+                          }`}
+                        >
+                          <span className="text-lg font-extrabold font-mono group-hover:text-church-700 transition-colors">
+                            {item.letter}
+                          </span>
+                          <span className="text-[10px] bg-slate-100 group-hover:bg-church-50 group-hover:text-church-700 px-2 py-0.5 rounded-full font-bold">
+                            {item.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredBooks.map((book) => {
-                  const isAvailable = (book.availableCopies || 0) > 0;
-                  return (
-                    <div
-                      key={book.id}
-                      onClick={() => {
-                        setSelectedBookDetails(book);
-                        setBookDetailsModalOpen(true);
-                      }}
-                      className="bg-white rounded-2xl p-4 border border-slate-200 hover:border-church-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
-                    >
-                      <div>
-                        {/* Top bar: Acc No + Status */}
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-mono text-xs font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            {book.accessionNo}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              isAvailable
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200'
-                            }`}
-                          >
-                            {isAvailable ? `${book.availableCopies} Copies Left` : 'Issued Out'}
-                          </span>
-                        </div>
-
-                        {/* Title & Author */}
-                        <h3 className="font-bold text-sm text-slate-900 group-hover:text-church-700 transition-colors line-clamp-2 mb-1">
-                          {book.title}
-                        </h3>
-                        <p className="text-xs text-slate-600 font-medium line-clamp-1 mb-2">
-                          By {book.author}
-                        </p>
-
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
-                            {book.category}
-                          </span>
-                          {book.shelfLocation && (
-                            <span className="text-[10px] bg-church-50 text-church-700 px-2 py-0.5 rounded font-medium flex items-center space-x-1">
-                              <MapPin className="w-2.5 h-2.5" />
-                              <span>{book.shelfLocation}</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Card Footer: Quick Actions */}
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>Total: {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'}</span>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-church-600 font-bold text-[11px] group-hover:underline flex items-center">
-                            Details <ArrowRight className="w-3 h-3 ml-0.5" />
-                          </span>
-                        </div>
-                      </div>
+              <div className="space-y-4">
+                {selectedDirectoryFilter && (
+                  <div className="flex items-center justify-between bg-church-50 border border-church-200 px-4 py-3 rounded-2xl shadow-xs">
+                    <div className="flex items-center space-x-2 text-xs font-semibold text-church-900">
+                      <span className="font-bold text-church-700">Browsing {selectedDirectoryFilter.type.toUpperCase()}:</span>
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-church-300 font-bold text-slate-900">
+                        {selectedDirectoryFilter.value}
+                      </span>
+                      <span className="text-slate-500">({filteredBooks.length} {filteredBooks.length === 1 ? 'book' : 'books'})</span>
                     </div>
-                  );
-                })}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDirectoryFilter(null)}
+                      className="px-3.5 py-1.5 bg-church-800 text-white rounded-xl text-xs font-bold hover:bg-church-900 transition-colors shadow-xs"
+                    >
+                      ← Back to Directory
+                    </button>
+                  </div>
+                )}
+
+                {filteredBooks.length === 0 ? (
+                  <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
+                    <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
+                    <h3 className="text-lg font-bold text-slate-800">Lehkhabu hmuh a ni lo</h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto">
+                      I thil zawn nen a inmil lehkhabu a awm rih lo.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredBooks.map((book) => {
+                      const isAvailable = (book.availableCopies || 0) > 0;
+                      return (
+                        <div
+                          key={book.id}
+                          onClick={() => {
+                            setSelectedBookDetails(book);
+                            setBookDetailsModalOpen(true);
+                          }}
+                          className="bg-white rounded-2xl p-4 border border-slate-200 hover:border-church-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+                        >
+                          <div>
+                            {/* Top bar: Acc No + Status */}
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-xs font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                {book.accessionNo}
+                              </span>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  isAvailable
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                }`}
+                              >
+                                {isAvailable ? `${book.availableCopies} Copies Left` : 'Issued Out'}
+                              </span>
+                            </div>
+
+                            {/* Title & Author */}
+                            <h3 className="font-bold text-sm text-slate-900 group-hover:text-church-700 transition-colors line-clamp-2 mb-1">
+                              {book.title}
+                            </h3>
+                            <p className="text-xs text-slate-600 font-medium line-clamp-1 mb-2">
+                              By {book.author}
+                            </p>
+
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
+                                {book.category}
+                              </span>
+                              {book.shelfLocation && (
+                                <span className="text-[10px] bg-church-50 text-church-700 px-2 py-0.5 rounded font-medium flex items-center space-x-1">
+                                  <MapPin className="w-2.5 h-2.5" />
+                                  <span>{book.shelfLocation}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Card Footer: Quick Actions */}
+                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                            <span>Total: {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'}</span>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-church-600 font-bold text-[11px] group-hover:underline flex items-center">
+                                Details <ArrowRight className="w-3 h-3 ml-0.5" />
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1219,7 +1465,7 @@ export const Library: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* 1. Import Excel */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
                   <div>
@@ -1286,6 +1532,27 @@ export const Library: React.FC = () => {
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Export Catalog ({books.length})</span>
+                  </button>
+                </div>
+
+                {/* 4. Delete Book List / Clear Catalog */}
+                <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 flex flex-col justify-between space-y-3">
+                  <div>
+                    <h4 className="font-bold text-sm text-rose-900 flex items-center space-x-1.5">
+                      <Trash2 className="w-4 h-4 text-rose-600" />
+                      <span>4. Clear Book List</span>
+                    </h4>
+                    <p className="text-xs text-rose-700 mt-1">
+                      Delete all existing book titles from the database to upload your new list.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAllBooks}
+                    className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center space-x-1.5 shadow-xs"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete All Books ({books.length})</span>
                   </button>
                 </div>
               </div>
