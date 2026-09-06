@@ -141,40 +141,47 @@ const Navbar: React.FC = () => {
                       </button>
                       
                       {/* Dropdown Menu with Gap Bridge (pt-2 instead of mt-2) */}
-                      <div className="absolute left-0 top-full pt-2 w-56 hidden group-hover:block animate-in fade-in slide-in-from-top-1 duration-200 z-40">
+                      <div 
+                        className="absolute left-0 top-full pt-2 w-64 hidden group-hover:block animate-in fade-in slide-in-from-top-1 duration-200 z-40"
+                        onMouseLeave={() => setOpenDesktopSubmenu(null)}
+                      >
                         <div className="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none py-1 overflow-hidden">
                           {link.children.map((child) => (
                             child.children ? (
                               <div 
                                 key={child.name} 
-                                className="relative group/sub"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenDesktopSubmenu(openDesktopSubmenu === child.name ? null : child.name);
-                                }}
+                                className="flex flex-col"
                               >
-                                <div className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer font-medium">
+                                <button
+                                  type="button"
+                                  onMouseEnter={() => setOpenDesktopSubmenu(child.name)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenDesktopSubmenu(openDesktopSubmenu === child.name ? null : child.name);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer font-medium"
+                                >
                                   <span>{child.name}</span>
-                                  <span className="text-xs">&gt;</span>
-                                </div>
-                                <div className={`absolute left-full top-0 pl-1 w-56 shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50 rounded-md ${
-                                  openDesktopSubmenu === child.name ? 'block' : 'hidden group-hover/sub:block'
-                                }`}>
-                                  {child.children.map((subChild) => (
-                                    <Link
-                                      key={subChild.path}
-                                      to={subChild.path}
-                                      onClick={() => setOpenDesktopSubmenu(null)}
-                                      className={`block px-4 py-2 text-sm ${
-                                        isActive(subChild.path)
-                                          ? 'bg-church-50 text-church-700 font-bold'
-                                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                                      }`}
-                                    >
-                                      {subChild.name}
-                                    </Link>
-                                  ))}
-                                </div>
+                                  {openDesktopSubmenu === child.name ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </button>
+                                {openDesktopSubmenu === child.name && (
+                                  <div className="bg-slate-50 py-1 pl-4 border-l-2 border-church-200 my-0.5 space-y-0.5">
+                                    {child.children.map((subChild) => (
+                                      <Link
+                                        key={subChild.path}
+                                        to={subChild.path}
+                                        onClick={() => setOpenDesktopSubmenu(null)}
+                                        className={`block px-3 py-1.5 text-sm rounded-md ${
+                                          isActive(subChild.path)
+                                            ? 'bg-church-100 text-church-800 font-bold'
+                                            : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                                        }`}
+                                      >
+                                        {subChild.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             ) : child.isPathianRam ? (
                               <button
