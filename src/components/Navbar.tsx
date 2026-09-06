@@ -9,7 +9,7 @@ import { PathianRamModal } from './PathianRamModal';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string[]>([]);
   const [pathianRamModalOpen, setPathianRamModalOpen] = useState(false);
   const location = useLocation();
   const { t } = useLanguage();
@@ -42,7 +42,20 @@ const Navbar: React.FC = () => {
             { name: 'Kohhran Pavalai Pawl (KPP)', path: '/kpp' },
           ]
         },
-        { name: 'Sunday School', path: '/sundayschool/dashboard' },
+        { 
+          name: 'Sunday School', 
+          path: '#',
+          children: [
+            { name: 'Dashboard', path: '/sundayschool/dashboard' },
+            { name: 'Puitling', path: '/sundayschool/puitling' },
+            { name: 'Senior', path: '/sundayschool/senior' },
+            { name: 'Sacrament', path: '/sundayschool/sacrament' },
+            { name: 'Intermediate', path: '/sundayschool/intermediate' },
+            { name: 'Junior', path: '/sundayschool/junior' },
+            { name: 'Primary', path: '/sundayschool/primary' },
+            { name: 'Beginner', path: '/sundayschool/beginner' },
+          ]
+        },
         { name: 'Pathian Ram', path: '#', isPathianRam: true },
       ]
     },
@@ -59,6 +72,7 @@ const Navbar: React.FC = () => {
       name: 'Resources', 
       path: '#',
       children: [
+        { name: 'Bethel Bulletin', path: '/bethel' },
         { name: 'Library', path: '/library' },
         { name: 'Records', path: '/records' },
         { name: 'Gallery', path: '/gallery' },
@@ -71,7 +85,7 @@ const Navbar: React.FC = () => {
   const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path));
 
   const toggleMobileMenu = (name: string) => {
-    setMobileExpanded(prev => prev === name ? null : name);
+    setMobileExpanded(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
   };
 
   const handleLogout = async () => {
@@ -260,14 +274,14 @@ const Navbar: React.FC = () => {
                     <button
                       onClick={() => toggleMobileMenu(link.name)}
                       className={`w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                         mobileExpanded === link.name ? 'bg-church-800 text-white' : 'text-slate-300 hover:bg-church-800 hover:text-white'
+                         mobileExpanded.includes(link.name) ? 'bg-church-800 text-white' : 'text-slate-300 hover:bg-church-800 hover:text-white'
                       }`}
                     >
                       {link.name}
-                      {mobileExpanded === link.name ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {mobileExpanded.includes(link.name) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                     
-                    {mobileExpanded === link.name && (
+                    {mobileExpanded.includes(link.name) && (
                       <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2 mt-1 animate-in slide-in-from-top-1 duration-200">
                         {link.children.map((child) => (
                           <div key={child.name}>
@@ -278,9 +292,9 @@ const Navbar: React.FC = () => {
                                   className="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-church-800 hover:text-white"
                                 >
                                   <span>{child.name}</span>
-                                  {mobileExpanded === child.name ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                  {mobileExpanded.includes(child.name) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                 </button>
-                                {mobileExpanded === child.name && (
+                                {mobileExpanded.includes(child.name) && (
                                   <div className="pl-4 space-y-1 border-l-2 border-church-700 ml-2 mt-1">
                                     {child.children.map((subChild) => (
                                       <Link

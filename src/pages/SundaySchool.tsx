@@ -2406,8 +2406,13 @@ const ReportEntrySection: React.FC<{
     const inputClass = isEmerald ? 'border-emerald-200 focus:ring-emerald-500' : 'border-slate-300 focus:ring-slate-500';
 
     const update = (role: 'zirtirtu' | 'zirtu', field: string, value: number) => {
-        const updated = JSON.parse(JSON.stringify(segment));
-        updated[role][field] = value;
+        const updated = {
+            ...segment,
+            [role]: {
+                ...segment[role],
+                [field]: value
+            }
+        };
         onChange(updated);
     };
 

@@ -11,6 +11,19 @@ interface Message {
   timestamp: Date;
 }
 
+const safeStringify = (obj: any) => {
+  const cache = new Set();
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return;
+      }
+      cache.add(value);
+    }
+    return value;
+  });
+};
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -40,7 +53,7 @@ const Chatbot: React.FC = () => {
         // Load Weekly Duties
         try {
            const sumDoc = await db.collection('weeklyDuties').doc('current').get();
-           if (sumDoc.exists) contextText += `== Weekly Duties ==\\n${JSON.stringify(sumDoc.data())}\\n`;
+           if (sumDoc.exists) contextText += `== Weekly Duties ==\\n${safeStringify(sumDoc.data())}\\n`;
         } catch(e) {}
 
         // Load Events
@@ -48,7 +61,7 @@ const Chatbot: React.FC = () => {
            const evSnap = await db.collection('events').limit(10).get();
            if (!evSnap.empty) {
                const evMap = evSnap.docs.map((d: any) => d.data());
-               contextText += `== Upcoming Events ==\\n${JSON.stringify(evMap)}\\n`;
+               contextText += `== Upcoming Events ==\\n${safeStringify(evMap)}\\n`;
            }
         } catch(e) {}
         
@@ -57,7 +70,7 @@ const Chatbot: React.FC = () => {
            const anSnap = await db.collection('announcements').limit(10).get();
            if (!anSnap.empty) {
                const anMap = anSnap.docs.map((d: any) => d.data());
-               contextText += `== Announcements ==\\n${JSON.stringify(anMap)}\\n`;
+               contextText += `== Announcements ==\\n${safeStringify(anMap)}\\n`;
            }
         } catch(e) {}
 
@@ -66,26 +79,26 @@ const Chatbot: React.FC = () => {
            const coSnap = await db.collection('committees').limit(20).get();
            if (!coSnap.empty) {
                const coMap = coSnap.docs.map((d: any) => d.data());
-               contextText += `== Committees ==\\n${JSON.stringify(coMap)}\\n`;
+               contextText += `== Committees ==\\n${safeStringify(coMap)}\\n`;
            }
         } catch(e) {}
 
         // Load Directories
         try {
            const pSnap = await db.collection('pastors').get();
-           if (!pSnap.empty) contextText += `== Pastors ==\\n${JSON.stringify(pSnap.docs.map((d: any) => d.data()))}\\n`;
+           if (!pSnap.empty) contextText += `== Pastors ==\\n${safeStringify(pSnap.docs.map((d: any) => d.data()))}\\n`;
            
            const eSnap = await db.collection('elders').get();
-           if (!eSnap.empty) contextText += `== Elders ==\\n${JSON.stringify(eSnap.docs.map((d: any) => d.data()))}\\n`;
+           if (!eSnap.empty) contextText += `== Elders ==\\n${safeStringify(eSnap.docs.map((d: any) => d.data()))}\\n`;
 
            const mSnap = await db.collection('ministries').get();
-           if (!mSnap.empty) contextText += `== Ministries Info ==\\n${JSON.stringify(mSnap.docs.map((d: any) => d.data()))}\\n`;
+           if (!mSnap.empty) contextText += `== Ministries Info ==\\n${safeStringify(mSnap.docs.map((d: any) => d.data()))}\\n`;
            
            const kSnap = await db.collection('ktpLeaders').get();
-           if (!kSnap.empty) contextText += `== KTP Leaders ==\\n${JSON.stringify(kSnap.docs.map((d: any) => d.data()))}\\n`;
+           if (!kSnap.empty) contextText += `== KTP Leaders ==\\n${safeStringify(kSnap.docs.map((d: any) => d.data()))}\\n`;
            
            const recSnap = await db.collection('records').limit(100).get();
-           if (!recSnap.empty) contextText += `== Records (Baptism, Wedding, etc.) ==\\n${JSON.stringify(recSnap.docs.map((d: any) => d.data()))}\\n`;
+           if (!recSnap.empty) contextText += `== Records (Baptism, Wedding, etc.) ==\\n${safeStringify(recSnap.docs.map((d: any) => d.data()))}\\n`;
         } catch(e) {}
 
         setDbContext(contextText);
@@ -105,7 +118,7 @@ const Chatbot: React.FC = () => {
         ? `Current Week: ${constants.weeklyDuty.weekRange}` 
         : 'Check "Weekly Duties" section for latest updates.';
     
-    const programsStr = JSON.stringify(constants.weeklyDuty.serviceTimes);
+    const programsStr = safeStringify(constants.weeklyDuty.serviceTimes);
     
     const pastorsStr = constants.pastors.map(p => `${p.name} (${p.role})`).join(", ");
     
@@ -187,7 +200,7 @@ const Chatbot: React.FC = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: safeStringify({
           message: userText,
           history,
           systemInstruction
