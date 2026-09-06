@@ -901,8 +901,18 @@ const SundaySchool: React.FC = () => {
   const handleAddReport = () => {
       setEditingReport({
           date: new Date().toISOString().split('T')[0],
-          naupang: JSON.parse(JSON.stringify(EMPTY_SEGMENT)),
-          puitling: JSON.parse(JSON.stringify(EMPTY_SEGMENT))
+          naupang: {
+              zirtirtu: { kal: 0, kallo: 0 },
+              zirtu: { kal: 0, kallo: 0 },
+              chhimtu: 0,
+              thawhlawm: 0
+          },
+          puitling: {
+              zirtirtu: { kal: 0, kallo: 0 },
+              zirtu: { kal: 0, kallo: 0 },
+              chhimtu: 0,
+              thawhlawm: 0
+          }
       });
       setIsReportModalOpen(true);
   };
@@ -1960,7 +1970,14 @@ const SundaySchool: React.FC = () => {
                           </div>
                           
                           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-                              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 px-2">Browse Departments</h4>
+                              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 px-2">Sunday School Reports</h4>
+                           <div className="grid grid-cols-1 gap-1.5 mb-4">
+                               <Link to="/sundayschool/report" className={`px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-between group ${isReportView ? 'bg-church-50 text-church-700 shadow-sm border border-church-100' : 'text-slate-600 hover:bg-slate-50 border border-transparent'}`}>
+                                   <span>Weekly Reports</span>
+                                   <ChevronRight size={14} className={`transition-transform ${isReportView ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'}`} />
+                               </Link>
+                           </div>
+                           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 px-2">Browse Departments</h4>
                               <div className="grid grid-cols-1 gap-1.5">
                                   {departments.map(d => (
                                       <Link key={d.id} to={`/sundayschool/${d.id}`} className={`px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-between group ${d.id === currentDept?.id ? 'bg-church-50 text-church-700 shadow-sm border border-church-100' : 'text-slate-600 hover:bg-slate-50 border border-transparent'}`}>
