@@ -82,6 +82,8 @@ const Navbar: React.FC = () => {
     { name: 'Directory', path: '/directory' },
   ];
 
+  const [openDesktopSubmenu, setOpenDesktopSubmenu] = useState<string | null>(null);
+
   const isActive = (path: string) => location.pathname === path;
   const isParentActive = (children: any[]) => children.some(child => location.pathname.startsWith(child.path) || (child.path.includes('?') && location.pathname + location.search === child.path));
 
@@ -143,16 +145,26 @@ const Navbar: React.FC = () => {
                         <div className="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none py-1 overflow-hidden">
                           {link.children.map((child) => (
                             child.children ? (
-                              <div key={child.name} className="relative group/sub">
+                              <div 
+                                key={child.name} 
+                                className="relative group/sub"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDesktopSubmenu(openDesktopSubmenu === child.name ? null : child.name);
+                                }}
+                              >
                                 <div className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer font-medium">
                                   <span>{child.name}</span>
                                   <span className="text-xs">&gt;</span>
                                 </div>
-                                <div className="absolute left-full top-0 w-56 hidden group-hover/sub:block shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50 rounded-md">
+                                <div className={`absolute left-full top-0 pl-1 w-56 shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50 rounded-md ${
+                                  openDesktopSubmenu === child.name ? 'block' : 'hidden group-hover/sub:block'
+                                }`}>
                                   {child.children.map((subChild) => (
                                     <Link
                                       key={subChild.path}
                                       to={subChild.path}
+                                      onClick={() => setOpenDesktopSubmenu(null)}
                                       className={`block px-4 py-2 text-sm ${
                                         isActive(subChild.path)
                                           ? 'bg-church-50 text-church-700 font-bold'
