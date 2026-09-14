@@ -135,7 +135,33 @@ const About: React.FC = () => {
       ]);
 
       if (contentSnap.exists) {
-          setContent(contentSnap.data() as AboutPageContent);
+          const loadedData = contentSnap.data() as AboutPageContent;
+          let needsUpdate = false;
+          // Synchronize conflicting old numbers to the official statistics
+          if (loadedData.stats_members === 2094 || !loadedData.stats_members) {
+              loadedData.stats_members = 2114;
+              needsUpdate = true;
+          }
+          if (loadedData.stats_families === 440 || !loadedData.stats_families) {
+              loadedData.stats_families = 445;
+              needsUpdate = true;
+          }
+          if (!loadedData.stats_sundayschool) {
+              loadedData.stats_sundayschool = 1773;
+              needsUpdate = true;
+          }
+          if (needsUpdate) {
+              db.collection('settings').doc('aboutPage').set(loadedData, { merge: true }).catch(console.error);
+          }
+          setContent(loadedData);
+      } else {
+          const initialData: Partial<AboutPageContent> = {
+              stats_members: 2114,
+              stats_families: 445,
+              stats_sundayschool: 1773
+          };
+          db.collection('settings').doc('aboutPage').set(initialData, { merge: true }).catch(console.error);
+          setContent(initialData);
       }
 
       const getUniqueData = (snap: any) => {
@@ -257,9 +283,9 @@ const About: React.FC = () => {
       mizo_missionText: content.mizo_missionText || translations.mizo.about.missionText,
       mizo_faithTitle: content.mizo_faithTitle || translations.mizo.about.faithTitle,
       mizo_faithText: content.mizo_faithText || translations.mizo.about.faithText,
-      stats_families: content.stats_families ?? 0,
-      stats_members: content.stats_members ?? 0,
-      stats_sundayschool: content.stats_sundayschool ?? 0,
+      stats_families: (content.stats_families && content.stats_families !== 440) ? content.stats_families : 445,
+      stats_members: (content.stats_members && content.stats_members !== 2094) ? content.stats_members : 2114,
+      stats_sundayschool: (content.stats_sundayschool && content.stats_sundayschool > 0) ? content.stats_sundayschool : 1773,
   });
 
   return (
@@ -340,9 +366,9 @@ const About: React.FC = () => {
 
         {/* Stats */}
         <StatsCounter 
-            families={content.stats_families || 0}
-            members={content.stats_members || 0}
-            sundaySchoolStudents={content.stats_sundayschool || 0}
+            families={(content.stats_families && content.stats_families !== 440) ? content.stats_families : 445}
+            members={(content.stats_members && content.stats_members !== 2094) ? content.stats_members : 2114}
+            sundaySchoolStudents={(content.stats_sundayschool && content.stats_sundayschool > 0) ? content.stats_sundayschool : 1773}
         />
 
         {/* Leaders Section */}
