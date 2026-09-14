@@ -8,28 +8,28 @@ const Statistics: React.FC = () => {
 
   // Hardcoded stats as per request
   const stats = {
-    date: "31.8.2025",
+    date: "31.8.2026",
     population: [
-      { label: "Dan zawhkim (Dan chhung a awm mek)", value: 1475 },
-      { label: "Kohhran mipa zawng zawng", value: 1032 },
-      { label: "Kohhran hmeichhia zawng zawng", value: 1071 },
-      { label: "Kohhran mi zawng zawng", value: 2094 },
+      { label: "Dan zawhkim (Dan chhung a awm mek)", value: 1527 },
+      { label: "Kohhran mipa zawng zawng", value: 1021 },
+      { label: "Kohhran hmeichhia zawng zawng", value: 1093 },
+      { label: "Kohhran mi zawng zawng", value: 2114 },
     ],
     vital: [
-      { label: "Naupiang zat (Mipa)", value: 14 },
-      { label: "Naupiang zat (Hmeichhia)", value: 10 },
-      { label: "Naupiang zawng zawng", value: 24, isTotal: true },
+      { label: "Naupiang zat (Mipa)", value: 11 },
+      { label: "Naupiang zat (Hmeichhia)", value: 12 },
+      { label: "Naupiang zawng zawng", value: 23, isTotal: true },
       { label: "Mitthi zat (Mipa)", value: 12 },
-      { label: "Mitthi zat (Hmeichhia)", value: 7 },
-      { label: "Mitthi zawng zawng", value: 19, isTotal: true },
+      { label: "Mitthi zat (Hmeichhia)", value: 3 },
+      { label: "Mitthi zawng zawng", value: 15, isTotal: true },
     ],
     families: [
-      { label: "Kohhran mi awm hlangna chhungkua", value: 431 },
-      { label: "Inawmpawlhna chhungkua", value: 9 },
+      { label: "Kohhran mi awm hlangna chhungkua", value: 435 },
+      { label: "Inawmpawlhna chhungkua", value: 10 },
     ],
     movement: [
-      { label: "Kohhran pawl danga pakai", value: 3 },
-      { label: "Kohhran pawl dangah atanga rawn pakai", value: 25 },
+      { label: "Kohhran pawl danga pakai", value: 2 },
+      { label: "Kohhran pawl dang atanga rawn pakai", value: 31 },
     ],
     sundaySchool: [
       { label: "Sunday School Zirtu", value: 1636 },

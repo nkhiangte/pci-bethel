@@ -10,7 +10,7 @@ import {
   BookOpen, Quote, Calendar, X, Users, ChevronRight, Phone, 
   MessageCircle, Save, BarChart3, Globe, Sparkles, Eye, 
   Type, Check, UserCheck, GraduationCap, Layout, Table as TableIcon,
-  FileSpreadsheet, Wand2, Image as ImageIcon
+  FileSpreadsheet, Wand2, Image as ImageIcon, Home as HomeIcon, Baby
 } from 'lucide-react';
 import StatsCounter from '../components/StatsCounter';
 import { useAuth } from '../contexts/AuthContext';
@@ -429,6 +429,209 @@ const About: React.FC = () => {
                         )}
                     </div>
                 ))}
+            </div>
+        </div>
+
+        {/* Latest Church Statistics (Inchhiarna) */}
+        <div id="inchhiarna-section" className="w-full bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-10 lg:p-12">
+            {/* Header */}
+            <div className="text-center max-w-3xl mx-auto mb-10">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-church-50 text-church-800 text-xs font-bold tracking-wide uppercase mb-3 border border-church-200">
+                    <BarChart3 size={14} className="text-church-600" />
+                    <span>Official Church Statistics</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-slate-900 tracking-tight">
+                    Inchhiarna (as of August 2023)
+                </h2>
+                <div className="h-1 w-20 bg-church-500 mx-auto my-4 rounded-full"></div>
+                <p className="text-slate-600 text-sm sm:text-base font-medium">
+                    Champai Bethel Kohhran Chhungkaw Inchhiarna Statistics
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                    (1st September 2025 atanga 31st August 2026 / As on 31st August 2026)
+                </p>
+            </div>
+
+            {/* Quick Stat Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-sm">
+                    <p className="text-xs text-slate-300 font-semibold uppercase tracking-wider mb-1">Kohhran Mi Zawng</p>
+                    <p className="text-3xl font-black text-white">2,114</p>
+                    <p className="text-[11px] text-slate-300 mt-1 font-medium">Mipa: 1,021 • Hmeichhia: 1,093</p>
+                </div>
+                <div className="bg-gradient-to-br from-church-700 to-church-900 text-white p-5 rounded-2xl shadow-sm">
+                    <p className="text-xs text-church-200 font-semibold uppercase tracking-wider mb-1">Dan Zawh Kim</p>
+                    <p className="text-3xl font-black text-white">1,527</p>
+                    <p className="text-[11px] text-church-200 mt-1 font-medium">72.2% of total membership</p>
+                </div>
+                <div className="bg-gradient-to-br from-amber-600 to-amber-700 text-white p-5 rounded-2xl shadow-sm">
+                    <p className="text-xs text-amber-200 font-semibold uppercase tracking-wider mb-1">Chhungkua</p>
+                    <p className="text-3xl font-black text-white">435</p>
+                    <p className="text-[11px] text-amber-200 mt-1 font-medium">Inawmpawlh: 10</p>
+                </div>
+                <div className="bg-gradient-to-br from-teal-700 to-teal-900 text-white p-5 rounded-2xl shadow-sm">
+                    <p className="text-xs text-teal-200 font-semibold uppercase tracking-wider mb-1">Naupang (≤ 14 Kum)</p>
+                    <p className="text-3xl font-black text-white">547</p>
+                    <p className="text-[11px] text-teal-200 mt-1 font-medium">Baptisma chang: 540 • Chang lo: 7</p>
+                </div>
+            </div>
+
+            {/* Detailed Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Main Table (Cols 1-7 on desktop) */}
+                <div className="lg:col-span-7 flex flex-col">
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs bg-white">
+                        <div className="bg-church-800 text-white px-5 py-3.5 flex justify-between items-center font-bold text-sm tracking-wide">
+                            <span className="uppercase tracking-wider text-xs">CATEGORY / DESCRIPTION</span>
+                            <span className="uppercase tracking-wider text-xs">ZAT (COUNT)</span>
+                        </div>
+                        
+                        <div className="divide-y divide-slate-100 text-sm">
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Dan zawh kim</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">1527</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Puitling Baptisma chang tawh (Dan la zawh kim lo)</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">3</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Puitling kum 15 chin chung lam (Baptisma chang lo)</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">0</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Naupang kum 14 leh hnuai lam (Baptisma chang tawh)</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">540</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Naupang kum 14 hnuai lam (Baptisma chang lo)</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">7</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Thunun tawk mek zat</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">37</span>
+                            </div>
+
+                            {/* Subtotal Total (Cols 1-6) */}
+                            <div className="px-5 py-3.5 bg-church-50/70 flex justify-between items-center font-bold text-church-900 border-t-2 border-church-200">
+                                <span className="text-church-950 font-bold">Total (Cols 1-6)</span>
+                                <span className="text-lg font-mono text-church-900 font-extrabold">2114</span>
+                            </div>
+
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Mipa zawng zawng</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">1021</span>
+                            </div>
+                            <div className="px-5 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span className="text-slate-700 font-medium">Hmeichhia zawng zawng</span>
+                                <span className="font-bold text-slate-900 font-mono text-base">1093</span>
+                            </div>
+
+                            {/* Total Mipa & Hmeichhia */}
+                            <div className="px-5 py-4 bg-slate-900 text-white flex justify-between items-center font-bold">
+                                <span className="tracking-wide">Total Mipa & Hmeichhia</span>
+                                <span className="text-xl font-mono text-amber-300 font-black">2114</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Chhungkua, Naupiang & Mitthi (Cols 8-12 on desktop) */}
+                <div className="lg:col-span-5 flex flex-col gap-6">
+                    {/* Chhungkua Box */}
+                    <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-6 shadow-xs">
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-amber-200/60">
+                            <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
+                                <HomeIcon size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-serif font-bold text-amber-950">Chhungkua</h3>
+                                <p className="text-xs text-amber-800 font-medium">Families & Church Transfers</p>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between items-center text-slate-800 bg-white/70 px-3.5 py-2.5 rounded-lg border border-amber-100">
+                                <span className="font-medium text-slate-700">Kohhran mi awm hlangna chhungkua</span>
+                                <span className="font-bold text-amber-950 font-mono text-base">435</span>
+                            </div>
+                            <div className="flex justify-between items-center text-slate-800 bg-white/70 px-3.5 py-2.5 rounded-lg border border-amber-100">
+                                <span className="font-medium text-slate-700">Inawmpawlhna chhungkua</span>
+                                <span className="font-bold text-amber-950 font-mono text-base">10</span>
+                            </div>
+                            <div className="flex justify-between items-center text-slate-800 bg-white/70 px-3.5 py-2.5 rounded-lg border border-amber-100">
+                                <span className="font-medium text-slate-700">Pawl danga pakai</span>
+                                <span className="font-bold text-amber-950 font-mono text-base">2</span>
+                            </div>
+                            <div className="flex justify-between items-center text-slate-800 bg-white/70 px-3.5 py-2.5 rounded-lg border border-amber-100">
+                                <span className="font-medium text-slate-700">Pawl dang atanga rawn pakai</span>
+                                <span className="font-bold text-amber-950 font-mono text-base">31</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Naupiang zat & Mitthi zat Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Nau piang zat */}
+                        <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+                            <div>
+                                <div className="flex items-center gap-2.5 mb-3 pb-2 border-b border-rose-200/60 text-rose-900">
+                                    <div className="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center">
+                                        <Baby size={16} />
+                                    </div>
+                                    <h4 className="font-bold text-base text-rose-950">Nau piang zat</h4>
+                                </div>
+                                <div className="space-y-2 text-sm text-slate-700 mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400"></span> Mipa</span>
+                                        <span className="font-bold font-mono text-rose-950">11</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400"></span> Hmeichhia</span>
+                                        <span className="font-bold font-mono text-rose-950">12</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-rose-200/60 text-rose-950 px-3.5 py-2 rounded-xl flex justify-between items-center font-bold text-sm">
+                                <span>Naupiang belhkhawm</span>
+                                <span className="text-base font-black font-mono">23</span>
+                            </div>
+                        </div>
+
+                        {/* Mitthi zat */}
+                        <div className="bg-teal-50/60 border border-teal-200/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+                            <div>
+                                <div className="flex items-center gap-2.5 mb-3 pb-2 border-b border-teal-200/60 text-teal-900">
+                                    <div className="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
+                                        <Users size={16} />
+                                    </div>
+                                    <h4 className="font-bold text-base text-teal-950">Mitthi zat</h4>
+                                </div>
+                                <div className="space-y-2 text-sm text-slate-700 mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Mipa</span>
+                                        <span className="font-bold font-mono text-teal-950">12</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Hmeichhia</span>
+                                        <span className="font-bold font-mono text-teal-950">3</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-teal-200/60 text-teal-950 px-3.5 py-2 rounded-xl flex justify-between items-center font-bold text-sm">
+                                <span>Mitthi belhkhawm</span>
+                                <span className="text-base font-black font-mono">15</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Official Footer Tag */}
+            <div className="mt-10 pt-6 border-t border-slate-100 text-center">
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                    Champai Bethel Kohhran Chhungkaw Inchhiarna Form • 1st September 2025 atanga 31st August 2026
+                </p>
             </div>
         </div>
 
