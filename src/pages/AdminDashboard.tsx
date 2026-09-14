@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send, BookOpen, Calculator, ExternalLink } from 'lucide-react';
+import { Calendar, Bell, Upload, Image, FileText, CheckCircle, Shield, Users, ClipboardList, UserCog, Settings, RefreshCw, HeartHandshake, Radio, Send, BookOpen, Calculator, ExternalLink, Smartphone } from 'lucide-react';
 import { db } from '../services/firebase';
 import firebase from 'firebase/compat/app';
 import { PathianRamModal } from '../components/PathianRamModal';
@@ -33,13 +33,14 @@ const AdminDashboard: React.FC = () => {
       { title: 'Pathian Ram / PTR Tithe Portal', icon: Calculator, isCustomAction: true, color: 'bg-amber-600', desc: 'Finance Committee Tithe Calculator (Web & Android App).' },
       { title: 'Church Library System', icon: BookOpen, link: '/library', color: 'bg-church-800', desc: 'QR Scanner, Issue & Return, Excel Book Import & Catalog.' },
       { title: 'Manage Contributions', icon: HeartHandshake, link: '/admin/thawhlawm', color: 'bg-emerald-600', desc: 'Verify and track Thawhlawm payments.' },
+      { title: 'App Update Settings', icon: Smartphone, link: '/admin/settings#app-update', color: 'bg-teal-600', desc: 'Push Play Store app update notifications to Android users.' },
       { title: 'Manage Events', icon: Calendar, link: '/events', color: 'bg-church-500', desc: 'Add or edit church calendar items.' },
       { title: 'Manage Announcements', icon: Bell, link: '/announcements', color: 'bg-orange-500', desc: 'Post new updates for the congregation.' },
       { title: 'Manage Ministries', icon: Users, link: '/admin/ministries', color: 'bg-blue-500', desc: 'Update fellowship leaders and schedules.' },
       { title: 'Manage Weekly Duties', icon: ClipboardList, link: '/admin/duties', color: 'bg-indigo-500', desc: 'Update ushers, song leaders, etc.' },
       { title: 'Manage Gallery', icon: Image, link: '/gallery', color: 'bg-purple-500', desc: 'Upload photos from recent events.' },
       { title: 'Manage Users', icon: UserCog, link: '/admin/users', color: 'bg-pink-500', desc: 'Manage registered users and admin roles.' },
-      { title: 'Church Settings', icon: Settings, link: '/admin/settings', color: 'bg-slate-700', desc: 'Update church logo and general information.' },
+      { title: 'Church Settings', icon: Settings, link: '/admin/settings', color: 'bg-slate-700', desc: 'Update church logo, contact, and settings.' },
   ];
 
   const handleMigrateWeeklyPrograms = async () => {

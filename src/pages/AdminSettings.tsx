@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useLocation } from 'react-router-dom';
 import { Shield, Save, Loader, Upload, Trash2, ArrowLeft, Image as ImageIcon, MapPin, Phone, Mail, Map, Smartphone, BellRing, Plus, CheckCircle } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -16,8 +16,8 @@ const INITIAL_CONTACT_DATA = {
 };
 
 const INITIAL_APP_UPDATE_DATA = {
-  latestVersionCode: 24,
-  latestVersionName: "2.4",
+  latestVersionCode: 31,
+  latestVersionName: "3.1.0",
   updateUrl: "https://play.google.com/store/apps/details?id=com.pcibethel.app",
   updateMessage: "Siampa hian App hmelhmang a tlem a thalo leh a chhung thu kuttia phek chet vel te, thuziak phek danga in split chungchang te, a phek zoom theihna te leh hriattirna/announcement danga buaina a awmte a rawn tidam rualin kan rawn update a ni. Khawngaihin update rawh le.",
   isUpdateRequired: false
@@ -26,6 +26,7 @@ const INITIAL_APP_UPDATE_DATA = {
 const AdminSettings: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin, currentUser } = useAuth();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
@@ -66,6 +67,18 @@ const AdminSettings: React.FC = () => {
     };
     fetchSettings();
   }, []);
+
+  // Auto scroll to target hash (e.g. #app-update)
+  useEffect(() => {
+    if (!loading && location.hash) {
+      setTimeout(() => {
+        const elem = document.querySelector(location.hash);
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [loading, location.hash]);
 
   if (!currentUser) return <Navigate to="/login" />;
   if (!isAdmin) return <Navigate to="/" />;
@@ -196,7 +209,10 @@ const AdminSettings: React.FC = () => {
             <Link to="/admin" className="p-2 hover:bg-white rounded-full transition text-slate-500">
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-3xl font-serif font-bold text-church-900">{t.admin.churchSettings}</h1>
+            <div>
+              <h1 className="text-3xl font-serif font-bold text-church-900">{t.admin.churchSettings}</h1>
+              <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Manage logo, contact details, and Play Store Android app updates</p>
+            </div>
           </div>
           <button 
             onClick={handleSave} 
@@ -208,8 +224,30 @@ const AdminSettings: React.FC = () => {
           </button>
         </div>
 
+        {/* Quick Section Navigation */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <a 
+            href="#logo-section" 
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-church-50 hover:text-church-700 hover:border-church-300 transition flex items-center gap-1.5 whitespace-nowrap shadow-xs"
+          >
+            <ImageIcon size={14} /> Church Logo
+          </a>
+          <a 
+            href="#contact-section" 
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-church-50 hover:text-church-700 hover:border-church-300 transition flex items-center gap-1.5 whitespace-nowrap shadow-xs"
+          >
+            <MapPin size={14} /> Contact Information
+          </a>
+          <a 
+            href="#app-update" 
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 transition flex items-center gap-1.5 whitespace-nowrap shadow-xs"
+          >
+            <Smartphone size={14} className="text-teal-600" /> Play Store App Update Settings
+          </a>
+        </div>
+
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div id="logo-section" className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-8 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center">
                 <ImageIcon className="mr-2 text-church-600" /> {t.admin.logo}
@@ -267,7 +305,7 @@ const AdminSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div id="contact-section" className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-8 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center">
                 <MapPin className="mr-2 text-church-600" /> Contact Information
@@ -332,11 +370,14 @@ const AdminSettings: React.FC = () => {
           </div>
 
           {/* Play Store Update Notification Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div id="app-update" className="bg-white rounded-2xl shadow-sm border-2 border-teal-500/40 overflow-hidden ring-4 ring-teal-50">
+            <div className="p-8 border-b border-teal-100 bg-gradient-to-r from-teal-50/50 to-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[11px] font-bold uppercase tracking-wider mb-2">
+                  Android Play Store
+                </div>
                 <h2 className="text-xl font-bold text-slate-800 mb-1 flex items-center">
-                  <Smartphone className="mr-2 text-church-600" /> Play Store Update Notification
+                  <Smartphone className="mr-2 text-teal-600" /> Play Store Update Notification
                 </h2>
                 <p className="text-slate-500 text-sm">Notify all members with a push alert and in-app popup whenever a new version is released on Google Play Store.</p>
               </div>
