@@ -8,6 +8,7 @@ import { ClipboardList, Users, UserCircle, Radio, Music, ArrowRight, Calendar, C
 import { Link } from 'react-router-dom';
 import StaffEditModal from '../components/StaffEditModal';
 import SundaySchoolReportWidget from '../components/SundaySchoolReportWidget';
+import { ShareButton } from '../components/ShareButton';
 import { useWeeklyEvents, parseLocalDate, normalizeTitle, getMizoDayName } from '../hooks/useWeeklyEvents';
 import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
 
@@ -238,10 +239,23 @@ const Home: React.FC = () => {
                                     <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-3">
                                         {getAnnouncementSnippet(item)}
                                     </p>
-                                    <span className="inline-flex items-center text-xs font-black text-church-600 uppercase tracking-widest gap-1 mt-auto">
-                                        {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
-                                        <ArrowRight size={14} className="group-hover/card:translate-x-1 transition-transform duration-300" />
-                                    </span>
+                                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
+                                        <span className="inline-flex items-center text-xs font-black text-church-600 uppercase tracking-widest gap-1">
+                                            {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
+                                            <ArrowRight size={14} className="group-hover/card:translate-x-1 transition-transform duration-300" />
+                                        </span>
+                                        <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                            <ShareButton 
+                                                title={item.title}
+                                                date={item.date}
+                                                category={item.category}
+                                                text={getAnnouncementSnippet(item)}
+                                                url={`${window.location.origin}/announcements/${item.id}`}
+                                                variant="outline"
+                                                size="sm"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </Link>
                             {isAdmin && (

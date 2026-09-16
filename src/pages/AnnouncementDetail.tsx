@@ -6,6 +6,7 @@ import { Announcement } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeSundaySchoolReportHtml } from '../utils/sanitizeReport';
+import { ShareButton } from '../components/ShareButton';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -121,12 +122,15 @@ const AnnouncementDetail: React.FC = () => {
                 <Edit size={20} />
               </Link>
             )}
-            <button 
-              onClick={shareHandler}
-              className="p-2 text-slate-400 hover:text-church-600 hover:bg-church-50 rounded-full transition"
-            >
-              <Share2 size={20} />
-            </button>
+            <ShareButton 
+              title={announcement.title}
+              date={announcement.date}
+              category={announcement.category}
+              text={announcement.content ? announcement.content.replace(/<[^>]*>?/gm, '').slice(0, 160) : ''}
+              url={window.location.href}
+              variant="outline"
+              size="sm"
+            />
           </div>
         </div>
       </div>
@@ -202,6 +206,18 @@ const AnnouncementDetail: React.FC = () => {
                 </Link>
               </div>
             )}
+
+            {/* Inline Share Section */}
+            <div className="mt-10 pt-6 border-t border-slate-100">
+              <ShareButton 
+                title={announcement.title}
+                date={announcement.date}
+                category={announcement.category}
+                text={announcement.content ? announcement.content.replace(/<[^>]*>?/gm, '').slice(0, 160) : ''}
+                url={window.location.href}
+                variant="inline"
+              />
+            </div>
           </div>
 
           {/* Additional Media Section */}

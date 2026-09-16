@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
+import { ShareButton } from '../components/ShareButton';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle, ArrowRight } from 'lucide-react';
 
 const quillModules = {
@@ -361,10 +362,23 @@ const Announcements: React.FC = () => {
                         <p className="text-slate-600 leading-relaxed text-[15px] text-justify break-normal mb-4 line-clamp-3">
                             {getAnnouncementSnippet(item)}
                         </p>
-                        <span className="inline-flex items-center text-xs font-black text-church-600 group-hover/card:text-church-700 uppercase tracking-widest gap-1">
-                            {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
-                            <ArrowRight size={14} className="group-hover/card:translate-x-1.5 transition-transform duration-300" />
-                        </span>
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-200/60 mt-2">
+                            <span className="inline-flex items-center text-xs font-black text-church-600 group-hover/card:text-church-700 uppercase tracking-widest gap-1">
+                                {language === 'en' ? 'Read More' : 'Chhiar Zawm Rawh'}
+                                <ArrowRight size={14} className="group-hover/card:translate-x-1.5 transition-transform duration-300" />
+                            </span>
+                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                <ShareButton 
+                                    title={item.title}
+                                    date={item.date}
+                                    category={item.category}
+                                    text={getAnnouncementSnippet(item)}
+                                    url={`${window.location.origin}/announcements/${item.id}`}
+                                    variant="outline"
+                                    size="sm"
+                                />
+                            </div>
+                        </div>
                     </Link>
                     </div>
                 );

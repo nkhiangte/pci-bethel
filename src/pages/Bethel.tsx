@@ -8,6 +8,7 @@ import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BethelFolder, BethelPdf } from '../types';
+import { ShareButton } from '../components/ShareButton';
 
 const Bethel: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -262,7 +263,16 @@ const Bethel: React.FC = () => {
           <FileText size={20} className="text-yellow-400" />
           <span className="font-bold truncate max-w-md">{pdf.name}</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <ShareButton 
+            title={`Bethel Kohhran Chanchinbu - ${pdf.name}`}
+            date={pdf.date}
+            category="Weekly Bulletin"
+            url={pdf.url || window.location.href}
+            variant="outline"
+            size="sm"
+            className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
+          />
           <a 
             href={pdf.url} 
             target="_blank" 
@@ -543,10 +553,18 @@ const Bethel: React.FC = () => {
                             <p className="text-slate-400 text-xs">{formatDate(pdf.uploadedAt)}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => setViewingPdf(pdf)} className="p-2 text-church-600 hover:bg-church-50 rounded-xl transition"><Eye size={18} /></button>
-                            <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition"><Download size={18} /></a>
+                            <ShareButton 
+                              title={`Bethel Kohhran Chanchinbu - ${pdf.name}`}
+                              date={pdf.date}
+                              category="Weekly Bulletin"
+                              url={pdf.url || window.location.href}
+                              variant="icon"
+                              size="sm"
+                            />
+                            <button onClick={() => setViewingPdf(pdf)} className="p-2 text-church-600 hover:bg-church-50 rounded-xl transition" title="View"><Eye size={18} /></button>
+                            <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition" title="Download"><Download size={18} /></a>
                             {isAdmin && (
-                              <button onClick={() => handleDeletePdf(pdf)} disabled={deletingId === pdf.id} className="p-2 text-red-400 hover:text-red-500 rounded-xl transition">
+                              <button onClick={() => handleDeletePdf(pdf)} disabled={deletingId === pdf.id} className="p-2 text-red-400 hover:text-red-500 rounded-xl transition" title="Delete">
                                 {deletingId === pdf.id ? <Loader className="animate-spin" size={18} /> : <Trash2 size={18} />}
                               </button>
                             )}

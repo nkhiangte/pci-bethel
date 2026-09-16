@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/firebase';
 import { Article } from '../types';
 import { sanitizeContentForStorage } from '../utils/imageUtils';
+import { ShareButton } from '../components/ShareButton';
 import { 
   FileText, Mic, Search, Plus, Edit, Trash, X, Save, 
   Calendar, User, Filter, ExternalLink, Loader, ChevronRight
@@ -15,6 +17,7 @@ import {
 const Articles: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,10 +125,27 @@ const Articles: React.FC = () => {
     setIsSaving(false);
   };
 
+  useEffect(() => {
+    const articleId = searchParams.get('id');
+    if (articleId && articles.length > 0) {
+      const found = articles.find(a => a.id === articleId);
+      if (found) {
+        setSelectedArticle(found);
+        setIsModalOpen(true);
+      }
+    }
+  }, [searchParams, articles]);
+
   const openReader = (article: Article) => {
     setSelectedArticle(article);
     setIsModalOpen(true);
-    // Optional: Increment view count logic here
+    setSearchParams({ id: article.id }, { replace: true });
+  };
+
+  const closeReader = () => {
+    setIsModalOpen(false);
+    setSelectedArticle(null);
+    setSearchParams({}, { replace: true });
   };
 
   const filteredArticles = articles.filter(item => {
@@ -229,27 +249,42 @@ const Articles: React.FC = () => {
                                 {article.content.replace(/<[^>]*>?/gm, '')}
                             </p>
 
-                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 gap-2">
                                 <span className="text-church-600 font-semibold text-sm flex items-center group-hover:underline">
                                     {t.articles.readMore} <ChevronRight size={16} />
                                 </span>
                                 
-                                {isAdmin && (
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={(e) => handleEdit(e, article)}
-                                            className="p-1.5 text-slate-400 hover:text-church-600 hover:bg-slate-50 rounded transition"
-                                        >
-                                            <Edit size={16} />
-                                        </button>
-                                        <button 
-                                            onClick={(e) => handleDelete(e, article.id)}
-                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-50 rounded transition"
-                                        >
-                                            <Trash size={16} />
-                                        </button>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                    <ShareButton 
+                                        title={article.title}
+                                        author={article.author}
+                                        date={new Date(article.date).toLocaleDateString()}
+                                        category={article.category}
+                                        text={article.content.replace(/<[^>]*>?/gm, '')}
+                                        url={`${window.location.origin}/articles?id=${article.id}`}
+                                        variant="outline"
+                                        size="sm"
+                                    />
+
+                                    {isAdmin && (
+                                        <div className="flex gap-1 ml-1 pl-1 border-l border-slate-200">
+                                            <button 
+                                                onClick={(e) => handleEdit(e, article)}
+                                                className="p-1.5 text-slate-400 hover:text-church-600 hover:bg-slate-50 rounded transition"
+                                                title="Edit"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleDelete(e, article.id)}
+                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-50 rounded transition"
+                                                title="Delete"
+                                            >
+                                                <Trash size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -277,13 +312,25 @@ const Articles: React.FC = () => {
                         <span>•</span>
                         <span>{new Date(selectedArticle.date).toLocaleDateString()}</span>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition">
-                        <X size={24} className="text-slate-500" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <ShareButton 
+                            title={selectedArticle.title}
+                            author={selectedArticle.author}
+                            date={new Date(selectedArticle.date).toLocaleDateString()}
+                            category={selectedArticle.category}
+                            text={selectedArticle.content ? selectedArticle.content.replace(/<[^>]*>?/gm, '') : ''}
+                            url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
+                            variant="outline"
+                            size="sm"
+                        />
+                        <button onClick={closeReader} className="p-2 hover:bg-slate-100 rounded-full transition" aria-label="Close">
+                            <X size={24} className="text-slate-500" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
-        <div className="px-4 py-8 md:px-12 md:py-12">
+                <div className="px-4 py-8 md:px-12 md:py-12">
                     <h1 className="text-2xl md:text-4xl font-serif font-bold text-slate-900 mb-6 leading-tight">
                         {selectedArticle.title}
                     </h1>
@@ -308,6 +355,19 @@ const Articles: React.FC = () => {
                         className="prose prose-slate prose-lg max-w-none font-serif text-slate-700 leading-relaxed quill-content overflow-hidden break-normal"
                         dangerouslySetInnerHTML={{ __html: selectedArticle.content ? selectedArticle.content.replace(/&nbsp;/g, ' ') : '' }}
                     />
+
+                    {/* Inline Share Section */}
+                    <div className="mt-12 pt-6 border-t border-slate-100">
+                        <ShareButton 
+                            title={selectedArticle.title}
+                            author={selectedArticle.author}
+                            date={new Date(selectedArticle.date).toLocaleDateString()}
+                            category={selectedArticle.category}
+                            text={selectedArticle.content ? selectedArticle.content.replace(/<[^>]*>?/gm, '') : ''}
+                            url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
+                            variant="inline"
+                        />
+                    </div>
 
                     {selectedArticle.videoUrl && (
                         <div className="mt-10 pt-8 border-t border-slate-100">
