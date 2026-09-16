@@ -7,6 +7,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeSundaySchoolReportHtml } from '../utils/sanitizeReport';
 import { ShareButton } from '../components/ShareButton';
+import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO } from '../utils/shareUtils';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -65,6 +66,24 @@ const AnnouncementDetail: React.FC = () => {
     fetchAnnouncement();
     window.scrollTo(0, 0);
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (announcement) {
+      const displayImgs = announcement.imageUrls || (announcement.imageUrl ? [announcement.imageUrl] : []);
+      const { url: thumb } = extractFirstImage({
+        imageUrl: displayImgs[0],
+        imageUrls: displayImgs,
+        content: announcement.content,
+      });
+      const excerpt = extractAtLeastTwoSentences(announcement.content);
+      updateShareMetaTags({
+        title: `${announcement.title} - Champhai Bethel Kohhran`,
+        description: excerpt,
+        imageUrl: thumb,
+        url: window.location.href,
+      });
+    }
+  }, [announcement]);
 
   const getYouTubeId = (url: string | undefined) => {
     if (!url) return null;
@@ -126,7 +145,10 @@ const AnnouncementDetail: React.FC = () => {
               title={announcement.title}
               date={announcement.date}
               category={announcement.category}
-              text={announcement.content ? announcement.content.replace(/<[^>]*>?/gm, '').slice(0, 160) : ''}
+              imageUrl={displayImages[0]}
+              imageUrls={displayImages}
+              content={announcement.content}
+              text={announcement.content}
               url={window.location.href}
               variant="outline"
               size="sm"
@@ -213,7 +235,10 @@ const AnnouncementDetail: React.FC = () => {
                 title={announcement.title}
                 date={announcement.date}
                 category={announcement.category}
-                text={announcement.content ? announcement.content.replace(/<[^>]*>?/gm, '').slice(0, 160) : ''}
+                imageUrl={displayImages[0]}
+                imageUrls={displayImages}
+                content={announcement.content}
+                text={announcement.content}
                 url={window.location.href}
                 variant="inline"
               />

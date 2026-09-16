@@ -9,6 +9,7 @@ import { db } from '../services/firebase';
 import { Article } from '../types';
 import { sanitizeContentForStorage } from '../utils/imageUtils';
 import { ShareButton } from '../components/ShareButton';
+import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO } from '../utils/shareUtils';
 import { 
   FileText, Mic, Search, Plus, Edit, Trash, X, Save, 
   Calendar, User, Filter, ExternalLink, Loader, ChevronRight
@@ -136,6 +137,30 @@ const Articles: React.FC = () => {
     }
   }, [searchParams, articles]);
 
+  // Synchronize Open Graph & Twitter meta tags when an article is being read
+  useEffect(() => {
+    if (selectedArticle) {
+      const { url: thumb } = extractFirstImage({
+        imageUrl: selectedArticle.imageUrl,
+        content: selectedArticle.content,
+      });
+      const excerpt = extractAtLeastTwoSentences(selectedArticle.content);
+      updateShareMetaTags({
+        title: `${selectedArticle.title} - Champhai Bethel Kohhran`,
+        description: excerpt,
+        imageUrl: thumb,
+        url: `${window.location.origin}/articles?id=${selectedArticle.id}`,
+      });
+    } else {
+      updateShareMetaTags({
+        title: 'Champhai Bethel Kohhran',
+        description: 'Champhai Bethel Presbyterian Kohhran official website ; inkhawm hunbi, rawngbawlna, record vawnthatna leh kohhran hmalakna hrang hrangte tarlanna.',
+        imageUrl: DEFAULT_CHURCH_LOGO,
+        url: `${window.location.origin}/articles`,
+      });
+    }
+  }, [selectedArticle]);
+
   const openReader = (article: Article) => {
     setSelectedArticle(article);
     setIsModalOpen(true);
@@ -260,7 +285,9 @@ const Articles: React.FC = () => {
                                         author={article.author}
                                         date={new Date(article.date).toLocaleDateString()}
                                         category={article.category}
-                                        text={article.content.replace(/<[^>]*>?/gm, '')}
+                                        imageUrl={article.imageUrl}
+                                        content={article.content}
+                                        text={article.content}
                                         url={`${window.location.origin}/articles?id=${article.id}`}
                                         variant="outline"
                                         size="sm"
@@ -318,7 +345,9 @@ const Articles: React.FC = () => {
                             author={selectedArticle.author}
                             date={new Date(selectedArticle.date).toLocaleDateString()}
                             category={selectedArticle.category}
-                            text={selectedArticle.content ? selectedArticle.content.replace(/<[^>]*>?/gm, '') : ''}
+                            imageUrl={selectedArticle.imageUrl}
+                            content={selectedArticle.content}
+                            text={selectedArticle.content}
                             url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
                             variant="outline"
                             size="sm"
@@ -363,7 +392,9 @@ const Articles: React.FC = () => {
                             author={selectedArticle.author}
                             date={new Date(selectedArticle.date).toLocaleDateString()}
                             category={selectedArticle.category}
-                            text={selectedArticle.content ? selectedArticle.content.replace(/<[^>]*>?/gm, '') : ''}
+                            imageUrl={selectedArticle.imageUrl}
+                            content={selectedArticle.content}
+                            text={selectedArticle.content}
                             url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
                             variant="inline"
                         />

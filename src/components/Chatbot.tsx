@@ -11,17 +11,81 @@ interface Message {
   timestamp: Date;
 }
 
-const safeStringify = (obj: any) => {
-  const cache = new Set();
-  return JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        return;
-      }
-      cache.add(value);
+const sanitizeDataForJson = (val: any, seen = new WeakSet(), depth = 0): any => {
+  if (depth > 6) return '[Max Depth]';
+  if (val === null || val === undefined) return val;
+  if (typeof val !== 'object') {
+    if (typeof val === 'bigint') return val.toString();
+    if (typeof val === 'function' || typeof val === 'symbol') return undefined;
+    return val;
+  }
+
+  // Handle Firestore Timestamp
+  if (typeof val.toDate === 'function') {
+    try {
+      return val.toDate().toISOString();
+    } catch {
+      return '[Timestamp]';
     }
-    return value;
-  });
+  }
+
+  // Handle Firestore DocumentReference / Query / CollectionReference
+  if (val.firestore || val._delegate || (val.id && val.path && typeof val.path === 'string')) {
+    return { id: val.id, path: val.path || '[DocRef]' };
+  }
+
+  // Handle Date
+  if (val instanceof Date) {
+    return val.toISOString();
+  }
+
+  // Handle Error
+  if (val instanceof Error) {
+    return { message: val.message, name: val.name };
+  }
+
+  // Circular reference check
+  if (seen.has(val)) {
+    return '[Circular]';
+  }
+  seen.add(val);
+
+  // Handle Array
+  if (Array.isArray(val)) {
+    return val.map(item => sanitizeDataForJson(item, seen, depth + 1));
+  }
+
+  // Handle Plain Object
+  const cleanObj: Record<string, any> = {};
+  for (const key of Object.keys(val)) {
+    // Ignore private or internal firebase keys
+    if (key.startsWith('_') || key === 'firestore' || key === 'client' || key === 'auth' || key === 'app') {
+      continue;
+    }
+    try {
+      const sanitizedChild = sanitizeDataForJson(val[key], seen, depth + 1);
+      if (sanitizedChild !== undefined) {
+        cleanObj[key] = sanitizedChild;
+      }
+    } catch {
+      // Ignore un-serializable property
+    }
+  }
+  return cleanObj;
+};
+
+const safeStringify = (obj: any): string => {
+  try {
+    const clean = sanitizeDataForJson(obj);
+    return JSON.stringify(clean);
+  } catch (err) {
+    console.warn("safeStringify fallback:", err);
+    try {
+      return String(obj);
+    } catch {
+      return "[Unserializable Data]";
+    }
+  }
 };
 
 const Chatbot: React.FC = () => {

@@ -372,7 +372,10 @@ const Announcements: React.FC = () => {
                                     title={item.title}
                                     date={item.date}
                                     category={item.category}
-                                    text={getAnnouncementSnippet(item)}
+                                    imageUrl={displayImages[0]}
+                                    imageUrls={displayImages}
+                                    content={item.content}
+                                    text={item.content}
                                     url={`${window.location.origin}/announcements/${item.id}`}
                                     variant="outline"
                                     size="sm"

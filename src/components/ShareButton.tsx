@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Share2, Check, Copy } from 'lucide-react';
 import { ShareModal, ShareData } from './ShareModal';
 import { useLanguage } from '../contexts/LanguageContext';
+import { extractAtLeastTwoSentences, generateShareMessage } from '../utils/shareUtils';
 
 export interface ShareButtonProps extends ShareData {
   variant?: 'button' | 'icon' | 'outline' | 'inline' | 'floating';
@@ -50,8 +51,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     e.stopPropagation();
     e.preventDefault();
     const url = shareData.url || window.location.href;
-    const text = `*${shareData.title}*${shareData.author ? `\n_By ${shareData.author}_` : ''}\n\n${url}\n\nChamphai Bethel Kohhran`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    const excerpt = extractAtLeastTwoSentences(shareData.content || shareData.text);
+    const message = generateShareMessage({
+      title: shareData.title,
+      author: shareData.author,
+      excerpt,
+      targetUrl: url,
+      language,
+    });
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
   // Size styling
