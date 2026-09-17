@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BethelFolder, BethelPdf } from '../types';
 import { ShareButton } from '../components/ShareButton';
+import { getPublicShareUrl } from '../utils/shareUtils';
 
 const Bethel: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -268,7 +269,7 @@ const Bethel: React.FC = () => {
             title={`Bethel Kohhran Chanchinbu - ${pdf.name}`}
             date={pdf.date}
             category="Weekly Bulletin"
-            url={pdf.url || window.location.href}
+            url={getPublicShareUrl(pdf.url || '/bethel')}
             variant="outline"
             size="sm"
             className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
@@ -557,7 +558,7 @@ const Bethel: React.FC = () => {
                               title={`Bethel Kohhran Chanchinbu - ${pdf.name}`}
                               date={pdf.date}
                               category="Weekly Bulletin"
-                              url={pdf.url || window.location.href}
+                              url={getPublicShareUrl(pdf.url || '/bethel')}
                               variant="icon"
                               size="sm"
                             />

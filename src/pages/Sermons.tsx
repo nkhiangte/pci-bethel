@@ -4,6 +4,7 @@ import { SERMONS_DATA } from '../constants';
 import Card from '../components/Card';
 import { ScriptureIcon, MicrophoneIcon, UserIcon } from '../components/Icon';
 import { ShareButton } from '../components/ShareButton';
+import { getPublicShareUrl } from '../utils/shareUtils';
 
 const Sermons: React.FC = () => {
   return (
@@ -50,7 +51,7 @@ const Sermons: React.FC = () => {
                 author={sermon.preacher}
                 date={sermon.date}
                 category="Sermon"
-                url={`${window.location.origin}/sermons`}
+                url={getPublicShareUrl('/sermons')}
                 variant="outline"
                 size="sm"
               />

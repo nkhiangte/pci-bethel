@@ -9,7 +9,7 @@ import { db } from '../services/firebase';
 import { Article } from '../types';
 import { sanitizeContentForStorage } from '../utils/imageUtils';
 import { ShareButton } from '../components/ShareButton';
-import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO } from '../utils/shareUtils';
+import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO, getPublicShareUrl } from '../utils/shareUtils';
 import { 
   FileText, Mic, Search, Plus, Edit, Trash, X, Save, 
   Calendar, User, Filter, ExternalLink, Loader, ChevronRight
@@ -149,14 +149,14 @@ const Articles: React.FC = () => {
         title: `${selectedArticle.title} - Champhai Bethel Kohhran`,
         description: excerpt,
         imageUrl: thumb,
-        url: `${window.location.origin}/articles?id=${selectedArticle.id}`,
+        url: getPublicShareUrl(`/articles?id=${selectedArticle.id}`),
       });
     } else {
       updateShareMetaTags({
         title: 'Champhai Bethel Kohhran',
         description: 'Champhai Bethel Presbyterian Kohhran official website ; inkhawm hunbi, rawngbawlna, record vawnthatna leh kohhran hmalakna hrang hrangte tarlanna.',
         imageUrl: DEFAULT_CHURCH_LOGO,
-        url: `${window.location.origin}/articles`,
+        url: getPublicShareUrl('/articles'),
       });
     }
   }, [selectedArticle]);
@@ -288,7 +288,7 @@ const Articles: React.FC = () => {
                                         imageUrl={article.imageUrl}
                                         content={article.content}
                                         text={article.content}
-                                        url={`${window.location.origin}/articles?id=${article.id}`}
+                                        url={getPublicShareUrl(`/articles?id=${article.id}`)}
                                         variant="outline"
                                         size="sm"
                                     />
@@ -348,7 +348,7 @@ const Articles: React.FC = () => {
                             imageUrl={selectedArticle.imageUrl}
                             content={selectedArticle.content}
                             text={selectedArticle.content}
-                            url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
+                            url={getPublicShareUrl(`/articles?id=${selectedArticle.id}`)}
                             variant="outline"
                             size="sm"
                         />
@@ -395,7 +395,7 @@ const Articles: React.FC = () => {
                             imageUrl={selectedArticle.imageUrl}
                             content={selectedArticle.content}
                             text={selectedArticle.content}
-                            url={`${window.location.origin}/articles?id=${selectedArticle.id}`}
+                            url={getPublicShareUrl(`/articles?id=${selectedArticle.id}`)}
                             variant="inline"
                         />
                     </div>

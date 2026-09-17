@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Share2, Check, Copy } from 'lucide-react';
 import { ShareModal, ShareData } from './ShareModal';
 import { useLanguage } from '../contexts/LanguageContext';
-import { extractAtLeastTwoSentences, generateShareMessage } from '../utils/shareUtils';
+import { extractAtLeastTwoSentences, generateShareMessage, getPublicShareUrl } from '../utils/shareUtils';
 
 export interface ShareButtonProps extends ShareData {
   variant?: 'button' | 'icon' | 'outline' | 'inline' | 'floating';
@@ -25,6 +25,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   const [copiedInline, setCopiedInline] = useState(false);
 
   const defaultText = buttonText || (language === 'en' ? 'Share' : 'Insem rawlh');
+  const targetUrl = getPublicShareUrl(shareData.url);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,10 +36,18 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   const handleInlineCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const url = shareData.url || window.location.href;
     try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(targetUrl);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = targetUrl;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
       }
       setCopiedInline(true);
       setTimeout(() => setCopiedInline(false), 2500);
@@ -50,16 +59,20 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   const handleDirectWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const url = shareData.url || window.location.href;
     const excerpt = extractAtLeastTwoSentences(shareData.content || shareData.text);
     const message = generateShareMessage({
       title: shareData.title,
       author: shareData.author,
       excerpt,
-      targetUrl: url,
+      targetUrl,
       language,
     });
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    try {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.location.href = waUrl;
+    }
   };
 
   // Size styling
@@ -129,7 +142,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         <ShareModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          data={shareData}
+          data={{ ...shareData, url: targetUrl }}
         />
       </>
     );
@@ -152,7 +165,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         <ShareModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          data={shareData}
+          data={{ ...shareData, url: targetUrl }}
         />
       </>
     );
@@ -174,7 +187,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         <ShareModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          data={shareData}
+          data={{ ...shareData, url: targetUrl }}
         />
       </>
     );
@@ -195,7 +208,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       <ShareModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        data={shareData}
+        data={{ ...shareData, url: targetUrl }}
       />
     </>
   );

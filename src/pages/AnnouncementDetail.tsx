@@ -7,7 +7,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeSundaySchoolReportHtml } from '../utils/sanitizeReport';
 import { ShareButton } from '../components/ShareButton';
-import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO } from '../utils/shareUtils';
+import { extractFirstImage, extractAtLeastTwoSentences, updateShareMetaTags, DEFAULT_CHURCH_LOGO, getPublicShareUrl } from '../utils/shareUtils';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -76,11 +76,12 @@ const AnnouncementDetail: React.FC = () => {
         content: announcement.content,
       });
       const excerpt = extractAtLeastTwoSentences(announcement.content);
+      const canonicalShareUrl = getPublicShareUrl(`/announcements/${announcement.id}`);
       updateShareMetaTags({
         title: `${announcement.title} - Champhai Bethel Kohhran`,
         description: excerpt,
         imageUrl: thumb,
-        url: window.location.href,
+        url: canonicalShareUrl,
       });
     }
   }, [announcement]);
@@ -90,19 +91,6 @@ const AnnouncementDetail: React.FC = () => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const shareHandler = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: announcement?.title,
-        text: announcement?.title,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
-    }
   };
 
   if (loading) {
@@ -149,7 +137,7 @@ const AnnouncementDetail: React.FC = () => {
               imageUrls={displayImages}
               content={announcement.content}
               text={announcement.content}
-              url={window.location.href}
+              url={getPublicShareUrl(`/announcements/${announcement.id}`)}
               variant="outline"
               size="sm"
             />
@@ -239,7 +227,7 @@ const AnnouncementDetail: React.FC = () => {
                 imageUrls={displayImages}
                 content={announcement.content}
                 text={announcement.content}
-                url={window.location.href}
+                url={getPublicShareUrl(`/announcements/${announcement.id}`)}
                 variant="inline"
               />
             </div>

@@ -10,6 +10,7 @@ import { db } from '../services/firebase';
 import { Announcement } from '../types';
 import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
 import { ShareButton } from '../components/ShareButton';
+import { getPublicShareUrl } from '../utils/shareUtils';
 import { Bell, Plus, Edit, Trash, X, Save, Loader, AlertCircle, Image as ImageIcon, Upload, Trash2, ZoomIn, Type, Play, Youtube, PlusCircle, ArrowRight } from 'lucide-react';
 
 const quillModules = {
@@ -376,7 +377,7 @@ const Announcements: React.FC = () => {
                                     imageUrls={displayImages}
                                     content={item.content}
                                     text={item.content}
-                                    url={`${window.location.origin}/announcements/${item.id}`}
+                                    url={getPublicShareUrl(`/announcements/${item.id}`)}
                                     variant="outline"
                                     size="sm"
                                 />

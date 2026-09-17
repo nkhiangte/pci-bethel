@@ -11,6 +11,7 @@ import SundaySchoolReportWidget from '../components/SundaySchoolReportWidget';
 import { ShareButton } from '../components/ShareButton';
 import { useWeeklyEvents, parseLocalDate, normalizeTitle, getMizoDayName } from '../hooks/useWeeklyEvents';
 import { sanitizeSundaySchoolReportHtml, getAnnouncementSnippet } from '../utils/sanitizeReport';
+import { getPublicShareUrl } from '../utils/shareUtils';
 
 const Home: React.FC = () => {
   const { language, t } = useLanguage();
@@ -253,7 +254,7 @@ const Home: React.FC = () => {
                                                 imageUrls={item.imageUrls}
                                                 content={item.content}
                                                 text={item.content}
-                                                url={`${window.location.origin}/announcements/${item.id}`}
+                                                url={getPublicShareUrl(`/announcements/${item.id}`)}
                                                 variant="outline"
                                                 size="sm"
                                             />

@@ -1,6 +1,119 @@
 // Utility functions for robust sharing across WhatsApp, Social Media, and Web Share API
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 export const DEFAULT_CHURCH_LOGO = "https://i.ibb.co/mVw3Ftpw/PCI-logo.png";
+export const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
+export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.pcibethel.app";
+
+/**
+ * Returns a publicly accessible URL for sharing.
+ * - On Native Android / iOS App: Returns the official Google Play Store download link.
+ * - On Web App: Returns the direct webpage link (e.g. https://www.cpibethel.com/announcements/...).
+ */
+export function getPublicShareUrl(pathOrUrl?: string): string {
+  const isNative = Capacitor.isNativePlatform();
+
+  // If in native Android / mobile app, share the Play Store link
+  if (isNative) {
+    return PLAY_STORE_URL;
+  }
+
+  // Web app mode: Share the direct website page link
+  let input = pathOrUrl;
+  if (!input && typeof window !== 'undefined') {
+    input = window.location.pathname + window.location.search + window.location.hash;
+  }
+  if (!input) return PRODUCTION_WEB_DOMAIN;
+
+  input = input.trim();
+
+  // If already full http/https or capacitor URL
+  if (/^https?:\/\//i.test(input) || /^capacitor:\/\//i.test(input)) {
+    // If it points to localhost / 127.0.0.1 / capacitor
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(input) || /^capacitor:\/\/localhost/i.test(input)) {
+      return input
+        .replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, PRODUCTION_WEB_DOMAIN)
+        .replace(/^capacitor:\/\/localhost/i, PRODUCTION_WEB_DOMAIN);
+    }
+    return input;
+  }
+
+  // If relative path
+  const normalizedPath = input.startsWith('/') ? input : `/${input}`;
+
+  const isLocalHost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'ionic:'
+  );
+
+  if (isLocalHost) {
+    return `${PRODUCTION_WEB_DOMAIN}${normalizedPath}`;
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return `${window.location.origin}${normalizedPath}`;
+  }
+
+  return `${PRODUCTION_WEB_DOMAIN}${normalizedPath}`;
+}
+
+/**
+ * Executes a native share dialog via Capacitor Share Plugin (on Android / iOS)
+ * or Web Share API (on supporting browsers).
+ */
+export async function performNativeShare({
+  title,
+  text,
+  url,
+  dialogTitle,
+}: {
+  title: string;
+  text?: string;
+  url?: string;
+  dialogTitle?: string;
+}): Promise<boolean> {
+  const publicUrl = getPublicShareUrl(url);
+
+  // 1. Try Capacitor Native Share Sheet (Works on Android & iOS apps)
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await Share.share({
+        title,
+        text,
+        url: publicUrl,
+        dialogTitle: dialogTitle || title,
+      });
+      return true;
+    }
+  } catch (err: any) {
+    if (err?.name === 'AbortError' || err?.message?.includes('canceled') || err?.message?.includes('dismissed')) {
+      return true;
+    }
+    console.warn("Capacitor share fallback:", err);
+  }
+
+  // 2. Try Browser Web Share API (navigator.share)
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title,
+        text,
+        url: publicUrl,
+      });
+      return true;
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        return true;
+      }
+      console.warn("navigator.share fallback:", err);
+    }
+  }
+
+  return false;
+}
 
 /**
  * Strips HTML tags and decodes common HTML entities into clean readable text
@@ -149,11 +262,16 @@ export function generateShareMessage({
     parts.push(excerpt.trim());
   }
 
-  // Read more and Link
+  // Read more / Download app link
   parts.push('');
-  const readMoreLabel = language === 'en' 
-    ? '👉 Read more:' 
-    : '👉 Chhiar chhunzawmna / Read more:';
+  const isNative = Capacitor.isNativePlatform();
+  const readMoreLabel = isNative
+    ? (language === 'en' 
+        ? '📲 Download Bethel Kohhran App on Google Play Store:' 
+        : '📲 Bethel Kohhran App Google Play Store-ah download rawh:')
+    : (language === 'en' 
+        ? '👉 Read more:' 
+        : '👉 Chhiar chhunzawmna / Read more:');
   parts.push(readMoreLabel);
   parts.push(targetUrl);
 

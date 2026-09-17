@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, Share2, Mail, ExternalLink, MessageCircle, FileText } from 'lucide-react';
+import { X, Copy, Check, Share2, Mail, ExternalLink, MessageCircle, FileText, Smartphone } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   extractFirstImage,
   extractAtLeastTwoSentences,
   generateShareMessage,
+  getPublicShareUrl,
+  performNativeShare,
   DEFAULT_CHURCH_LOGO
 } from '../utils/shareUtils';
 
@@ -60,7 +63,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
 
   if (!isOpen) return null;
 
-  const targetUrl = data.url || window.location.href;
+  // Guarantee clean public production URL (e.g. https://www.cpibethel.com/...)
+  const targetUrl = getPublicShareUrl(data.url);
   const shareTitle = data.title || "Champhai Bethel Kohhran";
 
   // 1. Extract thumbnail: embedded image if present on the article, otherwise use church logo
@@ -109,7 +113,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
 
   const handleWhatsApp = () => {
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareMessage)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    try {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.location.href = url;
+    }
   };
 
   const handleFacebook = () => {
@@ -137,24 +145,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: `${shareTitle}${data.author ? ` (By ${data.author})` : ''}\n\n${shareExcerpt}\n\nRead more / Chhiar zawmna:`,
-          url: targetUrl,
-        });
-      } catch (err) {
-        if ((err as Error)?.name !== 'AbortError') {
-          console.error("Native share error:", err);
-        }
-      }
-    } else {
+    const success = await performNativeShare({
+      title: shareTitle,
+      text: fullShareMessage,
+      url: targetUrl,
+      dialogTitle: shareTitle,
+    });
+    if (!success) {
       handleCopyFullMessage();
     }
   };
 
-  const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
+  const isNativeApp = Capacitor.isNativePlatform();
 
   return (
     <div 
@@ -320,20 +322,26 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
 
           {/* Secondary Actions: Native Share / Email */}
           <div className="flex gap-2">
-            {hasNativeShare && (
-              <button
-                type="button"
-                onClick={handleNativeShare}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-church-50 text-church-800 hover:bg-church-100 border border-church-200 text-xs font-bold transition shadow-2xs active:scale-95"
-              >
+            <button
+              type="button"
+              onClick={handleNativeShare}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-church-50 hover:bg-church-100 text-church-800 border border-church-200 text-xs font-bold transition shadow-2xs active:scale-95"
+            >
+              {isNativeApp ? (
+                <Smartphone size={16} className="text-church-600" />
+              ) : (
                 <Share2 size={16} className="text-church-600" />
-                <span>{language === 'en' ? 'More Apps (System Share)' : 'App dang zawng zawng'}</span>
-              </button>
-            )}
+              )}
+              <span>
+                {isNativeApp
+                  ? (language === 'en' ? 'Android Share Sheet (All Apps)' : 'Phone Share Menu (App dang zawng zawng)')
+                  : (language === 'en' ? 'More Apps (System Share)' : 'App dang zawng zawng')}
+              </span>
+            </button>
             <button
               type="button"
               onClick={handleEmail}
-              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 text-xs font-bold transition shadow-2xs active:scale-95 ${hasNativeShare ? '' : 'w-full'}`}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 text-xs font-bold transition shadow-2xs active:scale-95"
             >
               <Mail size={16} className="text-slate-500" />
               <span>Email</span>
@@ -368,7 +376,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
             {/* Direct Link Input & Copy Link Button */}
             <div>
               <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                {language === 'en' ? 'Or Copy Direct Link Only' : 'Emaw Link Chauh Copy Rawh'}
+                {isNativeApp 
+                  ? (language === 'en' ? 'Play Store App Link' : 'Play Store App Link') 
+                  : (language === 'en' ? 'Or Copy Direct Link Only' : 'Emaw Link Chauh Copy Rawh')}
               </label>
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500 transition">
                 <input

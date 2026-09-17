@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, QrCode, Printer, Download, Sparkles, Smartphone, Share2 } from 'lucide-react';
 import { generateQrCodeDataUrl } from '../../utils/qrHelper';
+import { getPublicShareUrl } from '../../utils/shareUtils';
 
 interface RegisterQrStandModalProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ export const RegisterQrStandModal: React.FC<RegisterQrStandModalProps> = ({
   onClose,
 }) => {
   const [registrationQrUrl, setRegistrationQrUrl] = useState<string>('');
-  const registrationUrl = `${window.location.origin}/library?action=register`;
+  const registrationUrl = getPublicShareUrl('/library?action=register');
 
   useEffect(() => {
     if (isOpen) {
