@@ -12,17 +12,24 @@ let adminDbInstance: any = null;
 
 function getAdminDb() {
   if (!adminDbInstance) {
-    if (!admin.apps.length) {
-      try {
-        admin.initializeApp({
-          projectId: firebaseConfig.projectId,
-          storageBucket: firebaseConfig.storageBucket,
-        });
-      } catch (e) {
-        console.error("Firebase admin init error:", e);
+    try {
+      const apps = admin?.apps || admin?.default?.apps || [];
+      if (!apps || apps.length === 0) {
+        const initFn = admin?.initializeApp || admin?.default?.initializeApp;
+        if (initFn) {
+          initFn({
+            projectId: firebaseConfig.projectId,
+            storageBucket: firebaseConfig.storageBucket,
+          });
+        }
       }
+      const fsFn = admin?.firestore || admin?.default?.firestore;
+      if (fsFn) {
+        adminDbInstance = fsFn(firebaseConfig.firestoreDatabaseId);
+      }
+    } catch (e) {
+      console.error("Firebase admin init error:", e);
     }
-    adminDbInstance = admin.firestore(firebaseConfig.firestoreDatabaseId);
   }
   return adminDbInstance;
 }
@@ -54,9 +61,10 @@ function extractAtLeastTwoSentences(contentOrText?: string, minSentences = 2): s
     .replace(/\b(Rev|Dr|Prof|Upa|Pu|Pi|Tv|Nl|Ch|vs|v|eg|i\.e|etc)\./gi, '$1§DOT§')
     .replace(/(\d+)\.(\d+)/g, '$1§DOT§$2');
   const parts = protectedText.split(/(?<=[.!?])(?=['"]?\s+|$)/);
+  if (!parts || !Array.isArray(parts)) return text;
   const sentences = parts
-    .map(s => s.replace(/§DOT§/g, '.').trim())
-    .filter(s => s.length > 0);
+    .map(s => (s ? s.replace(/§DOT§/g, '.').trim() : ''))
+    .filter(s => s && s.length > 0);
   if (sentences.length >= minSentences) {
     let combined = sentences.slice(0, minSentences).join(' ');
     if (combined.length < 70 && sentences.length > minSentences) {
@@ -75,7 +83,7 @@ function extractAtLeastTwoSentences(contentOrText?: string, minSentences = 2): s
   return (lastSpace > 50 ? slice.slice(0, lastSpace) : slice) + '...';
 }
 
-function extractFirstImage(data: {
+function extractFirstImage(data?: {
   imageUrl?: string;
   image?: string;
   content?: string;
@@ -83,34 +91,58 @@ function extractFirstImage(data: {
   imageUrls?: string[];
   images?: string[];
 }): string {
-  if (data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.trim()) {
-    return data.imageUrl.trim();
+  if (!data) return DEFAULT_CHURCH_LOGO;
+  const sanitizeUrl = (rawUrl?: string): string | null => {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('data:')) return null; // Reject base64 data URIs
+    if (trimmed.startsWith('/')) {
+      return `${PRODUCTION_WEB_DOMAIN}${trimmed}`;
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    return null;
+  };
+
+  const img1 = sanitizeUrl(data.imageUrl) || sanitizeUrl(data.image);
+  if (img1) return img1;
+
+  if (data.imageUrls && Array.isArray(data.imageUrls)) {
+    for (const u of data.imageUrls) {
+      const sanitized = sanitizeUrl(u);
+      if (sanitized) return sanitized;
+    }
   }
-  if (data.image && typeof data.image === 'string' && data.image.trim()) {
-    return data.image.trim();
+  if (data.images && Array.isArray(data.images)) {
+    for (const u of data.images) {
+      const sanitized = sanitizeUrl(u);
+      if (sanitized) return sanitized;
+    }
   }
-  if (data.imageUrls && Array.isArray(data.imageUrls) && data.imageUrls.length > 0 && data.imageUrls[0]?.trim()) {
-    return data.imageUrls[0].trim();
-  }
-  if (data.images && Array.isArray(data.images) && data.images.length > 0 && data.images[0]?.trim()) {
-    return data.images[0].trim();
-  }
+
   if (data.content && typeof data.content === 'string') {
     const match = data.content.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (match && match[1] && match[1].trim()) {
-      return match[1].trim();
+    if (match && match[1]) {
+      const sanitized = sanitizeUrl(match[1]);
+      if (sanitized) return sanitized;
     }
   }
+
   if (data.text && typeof data.text === 'string') {
     const matchHtml = data.text.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (matchHtml && matchHtml[1] && matchHtml[1].trim()) {
-      return matchHtml[1].trim();
+    if (matchHtml && matchHtml[1]) {
+      const sanitized = sanitizeUrl(matchHtml[1]);
+      if (sanitized) return sanitized;
     }
     const matchMd = data.text.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/i);
-    if (matchMd && matchMd[1] && matchMd[1].trim()) {
-      return matchMd[1].trim();
+    if (matchMd && matchMd[1]) {
+      const sanitized = sanitizeUrl(matchMd[1]);
+      if (sanitized) return sanitized;
     }
   }
+
   return DEFAULT_CHURCH_LOGO;
 }
 
@@ -141,6 +173,8 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
       .replace(/<meta name="twitter:description" content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${description}" />`)
       .replace(/<meta property="og:image" content=".*?"\s*\/?>/i, `<meta property="og:image" content="${imageUrl}" />`)
       .replace(/<meta property="og:image:secure_url" content=".*?"\s*\/?>/i, `<meta property="og:image:secure_url" content="${imageUrl}" />`)
+      .replace(/<meta property="og:image:width" content=".*?"\s*\/?>/i, `<meta property="og:image:width" content="1200" />`)
+      .replace(/<meta property="og:image:height" content=".*?"\s*\/?>/i, `<meta property="og:image:height" content="630" />`)
       .replace(/<meta name="twitter:image" content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${imageUrl}" />`)
       .replace(/<meta property="og:url" content=".*?"\s*\/?>/i, `<meta property="og:url" content="${url}" />`);
 
@@ -152,6 +186,8 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
         <meta property="og:description" content="${description}" />
         <meta property="og:image" content="${imageUrl}" />
         <meta property="og:image:secure_url" content="${imageUrl}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="${url}" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${title}" />
@@ -329,14 +365,14 @@ async function startServer() {
       const docRef = getAdminDb().collection("announcements").doc(id);
       const doc = await docRef.get();
       if (doc.exists) {
-        const data = doc.data() as any;
+        const data = (doc.data() as any) || {};
         const displayImgs = data.imageUrls || (data.imageUrl ? [data.imageUrl] : []);
         const imageUrl = extractFirstImage({
           imageUrl: displayImgs[0],
           imageUrls: displayImgs,
           content: data.content,
         });
-        const excerpt = extractAtLeastTwoSentences(data.content);
+        const excerpt = extractAtLeastTwoSentences(data.content || "");
         const title = `${data.title || "Announcement"} - Champhai Bethel Kohhran`;
         const description = excerpt || "Champhai Bethel Kohhran Announcement";
         const url = `${PRODUCTION_WEB_DOMAIN}/announcements/${id}`;
@@ -368,12 +404,12 @@ async function startServer() {
       const docRef = getAdminDb().collection("articles").doc(articleId);
       const doc = await docRef.get();
       if (doc.exists) {
-        const data = doc.data() as any;
+        const data = (doc.data() as any) || {};
         const imageUrl = extractFirstImage({
           imageUrl: data.imageUrl,
           content: data.content,
         });
-        const excerpt = extractAtLeastTwoSentences(data.content);
+        const excerpt = extractAtLeastTwoSentences(data.content || "");
         const title = `${data.title || "Article"} - Champhai Bethel Kohhran`;
         const description = excerpt || "Champhai Bethel Kohhran Article";
         const url = `${PRODUCTION_WEB_DOMAIN}/articles?id=${articleId}`;

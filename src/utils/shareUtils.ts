@@ -191,43 +191,57 @@ export function extractFirstImage(data: {
   imageUrls?: string[];
   images?: string[];
 }): { url: string; isLogo: boolean } {
-  // 1. Check explicit single image URL
-  if (data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.trim()) {
-    return { url: data.imageUrl.trim(), isLogo: false };
+  const sanitizeUrl = (rawUrl?: string): string | null => {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('data:')) return null; // Reject base64 data URIs
+    if (trimmed.startsWith('/')) {
+      return `${PRODUCTION_WEB_DOMAIN}${trimmed}`;
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    return null;
+  };
+
+  const img1 = sanitizeUrl(data.imageUrl) || sanitizeUrl(data.image);
+  if (img1) return { url: img1, isLogo: false };
+
+  if (data.imageUrls && Array.isArray(data.imageUrls)) {
+    for (const u of data.imageUrls) {
+      const sanitized = sanitizeUrl(u);
+      if (sanitized) return { url: sanitized, isLogo: false };
+    }
   }
-  if (data.image && typeof data.image === 'string' && data.image.trim()) {
-    return { url: data.image.trim(), isLogo: false };
+  if (data.images && Array.isArray(data.images)) {
+    for (const u of data.images) {
+      const sanitized = sanitizeUrl(u);
+      if (sanitized) return { url: sanitized, isLogo: false };
+    }
   }
 
-  // 2. Check image arrays
-  if (data.imageUrls && Array.isArray(data.imageUrls) && data.imageUrls.length > 0 && data.imageUrls[0]?.trim()) {
-    return { url: data.imageUrls[0].trim(), isLogo: false };
-  }
-  if (data.images && Array.isArray(data.images) && data.images.length > 0 && data.images[0]?.trim()) {
-    return { url: data.images[0].trim(), isLogo: false };
-  }
-
-  // 3. Search HTML content for embedded <img> tags
   if (data.content && typeof data.content === 'string') {
     const match = data.content.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (match && match[1] && match[1].trim()) {
-      return { url: match[1].trim(), isLogo: false };
+    if (match && match[1]) {
+      const sanitized = sanitizeUrl(match[1]);
+      if (sanitized) return { url: sanitized, isLogo: false };
     }
   }
 
-  // 4. Search plain text / markdown for images
   if (data.text && typeof data.text === 'string') {
     const matchHtml = data.text.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (matchHtml && matchHtml[1] && matchHtml[1].trim()) {
-      return { url: matchHtml[1].trim(), isLogo: false };
+    if (matchHtml && matchHtml[1]) {
+      const sanitized = sanitizeUrl(matchHtml[1]);
+      if (sanitized) return { url: sanitized, isLogo: false };
     }
     const matchMd = data.text.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/i);
-    if (matchMd && matchMd[1] && matchMd[1].trim()) {
-      return { url: matchMd[1].trim(), isLogo: false };
+    if (matchMd && matchMd[1]) {
+      const sanitized = sanitizeUrl(matchMd[1]);
+      if (sanitized) return { url: sanitized, isLogo: false };
     }
   }
 
-  // 5. Default fallback to the official Champhai Bethel Church Logo
   return { url: DEFAULT_CHURCH_LOGO, isLogo: true };
 }
 
@@ -320,7 +334,10 @@ export function updateShareMetaTags(meta: {
   if (meta.imageUrl) {
     setMetaTag('og:image', meta.imageUrl);
     setMetaTag('og:image:secure_url', meta.imageUrl);
+    setMetaTag('og:image:width', '1200');
+    setMetaTag('og:image:height', '630');
     setMetaTag('twitter:image', meta.imageUrl, true);
+    setMetaTag('twitter:card', 'summary_large_image', true);
   }
   if (meta.url) {
     setMetaTag('og:url', meta.url);
