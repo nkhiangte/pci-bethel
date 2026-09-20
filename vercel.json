@@ -1,5 +1,34 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/announcements/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+        }
+      ],
+      "destination": "/api/share?type=announcements&id=:id"
+    },
+    {
+      "source": "/articles",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+        }
+      ],
+      "destination": "/api/share?type=articles"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

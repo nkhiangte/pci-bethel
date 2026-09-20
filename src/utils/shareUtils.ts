@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 
-export const DEFAULT_CHURCH_LOGO = "https://i.ibb.co/mVw3Ftpw/PCI-logo.png";
+export const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.png";
 export const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.pcibethel.app";
 

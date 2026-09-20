@@ -4,37 +4,49 @@ import path from "path";
 import fs from "fs";
 import twilio, { Twilio } from "twilio";
 import { GoogleGenAI, Type } from "@google/genai";
-import adminPkg from "firebase-admin";
-const admin = adminPkg as any;
 import firebaseConfig from "./firebase-applet-config.json";
+import shareHandler from "./api/share";
 
-let adminDbInstance: any = null;
-
-function getAdminDb() {
-  if (!adminDbInstance) {
-    try {
-      const apps = admin?.apps || admin?.default?.apps || [];
-      if (!apps || apps.length === 0) {
-        const initFn = admin?.initializeApp || admin?.default?.initializeApp;
-        if (initFn) {
-          initFn({
-            projectId: firebaseConfig.projectId,
-            storageBucket: firebaseConfig.storageBucket,
-          });
-        }
-      }
-      const fsFn = admin?.firestore || admin?.default?.firestore;
-      if (fsFn) {
-        adminDbInstance = fsFn(firebaseConfig.firestoreDatabaseId);
-      }
-    } catch (e) {
-      console.error("Firebase admin init error:", e);
+function parseFirestoreFields(fields: any): any {
+  if (!fields) return {};
+  const result: any = {};
+  for (const [key, val] of Object.entries(fields)) {
+    const v: any = val;
+    if (v.stringValue !== undefined) result[key] = v.stringValue;
+    else if (v.integerValue !== undefined) result[key] = Number(v.integerValue);
+    else if (v.booleanValue !== undefined) result[key] = v.booleanValue;
+    else if (v.arrayValue !== undefined) {
+      result[key] = (v.arrayValue.values || []).map((item: any) => {
+        if (item.stringValue !== undefined) return item.stringValue;
+        return item;
+      });
+    } else if (v.mapValue !== undefined) {
+      result[key] = parseFirestoreFields(v.mapValue.fields);
     }
   }
-  return adminDbInstance;
+  return result;
 }
 
-const DEFAULT_CHURCH_LOGO = "https://i.ibb.co/mVw3Ftpw/PCI-logo.png";
+async function fetchFirestoreDocument(collection: string, id: string) {
+  const dbs = ["(default)", firebaseConfig.firestoreDatabaseId];
+  for (const dbId of dbs) {
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${dbId}/documents/${collection}/${id}?key=${firebaseConfig.apiKey}`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const json = await response.json();
+        if (json && json.fields) {
+          return parseFirestoreFields(json.fields);
+        }
+      }
+    } catch (err) {
+      console.error(`Error querying firestore database ${dbId}:`, err);
+    }
+  }
+  return null;
+}
+
+const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.png";
 const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
 
 function cleanHtmlToText(htmlOrText?: string): string {
@@ -358,14 +370,17 @@ async function startServer() {
     }
   });
 
+  // Share preview endpoint (compatible with Vercel serverless function)
+  app.get("/api/share", async (req, res) => {
+    return shareHandler(req, res);
+  });
+
   // Announcement share preview route
   app.get("/announcements/:id", async (req, res) => {
     const { id } = req.params;
     try {
-      const docRef = getAdminDb().collection("announcements").doc(id);
-      const doc = await docRef.get();
-      if (doc.exists) {
-        const data = (doc.data() as any) || {};
+      const data = await fetchFirestoreDocument("announcements", id);
+      if (data) {
         const displayImgs = data.imageUrls || (data.imageUrl ? [data.imageUrl] : []);
         const imageUrl = extractFirstImage({
           imageUrl: displayImgs[0],
@@ -401,10 +416,8 @@ async function startServer() {
     }
 
     try {
-      const docRef = getAdminDb().collection("articles").doc(articleId);
-      const doc = await docRef.get();
-      if (doc.exists) {
-        const data = (doc.data() as any) || {};
+      const data = await fetchFirestoreDocument("articles", articleId);
+      if (data) {
         const imageUrl = extractFirstImage({
           imageUrl: data.imageUrl,
           content: data.content,
