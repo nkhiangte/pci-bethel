@@ -46,7 +46,7 @@ async function fetchFirestoreDocument(collection: string, id: string) {
   return null;
 }
 
-const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.png";
+const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.jpg";
 const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
 
 function cleanHtmlToText(htmlOrText?: string): string {
@@ -189,30 +189,11 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
       .replace(/<meta property="og:image" content=".*?"\s*\/?>/i, `<meta property="og:image" content="${imageUrl}" />`)
       .replace(/<meta property="og:image:secure_url" content=".*?"\s*\/?>/i, `<meta property="og:image:secure_url" content="${imageUrl}" />`)
       .replace(/<meta property="og:image:type" content=".*?"\s*\/?>/i, `<meta property="og:image:type" content="${mimeType}" />`)
-      .replace(/<meta property="og:image:width" content=".*?"\s*\/?>/i, `<meta property="og:image:width" content="1200" />`)
-      .replace(/<meta property="og:image:height" content=".*?"\s*\/?>/i, `<meta property="og:image:height" content="630" />`)
       .replace(/<meta name="twitter:image" content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${imageUrl}" />`)
+      .replace(/<meta itemprop="image" content=".*?"\s*\/?>/i, `<meta itemprop="image" content="${imageUrl}" />`)
+      .replace(/<link rel="image_src" href=".*?"\s*\/?>/i, `<link rel="image_src" href="${imageUrl}" />`)
+      .replace(/<link rel="canonical" href=".*?"\s*\/?>/i, `<link rel="canonical" href="${url}" />`)
       .replace(/<meta property="og:url" content=".*?"\s*\/?>/i, `<meta property="og:url" content="${url}" />`);
-
-    if (!html.includes(`content="${title}"`)) {
-      const metaTags = `
-        <title>${title}</title>
-        <meta name="description" content="${description}" />
-        <meta property="og:title" content="${title}" />
-        <meta property="og:description" content="${description}" />
-        <meta property="og:image" content="${imageUrl}" />
-        <meta property="og:image:secure_url" content="${imageUrl}" />
-        <meta property="og:image:type" content="${mimeType}" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:url" content="${url}" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="${title}" />
-        <meta name="twitter:description" content="${description}" />
-        <meta name="twitter:image" content="${imageUrl}" />
-      `;
-      html = html.replace("</head>", `${metaTags}\n</head>`);
-    }
 
     res.send(html);
   } catch (err) {
@@ -432,7 +413,7 @@ async function startServer() {
         const excerpt = extractAtLeastTwoSentences(data.content || "");
         const title = `${data.title || "Article"} - Champhai Bethel Kohhran`;
         const description = excerpt || "Champhai Bethel Kohhran Article";
-        const url = `${PRODUCTION_WEB_DOMAIN}/articles?id=${articleId}`;
+        const url = `${PRODUCTION_WEB_DOMAIN}/articles/${articleId}`;
 
         return serveIndexWithMeta(req, res, { title, description, imageUrl, url });
       }
@@ -443,7 +424,7 @@ async function startServer() {
     return serveIndexWithMeta(req, res, {
       title: "Article - Champhai Bethel Kohhran",
       imageUrl: DEFAULT_CHURCH_LOGO,
-      url: `${PRODUCTION_WEB_DOMAIN}/articles?id=${articleId}`,
+      url: `${PRODUCTION_WEB_DOMAIN}/articles/${articleId}`,
     });
   };
 

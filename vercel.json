@@ -5,8 +5,8 @@
       "has": [
         {
           "type": "header",
-          "key": "User-Agent",
-          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+          "key": "user-agent",
+          "value": ".*([bB]ot|[cC]rawl|[sS]pider|[sS]lurp|[fF]acebook|[fF]acebot|[tT]witter|[wW]hats[aA]pp|[tT]elegram|[sS]lack|[dD]iscord|[pP]interest|[gG]oogle|[lL]inked[iI]n|[mM]eta[uU][rR][iI]|[aA]pplebot).*"
         }
       ],
       "destination": "/api/share?type=announcements&id=:id"
@@ -16,8 +16,8 @@
       "has": [
         {
           "type": "header",
-          "key": "User-Agent",
-          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+          "key": "user-agent",
+          "value": ".*([bB]ot|[cC]rawl|[sS]pider|[sS]lurp|[fF]acebook|[fF]acebot|[tT]witter|[wW]hats[aA]pp|[tT]elegram|[sS]lack|[dD]iscord|[pP]interest|[gG]oogle|[lL]inked[iI]n|[mM]eta[uU][rR][iI]|[aA]pplebot).*"
         }
       ],
       "destination": "/api/share?type=articles&id=:id"
@@ -27,8 +27,8 @@
       "has": [
         {
           "type": "header",
-          "key": "User-Agent",
-          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+          "key": "user-agent",
+          "value": ".*([bB]ot|[cC]rawl|[sS]pider|[sS]lurp|[fF]acebook|[fF]acebot|[tT]witter|[wW]hats[aA]pp|[tT]elegram|[sS]lack|[dD]iscord|[pP]interest|[gG]oogle|[lL]inked[iI]n|[mM]eta[uU][rR][iI]|[aA]pplebot).*"
         }
       ],
       "destination": "/api/share?type=articles"

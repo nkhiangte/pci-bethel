@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 
-export const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.png";
+export const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.jpg";
 export const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.pcibethel.app";
 
@@ -58,10 +58,11 @@ export async function performNativeShare({
   // 1. Try Capacitor Native Share Sheet (Works on Android & iOS apps)
   try {
     if (Capacitor.isNativePlatform()) {
+      const alreadyHasUrl = text && text.includes(publicUrl);
       await Share.share({
         title,
         text,
-        url: publicUrl,
+        url: alreadyHasUrl ? undefined : publicUrl,
         dialogTitle: dialogTitle || title,
       });
       return true;
@@ -254,17 +255,17 @@ export function generateShareMessage({
     parts.push(excerpt.trim());
   }
 
-  // Read more link
+  // Church footer
+  parts.push('');
+  parts.push('Champhai Bethel Kohhran');
+
+  // Read more link - placed at the end so WhatsApp immediately unfurls the link preview
   parts.push('');
   const readMoreLabel = language === 'en' 
     ? '👉 Read more:' 
     : '👉 Chhiar chhunzawmna / Read more:';
   parts.push(readMoreLabel);
   parts.push(targetUrl);
-
-  // Church footer
-  parts.push('');
-  parts.push('Champhai Bethel Kohhran');
 
   return parts.join('\n');
 }
@@ -295,9 +296,20 @@ export function updateShareMetaTags(meta: {
     element.setAttribute('content', content);
   };
 
+  const setLinkTag = (rel: string, href: string) => {
+    let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = rel;
+      document.head.appendChild(link);
+    }
+    link.href = href;
+  };
+
   if (meta.title) {
     setMetaTag('og:title', meta.title);
     setMetaTag('twitter:title', meta.title, true);
+    setMetaTag('name', meta.title, false);
   }
   if (meta.description) {
     setMetaTag('og:description', meta.description);
@@ -310,12 +322,12 @@ export function updateShareMetaTags(meta: {
     setMetaTag('og:image', meta.imageUrl);
     setMetaTag('og:image:secure_url', meta.imageUrl);
     setMetaTag('og:image:type', mimeType);
-    setMetaTag('og:image:width', '1200');
-    setMetaTag('og:image:height', '630');
     setMetaTag('twitter:image', meta.imageUrl, true);
     setMetaTag('twitter:card', 'summary_large_image', true);
+    setLinkTag('image_src', meta.imageUrl);
   }
   if (meta.url) {
     setMetaTag('og:url', meta.url);
+    setLinkTag('canonical', meta.url);
   }
 }

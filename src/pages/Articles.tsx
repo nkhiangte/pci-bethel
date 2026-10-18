@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useParams } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ import {
 const Articles: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { id: routeId } = useParams<{ id?: string }>();
   
@@ -162,7 +163,7 @@ const Articles: React.FC = () => {
         title: `${selectedArticle.title} - Champhai Bethel Kohhran`,
         description: excerpt,
         imageUrl: thumb,
-        url: getPublicShareUrl(`/articles?id=${selectedArticle.id}`),
+        url: getPublicShareUrl(`/articles/${selectedArticle.id}`),
       });
     } else {
       updateShareMetaTags({
@@ -177,13 +178,13 @@ const Articles: React.FC = () => {
   const openReader = (article: Article) => {
     setSelectedArticle(article);
     setIsModalOpen(true);
-    setSearchParams({ id: article.id }, { replace: true });
+    navigate(`/articles/${article.id}`, { replace: true });
   };
 
   const closeReader = () => {
     setIsModalOpen(false);
     setSelectedArticle(null);
-    setSearchParams({}, { replace: true });
+    navigate('/articles', { replace: true });
   };
 
   const filteredArticles = articles.filter(item => {
@@ -301,7 +302,7 @@ const Articles: React.FC = () => {
                                         imageUrl={article.imageUrl}
                                         content={article.content}
                                         text={article.content}
-                                        url={getPublicShareUrl(`/articles?id=${article.id}`)}
+                                        url={getPublicShareUrl(`/articles/${article.id}`)}
                                         variant="outline"
                                         size="sm"
                                     />
@@ -361,7 +362,7 @@ const Articles: React.FC = () => {
                             imageUrl={selectedArticle.imageUrl}
                             content={selectedArticle.content}
                             text={selectedArticle.content}
-                            url={getPublicShareUrl(`/articles?id=${selectedArticle.id}`)}
+                            url={getPublicShareUrl(`/articles/${selectedArticle.id}`)}
                             variant="outline"
                             size="sm"
                         />
@@ -408,7 +409,7 @@ const Articles: React.FC = () => {
                             imageUrl={selectedArticle.imageUrl}
                             content={selectedArticle.content}
                             text={selectedArticle.content}
-                            url={getPublicShareUrl(`/articles?id=${selectedArticle.id}`)}
+                            url={getPublicShareUrl(`/articles/${selectedArticle.id}`)}
                             variant="inline"
                         />
                     </div>

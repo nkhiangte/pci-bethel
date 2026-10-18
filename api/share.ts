@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 
 const FIREBASE_API_KEY = "AIzaSyCby5_5xWpMRPFrzIcDexEkMaxZU6ZYZvo";
 const FIREBASE_PROJECT_ID = "bethelpci";
-const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.png";
+const DEFAULT_CHURCH_LOGO = "https://www.cpibethel.com/pci-logo.jpg";
 const PRODUCTION_WEB_DOMAIN = "https://www.cpibethel.com";
 
 function cleanHtmlToText(htmlOrText?: string): string {
@@ -197,10 +197,6 @@ export default async function handler(req: any, res: any) {
     let imageUrl = DEFAULT_CHURCH_LOGO;
     let targetUrl = `${PRODUCTION_WEB_DOMAIN}/${collectionName}${id ? `/${id}` : ""}`;
 
-    if (collectionName === "articles" && id) {
-      targetUrl = `${PRODUCTION_WEB_DOMAIN}/articles?id=${id}`;
-    }
-
     if (id) {
       const doc = await fetchFirestoreDocument(collectionName, id);
       if (doc) {
@@ -230,24 +226,29 @@ export default async function handler(req: any, res: any) {
     const mimeType = lowerImg.includes(".png") ? "image/png" : (lowerImg.includes(".webp") ? "image/webp" : "image/jpeg");
 
     const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: http://ogp.me/ns#">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle}</title>
   <meta name="description" content="${safeDesc}" />
 
-  <!-- Open Graph / WhatsApp / Facebook -->
+  <!-- Open Graph / WhatsApp / Facebook / Telegram -->
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Champhai Bethel Kohhran" />
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDesc}" />
+  <meta property="og:url" content="${safeUrl}" />
   <meta property="og:image" content="${safeImage}" />
   <meta property="og:image:secure_url" content="${safeImage}" />
   <meta property="og:image:type" content="${mimeType}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="${safeUrl}" />
+  <meta property="og:image:alt" content="${safeTitle}" />
+
+  <!-- Schema.org microdata & link image fallback for crawlers -->
+  <meta itemprop="name" content="${safeTitle}" />
+  <meta itemprop="description" content="${safeDesc}" />
+  <meta itemprop="image" content="${safeImage}" />
+  <link rel="image_src" href="${safeImage}" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -258,13 +259,12 @@ export default async function handler(req: any, res: any) {
   <!-- Canonical -->
   <link rel="canonical" href="${safeUrl}" />
 
-  <!-- Automatic Client Redirect -->
+  <!-- Real User Browser Redirect (no meta refresh tag so scrapers parse OG tags directly) -->
   <script>
-    window.location.replace("${safeUrl}");
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.replace("${safeUrl}");
+    }
   </script>
-  <noscript>
-    <meta http-equiv="refresh" content="0;url=${safeUrl}" />
-  </noscript>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; text-align: center; background: #f8fafc; color: #334155;">
   <div style="max-width: 500px; margin: 40px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
