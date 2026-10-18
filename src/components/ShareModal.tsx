@@ -376,9 +376,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, data })
             {/* Direct Link Input & Copy Link Button */}
             <div>
               <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                {isNativeApp 
-                  ? (language === 'en' ? 'Play Store App Link' : 'Play Store App Link') 
-                  : (language === 'en' ? 'Or Copy Direct Link Only' : 'Emaw Link Chauh Copy Rawh')}
+                {language === 'en' ? 'Direct Article Link' : 'Thuziak Link (Social Media Unfurl)'}
               </label>
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl focus-within:ring-2 focus-within:ring-church-500 focus-within:border-church-500 transition">
                 <input

@@ -115,6 +115,7 @@ const AppContent: React.FC = () => {
           <Route path="/upa-bial" element={<UpaBial />} />
           <Route path="/missionaries" element={<Missionaries />} />
           <Route path="/articles" element={<Articles />} /> 
+          <Route path="/articles/:id" element={<Articles />} /> 
           <Route path="/about" element={<About />} />
           <Route path="/events" element={<Events />} />
           <Route path="/calendar" element={<Calendar />} />

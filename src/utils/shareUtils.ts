@@ -8,18 +8,11 @@ export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com
 
 /**
  * Returns a publicly accessible URL for sharing.
- * - On Native Android / iOS App: Returns the official Google Play Store download link.
- * - On Web App: Returns the direct webpage link (e.g. https://www.cpibethel.com/announcements/...).
+ * Always resolves to the canonical public website URL (e.g. https://www.cpibethel.com/articles?id=...)
+ * even when called inside the native Android app, so that WhatsApp, Facebook, and Twitter
+ * crawlers unfurl the actual article thumbnail, title, and excerpt.
  */
 export function getPublicShareUrl(pathOrUrl?: string): string {
-  const isNative = Capacitor.isNativePlatform();
-
-  // If in native Android / mobile app, share the Play Store link
-  if (isNative) {
-    return PLAY_STORE_URL;
-  }
-
-  // Web app mode: Share the direct website page link
   let input = pathOrUrl;
   if (!input && typeof window !== 'undefined') {
     input = window.location.pathname + window.location.search + window.location.hash;
@@ -41,21 +34,6 @@ export function getPublicShareUrl(pathOrUrl?: string): string {
 
   // If relative path
   const normalizedPath = input.startsWith('/') ? input : `/${input}`;
-
-  const isLocalHost = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' ||
-    window.location.protocol === 'capacitor:' ||
-    window.location.protocol === 'ionic:'
-  );
-
-  if (isLocalHost) {
-    return `${PRODUCTION_WEB_DOMAIN}${normalizedPath}`;
-  }
-
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return `${window.location.origin}${normalizedPath}`;
-  }
 
   return `${PRODUCTION_WEB_DOMAIN}${normalizedPath}`;
 }
@@ -276,16 +254,11 @@ export function generateShareMessage({
     parts.push(excerpt.trim());
   }
 
-  // Read more / Download app link
+  // Read more link
   parts.push('');
-  const isNative = Capacitor.isNativePlatform();
-  const readMoreLabel = isNative
-    ? (language === 'en' 
-        ? '📲 Download Bethel Kohhran App on Google Play Store:' 
-        : '📲 Bethel Kohhran App Google Play Store-ah download rawh:')
-    : (language === 'en' 
-        ? '👉 Read more:' 
-        : '👉 Chhiar chhunzawmna / Read more:');
+  const readMoreLabel = language === 'en' 
+    ? '👉 Read more:' 
+    : '👉 Chhiar chhunzawmna / Read more:';
   parts.push(readMoreLabel);
   parts.push(targetUrl);
 
@@ -332,8 +305,11 @@ export function updateShareMetaTags(meta: {
     setMetaTag('description', meta.description, true);
   }
   if (meta.imageUrl) {
+    const lower = meta.imageUrl.toLowerCase();
+    const mimeType = lower.includes('.png') ? 'image/png' : (lower.includes('.webp') ? 'image/webp' : 'image/jpeg');
     setMetaTag('og:image', meta.imageUrl);
     setMetaTag('og:image:secure_url', meta.imageUrl);
+    setMetaTag('og:image:type', mimeType);
     setMetaTag('og:image:width', '1200');
     setMetaTag('og:image:height', '630');
     setMetaTag('twitter:image', meta.imageUrl, true);

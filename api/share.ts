@@ -164,11 +164,33 @@ function escapeHtml(str: string): string {
 
 export default async function handler(req: any, res: any) {
   try {
-    const query = req.query || {};
-    const type = (query.type as string) || "announcements";
-    const id = (query.id as string) || "";
+    let id = (req.query?.id as string) || (req.query?.articleId as string) || "";
+    let type = (req.query?.type as string) || "";
 
-    const collectionName = type.startsWith("art") ? "articles" : "announcements";
+    if (req.url) {
+      try {
+        const u = new URL(req.url, "http://localhost");
+        if (!id) id = u.searchParams.get("id") || u.searchParams.get("articleId") || "";
+        if (!type) type = u.searchParams.get("type") || "";
+
+        // Check path segments like /articles/:id
+        if (!id) {
+          const segments = u.pathname.split("/").filter(Boolean);
+          if (segments.length >= 2) {
+            const first = segments[segments.length - 2];
+            const second = segments[segments.length - 1];
+            if (["articles", "announcements"].includes(first)) {
+              if (!type) type = first;
+              id = second;
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const collectionName = (type && type.startsWith("art")) ? "articles" : "announcements";
 
     let title = "Champhai Bethel Kohhran";
     let description = "Champhai Bethel Presbyterian Kohhran official website ; inkhawm hunbi, rawngbawlna, record vawnthatna leh kohhran hmalakna hrang hrangte tarlanna.";
@@ -194,7 +216,7 @@ export default async function handler(req: any, res: any) {
           imageUrl: displayImgs[0] || doc.imageUrl,
           imageUrls: displayImgs,
           content: doc.content,
-          text: doc.text,
+          text: doc.text || doc.content,
         });
       }
     }
@@ -204,8 +226,8 @@ export default async function handler(req: any, res: any) {
     const safeImage = escapeHtml(imageUrl);
     const safeUrl = escapeHtml(targetUrl);
 
-    const imageExt = imageUrl.toLowerCase();
-    const mimeType = imageExt.endsWith(".png") ? "image/png" : "image/jpeg";
+    const lowerImg = imageUrl.toLowerCase();
+    const mimeType = lowerImg.includes(".png") ? "image/png" : (lowerImg.includes(".webp") ? "image/webp" : "image/jpeg");
 
     const html = `<!DOCTYPE html>
 <html lang="en">

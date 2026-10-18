@@ -176,6 +176,9 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
     const imageUrl = meta.imageUrl || DEFAULT_CHURCH_LOGO;
     const url = meta.url || `${PRODUCTION_WEB_DOMAIN}${req.originalUrl}`;
 
+    const lowerImg = imageUrl.toLowerCase();
+    const mimeType = lowerImg.includes(".png") ? "image/png" : (lowerImg.includes(".webp") ? "image/webp" : "image/jpeg");
+
     html = html
       .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
       .replace(/<meta property="og:title" content=".*?"\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
@@ -185,6 +188,7 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
       .replace(/<meta name="twitter:description" content=".*?"\s*\/?>/i, `<meta name="twitter:description" content="${description}" />`)
       .replace(/<meta property="og:image" content=".*?"\s*\/?>/i, `<meta property="og:image" content="${imageUrl}" />`)
       .replace(/<meta property="og:image:secure_url" content=".*?"\s*\/?>/i, `<meta property="og:image:secure_url" content="${imageUrl}" />`)
+      .replace(/<meta property="og:image:type" content=".*?"\s*\/?>/i, `<meta property="og:image:type" content="${mimeType}" />`)
       .replace(/<meta property="og:image:width" content=".*?"\s*\/?>/i, `<meta property="og:image:width" content="1200" />`)
       .replace(/<meta property="og:image:height" content=".*?"\s*\/?>/i, `<meta property="og:image:height" content="630" />`)
       .replace(/<meta name="twitter:image" content=".*?"\s*\/?>/i, `<meta name="twitter:image" content="${imageUrl}" />`)
@@ -198,6 +202,7 @@ async function serveIndexWithMeta(req: express.Request, res: express.Response, m
         <meta property="og:description" content="${description}" />
         <meta property="og:image" content="${imageUrl}" />
         <meta property="og:image:secure_url" content="${imageUrl}" />
+        <meta property="og:image:type" content="${mimeType}" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:url" content="${url}" />
@@ -404,9 +409,8 @@ async function startServer() {
     });
   });
 
-  // Article share preview route
-  app.get("/articles", async (req, res) => {
-    const articleId = req.query.id as string;
+  // Article share preview routes
+  const handleArticleRequest = async (articleId: string | undefined, req: express.Request, res: express.Response) => {
     if (!articleId) {
       return serveIndexWithMeta(req, res, {
         title: "Articles & Chanchinbu - Champhai Bethel Kohhran",
@@ -418,9 +422,12 @@ async function startServer() {
     try {
       const data = await fetchFirestoreDocument("articles", articleId);
       if (data) {
+        const displayImgs = data.imageUrls || (data.imageUrl ? [data.imageUrl] : []);
         const imageUrl = extractFirstImage({
-          imageUrl: data.imageUrl,
+          imageUrl: displayImgs[0] || data.imageUrl,
+          imageUrls: displayImgs,
           content: data.content,
+          text: data.content,
         });
         const excerpt = extractAtLeastTwoSentences(data.content || "");
         const title = `${data.title || "Article"} - Champhai Bethel Kohhran`;
@@ -438,6 +445,14 @@ async function startServer() {
       imageUrl: DEFAULT_CHURCH_LOGO,
       url: `${PRODUCTION_WEB_DOMAIN}/articles?id=${articleId}`,
     });
+  };
+
+  app.get("/articles/:id", async (req, res) => {
+    return handleArticleRequest(req.params.id, req, res);
+  });
+
+  app.get("/articles", async (req, res) => {
+    return handleArticleRequest(req.query.id as string, req, res);
   });
 
   // Vite middleware for development or Static server for production

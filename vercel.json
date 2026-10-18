@@ -12,6 +12,17 @@
       "destination": "/api/share?type=announcements&id=:id"
     },
     {
+      "source": "/articles/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(bot|crawl|spider|slurp|facebook|Facebook|facebot|Facebot|twitter|Twitter|whatsapp|WhatsApp|telegram|Telegram|slack|Slack|discord|Discord|pinterest|Pinterest|google|Google|linkedin|LinkedIn).*"
+        }
+      ],
+      "destination": "/api/share?type=articles&id=:id"
+    },
+    {
       "source": "/articles",
       "has": [
         {

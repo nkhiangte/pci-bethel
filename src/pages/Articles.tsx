@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +19,7 @@ const Articles: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { id: routeId } = useParams<{ id?: string }>();
   
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,15 +128,27 @@ const Articles: React.FC = () => {
   };
 
   useEffect(() => {
-    const articleId = searchParams.get('id');
-    if (articleId && articles.length > 0) {
-      const found = articles.find(a => a.id === articleId);
-      if (found) {
-        setSelectedArticle(found);
-        setIsModalOpen(true);
+    const articleId = searchParams.get('id') || routeId;
+    if (articleId) {
+      if (articles.length > 0) {
+        const found = articles.find(a => a.id === articleId);
+        if (found) {
+          setSelectedArticle(found);
+          setIsModalOpen(true);
+          return;
+        }
+      }
+      // If articles are loaded or loading finished and not found in list, attempt direct fetch
+      if (!loading && db?.collection) {
+        db.collection('articles').doc(articleId).get().then((docSnapshot: any) => {
+          if (docSnapshot && docSnapshot.exists) {
+            setSelectedArticle({ id: docSnapshot.id, ...docSnapshot.data() } as Article);
+            setIsModalOpen(true);
+          }
+        }).catch((err: any) => console.error("Error loading direct article:", err));
       }
     }
-  }, [searchParams, articles]);
+  }, [searchParams, routeId, articles, loading]);
 
   // Synchronize Open Graph & Twitter meta tags when an article is being read
   useEffect(() => {
